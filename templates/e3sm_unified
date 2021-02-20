@@ -1,0 +1,10 @@
+{%- if machine == 'compy' -%}
+# Load E3SM unified environment for compy (selectable)
+source /share/apps/E3SM/conda_envs/load_{{ e3sm_unified }}_e3sm_unified.
+{%- elif machine == 'cori' -%}
+# Load E3SM unified environment for NERSC (selectable)
+source /global/cfs/cdirs/e3sm/software/anaconda_envs/load_{{ e3sm_unified }}_e3sm_unified.
+{%- elif machine in ['anvil', 'chrysalis'] -%}
+# Load E3SM unified environment for LCRC (selectable)
+source /lcrc/soft/climate/e3sm-unified/load_{{ e3sm_unified }}_e3sm_unified.
+{%- endif -%}
