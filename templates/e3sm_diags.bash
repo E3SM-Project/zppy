@@ -89,8 +89,18 @@ runner.run_diags([param])
 
 EOF
 
+# Handle cases when cfg file is explicitly provided
+{% if cfg != "" %}
+cat > e3sm_diags.cfg << EOF
+{% include cfg %}
+EOF
+command="python e3sm.py -d e3sm_diags.cfg"
+{% else %}
+command="python e3sm.py"
+{% endif %}
+
 # Run diagnostics
-time python e3sm.py
+time ${command}
 if [ $? != 0 ]; then
   cd ..
   echo 'ERROR (1)' > {{ prefix }}.status
