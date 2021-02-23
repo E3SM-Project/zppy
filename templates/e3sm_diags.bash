@@ -92,7 +92,7 @@ EOF
 # Handle cases when cfg file is explicitly provided
 {% if cfg != "" %}
 cat > e3sm_diags.cfg << EOF
-  {% include cfg %}
+{% include cfg %}
 EOF
 command="python e3sm.py -d e3sm_diags.cfg"
 {% else %}
