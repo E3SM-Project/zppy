@@ -161,7 +161,6 @@ popd
 {% if machine in ['anvil', 'chrysalis'] %}
 # For LCRC, change permissions of new files
 pushd ${www}/${case}/e3sm_diags/{{ grid }}/
-chgrp -R e3sm ${results_dir}
 chmod -R go+rX,go-w ${results_dir}
 popd
 {% endif %}
