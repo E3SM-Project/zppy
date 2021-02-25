@@ -2,7 +2,7 @@ import jinja2
 import os
 import re
 
-from utils import getTasks, getYears, submitScript, checkStatus
+from utils import getComponent, getTasks, getYears, submitScript, checkStatus
 
 # -----------------------------------------------------------------------------
 def climo(config, scriptDir):
@@ -19,27 +19,37 @@ def climo(config, scriptDir):
 
     # --- Generate and submit climo scripts ---
     for c in tasks:
+
+        # Grid name (if not explicitly defined)
+        #   'native' if no remapping
+        #   or extracted from mapping filename
         if c['grid'] == "":
-            tmp = os.path.basename(c['mapping_file'])
-            tmp = re.sub('\.[^.]*\.nc$', '', tmp)
-            tmp = tmp.split('_')
-            if tmp[0] == "map":
-                c['grid'] = ('%s_%s' % (tmp[-2],tmp[-1]))
+            if c['mapping_file'] == "":
+                c['grid'] = "native"
             else:
-                raise Exception('Cannot extract traget grid name from mapping file %s' % (c['mapping_file']))
+                tmp = os.path.basename(c['mapping_file'])
+                tmp = re.sub('\.[^.]*\.nc$', '', tmp)
+                tmp = tmp.split('_')
+                if tmp[0] == "map":
+                    c['grid'] = ('%s_%s' % (tmp[-2],tmp[-1]))
+                else:
+                    raise Exception('Cannot extract target grid name from mapping file %s' % (c['mapping_file']))
+
+        # Component
+        c['component'] = getComponent(c['input_files'])
 
         # Loop over year sets
         year_sets = getYears(c['years'])
         for s in year_sets:
 
-            c['year1'] = s[0]
-            c['year2'] = s[1]
+            c['yr_start'] = s[0]
+            c['yr_end'] = s[1]
             c['scriptDir'] = scriptDir
             if c['subsection']:
                 sub = c['subsection']
             else:
                 sub = c['grid']
-            prefix = 'climo_%s_%04d-%04d' % (sub,c['year1'],c['year2'])
+            prefix = 'climo_%s_%04d-%04d' % (sub,c['yr_start'],c['yr_end'])
             print(prefix)
             c['prefix'] = prefix
             scriptFile = os.path.join(scriptDir, '%s.bash' % (prefix))
