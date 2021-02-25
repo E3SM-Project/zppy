@@ -22,33 +22,114 @@ echo "RUNNING ${id}" > {{ prefix }}.status
 workdir=`mktemp -d tmp.${id}.XXXX`
 cd ${workdir}
 
-# Generate climo files
-ncclimo -n '-x' -v ANRAIN,ANSNOW,AQRAIN,AQSNOW \
---no_amwg_link -p mpi -a sdd \
--c {{ case }} \
--s {{ year1 }} -e {{ year2 }} \
--i {{ input }}/{{ input_subdir }} \
--r {{ mapping_file }} \
--o clim \
--O clim_rgr \
--m {{ model_name }}
+{% if frequency == 'monthly' %}
+# --- Monthly climatologies ---
+ncclimo \
+--case={{ case }} \
+{%- if exclude %}
+-n '-x' \
+{%- endif %}
+{%- if vars != '' %}
+--vars={{ vars }} \
+{%- endif %}
+--no_amwg_link \
+--parallel=mpi \
+--december_mode=sdd \
+--yr_srt={{ yr_start }} \
+--yr_end={{ yr_end }} \
+--input={{ input }}/{{ input_subdir }} \
+{% if mapping_file == '' -%}
+--output=output \
+{%- else -%}
+--map={{ mapping_file }} \
+--output=trash \
+--regrid=output \
+{%- endif %}
+--model={{ input_files.split(".")[0] }}
 
-if [ $? != 0 ]; then
-  cd ..
-  echo 'ERROR (1)' > {{ prefix }}.status
-  exit 1
+{% elif frequency == 'diurnal' %}
+
+# --- Diurnal cycle climatologies ---
+
+# Create symbolic links to input files
+input={{ input }}/{{ input_subdir }}
+for (( year={{ yr_start }}; year<={{ yr_end }}; year++ ))
+do
+  YYYY=`printf "%04d" ${year}`
+  for file in ${input}/{{ case }}.{{ input_files }}.${YYYY}-*.nc
+  do
+    ln -s ${file} .
+  done
+done
+
+# Add the last file of the previous year
+year={{ yr_start - 1 }}
+YYYY=`printf "%04d" ${year}`
+mapfile -t files < <( ls ${input}/{{ case }}.{{ input_files }}.${YYYY}-*.nc 2> /dev/null )
+{% raw -%}
+if [ ${#files[@]} -ne 0 ]
+then
+  ln -s ${files[-1]} .
 fi
+{%- endraw %}
+# as well as first file of next year to ensure that first and last years are complete
+year={{ yr_end + 1 }}
+YYYY=`printf "%04d" ${year}`
+mapfile -t files < <( ls ${input}/{{ case }}.{{ input_files }}.${YYYY}-*.nc 2> /dev/null )
+{% raw -%}
+if [ ${#files[@]} -ne 0 ]
+then
+  ln -s ${files[0]} .
+fi
+{%- endraw %}
 
-# Move regridded climo files to final destination
-{
-  dest={{ output }}/post/atm/{{ grid }}/clim/{{ '%dyr' % (year2-year1+1) }}
-  mkdir -p ${dest}
-  mv clim_rgr/*.nc ${dest}
-}
+# Now, call ncclimo
+ncclimo \
+--case={{ case }}.{{ input_files }} \
+{%- if exclude %}
+-n '-x' \
+{%- endif %}
+{%- if vars != '' %}
+--vars={{ vars }} \
+{%- endif %}
+--parallel=mpi \
+--december_mode=sdd \
+--yr_srt={{ yr_start }} \
+--yr_end={{ yr_end }} \
+{% if mapping_file == '' -%}
+--output=output \
+{%- else -%}
+--map={{ mapping_file }} \
+--output=trash \
+--regrid=output \
+{%- endif %}
+--climatology_mode=hfc \
+{{ case }}.{{ input_files }}.????-*.nc
+
+{% else %}
+# --- Unsupported climatology mode ---
+echo 'Frequency '{{ frequency }}' is not a valid option'
+echo 'ERROR (1)' > {{ prefix }}.status
+exit 1
+
+{%- endif %}
+
 if [ $? != 0 ]; then
   cd ..
   echo 'ERROR (2)' > {{ prefix }}.status
   exit 2
+fi
+
+# Move regridded climo files to final destination
+{
+  dest={{ output }}/post/{{ component }}/{{ grid }}/clim/{{ '%dyr' % (yr_end-yr_start+1) }}
+  mkdir -p ${dest}
+  mv output/*.nc ${dest}
+}
+if [ $? != 0 ]; then
+  cd ..
+  echo 'ERROR (3)' > {{ prefix }}.status
+  exit 3
 fi
 
 # Delete temporary workdir
