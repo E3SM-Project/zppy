@@ -187,10 +187,10 @@ seaIceHistorySubdirectory = {{ input }}/{{ subdir_ice }}
 
 # names of namelist and streams files, either a path relative to baseDirectory
 # or an absolute path.
-oceanNamelistFileName = {{ input }}/run/{{ mpaso_nml }}
-oceanStreamsFileName = {{ input }}/run/{{ stream_ocn }}
-seaIceNamelistFileName = {{ input }}/run/{{ mpassi_nml }}
-seaIceStreamsFileName = {{ input }}/run/{{ stream_ice }}
+oceanNamelistFileName = {{ input }}/run/mpaso_in
+oceanStreamsFileName = {{ input }}/run/streams.ocean
+seaIceNamelistFileName = {{ input }}/run/mpassi_in
+seaIceStreamsFileName = {{ input }}/run/streams.seaice
 
 # names of ocean and sea ice meshes (e.g. oEC60to30, oQU240, oRRS30to10, etc.)
 mpasMeshName = {{ mesh }}
