@@ -45,5 +45,6 @@
 #SBATCH  --output={{ scriptDir }}/{{ prefix }}.o%j
 #SBATCH  --exclusive
 #SBATCH  --time={{ walltime }}
+#SBATCH  --partition={{ partition }}
 
 {% endif %}
