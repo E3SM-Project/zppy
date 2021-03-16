@@ -271,6 +271,17 @@ endYear = ${tsY2}
 startYear = ${ensoY1}
 endYear = ${ensoY2}
 
+[streamfunctionMOC]!
+## options related to plotting the streamfunction of the meridional overturning!
+## circulation (MOC)!
+# Use postprocessing script to compute the MOC? You want this to be True!
+# for low-resolution simulations that use GM to parameterize eddies, because!
+# the online MOC analysis member currently does not include the bolus velocity!
+# in its calculation, whereas the postprocessing script does.!
+# NOTE: this is a temporary option that will be removed once the online!
+# MOC takes into account the bolus velocity when GM is on.!
+usePostprocessingScript = {{ PostMOC }}
+
 [oceanObservations]
 ## options related to ocean observations with which the results will be
 ## compared
