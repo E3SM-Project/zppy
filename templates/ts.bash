@@ -76,6 +76,8 @@ ncclimo \
 {%- endif %}
 {%- if frequency != 'monthly' %}
 --clm_md=hfs \
+--dpf={{ dpf }} \
+--tpd={{ tpd }} \
 {%- endif %}
 {{ case }}.{{ input_files }}.????-*.nc
 
