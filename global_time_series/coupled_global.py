@@ -24,7 +24,7 @@ def getmoc(dir_in):
     var0 = fin['mocAtlantic26'][:]
     for iyear in range(np.int(time0[0]),np.int(time0[-1])+1):
         if(i>0 and iyear <= time[-1]):
-          #print('the amoc value for year',iyear, 'has been included in the moc time series from another moc file',files[i-1], time[-1], 'Skipping...')
+          print('the amoc value for year',iyear, 'has been included in the moc time series from another moc file',files[i-1], time[-1], 'Skipping...')
         else:
           imon = np.where(time0==iyear)[0]
           if(len(imon)==12):
