@@ -1,13 +1,12 @@
 #!/bin/bash
 {% include 'slurm_header.sh' %}
+
+
+{%- if environment_commands != "" -%}
+{{ environment_commands }}
+{%- else -%}
 {% include 'e3sm_unified' %}sh
-
-# To load custom E3SM Diags environment, comment out line above using {# ... #}
-# and uncomment lines below
-
-#module load anaconda3/2019.03
-#source /share/apps/anaconda3/2019.03/etc/profile.d/conda.sh
-#conda activate e3sm_diags_env_dev
+{%- endif %}
 
 # Turn on debug output if needed
 debug={{ debug }}
@@ -133,6 +132,7 @@ param.output_format = {{ output_format }}
 param.output_format_subplot = {{ output_format_subplot }}
 param.multiprocessing = {{ multiprocessing }}
 param.num_workers = {{ num_workers }}
+#param.fail_on_incomplete = True
 params = [param]
 
 {%- if "enso_diags" in sets %}
@@ -156,9 +156,12 @@ qbo_param.test_name = short_name
 qbo_param.test_start_yr = start_yr
 qbo_param.test_end_yr = end_yr
 qbo_param.ref_start_yr = ref_start_yr
-qbo_param.ref_end_yr = ref_start_yr + num_years - 1
-if (qbo_param.ref_end_yr <= {{ ref_final_yr }}):
-  params.append(qbo_param)
+ref_end_yr = ref_start_yr + num_years - 1
+if (ref_end_yr <= {{ ref_final_yr }}):
+  qbo_param.ref_end_yr = ref_end_yr
+else:
+  qbo_param.ref_end_yr = {{ ref_final_yr }}
+params.append(qbo_param)
 {%- endif %}
 
 
@@ -174,10 +177,6 @@ params.append(ts_param)
 
 # Run
 runner.sets_to_run = {{ sets }}
-{%- if "qbo" in sets %}
-if (qbo_param.ref_end_yr > {{ ref_final_yr }}):
-  runner.sets_to_run.remove('qbo')
-{%- endif %}
 runner.run_diags(params)
 
 EOF
