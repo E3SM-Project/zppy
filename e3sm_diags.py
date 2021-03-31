@@ -47,6 +47,12 @@ def e3sm_diags(config, scriptDir):
 
             # List of depensencies
             dependencies = [ os.path.join(scriptDir, 'climo_%s_%04d-%04d.status' % (sub,c['year1'],c['year2'])), ]
+            # Iterate from year1 to year2 incrementing by the number of years per time series file.
+            if 'ts_num_years' in c.keys():
+                for yr in range(c['year1'], c['year2'], c['ts_num_years']):
+                    start_yr = yr
+                    end_yr = yr + c['ts_num_years'] - 1
+                    dependencies.append(os.path.join(scriptDir, 'ts_%s_%04d-%04d-%04d.status' % (sub,start_yr,end_yr,c['ts_num_years'])))
 
             # Submit job
             jobid = submitScript(scriptFile, dependFiles=dependencies, export='NONE')
