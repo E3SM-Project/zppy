@@ -187,9 +187,9 @@ EOF
 cat > e3sm_diags.cfg << EOF
 {% include cfg %}
 EOF
-command="python e3sm.py -d e3sm_diags.cfg"
+command="python -u e3sm.py -d e3sm_diags.cfg"
 {% else %}
-command="python e3sm.py"
+command="python -u e3sm.py"
 {% endif %}
 
 # Run diagnostics
