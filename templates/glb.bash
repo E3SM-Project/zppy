@@ -30,7 +30,7 @@ input={{ input }}/{{ input_subdir }}
   for (( year={{ year1 }}; year<={{ year2 }}; year++ ))
   do
     YYYY=`printf "%04d" ${year}`
-    for file in ${input}/*.{{ model_name }}.h0.${YYYY}-??.nc
+    for file in ${input}/{{ case }}.*.h0.${YYYY}-??.nc
     do
       echo $file
       # Extract file name
@@ -51,7 +51,7 @@ fi
 {
   Y1=`printf "%04d" {{ year1 }}`
   Y2=`printf "%04d" {{ year2 }}`
-  ncrcat ????-??.nc {{ model_name }}.h0.glb.${Y1}01-${Y2}12.nc
+  ncrcat ????-??.nc {{ case }}.h0.glb.${Y1}01-${Y2}12.nc
   rm -f ????-??.nc
 }
 if [ $? != 0 ]; then
@@ -64,7 +64,7 @@ fi
 {
   dest={{ output }}/post/atm/{{ grid }}/ts/monthly/{{ '%dyr' % (year2-year1+1) }}
   mkdir -p ${dest}
-  mv {{ model_name }}.h0.glb.${Y1}01-${Y2}12.nc ${dest}
+  mv {{ case }}.h0.glb.${Y1}01-${Y2}12.nc ${dest}
 }
 if [ $? != 0 ]; then
   cd ..
