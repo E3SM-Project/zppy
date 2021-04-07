@@ -19,10 +19,12 @@ def e3sm_diags(config, scriptDir):
     # --- Generate and submit e3sm_diags scripts ---
     for c in tasks:
 
+        if 'ts_num_years' in c.keys():
+          c['ts_num_years'] = int(c['ts_num_years'])
+
         # Loop over year sets
         year_sets = getYears(c['years'])
         for s in year_sets:
-
             c['year1'] = s[0]
             c['year2'] = s[1]
             c['scriptDir'] = scriptDir

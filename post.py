@@ -27,8 +27,8 @@ validator = Validator()
 
 result = config.validate(validator)
 if result != True:
-  print('Configuration file validation failed')
-  #raise Exception
+  print('Validation results={}'.format(result))
+  raise Exception('Configuration file validation failed')
 else:
   print('Configuration file validation passed')
 
