@@ -1,0 +1,93 @@
+#!/bin/bash
+
+
+# Running on chrysalis
+
+#SBATCH  --job-name=ts_land_monthly_0031-0040-0010
+#SBATCH  --nodes=1
+#SBATCH  --output=test_output/post/scripts/ts_land_monthly_0031-0040-0010.o%j
+#SBATCH  --exclusive
+#SBATCH  --time=02:00:00
+#SBATCH  --partition=compute
+
+
+# Load E3SM unified environment for LCRC (selectable)
+source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified.sh
+
+# Turn on debug output if needed
+debug=False
+if [[ "${debug,,}" == "true" ]]; then
+  set -x
+fi
+
+# Script dir
+cd test_output/post/scripts
+
+# Get jobid
+id=${SLURM_JOBID}
+
+# Update status file
+STARTTIME=$(date +%s)
+echo "RUNNING ${id}" > ts_land_monthly_0031-0040-0010.status
+
+# Create temporary workdir
+workdir=`mktemp -d tmp.${id}.XXXX`
+cd ${workdir}
+
+# Create symbolic links to input files
+input=./archive/lnd/hist
+for (( year=31; year<=40; year++ ))
+do
+  YYYY=`printf "%04d" ${year}`
+  for file in ${input}/case_name.elm.h0.${YYYY}-*.nc
+  do
+    ln -s ${file} .
+  done
+done
+
+# Generate time series files
+ncclimo \
+-c case_name \
+-v FSH,RH2M \
+--yr_srt=31 \
+--yr_end=40 \
+--ypf=10 \
+--map=/home/ac.zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc \
+-o trash \
+-O output \
+case_name.elm.h0.????-*.nc
+
+if [ $? != 0 ]; then
+  cd ..
+  echo 'ERROR (1)' > ts_land_monthly_0031-0040-0010.status
+  exit 1
+fi
+
+# Move output ts files to final destination
+{
+  dest=test_output/post/lnd/180x360_aave/ts/monthly/10yr
+  mkdir -p ${dest}
+  mv output/*.nc ${dest}
+}
+if [ $? != 0 ]; then
+  cd ..
+  echo 'ERROR (2)' > ts_land_monthly_0031-0040-0010.status
+  exit 2
+fi
+
+# Delete temporary workdir
+cd ..
+if [[ "${debug,,}" != "true" ]]; then
+  rm -rf ${workdir}
+fi
+
+# Update status file and exit
+
+ENDTIME=$(date +%s)
+ELAPSEDTIME=$(($ENDTIME - $STARTTIME))
+
+echo ==============================================
+echo "Elapsed time: $ELAPSEDTIME seconds"
+echo ==============================================
+echo 'OK' > ts_land_monthly_0031-0040-0010.status
+exit 0

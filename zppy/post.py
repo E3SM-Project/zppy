@@ -78,4 +78,3 @@ amwg(config, scriptDir)
 
 # mpas_analysis tasks
 mpas_analysis(config, scriptDir)
-

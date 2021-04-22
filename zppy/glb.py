@@ -4,20 +4,22 @@ import os
 from utils import getTasks, getYears, submitScript, checkStatus
 
 # -----------------------------------------------------------------------------
-def amwg(config, scriptDir):
+def glb(config, scriptDir):
 
-    # Initialize jinja2 template engine
+    # --- Initialize jinja2 template engine ---
     templateLoader = jinja2.FileSystemLoader(searchpath=config['default']['templateDir'])
     templateEnv = jinja2.Environment( loader=templateLoader )
-    template = templateEnv.get_template( 'amwg.csh' )
+    template = templateEnv.get_template( 'glb.bash' )
 
-    # --- List of amwg tasks ---
-    tasks = getTasks(config, 'amwg')
+    # --- List of tasks ---
+    tasks = getTasks(config, 'glb')
     if (len(tasks) == 0):
         return
 
-    # --- Generate and submit amwg scripts ---
+    # --- Generate and submit scripts ---
     for c in tasks:
+
+        c['grid'] = "glb"
 
         # Loop over year sets
         year_sets = getYears(c['years'])
@@ -27,13 +29,12 @@ def amwg(config, scriptDir):
             c['year2'] = s[1]
             c['scriptDir'] = scriptDir
             if c['subsection']:
-                sub = c['subsection']
+                prefix = 'glb_%s_%04d-%04d' % (c['subsection'],c['year1'],c['year2'])
             else:
-                sub = c['grid']
-            prefix = 'amwg_%s_%s_%04d-%04d' % (sub,c['tag'],c['year1'],c['year2'])
+                prefix = 'glb_%04d-%04d' % (c['year1'],c['year2'])
             print(prefix)
             c['prefix'] = prefix
-            scriptFile = os.path.join(scriptDir, '%s.csh' % (prefix))
+            scriptFile = os.path.join(scriptDir, '%s.bash' % (prefix))
             statusFile = os.path.join(scriptDir, '%s.status' % (prefix))
             skip = checkStatus(statusFile)
             if skip:
@@ -43,13 +44,10 @@ def amwg(config, scriptDir):
             with open(scriptFile, 'w') as f:
                 f.write(template.render( **c ))
 
-            # List of dependencies
-            dependencies = [ os.path.join(scriptDir, 'climo_%s_%04d-%04d.status' % (c['grid'],c['year1'],c['year2'])), ]
-
-            # Submit job
-            jobid = submitScript(scriptFile, dependFiles=dependencies, export='NONE')
-
-            # Update status file
-            with open(statusFile, 'w') as f:
-                f.write('WAITING %d\n' % (jobid))
-
+            if not c['dry_run']:
+                # Submit job
+                jobid = submitScript(scriptFile)
+                
+                # Update status file
+                with open(statusFile, 'w') as f:
+                    f.write('WAITING %d\n' % (jobid))
