@@ -6,7 +6,6 @@ import os
 
 from climo import climo
 from ts import ts
-from glb import glb
 from e3sm_diags import e3sm_diags
 from e3sm_diags_vs_model import e3sm_diags_vs_model
 from amwg import amwg
@@ -63,9 +62,6 @@ climo(config, scriptDir)
 
 # time series tasks
 ts(config, scriptDir)
-
-# global average time series tasks
-glb(config, scriptDir)
 
 # e3sm_diags tasks
 e3sm_diags(config, scriptDir)
