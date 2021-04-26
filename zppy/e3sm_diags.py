@@ -1,42 +1,38 @@
 import jinja2
 import os
 
-from utils import getTasks, getYears, submitScript, checkStatus
+from zppy.utils import getTasks, getYears, submitScript, checkStatus
 
 # -----------------------------------------------------------------------------
-def e3sm_diags_vs_model(config, scriptDir):
+def e3sm_diags(config, scriptDir):
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(searchpath=config['default']['templateDir'])
     templateEnv = jinja2.Environment( loader=templateLoader )
-    template = templateEnv.get_template( 'e3sm_diags_vs_model.bash' )
+    template = templateEnv.get_template( 'e3sm_diags.bash' )
 
     # --- List of e3sm_diags tasks ---
-    tasks = getTasks(config, 'e3sm_diags_vs_model')
+    tasks = getTasks(config, 'e3sm_diags')
     if (len(tasks) == 0):
         return
 
-    # --- Generate and submit e3sm_diags_vs_model scripts ---
+    # --- Generate and submit e3sm_diags scripts ---
     for c in tasks:
+
+        if 'ts_num_years' in c.keys():
+          c['ts_num_years'] = int(c['ts_num_years'])
 
         # Loop over year sets
         year_sets = getYears(c['years'])
-        if c['ref_years'] != [""]:
-            ref_year_sets = getYears(c['ref_years'])
-        else:
-            ref_year_sets = year_sets
-        for s, rs in zip(year_sets, ref_year_sets):
-
+        for s in year_sets:
             c['year1'] = s[0]
             c['year2'] = s[1]
-            c['ref_year1'] = rs[0]
-            c['ref_year2'] = rs[1]
             c['scriptDir'] = scriptDir
             if c['subsection']:
                 sub = c['subsection']
             else:
                 sub = c['grid']
-            prefix = 'e3sm_diags_%s_%s_%04d-%04d_vs_%04d-%04d' % (sub,c['tag'],c['year1'],c['year2'],c['ref_year1'],c['ref_year2'])
+            prefix = 'e3sm_diags_%s_%s_%04d-%04d' % (sub,c['tag'],c['year1'],c['year2'])
             print(prefix)
             c['prefix'] = prefix
             scriptFile = os.path.join(scriptDir, '%s.bash' % (prefix))
@@ -51,6 +47,15 @@ def e3sm_diags_vs_model(config, scriptDir):
 
             # List of dependencies
             dependencies = [ os.path.join(scriptDir, 'climo_%s_%04d-%04d.status' % (sub,c['year1'],c['year2'])), ]
+            if "diurnal_cycle" in c['sets']:
+                dependencies.append(os.path.join(scriptDir, 'climo_%s_%04d-%04d.status' % (
+                    c['climo_diurnal_subsection'], c['year1'],c['year2'])))
+            # Iterate from year1 to year2 incrementing by the number of years per time series file.
+            if 'ts_num_years' in c.keys():
+                for yr in range(c['year1'], c['year2'], c['ts_num_years']):
+                    start_yr = yr
+                    end_yr = yr + c['ts_num_years'] - 1
+                    dependencies.append(os.path.join(scriptDir, 'ts_%s_%04d-%04d-%04d.status' % (sub,start_yr,end_yr,c['ts_num_years'])))
 
             # Submit job
             jobid = submitScript(scriptFile, dependFiles=dependencies, export='NONE')

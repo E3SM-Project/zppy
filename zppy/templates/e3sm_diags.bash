@@ -1,12 +1,7 @@
 #!/bin/bash
 {% include 'slurm_header.sh' %}
 
-
-{%- if environment_commands != "" -%}
 {{ environment_commands }}
-{%- else -%}
-{% include 'e3sm_unified' %}sh
-{%- endif %}
 
 # Turn on debug output if needed
 debug={{ debug }}

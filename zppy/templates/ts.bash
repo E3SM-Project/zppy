@@ -1,6 +1,6 @@
 #!/bin/bash
 {% include 'slurm_header.sh' %}
-{% include 'e3sm_unified' %}sh
+{{ environment_commands }}
 
 # Turn on debug output if needed
 debug={{ debug }}

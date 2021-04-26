@@ -1,6 +1,6 @@
 build/
 dist/
-zstash.egg-info/
+zppy.egg-info/
 *.pyc
 *~
 \#*

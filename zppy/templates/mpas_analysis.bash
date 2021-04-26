@@ -1,6 +1,6 @@
 #!/bin/bash
 {% include 'slurm_header.sh' %}
-{% include 'e3sm_unified' %}sh
+{{ environment_commands }}
 
 # Additional settings for MPAS-Analysis
 export OMP_NUM_THREADS=1

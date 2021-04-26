@@ -2,23 +2,22 @@ import jinja2
 import os
 import re
 
-from utils import getComponent, getTasks, getYears, submitScript, checkStatus
+from zppy.utils import getComponent, getTasks, getYears, submitScript, checkStatus
 
 # -----------------------------------------------------------------------------
-def ts(config, scriptDir):
-
+def climo(config, scriptDir):
 
     # --- Initialize jinja2 template engine ---
     templateLoader = jinja2.FileSystemLoader(searchpath=config['default']['templateDir'])
     templateEnv = jinja2.Environment( loader=templateLoader )
-    template = templateEnv.get_template( 'ts.bash' )
+    template = templateEnv.get_template( 'climo.bash' )
 
-    # --- List of tasks ---
-    tasks = getTasks(config, 'ts')
+    # --- List of climo tasks ---
+    tasks = getTasks(config, 'climo')
     if (len(tasks) == 0):
         return
 
-    # --- Generate and submit ts scripts ---
+    # --- Generate and submit climo scripts ---
     for c in tasks:
 
         # Grid name (if not explicitly defined)
@@ -27,8 +26,6 @@ def ts(config, scriptDir):
         if c['grid'] == "":
             if c['mapping_file'] == "":
                 c['grid'] = "native"
-            elif c['mapping_file'] == "glb":
-                c['grid'] = "glb"
             else:
                 tmp = os.path.basename(c['mapping_file'])
                 tmp = re.sub('\.[^.]*\.nc$', '', tmp)
@@ -47,13 +44,12 @@ def ts(config, scriptDir):
 
             c['yr_start'] = s[0]
             c['yr_end'] = s[1]
-            c['ypf'] = s[1] - s[0] + 1
             c['scriptDir'] = scriptDir
             if c['subsection']:
                 sub = c['subsection']
             else:
                 sub = c['grid']
-            prefix = 'ts_%s_%04d-%04d-%04d' % (sub,c['yr_start'],c['yr_end'],c['ypf'])
+            prefix = 'climo_%s_%04d-%04d' % (sub,c['yr_start'],c['yr_end'])
             print(prefix)
             c['prefix'] = prefix
             scriptFile = os.path.join(scriptDir, '%s.bash' % (prefix))
