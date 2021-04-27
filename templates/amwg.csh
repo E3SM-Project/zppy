@@ -223,8 +223,8 @@ set cntl_compute_climo = 1    # (0=ON,1=OFF)
 # First year of data is: $test_first_yr     (must be >= 1)
 # Number of years is: $test_nyrs         (must be >= 1)
 
-set test_first_yr = 1851           # first year (must be >= 1)
-set test_nyrs     = 2           # number of yrs (must be >= 1)
+set test_first_yr = 2           # first year (must be >= 1)
+set test_nyrs     = 5           # number of yrs (must be >= 1)
 
 # FOR CNTL == USER ONLY (otherwise skip this section)
 # First year of data is: $cntl_first_yr     (must be >= 1)
@@ -257,10 +257,10 @@ set weight_months = 0     # (0=ON,1=OFF)
 # Select the diagnostic sets to be done. You can do one at a
 # time or as many as you want at one time, or all at once.
 
-set all_sets = 0  # (0=ON,1=OFF)  Do all the CAM sets (1-16)
+set all_sets = 1  # (0=ON,1=OFF)  Do all the CAM sets (1-16)
 set set_1  = 0    # (0=ON,1=OFF)  tables of global,regional means
 set set_2  = 1    # (0=ON,1=OFF)  implied transport plots 
-set set_3  = 1    # (0=ON,1=OFF)  zonal mean line plots
+set set_3  = 0    # (0=ON,1=OFF)  zonal mean line plots
 set set_4  = 1    # (0=ON,1=OFF)  vertical zonal mean contour plots
 set set_4a = 1    # (0=ON,1=OFF)  vertical zonal mean contour plots
 set set_5  = 1    # (0=ON,1=OFF)  2D-field contour plots
