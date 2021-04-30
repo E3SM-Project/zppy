@@ -10,6 +10,7 @@ from e3sm_diags import e3sm_diags
 from e3sm_diags_vs_model import e3sm_diags_vs_model
 from amwg import amwg
 from mpas_analysis import mpas_analysis
+from global_time_series import global_time_series
 
 # Command line parser
 parser = argparse.ArgumentParser(description='Launch E3SM post-processing tasks')
@@ -75,3 +76,5 @@ amwg(config, scriptDir)
 # mpas_analysis tasks
 mpas_analysis(config, scriptDir)
 
+# global time series tasks
+global_time_series(config, scriptDir)
