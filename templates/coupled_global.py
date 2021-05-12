@@ -107,8 +107,9 @@ exps = [
    'vol':'{}/post/ocn/glb/ts/monthly/10yr/glb.xml'.format(case_dir),
    'name': experiment_name,
    'yoffset':0.0,
-   'yr':([1,100],),
-   'color':'Blue'},
+   'yr':([{{ year1 }},{{ year2 }}],),
+   'color':'{{ color }}',
+  }
 
 ]
 
