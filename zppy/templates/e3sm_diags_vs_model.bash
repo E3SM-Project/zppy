@@ -1,6 +1,6 @@
 #!/bin/bash
 {% include 'slurm_header.sh' %}
-{% include 'e3sm_unified' %}sh
+{{ environment_commands }}
 
 # To load custom E3SM Diags environment, comment out line above using {# ... #}
 # and uncomment lines below

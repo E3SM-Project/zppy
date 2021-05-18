@@ -1,0 +1,51 @@
+{% set name = "zppy" %}
+{% set version = "1.0.0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://github.com/E3SM-Project/{{ name }}/archive/v{{ version }}.tar.gz
+  sha256: ab6dee537f8252a9f244f01b725046dd64748d68
+
+build:
+  number: 0
+  script: "{{ PYTHON }} -m pip install . --no-deps -vv"
+  noarch: python
+  entry_points:
+    - zppy = zppy.__main__:main
+
+requirements:
+  host:
+    - python >=3.6
+    - pip
+  run:
+    - python >=3.6
+    - configobj >=5.0.0,<6.0.0
+    - jinja2 >=2.0.0,<3.0.0
+
+test:
+  requires:
+    - pip
+  imports:
+    - zppy
+  commands:
+    - zppy --help
+    - pip check
+
+about:
+  home: https://github.com/E3SM-Project/zppy
+  license: BSD-3-Clause
+  license_family: BSD
+  license_file: LICENSE
+  summary: |
+    Postprocessing package for the DOE's Energy Exascale Earth System Model
+    (E3SM) project.
+  doc_url: https://e3sm-project.github.io/zppy/docs/html/index.html
+  dev_url: https://github.com/E3SM-Project/zppy
+
+extra:
+  recipe-maintainers:
+    - forsyth2
+    - golaz

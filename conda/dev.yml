@@ -1,0 +1,11 @@
+name: zppy_dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Base
+  - configobj=5.0.6
+  - jinja2=2.11.3
+  - pip=21.0.1
+  - python=3.7.10
+prefix: /opt/miniconda3/envs/zppy_dev

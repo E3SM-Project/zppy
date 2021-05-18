@@ -1,7 +1,6 @@
 import jinja2
 import os
-
-from utils import getTasks, getYears, submitScript, checkStatus
+from zppy.utils import getTasks, getYears, submitScript, checkStatus
 
 # -----------------------------------------------------------------------------
 def mpas_analysis(config, scriptDir):

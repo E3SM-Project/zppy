@@ -1,7 +1,7 @@
 import jinja2
 import os
 
-from utils import getTasks, getYears, submitScript, checkStatus
+from zppy.utils import getTasks, getYears, submitScript, checkStatus
 
 # -----------------------------------------------------------------------------
 def global_time_series(config, scriptDir):
@@ -74,4 +74,3 @@ def global_time_series(config, scriptDir):
             # Update status file
             with open(statusFile, 'w') as f:
                 f.write('WAITING %d\n' % (jobid))
-

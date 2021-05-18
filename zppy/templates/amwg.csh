@@ -1,6 +1,6 @@
 #!/bin/csh
 {% include 'slurm_header.sh' %}
-{% include 'e3sm_unified' %}csh
+{{ environment_commands }}
 
 # file: diag140804.csh
 # Updated: 2014/08/04
