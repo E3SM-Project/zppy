@@ -44,7 +44,7 @@ cdscan -x glb.xml *.nc
 echo 'Create ocean time series'
 cd ${global_ts_dir}
 mkdir -p ${case_dir}/post/ocn/glb/ts/monthly/10yr
-python ocean_month.py ${case_dir} ${start_yr} ${end_yr}
+python ocean_month.py {{ input }} ${case_dir} ${start_yr} ${end_yr}
 
 echo 'Create xml for for ocn'
 cd ${case_dir}/post/ocn/glb/ts/monthly/10yr

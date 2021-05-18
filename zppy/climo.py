@@ -62,10 +62,11 @@ def climo(config, scriptDir):
             with open(scriptFile, 'w') as f:
                 f.write(template.render( **c ))
 
-            # Submit job
-            jobid = submitScript(scriptFile)
+            if not c['dry_run']:
+                # Submit job
+                jobid = submitScript(scriptFile)
 
-            # Update status file
-            with open(statusFile, 'w') as f:
-                f.write('WAITING %d\n' % (jobid))
+                # Update status file
+                with open(statusFile, 'w') as f:
+                    f.write('WAITING %d\n' % (jobid))
 

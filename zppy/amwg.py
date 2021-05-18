@@ -49,10 +49,11 @@ def amwg(config, scriptDir):
             # List of dependencies
             dependencies = [ os.path.join(scriptDir, 'climo_%s_%04d-%04d.status' % (c['grid'],c['year1'],c['year2'])), ]
 
-            # Submit job
-            jobid = submitScript(scriptFile, dependFiles=dependencies, export='NONE')
+            if not c['dry_run']:
+                # Submit job
+                jobid = submitScript(scriptFile, dependFiles=dependencies, export='NONE')
 
-            # Update status file
-            with open(statusFile, 'w') as f:
-                f.write('WAITING %d\n' % (jobid))
+                # Update status file
+                with open(statusFile, 'w') as f:
+                    f.write('WAITING %d\n' % (jobid))
 
