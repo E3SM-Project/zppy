@@ -57,10 +57,11 @@ def e3sm_diags(config, scriptDir):
                     end_yr = yr + c['ts_num_years'] - 1
                     dependencies.append(os.path.join(scriptDir, 'ts_%s_%04d-%04d-%04d.status' % (sub,start_yr,end_yr,c['ts_num_years'])))
 
-            # Submit job
-            jobid = submitScript(scriptFile, dependFiles=dependencies, export='NONE')
+            if not c['dry_run']:
+                # Submit job
+                jobid = submitScript(scriptFile, dependFiles=dependencies, export='NONE')
 
-            # Update status file
-            with open(statusFile, 'w') as f:
-                f.write('WAITING %d\n' % (jobid))
+                # Update status file
+                with open(statusFile, 'w') as f:
+                    f.write('WAITING %d\n' % (jobid))
 

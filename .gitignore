@@ -4,3 +4,5 @@ zppy.egg-info/
 *.pyc
 *~
 \#*
+
+tests/image_check_failures

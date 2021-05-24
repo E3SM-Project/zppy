@@ -6,6 +6,7 @@ dependencies:
   # Base
   - configobj=5.0.6
   - jinja2=2.11.3
+  - pillow=8.1.2
   - pip=21.0.1
   - python=3.7.10
 prefix: /opt/miniconda3/envs/zppy_dev

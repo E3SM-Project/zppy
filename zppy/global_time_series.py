@@ -68,9 +68,10 @@ def global_time_series(config, scriptDir):
                 c['climo_year2'] = climo_year_set[1]
                 dependencies.append(os.path.join(scriptDir, 'mpas_analysis_ts_%04d-%04d_climo_%04d-%04d.status' % (c['ts_year1'], c['ts_year2'], c['climo_year1'], c['climo_year2'])))
 
-            # Submit job
-            jobid = submitScript(scriptFile, dependFiles=dependencies, export='NONE')
+            if not c['dry_run']:
+                # Submit job
+                jobid = submitScript(scriptFile, dependFiles=dependencies, export='NONE')
 
-            # Update status file
-            with open(statusFile, 'w') as f:
-                f.write('WAITING %d\n' % (jobid))
+                # Update status file
+                with open(statusFile, 'w') as f:
+                    f.write('WAITING %d\n' % (jobid))

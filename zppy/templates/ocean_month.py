@@ -10,13 +10,14 @@ from datetime import datetime
 from netCDF4 import Dataset, MFDataset, chartostring, date2num
 
 # Run directories
-case_dir = sys.argv[1]
-path_in = '{}/archive/ocn/hist'.format(case_dir)
+input_dir = sys.argv[1]
+case_dir = sys.argv[2]
+path_in = '{}/archive/ocn/hist'.format(input_dir)
 path_out = '{}/post/ocn/glb/ts/monthly/10yr'.format(case_dir)
 
 # Years to process
-start_yr = int(sys.argv[2])
-end_yr = int(sys.argv[3])
+start_yr = int(sys.argv[3])
+end_yr = int(sys.argv[4])
 
 # Ocean constants
 # specific heat [J/(kg*degC)]
