@@ -1,0 +1,66 @@
+name: CI/CD Build Workflow
+
+on:
+  push:
+    branches: [main]
+
+  pull_request:
+    branches: [main]
+
+  workflow_dispatch:
+
+jobs:
+  check-jobs-to-skip:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          cancel_others: true
+          paths_ignore: '["**/README.md", "**/docs/**"]'
+
+  build:
+    needs: check-jobs-to-skip
+    if: ${{ needs.check-jobs-to-skip.outputs.should_skip != 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache Conda
+        uses: actions/cache@v2
+        env:
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
+            hashFiles('conda/dev.yml') }}
+
+      - name: Build Conda Environment
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: zppy_dev
+          environment-file: conda/dev.yml
+          channel-priority: strict
+          auto-update-conda: true
+          # IMPORTANT: This needs to be set for caching to work properly!
+          use-only-tar-bz2: true
+
+      - if: ${{ needs.check-jobs-to-skip.outputs.should_skip != 'true' }}
+        name: Show Conda Environment Info
+        run: |
+          conda config --set anaconda_upload no
+          conda info
+          conda list
+
+      - name: Install `zppy` Package
+        run: pip install .
+
+      # Does not run the integration tests, which require server access
+      - name: Run Unit Tests
+        run: |
+          python -m unittest tests/test_*.py
