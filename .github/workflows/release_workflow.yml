@@ -53,4 +53,4 @@ jobs:
           done
 
           echo Uploading to conda-forge with \'$label\' label
-          anaconda upload --label $label ../noarch/*.tar.bz2 --force
+          anaconda upload --label $label noarch/*.tar.bz2 --force
