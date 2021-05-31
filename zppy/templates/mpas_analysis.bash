@@ -139,6 +139,43 @@ parallelTaskCount = {{ parallelTaskCount }}
 # handle 12 simultaneous processes, one for each monthly climatology.
 ncclimoParallelMode = bck
 
+# the number of total threads to use when ncclimo runs in "bck" or "mpi" mode.
+# Reduce this number if ncclimo is crashing (maybe because it is out of memory).
+# The number of threads must be a factor of 12 (1, 2, 3, 4, 6 or 12).
+ncclimoThreads = 12
+
+# the number of MPI tasks to use in creating mapping files (1 means tasks run in
+# serial, the default)
+{% if machine == 'cori' and partition == 'knl' %}
+# Cori-KNL does not support creating mapping files in parallel
+mapMpiTasks = 1
+{% elif machine in ['cori', 'compy', 'anvil', 'chrysalis'] %}
+mapMpiTasks = {{ mapMpiTasks }}
+{% endif %}
+
+# "None" if ESMF should perform remapping in serial without a command, or one of
+# "srun" or "mpirun" if it should be run in parallel  (or in serial but with a
+# command)
+{% if machine == 'cori' and partition == 'knl' %}
+# Cori-KNL does not support creating mapping files in parallel
+mapParallelExec = None
+{% elif machine in ['cori', 'anvil', 'chrysalis'] %}
+mapParallelExec = srun
+{% elif machine in ['compy'] %}
+mapParallelExec = srun --mpi=pmi2
+{% endif %}
+
+# "None" if ncremap should perform remapping without a command, or "srun"
+# possibly with some flags if it should be run with that command
+{% if machine == 'cori' and partition == 'knl' %}
+# Cori-KNL does not support creating mapping files in parallel
+ncremapParallelExec = None
+{% elif machine in ['cori', 'anvil', 'chrysalis'] %}
+ncremapParallelExec = srun -n 1
+{% elif machine in ['compy'] %}
+ncremapParallelExec = srun --mpi=pmi2 -n 1
+{% endif %}
+
 
 [diagnostics]
 ## config options related to observations, mapping files and region files used
@@ -331,7 +368,13 @@ purge="--purge"
 {% else %}
 purge=""
 {% endif %}
-srun -N 1 -n 1 mpas_analysis ${purge} --verbose cfg/mpas_analysis_${identifier}.cfg
+{% if machine in ['compy'] %}
+mpi="--mpi=pmi2"
+{% else %}
+mpi=""
+{% endif %}
+
+srun ${mpi} -N 1 -n 1 mpas_analysis ${purge} --verbose cfg/mpas_analysis_${identifier}.cfg
 if [ $? != 0 ]; then
   echo 'ERROR (1)' > {{ scriptDir }}/{{ prefix }}.status
   exit 1
@@ -415,4 +458,3 @@ echo "Elapsed time: $ELAPSEDTIME seconds"
 echo ==============================================
 echo 'OK' > {{ scriptDir }}/{{ prefix }}.status
 exit 0
-
