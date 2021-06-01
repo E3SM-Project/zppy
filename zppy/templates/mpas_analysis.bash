@@ -106,28 +106,6 @@ cat > cfg/mpas_analysis_${identifier}.cfg << EOF
 # mainRunName is a name that identifies the simulation being analyzed.
 mainRunName = {{ case }}
 
-# preprocessedReferenceRunName is the name of a reference run that has been
-# preprocessed to compare against (or None to turn off comparison).  Reference
-# runs of this type would have preprocessed results because they were not
-# performed with MPAS components (so they cannot be easily ingested by
-# MPAS-Analysis)
-preprocessedReferenceRunName = None
-
-# config file for a control run to which this run will be compared.  The
-# analysis should have already been run to completion once with this config
-# file, so that the relevant MPAS climatologies already exist and have been
-# remapped to the comparison grid.  Leave this option commented out if no
-# control run is desired.
-# controlRunConfigFile = /path/to/config/file
-
-# config file for a main run on which the analysis was already run to
-# completion.  The relevant MPAS climatologies already exist and have been
-# remapped to the comparison grid and time series have been extracted.
-# Leave this option commented out if the analysis for the main run should be
-# performed.
-# mainRunConfigFile = /path/to/config/file
-
-
 [execute]
 ## options related to executing parallel tasks
 
@@ -156,17 +134,6 @@ baseDirectory = /global/cfs/cdirs/e3sm/diagnostics
 {% elif machine in ['anvil', 'chrysalis'] %}
 baseDirectory = /lcrc/group/acme/diagnostics
 {% endif %}
-
-# Directory for mapping files (if they have been generated already). If mapping
-# files needed by the analysis are not found here, they will be generated and
-# placed in the output mappingSubdirectory.  The user can supply an absolute
-# path here to point to a path that is not within the baseDirectory above.
-mappingSubdirectory = mpas_analysis/maps
-
-# Directory for region mask files. The user can supply an absolute path here to
-# point to a path that is not within the baseDirectory above.
-regionMaskSubdirectory = mpas_analysis/region_masks
-
 
 [input]
 ## options related to reading in the results to be analyzed
@@ -204,13 +171,6 @@ mpasMeshName = {{ mesh }}
 # NOTE: This directory path must be specific to each test case.
 baseDirectory = {{ scriptDir }}/${workdir}/${identifier}
 
-# subdirectories within baseDirectory for analysis output
-scratchSubdirectory = scratch
-plotsSubdirectory = plots
-logsSubdirectory = logs
-mpasClimatologySubdirectory = clim/mpas
-mappingSubdirectory = mapping
-timeSeriesSubdirectory = timeseries
 # provide an absolute path to put HTML in an alternative location (e.g. a web
 # portal)
 htmlSubdirectory = html
@@ -281,47 +241,6 @@ endYear = ${ensoY2}
 # NOTE: this is a temporary option that will be removed once the online
 # MOC takes into account the bolus velocity when GM is on.
 usePostprocessingScript = {{ PostMOC }}
-
-[oceanObservations]
-## options related to ocean observations with which the results will be
-## compared
-
-# subdirectory within [diagnostics]/baseDirectory where ocean observations are
-# stored.  The user can supply an absolute path here to point to a path that is
-# not within [diagnostics]/baseDirectory.
-obsSubdirectory = observations/Ocean
-
-[oceanPreprocessedReference]
-## options related to preprocessed ocean reference run with which the results
-## will be compared (e.g. a POP, CESM or ACME v0 run)
-
-# directory where ocean reference simulation results are stored
-baseDirectory = /dir/to/ocean/reference
-
-[seaIceObservations]
-## options related to sea ice observations with which the results will be
-## compared
-
-# subdirectory within [diagnostics]/baseDirectory where sea ice observations
-# are stored.  The user can supply an absolute path here to point to a path
-# that is not within [diagnostics]/baseDirectory.
-obsSubdirectory = observations/SeaIce
-
-[seaIcePreprocessedReference]
-## options related to preprocessed sea ice reference run with which the results
-## will be compared (e.g. a CICE, CESM or ACME v0 run)
-
-# directory where ocean reference simulation results are stored
-baseDirectory = /dir/to/seaice/reference
-
-[icebergObservations]
-## options related to iceberg observations with which the results will be
-## compared
-
-# subdirectory within [diagnostics]/baseDirectory where iceberg observations
-# are stored.  The user can supply an absolute path here to point to a path
-# that is not within [diagnostics]/baseDirectory.
-obsSubdirectory = observations/Icebergs
 
 EOF
 
