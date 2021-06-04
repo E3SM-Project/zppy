@@ -115,12 +115,12 @@ parallelTaskCount = {{ parallelTaskCount }}
 # the parallelism mode in ncclimo ("serial" or "bck")
 # Set this to "bck" (background parallelism) if running on a machine that can
 # handle 12 simultaneous processes, one for each monthly climatology.
-ncclimoParallelMode = bck
+ncclimoParallelMode = {{ ncclimoParallelMode }}
 
 # the number of total threads to use when ncclimo runs in "bck" or "mpi" mode.
 # Reduce this number if ncclimo is crashing (maybe because it is out of memory).
 # The number of threads must be a factor of 12 (1, 2, 3, 4, 6 or 12).
-ncclimoThreads = 12
+ncclimoThreads = {{ ncclimoThreads }}
 
 # the number of MPI tasks to use in creating mapping files (1 means tasks run in
 # serial, the default)
