@@ -14,7 +14,7 @@ def package_files(directory, prefixes, extensions):
                 paths.append(os.path.join('..', path, filename))
     return paths
 
-data_files = package_files('zppy', prefixes=[], extensions=['bash', 'csh', 'ini', 'sh'])
+data_files = package_files('zppy', prefixes=[], extensions=['bash', 'csh', 'cfg', 'ini', 'sh'])
 
 setup(
     name="zppy",
