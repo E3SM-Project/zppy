@@ -4,6 +4,9 @@ Contributing to this documentation
 
 .. highlight:: none
 
+.. warning::
+    This page will be obsolete once the documentation is transferred over to CI/CD.
+
 Create a conda environment
 ==========================
 

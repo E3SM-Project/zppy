@@ -1,0 +1,630 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tutorial &mdash; zppy  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Parameters" href="parameters.html" />
+    <link rel="prev" title="Getting started" href="getting_started.html" />
+    <link href="_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> zppy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Zppy documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#example-1">Example 1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-2">Example 2</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to this documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">zppy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Tutorial</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tutorial.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tutorial">
+<span id="id1"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="example-1">
+<h2>Example 1<a class="headerlink" href="#example-1" title="Permalink to this headline">¶</a></h2>
+<p>Let’s say we want to post-process 100 years of an existing simulation.</p>
+<p>Copy and paste the following into <code class="docutils literal notranslate"><span class="pre">post.mysimulation.cfg</span></code></p>
+<div class="highlight-cfg notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+ 10
+ 11
+ 12
+ 13
+ 14
+ 15
+ 16
+ 17
+ 18
+ 19
+ 20
+ 21
+ 22
+ 23
+ 24
+ 25
+ 26
+ 27
+ 28
+ 29
+ 30
+ 31
+ 32
+ 33
+ 34
+ 35
+ 36
+ 37
+ 38
+ 39
+ 40
+ 41
+ 42
+ 43
+ 44
+ 45
+ 46
+ 47
+ 48
+ 49
+ 50
+ 51
+ 52
+ 53
+ 54
+ 55
+ 56
+ 57
+ 58
+ 59
+ 60
+ 61
+ 62
+ 63
+ 64
+ 65
+ 66
+ 67
+ 68
+ 69
+ 70
+ 71
+ 72
+ 73
+ 74
+ 75
+ 76
+ 77
+ 78
+ 79
+ 80
+ 81
+ 82
+ 83
+ 84
+ 85
+ 86
+ 87
+ 88
+ 89
+ 90
+ 91
+ 92
+ 93
+ 94
+ 95
+ 96
+ 97
+ 98
+ 99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">[default]</span>
+<span class="na">input</span> <span class="o">=</span> <span class="s">&lt;input&gt;</span>
+<span class="na">input_subdir</span> <span class="o">=</span> <span class="s">archive/atm/hist</span>
+<span class="na">output</span> <span class="o">=</span> <span class="s">&lt;output&gt;</span>
+<span class="na">case</span> <span class="o">=</span> <span class="s">20210122.v2_test01.piControl.ne30pg2_EC30to60E2r2-1900_ICG.chrysalis</span>
+<span class="na">www</span> <span class="o">=</span> <span class="s">&lt;wwww&gt;</span>
+<span class="na">e3sm_unified</span> <span class="o">=</span> <span class="s">latest</span>
+<span class="na">partition</span> <span class="o">=</span> <span class="s">compute</span>
+
+<span class="c1"># Regridded atmosphere climatologies every 20 and 50 years</span>
+<span class="k">[climo]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">True</span>
+<span class="na">years</span> <span class="o">=</span> <span class="s">&quot;1:100:20&quot;, &quot;1:100:50&quot;,</span>
+<span class="c1"># Use default vars</span>
+
+  <span class="c1"># Monthly climatology</span>
+  <span class="k">[[ atm_monthly_180x360_aave ]]</span>
+  <span class="na">mapping_file</span> <span class="o">=</span> <span class="s">/home/ac.zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</span>
+<span class="s">  frequency = &quot;monthly&quot;</span>
+
+  <span class="c1"># Diurnal climatology (specifically, 3-hour increments of a day averaged over every day of a month)</span>
+  <span class="k">[[ atm_monthly_diurnal_8xdaily_180x360_aave ]]</span>
+  <span class="na">input_subdir</span> <span class="o">=</span> <span class="s">&quot;archive/atm/hist&quot;</span>
+<span class="s">  input_files = &quot;eam.h4&quot;</span>
+<span class="s">  mapping_file = /home/ac.zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</span>
+<span class="s">  vars = &quot;PRECT&quot;</span>
+<span class="s">  frequency = &quot;monthly_diurnal_8xdaily&quot;</span>
+
+<span class="c1"># Regridded atmosphere monthly time series files in 10 year chunks</span>
+<span class="k">[ts]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">True</span>
+<span class="na">years</span> <span class="o">=</span> <span class="s">&quot;1:100:10&quot;,</span>
+
+  <span class="c1"># Monthly time series</span>
+  <span class="k">[[ atm_monthly_180x360_aave ]]</span>
+  <span class="na">input_subdir</span> <span class="o">=</span> <span class="s">&quot;archive/atm/hist&quot;</span>
+<span class="s">  input_files = &quot;eam.h0&quot;</span>
+<span class="s">  frequency = &quot;monthly&quot;</span>
+<span class="s">  mapping_file = /home/ac.zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</span>
+<span class="s">  # Use default vars</span>
+
+  <span class="c1"># Daily time series</span>
+  <span class="k">[[ atm_daily_180x360_aave ]]</span>
+  <span class="na">input_subdir</span> <span class="o">=</span> <span class="s">&quot;archive/atm/hist&quot;</span>
+<span class="s">  input_files = &quot;eam.h1&quot;</span>
+<span class="s">  frequency = &quot;daily&quot;</span>
+<span class="s">  mapping_file = /home/ac.zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</span>
+<span class="s">  vars = &quot;PRECT&quot;</span>
+
+  <span class="c1"># Monthly global time series</span>
+  <span class="k">[[ atm_monthly_glb ]]</span>
+  <span class="na">input_subdir</span> <span class="o">=</span> <span class="s">&quot;archive/atm/hist&quot;</span>
+<span class="s">  input_files = &quot;eam.h0&quot;</span>
+<span class="s">  frequency = &quot;monthly&quot;</span>
+<span class="s">  mapping_file = &quot;glb&quot;</span>
+<span class="s">  # Use default vars</span>
+
+  <span class="c1"># Monthly land time series</span>
+  <span class="k">[[ land_monthly ]]</span>
+  <span class="na">input_subdir</span> <span class="o">=</span> <span class="s">&quot;archive/lnd/hist&quot;</span>
+<span class="s">  input_files = &quot;elm.h0&quot;</span>
+<span class="s">  frequency = &quot;monthly&quot;</span>
+<span class="s">  mapping_file = /home/ac.zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</span>
+<span class="s">  vars = &quot;FSH,RH2M&quot;</span>
+
+<span class="c1"># E3SM Diags every 20 and 50 years</span>
+<span class="k">[e3sm_diags]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">True</span>
+<span class="na">years</span> <span class="o">=</span> <span class="s">&quot;1:100:20&quot;, &quot;1:100:50&quot;,</span>
+<span class="na">ts_num_years</span> <span class="o">=</span> <span class="s">10</span>
+
+  <span class="c1"># Monthly diagnostics</span>
+  <span class="k">[[ atm_monthly_180x360_aave ]]</span>
+  <span class="na">short_name</span> <span class="o">=</span> <span class="s">&#39;20210122.v2_test01.piControl.ne30pg2_EC30to60E2r2-1900_ICG.chrysalis&#39;</span>
+<span class="s">  grid = &#39;180x360_aave&#39;</span>
+<span class="s">  reference_data_path = &#39;/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/climatology&#39;</span>
+<span class="s">  # These two lines need to be included if sets requiring time series files are being run.</span>
+<span class="s">  obs_ts = &#39;/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/time-series&#39;</span>
+<span class="s">  ref_start_yr = 1979</span>
+<span class="s">  # This needs to be set for QBO Diags</span>
+<span class="s">  ref_final_yr = 2016</span>
+<span class="s">  # These two lines need to be included if diurnal cycle diagnostics are being run.</span>
+<span class="s">  dc_obs_climo = &#39;/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/climatology&#39;</span>
+<span class="s">  climo_diurnal_subsection = &quot;atm_monthly_diurnal_8xdaily_180x360_aave&quot;</span>
+
+<span class="k">[e3sm_diags_vs_model]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">False</span>
+
+<span class="k">[amwg]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">False</span>
+
+<span class="c1"># MPAS-Analysis</span>
+<span class="k">[mpas_analysis]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">True</span>
+<span class="na">walltime</span> <span class="o">=</span> <span class="s">&quot;24:00:00&quot;</span>
+<span class="na">parallelTaskCount</span> <span class="o">=</span> <span class="s">6</span>
+<span class="na">ts_years</span> <span class="o">=</span> <span class="s">&quot;1-50&quot;, &quot;1-100&quot;,</span>
+<span class="na">enso_years</span> <span class="o">=</span> <span class="s">&quot;11-50&quot;, &quot;11-100&quot;,</span>
+<span class="na">climo_years</span> <span class="o">=</span><span class="s">&quot;21-50&quot;, &quot;51-100&quot;,</span>
+<span class="na">mesh</span> <span class="o">=</span> <span class="s">&quot;EC30to60E2r2&quot;</span>
+
+<span class="c1"># Global time series plots</span>
+<span class="k">[global_time_series]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">True</span>
+<span class="na">years</span> <span class="o">=</span> <span class="s">&quot;1-100&quot;,</span>
+<span class="na">ts_num_years</span> <span class="o">=</span> <span class="s">10</span>
+<span class="na">figstr</span><span class="o">=</span><span class="s">coupled_v2_test01</span>
+<span class="na">moc_file</span><span class="o">=</span><span class="s">mocTimeSeries_0001-0100.nc</span>
+<span class="na">experiment_name</span><span class="o">=</span><span class="s">20210122.v2_test01.piControl.chrysalis</span>
+<span class="na">ts_years</span> <span class="o">=</span> <span class="s">&quot;1-50&quot;, &quot;1-100&quot;,</span>
+</pre></div>
+</td></tr></table></div>
+<p>Now we can run <code class="docutils literal notranslate"><span class="pre">zppy</span> <span class="pre">-c</span> <span class="pre">post.mysimulation.cfg</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">[climo]</span></code> subsections (<code class="docutils literal notranslate"><span class="pre">[[</span> <span class="pre">atm_monthly_180x360_aave</span> <span class="pre">]]</span></code> and
+<code class="docutils literal notranslate"><span class="pre">[[</span> <span class="pre">atm_monthly_diurnal_8xdaily_180x360_aave</span> <span class="pre">]]</span></code>), the <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> subsections
+(<code class="docutils literal notranslate"><span class="pre">[[</span> <span class="pre">atm_monthly_180x360_aave</span> <span class="pre">]]</span></code>, <code class="docutils literal notranslate"><span class="pre">[[</span> <span class="pre">atm_daily_180x360_aave</span> <span class="pre">]]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">[[</span> <span class="pre">atm_monthly_glb</span> <span class="pre">]]</span></code> and <code class="docutils literal notranslate"><span class="pre">[[</span> <span class="pre">land_monthly</span> <span class="pre">]]</span></code>), and
+the <code class="docutils literal notranslate"><span class="pre">[mpas_analysis]</span></code> section will run first because they have
+no dependencies.</p>
+<p>Once the <code class="docutils literal notranslate"><span class="pre">[climo]</span></code> subsections and the <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> subsection
+<code class="docutils literal notranslate"><span class="pre">[[</span> <span class="pre">atm_monthly_180x360_aave</span> <span class="pre">]]</span></code> finish, <code class="docutils literal notranslate"><span class="pre">[e3sm_diags]</span></code> will run.</p>
+<p>Once the <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> subsection <code class="docutils literal notranslate"><span class="pre">[[</span> <span class="pre">atm_monthly_glb</span> <span class="pre">]]</span></code> and the <code class="docutils literal notranslate"><span class="pre">[mpas_analysis]</span></code>
+section finish, <code class="docutils literal notranslate"><span class="pre">[global_time_series]</span></code> will run.</p>
+<p>Post-processing results will be located in <code class="docutils literal notranslate"><span class="pre">output</span></code> and <code class="docutils literal notranslate"><span class="pre">www</span></code>. Some machines have
+a web server. <code class="docutils literal notranslate"><span class="pre">www</span></code> should be pointed to that so that E3SM Diags, MPAS-Analysis, and
+the global time series plots will be visible online.</p>
+</div>
+<div class="section" id="example-2">
+<h2>Example 2<a class="headerlink" href="#example-2" title="Permalink to this headline">¶</a></h2>
+<p>This is another example of a configuration file, this time using a RRM simulation.</p>
+<div class="highlight-cfg notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">[default]</span>
+<span class="na">input</span> <span class="o">=</span> <span class="s">&lt;input&gt;</span>
+<span class="na">input_subdir</span> <span class="o">=</span> <span class="s">archive/atm/hist</span>
+<span class="na">output</span> <span class="o">=</span> <span class="s">&lt;output&gt;</span>
+<span class="na">case</span> <span class="o">=</span> <span class="s">20210603.v2rc3c.piControl.northamericax4v1pg2_WC14to60E2r3.chrysalis</span>
+<span class="na">www</span> <span class="o">=</span> <span class="s">&lt;www&gt;</span>
+<span class="na">e3sm_unified</span> <span class="o">=</span> <span class="s">latest</span>
+<span class="na">partition</span> <span class="o">=</span> <span class="s">debug</span>
+
+<span class="k">[climo]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">True</span>
+<span class="na">years</span> <span class="o">=</span> <span class="s">&quot;1:60:20&quot;,</span>
+
+  <span class="k">[[atm_monthly_180x360_aave]]</span>
+  <span class="na">mapping_file</span> <span class="o">=</span> <span class="s">/home/ac.zender/data/maps/map_northamericax4v1pg2_to_cmip6_180x360_aave.20200401.nc</span>
+
+  <span class="k">[[conus_0.23x0.31_aave]]</span>
+  <span class="na">grid</span> <span class="o">=</span> <span class="s">&#39;conus_0.23x0.31_aave&#39;</span>
+<span class="s">  mapping_file = /home/ac.zender/data/maps/map_northamericax4v1pg2_to_conus_0.23x0.31_nco.20210301.nc</span>
+
+<span class="k">[ts]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">True</span>
+<span class="na">years</span> <span class="o">=</span> <span class="s">&quot;1:60:10&quot;,</span>
+<span class="na">mapping_file</span> <span class="o">=</span> <span class="s">/home/ac.zender/data/maps/map_northamericax4v1pg2_to_cmip6_180x360_aave.20200401.nc</span>
+
+  <span class="k">[[ atm_monthly_180x360_aave ]]</span>
+  <span class="na">input_subdir</span> <span class="o">=</span> <span class="s">&quot;archive/atm/hist&quot;</span>
+<span class="s">  input_files = &quot;eam.h0&quot;</span>
+<span class="s">  vars = &quot;FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,TAUX,TAUY,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT,CLDTOT,CLDHGH,CLDMED,CLDLOW,U&quot;</span>
+
+  <span class="k">[[ atm_monthly_glb ]]</span>
+  <span class="na">input_subdir</span> <span class="o">=</span> <span class="s">&quot;archive/atm/hist&quot;</span>
+<span class="s">  input_files = &quot;eam.h0&quot;</span>
+<span class="s">  mapping_file = &quot;glb&quot;</span>
+<span class="s">  vars = &quot;FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,TAUX,TAUY,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT,CLDTOT,CLDHGH,CLDMED,CLDLOW&quot;</span>
+
+  <span class="k">[[ land_monthly ]]</span>
+  <span class="na">input_subdir</span> <span class="o">=</span> <span class="s">&quot;archive/lnd/hist&quot;</span>
+<span class="s">  input_files = &quot;elm.h0&quot;</span>
+<span class="s">  frequency = &quot;monthly&quot;</span>
+<span class="s">  vars = &quot;FSH,RH2M&quot;</span>
+
+<span class="k">[e3sm_diags]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">True</span>
+<span class="na">reference_data_path</span> <span class="o">=</span> <span class="s">&#39;/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/climatology&#39;</span>
+<span class="na">output_format_subplot</span> <span class="o">=</span> <span class="s">&quot;pdf&quot;,</span>
+<span class="na">short_name</span> <span class="o">=</span> <span class="s">&#39;20210603.v2rc3c.piControl.naRRM&#39;</span>
+<span class="na">years</span> <span class="o">=</span> <span class="s">&quot;1:60:20&quot;,</span>
+
+  <span class="k">[[atm_monthly_180x360_aave]]</span>
+  <span class="na">grid</span> <span class="o">=</span> <span class="s">&#39;180x360_aave&#39;</span>
+<span class="s">  sets = &quot;lat_lon&quot;,&quot;zonal_mean_xy&quot;,&quot;zonal_mean_2d&quot;,&quot;polar&quot;,&quot;cosp_histogram&quot;,&quot;meridional_mean_2d&quot;,&quot;enso_diags&quot;,&quot;qbo&quot;,&quot;area_mean_time_series&quot;,</span>
+<span class="s">  ts_num_years = 10</span>
+<span class="s">  obs_ts = &#39;/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/time-series&#39;</span>
+<span class="s">  ref_start_yr = 1990</span>
+<span class="s">  ref_end_yr = 1999</span>
+<span class="s">  ref_final_yr = 2016</span>
+
+  <span class="k">[[conus_0.23x0.31_aave]]</span>
+  <span class="na">grid</span> <span class="o">=</span> <span class="s">&#39;conus_0.23x0.31_aave&#39;</span>
+<span class="s">  sets = &#39;lat_lon&#39;,</span>
+<span class="s">  cfg = &quot;e3sm_diags/lat_lon_conus.cfg&quot;</span>
+
+<span class="k">[e3sm_diags_vs_model]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">False</span>
+
+<span class="k">[mpas_analysis]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">False</span>
+<span class="na">walltime</span> <span class="o">=</span> <span class="s">&quot;24:00:00&quot;</span>
+<span class="na">parallelTaskCount</span> <span class="o">=</span> <span class="s">6</span>
+<span class="na">ts_years</span> <span class="o">=</span> <span class="s">&quot;1-50&quot;,</span>
+<span class="na">enso_years</span> <span class="o">=</span> <span class="s">&quot;1-50&quot;,</span>
+<span class="na">climo_years</span> <span class="o">=</span><span class="s">&quot;1-50&quot;,</span>
+<span class="na">mesh</span> <span class="o">=</span> <span class="s">&quot;WC14to60E2r3&quot;</span>
+<span class="na">partition</span> <span class="o">=</span> <span class="s">compute</span>
+
+<span class="k">[amwg]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">False</span>
+
+<span class="k">[global_time_series]</span>
+<span class="na">active</span> <span class="o">=</span> <span class="s">False</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="parameters.html" class="btn btn-neutral float-right" title="Parameters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="Getting started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2021, E3SM
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
