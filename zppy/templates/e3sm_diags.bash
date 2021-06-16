@@ -187,7 +187,6 @@ params.append(ts_param)
 dc_param = DiurnalCycleParameter()
 dc_param.reference_data_path = '{{ dc_obs_climo }}'
 dc_param.test_data_path = 'climo_{{ climo_diurnal_subsection }}'
-dc_param.test_name = short_name
 dc_param.short_test_name = short_name
 # Plotting diurnal cycle amplitude on different scales. Default is True
 dc_param.normalize_test_amp = False
