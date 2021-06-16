@@ -55,4 +55,5 @@ It also shows possible dependencies in ``zppy`` tasks.
    tutorial
    parameters
    contributing
+   testing_e3sm_unified
 
