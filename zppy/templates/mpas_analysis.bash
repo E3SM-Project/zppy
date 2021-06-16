@@ -243,6 +243,9 @@ generate = {{ generate }}
 ## options related to producing climatologies, typically to compare against
 ## observations and previous runs
 
+# reference year for anomaly
+anomalyRefYear = {{ anomalyRefYear }}
+
 # the first year over which to average climatalogies
 startYear = ${climY1}
 # the last year over which to average climatalogies
@@ -251,6 +254,9 @@ endYear = ${climY2}
 [timeSeries]
 ## options related to producing time series plots, often to compare against
 ## observations and previous runs
+
+# reference year for anomaly
+anomalyRefYear = {{ anomalyRefYear }}
 
 # start and end years for timeseries analysis. Using out-of-bounds values
 #   like start_year = 1 and end_year = 9999 will be clipped to the valid range
