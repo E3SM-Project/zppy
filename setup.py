@@ -18,7 +18,7 @@ data_files = package_files('zppy', prefixes=[], extensions=['bash', 'csh', 'cfg'
 
 setup(
     name="zppy",
-    version="1.0.0rc2",
+    version="1.0.0rc3",
     author="Ryan Forsyth, Chris Golaz",
     author_email="forsyth2@llnl.gov, golaz1@llnl.gov",
     description="Post-processing software for E3SM",
