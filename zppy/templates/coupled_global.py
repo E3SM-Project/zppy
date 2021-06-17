@@ -146,7 +146,7 @@ for exp in exps:
 # -----------------------------------------------------------------------------
 # --- Generate plots ---
 
-xlim = [0., 100.]
+xlim = [{{ year1 }}., {{ year2 }}.]
 
 fig = plt.figure(figsize=[13.5, 16.5])
 nrows = 4
