@@ -92,9 +92,12 @@ def mpas_analysis(config, scriptDir):
                 # Submit job
                 jobid = submitScript(scriptFile, dependFiles=dependencies)
 
-                # Update status file
-                with open(statusFile, "w") as f:
-                    f.write("WAITING %d\n" % (jobid))
+                if jobid != -1:
+                    # Update status file
+                    with open(statusFile, "w") as f:
+                        f.write("WAITING %d\n" % (jobid))
 
+                # Note that this line should still be executed even if jobid == -1
+                # The later MPAS-Analysis tasks still depend on this task (and thus will also fail).
                 # Add to the dependency list
                 dependencies.append(statusFile)

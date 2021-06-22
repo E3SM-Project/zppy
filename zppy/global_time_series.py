@@ -44,7 +44,8 @@ def global_time_series(config, scriptDir):
             c["global_time_series_dir"] = os.path.join(
                 scriptDir, "{}_dir".format(prefix)
             )
-            os.mkdir(c["global_time_series_dir"])
+            if not os.path.exists(c["global_time_series_dir"]):
+                os.mkdir(c["global_time_series_dir"])
             scripts = ["coupled_global.py", "readTS.py", "ocean_month.py"]
             for script in scripts:
                 script_template = templateEnv.get_template(script)
@@ -97,6 +98,7 @@ def global_time_series(config, scriptDir):
                     scriptFile, dependFiles=dependencies, export="NONE"
                 )
 
-                # Update status file
-                with open(statusFile, "w") as f:
-                    f.write("WAITING %d\n" % (jobid))
+                if jobid != -1:
+                    # Update status file
+                    with open(statusFile, "w") as f:
+                        f.write("WAITING %d\n" % (jobid))

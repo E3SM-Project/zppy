@@ -41,6 +41,11 @@ echo 'Create xml files for atm'
 export CDMS_NO_MPI=true
 cd ${case_dir}/post/atm/glb/ts/monthly/10yr
 cdscan -x glb.xml *.nc
+if [ $? != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'ERROR (1)' > {{ prefix }}.status
+  exit 1
+fi
 
 echo 'Create ocean time series'
 cd ${global_ts_dir}
@@ -51,6 +56,12 @@ echo 'Create xml for for ocn'
 export CDMS_NO_MPI=true
 cd ${case_dir}/post/ocn/glb/ts/monthly/10yr
 cdscan -x glb.xml *.nc
+if [ $? != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'ERROR (2)' > {{ prefix }}.status
+  exit 2
+fi
+
 
 echo 'Copy moc file'
 cd ${case_dir}/post/analysis/mpas_analysis/cache/timeseries/moc
@@ -77,9 +88,9 @@ echo
 f=${www}/${case}/global_time_series
 mkdir -p ${f}
 if [ $? != 0 ]; then
-  cd ..
-  echo 'ERROR (1)' > {{ prefix }}.status
-  exit 1
+  cd {{ scriptDir }}
+  echo 'ERROR (3)' > {{ prefix }}.status
+  exit 3
 fi
 
 {% if machine == 'cori' %}
@@ -99,9 +110,9 @@ done
 # Copy files
 rsync -a --delete ${results_dir_absolute_path} ${www}/${case}/global_time_series
 if [ $? != 0 ]; then
-  cd ..
-  echo 'ERROR (2)' > {{ prefix }}.status
-  exit 1
+  cd {{ scriptDir }}
+  echo 'ERROR (4)' > {{ prefix }}.status
+  exit 4
 fi
 
 {% if machine == 'cori' %}

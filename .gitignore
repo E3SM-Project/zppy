@@ -5,7 +5,8 @@ zppy.egg-info/
 *~
 \#*
 
-tests/image_check_failures
+tests/integration/image_check_failures
+test_output
 
 # Sphinx documentation
 docs/_build/

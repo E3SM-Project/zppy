@@ -74,6 +74,7 @@ def climo(config, scriptDir):
                 # Submit job
                 jobid = submitScript(scriptFile)
 
-                # Update status file
-                with open(statusFile, "w") as f:
-                    f.write("WAITING %d\n" % (jobid))
+                if jobid != -1:
+                    # Update status file
+                    with open(statusFile, "w") as f:
+                        f.write("WAITING %d\n" % (jobid))

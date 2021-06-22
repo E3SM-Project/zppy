@@ -74,6 +74,7 @@ def e3sm_diags_vs_model(config, scriptDir):
                     scriptFile, dependFiles=dependencies, export="NONE"
                 )
 
-                # Update status file
-                with open(statusFile, "w") as f:
-                    f.write("WAITING %d\n" % (jobid))
+                if jobid != -1:
+                    # Update status file
+                    with open(statusFile, "w") as f:
+                        f.write("WAITING %d\n" % (jobid))
