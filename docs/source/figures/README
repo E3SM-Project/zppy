@@ -1,0 +1,6 @@
+# Generating svg file from PowerPoint
+# (1) Export as pdf
+# (2) Convert pdf to svg:
+
+pdf2svg zppy_schematic.pdf zppy_schematic.svg
+
