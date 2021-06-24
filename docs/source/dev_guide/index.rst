@@ -8,3 +8,4 @@ Developer Guide
    project-standards
    testing
    release
+   testing_e3sm_unified
