@@ -1,0 +1,444 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Parameters &mdash; zppy  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing to This Documentation" href="contributing.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" />
+    <link href="_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> zppy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Zppy documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to This Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">zppy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Parameters</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/parameters.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="parameters">
+<span id="id1"></span><h1>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h1>
+<p>Parameters make use of inheritance. Parameters set in <code class="docutils literal notranslate"><span class="pre">[default]</span></code> can
+be overridden by parameters set in a <code class="docutils literal notranslate"><span class="pre">[section]</span></code>, which can themselves
+be overridden by parameters set in a <code class="docutils literal notranslate"><span class="pre">[[subsection]</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The following code block lists the types and default values for parameters.
+It is not the correct syntax for a configuration file.
+Copying and pasting the code block into a configuration file will not work!</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">amwg</span></code> section is user-contributed and is not officially supported/documented!</p>
+</div>
+<p>The following is adapted from <code class="docutils literal notranslate"><span class="pre">zppy/zppy/templates/default.ini</span></code> and explains the
+types and default values for the parameters.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">default</span><span class="p">]</span>
+<span class="c1"># The directory to be post-processed</span>
+<span class="nb">input</span> <span class="o">=</span> <span class="n">string</span>
+<span class="c1"># The specific subdirectory with the atmospheric data</span>
+<span class="n">input_subdir</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;archive/atm/hist&quot;</span><span class="p">)</span>
+<span class="c1"># Where the post-processing results (`post` directory) should go</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">string</span>
+<span class="c1"># The case name of the simulation</span>
+<span class="n">case</span> <span class="o">=</span> <span class="n">string</span>
+<span class="c1"># Where the post-processing visuals should go (to be viewed online)</span>
+<span class="n">www</span> <span class="o">=</span> <span class="n">string</span>
+<span class="c1"># Set to True to keep temporary directories/files after zppy completes</span>
+<span class="n">debug</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="c1"># The partition of the machine to run on</span>
+<span class="n">partition</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="c1"># The version of E3SM Unified to use</span>
+<span class="n">e3sm_unified</span> <span class="o">=</span> <span class="n">option</span><span class="p">(</span><span class="s1">&#39;latest&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;latest&#39;</span><span class="p">)</span>
+<span class="c1"># This should be set to True if you don&#39;t want the batch jobs to be submitted</span>
+<span class="n">dry_run</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="p">[</span><span class="n">climo</span><span class="p">]</span>
+<span class="c1"># Set to True to run this section</span>
+<span class="n">active</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Quality of service</span>
+<span class="n">qos</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;regular&quot;</span><span class="p">)</span>
+<span class="c1"># The number of nodes to use</span>
+<span class="n">nodes</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="c1"># The maximum time to run</span>
+<span class="n">walltime</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;02:00:00&quot;</span><span class="p">)</span>
+<span class="c1"># Which files to use as input</span>
+<span class="n">input_files</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;eam.h0&quot;</span><span class="p">)</span>
+<span class="c1"># The frequency of the data. Options include &quot;monthly&quot;, &quot;monthly_diurnal_8xdaily&quot;</span>
+<span class="n">frequency</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">)</span>
+<span class="c1"># The mapping file to use</span>
+<span class="n">mapping_file</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="c1"># The grid to use</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="c1"># The years to run; &quot;1:100:20&quot; would mean process years 1-100 in 20-year increments</span>
+<span class="n">years</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+<span class="n">exclude</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="c1"># The variables to process</span>
+<span class="nb">vars</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<span class="p">[</span><span class="n">ts</span><span class="p">]</span>
+<span class="c1"># Set to True to run this section</span>
+<span class="n">active</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Quality of service</span>
+<span class="n">qos</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;regular&quot;</span><span class="p">)</span>
+<span class="c1"># The number of nodes to use</span>
+<span class="n">nodes</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># The maximum time to run</span>
+<span class="n">walltime</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;02:00:00&quot;</span><span class="p">)</span>
+<span class="c1"># Which files to use as input</span>
+<span class="n">input_files</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;eam.h0&quot;</span><span class="p">)</span>
+<span class="c1"># The frequency of the data. Options include &quot;monthly&quot;, &quot;monthly_diurnal_8xdaily&quot;</span>
+<span class="n">frequency</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">)</span>
+<span class="c1"># The mapping file to use</span>
+<span class="n">mapping_file</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="c1"># The grid to use</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">area_nm</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;area&quot;</span><span class="p">)</span>
+<span class="c1"># The variables to process</span>
+<span class="nb">vars</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,TAUX,TAUY,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT,CLDTOT,CLDHGH,CLDMED,CLDLOW,U&quot;</span><span class="p">)</span>
+<span class="c1"># The years to run; &quot;1:100:10&quot; would mean process years 1-100 in 10-year increments</span>
+<span class="n">years</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+<span class="c1"># Days per file</span>
+<span class="n">dpf</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="c1"># Time-steps per day</span>
+<span class="n">tpd</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="p">[</span><span class="n">e3sm_diags</span><span class="p">]</span>
+<span class="c1"># Set to True to run this section</span>
+<span class="n">active</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># The grid to use</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="c1"># Quality of service</span>
+<span class="n">qos</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;regular&quot;</span><span class="p">)</span>
+<span class="c1"># The number of nodes to use</span>
+<span class="n">nodes</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># The maximum time to run</span>
+<span class="n">walltime</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;02:00:00&quot;</span><span class="p">)</span>
+<span class="c1"># See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html</span>
+<span class="n">reference_data_path</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="c1"># Used for `test_name` and `short_test_name` in https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html</span>
+<span class="n">short_name</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="c1"># The sets to run</span>
+<span class="c1"># Note that &quot;enso_diags&quot;,&quot;qbo&quot;,&quot;area_mean_time_series&quot; require time-series data.</span>
+<span class="c1"># They also require `obs_ts` and `ref_start_yr` to be set.</span>
+<span class="c1"># &quot;qbo&quot; requires `ref_final_yr` to be set as well.</span>
+<span class="c1"># &quot;diurnal_cycle&quot; requires `climo_diurnal_subsection` and `ds_obs_climo` to be set.</span>
+<span class="n">sets</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;lat_lon&quot;</span><span class="p">,</span><span class="s2">&quot;zonal_mean_xy&quot;</span><span class="p">,</span><span class="s2">&quot;zonal_mean_2d&quot;</span><span class="p">,</span><span class="s2">&quot;polar&quot;</span><span class="p">,</span><span class="s2">&quot;cosp_histogram&quot;</span><span class="p">,</span><span class="s2">&quot;meridional_mean_2d&quot;</span><span class="p">,</span><span class="s2">&quot;enso_diags&quot;</span><span class="p">,</span><span class="s2">&quot;qbo&quot;</span><span class="p">,</span><span class="s2">&quot;area_mean_time_series&quot;</span><span class="p">,</span><span class="s2">&quot;diurnal_cycle&quot;</span><span class="p">))</span>
+<span class="c1"># See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;mpl&quot;</span><span class="p">)</span>
+<span class="c1"># See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html</span>
+<span class="n">diff_title</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;Model - Observations&quot;</span><span class="p">)</span>
+<span class="c1"># See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html</span>
+<span class="n">run_type</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;model_vs_obs&quot;</span><span class="p">)</span>
+<span class="c1"># Used to label the results directory</span>
+<span class="n">tag</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;model_vs_obs&quot;</span><span class="p">)</span>
+<span class="c1"># See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html</span>
+<span class="n">output_format</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;png&quot;</span><span class="p">))</span>
+<span class="c1"># See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html</span>
+<span class="n">output_format_subplot</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">())</span>
+<span class="c1"># See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html</span>
+<span class="n">multiprocessing</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html</span>
+<span class="n">num_workers</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+<span class="c1"># Variables to process</span>
+<span class="nb">vars</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,TAUX,TAUY,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT,CLDTOT,CLDHGH,CLDMED,CLDLOW,U&quot;</span><span class="p">)</span>
+<span class="c1"># Name of the subsection of `[climo]` to use for &quot;diurnal_cycle&quot; runs</span>
+<span class="n">climo_diurnal_subsection</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="c1"># The following parameters aren&#39;t defined in `default.ini`</span>
+<span class="c1"># Path to observation data for diurnal cycle runs</span>
+<span class="n">dc_obs_climo</span> <span class="o">=</span> <span class="n">string</span>
+<span class="c1"># Path to observation data for time-series-required (&quot;enso_diags&quot;,&quot;qbo&quot;,&quot;area_mean_time_series&quot;) runs</span>
+<span class="n">obs_ts</span> <span class="o">=</span> <span class="n">string</span>
+<span class="c1"># Start year for the reference data</span>
+<span class="n">ref_start_yr</span> <span class="o">=</span> <span class="n">string</span>
+<span class="c1"># End year (i.e., the last year to use) for the reference data</span>
+<span class="n">ref_end_yr</span> <span class="o">=</span> <span class="n">string</span>
+<span class="c1"># Final year (i.e., the last available year) for the reference data</span>
+<span class="n">ref_final_yr</span> <span class="o">=</span> <span class="n">string</span>
+
+<span class="p">[</span><span class="n">e3sm_diags_vs_model</span><span class="p">]</span>
+<span class="c1"># Set to True to run this section</span>
+<span class="n">active</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">grid</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="c1"># Quality of service</span>
+<span class="n">qos</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;regular&quot;</span><span class="p">)</span>
+<span class="n">nodes</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">walltime</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;02:00:00&quot;</span><span class="p">)</span>
+<span class="n">reference_data_path</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">ref_name</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">short_ref_name</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">short_name</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">swap_test_ref</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">sets</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;lat_lon&quot;</span><span class="p">,</span><span class="s2">&quot;zonal_mean_xy&quot;</span><span class="p">,</span><span class="s2">&quot;zonal_mean_2d&quot;</span><span class="p">,</span><span class="s2">&quot;polar&quot;</span><span class="p">,</span><span class="s2">&quot;cosp_histogram&quot;</span><span class="p">,</span><span class="s2">&quot;meridional_mean_2d&quot;</span><span class="p">))</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;mpl&quot;</span><span class="p">)</span>
+<span class="n">diff_title</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;Difference&quot;</span><span class="p">)</span>
+<span class="n">run_type</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;model_vs_model&quot;</span><span class="p">)</span>
+<span class="n">tag</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;model_vs_model&quot;</span><span class="p">)</span>
+<span class="n">output_format</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;png&quot;</span><span class="p">))</span>
+<span class="n">output_format_subplot</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+<span class="n">multiprocessing</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">num_workers</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+
+<span class="n">years</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+<span class="n">ref_years</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+
+<span class="p">[</span><span class="n">amwg</span><span class="p">]</span>
+<span class="c1"># Set to True to run this section</span>
+<span class="n">active</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="p">[</span><span class="n">mpas_analysis</span><span class="p">]</span>
+<span class="c1"># Set to True to run this section</span>
+<span class="n">active</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">shortTermArchive</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Quality of service</span>
+<span class="n">qos</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;regular&quot;</span><span class="p">)</span>
+<span class="c1"># The number of nodes to use</span>
+<span class="n">nodes</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># The maximum time to run</span>
+<span class="n">walltime</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;06:00:00&quot;</span><span class="p">)</span>
+<span class="n">parallelTaskCount</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">ncclimoParallelMode</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;bck&quot;</span><span class="p">)</span>
+<span class="n">ncclimoThreads</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">mapMpiTasks</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">cache</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">purge</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">PostMOC</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">mpaso_nml</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;mpaso_in&quot;</span><span class="p">)</span>
+<span class="n">mpassi_nml</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;mpassi_in&quot;</span><span class="p">)</span>
+<span class="n">stream_ocn</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;streams.ocean&quot;</span><span class="p">)</span>
+<span class="n">stream_ice</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;streams.seaice&quot;</span><span class="p">)</span>
+<span class="n">generate</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;no_landIceCavities&#39;</span><span class="p">,</span> <span class="s1">&#39;no_BGC&#39;</span><span class="p">,</span> <span class="s1">&#39;no_icebergs&#39;</span><span class="p">,</span> <span class="s1">&#39;no_min&#39;</span><span class="p">,</span> <span class="s1">&#39;no_max&#39;</span><span class="p">,</span> <span class="s1">&#39;no_sose&#39;</span><span class="p">,</span> <span class="s1">&#39;no_climatologyMapAntarcticMelt&#39;</span><span class="p">,</span> <span class="s1">&#39;no_regionalTSDiagrams&#39;</span><span class="p">,</span> <span class="s1">&#39;no_timeSeriesAntarcticMelt&#39;</span><span class="p">,</span> <span class="s1">&#39;no_timeSeriesOceanRegions&#39;</span><span class="p">,</span> <span class="s1">&#39;no_climatologyMapSose&#39;</span><span class="p">,</span> <span class="s1">&#39;no_woceTransects&#39;</span><span class="p">,</span> <span class="s1">&#39;no_soseTransects&#39;</span><span class="p">,</span> <span class="s1">&#39;no_geojsonTransects&#39;</span><span class="p">,</span> <span class="s1">&#39;no_oceanRegionalProfiles&#39;</span><span class="p">,</span> <span class="s1">&#39;no_hovmollerOceanRegions&#39;</span><span class="p">))</span>
+
+<span class="p">[</span><span class="n">global_time_series</span><span class="p">]</span>
+<span class="c1"># Set to True to run this section</span>
+<span class="n">active</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># The number of nodes to use</span>
+<span class="n">nodes</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># The maximum time to run</span>
+<span class="n">walltime</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;02:00:00&quot;</span><span class="p">)</span>
+<span class="c1"># The color to be used for the graphs.</span>
+<span class="n">color</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;Blue&quot;</span><span class="p">)</span>
+<span class="c1"># &quot;1-100&quot; would plot years 1 to 100 on the graphs.</span>
+<span class="n">years</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+<span class="c1"># The number of years in a time-series file.</span>
+<span class="n">ts_num_years</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="c1"># What the plot files should be named</span>
+<span class="n">figstr</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">moc_file</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">experiment_name</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">ts_years</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+<span class="n">climo_years</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing to This Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="tutorial.html" class="btn btn-neutral float-left" title="Tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, E3SM.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="parameters.html">main</a></dd>
+    </dl>
+  </div>
+</div>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
