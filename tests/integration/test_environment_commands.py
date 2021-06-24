@@ -1,7 +1,7 @@
 import os
 import shutil
-import subprocess
 import unittest
+from typing import List
 
 from PIL import Image, ImageChops, ImageDraw
 
@@ -72,20 +72,20 @@ def compare_images(
 class TestEnvironmentCommands(unittest.TestCase):
     def test_environment_commands(self):
         # Run `zppy -c test_environment_commands.cfg` prior to running this test!!!
-        actual_images_dir = '/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_www_environment_commands/20210122.v2_test01.piControl.ne30pg2_EC30to60E2r2-1900_ICG.chrysalis'
+        actual_images_dir = "/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_www_environment_commands/20210122.v2_test01.piControl.ne30pg2_EC30to60E2r2-1900_ICG.chrysalis"
 
         # The expected_images_file lists all images we expect to compare.
         expected_images_file = "/lcrc/group/e3sm/public_html/zppy_test_resources/image_list_expected_environment_commands.txt"
         expected_images_dir = "/lcrc/group/e3sm/public_html/zppy_test_resources/expected_environment_commands"
 
-        mismatched_images = []
+        mismatched_images: List[str] = []
 
         counter = 0
         with open(expected_images_file) as f:
             for line in f:
                 counter += 1
                 if counter % 250 == 0:
-                    print('On line #', counter)
+                    print("On line #", counter)
                 image_name = line.strip("./").strip("\n")
                 path_to_actual_png = os.path.join(actual_images_dir, image_name)
                 path_to_expected_png = os.path.join(expected_images_dir, image_name)

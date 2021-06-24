@@ -120,7 +120,7 @@ if [ $? != 0 ]; then
   exit 2
 fi
 
-# Move regridded climo files to final destination 
+# Move regridded climo files to final destination
 {% if frequency == 'monthly' %}
 {
   dest={{ output }}/post/{{ component }}/{{ grid }}/clim/{{ '%dyr' % (yr_end-yr_start+1) }}
@@ -159,4 +159,3 @@ echo "Elapsed time: $ELAPSEDTIME seconds"
 echo ==============================================
 echo 'OK' > {{ prefix }}.status
 exit 0
-

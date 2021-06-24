@@ -1,6 +1,6 @@
 {% if machine == 'compy' %}
 
-# Running on compy 
+# Running on compy
 
 #SBATCH  --job-name={{ prefix }}
 #SBATCH  --account=e3sm
@@ -26,7 +26,7 @@
 
 {% elif machine == 'anvil' %}
 
-# Running on anvil 
+# Running on anvil
 
 #SBATCH  --job-name={{ prefix }}
 #SBATCH  --account=condo

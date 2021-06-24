@@ -9,6 +9,14 @@ dependencies:
   - pillow=8.1.2
   - pip=21.0.1
   - python=3.7.10
+  # Developer Tools
+  # If versions are updated, also update 'rev' in `.pre-commit.config.yaml`
+  - black=21.5b2        # version from https://anaconda.org/conda-forge/black
+  - flake8=3.9.2        # version from https://anaconda.org/conda-forge/flake8
+  # This line also implicitly installs isort
+  - flake8-isort=4.0.0  # version from https://anaconda.org/conda-forge/flake8-isort
+  - mypy=0.910          # version from https://anaconda.org/conda-forge/mypy
+  - pre-commit=2.13.0   # version from https://anaconda.org/conda-forge/pre-commit
   # Documentation
   # If versions are updated, also update in `.github/workflows/workflow.yml`
   - sphinx=3.5.1

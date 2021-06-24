@@ -181,4 +181,3 @@ echo "Elapsed time: $ELAPSEDTIME seconds"
 echo ==============================================
 echo 'OK' > {{ prefix }}.status
 exit 0
-
