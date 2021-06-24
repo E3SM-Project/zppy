@@ -6,3 +6,6 @@ zppy.egg-info/
 \#*
 
 tests/image_check_failures
+
+# Sphinx documentation
+docs/_build/
