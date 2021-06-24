@@ -56,4 +56,3 @@ It also shows possible dependencies in ``zppy`` tasks.
    parameters
    dev_guide/index
    contributing
-
