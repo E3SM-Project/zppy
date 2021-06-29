@@ -1,10 +1,8 @@
-import numpy as np
-import numpy.ma as ma
-import cdms2, cdutil, cdtime
-import os.path
+import cdms2
+import cdutil
 
-class TS (object):
 
+class TS(object):
     def __init__(self, filename):
 
         self.filename = filename
@@ -42,7 +40,7 @@ class TS (object):
             PRECL = self.globalAnnual("PRECL")
             PRECSC = self.globalAnnual("PRECSC")
             PRECSL = self.globalAnnual("PRECSL")
-            v = (Lv+Lf)*QFLX - Lf*1.e3*(PRECC+PRECL-PRECSC-PRECSL)
+            v = (Lv + Lf) * QFLX - Lf * 1.0e3 * (PRECC + PRECL - PRECSC - PRECSL)
 
         elif var == "RESSURF":
 
@@ -56,7 +54,7 @@ class TS (object):
 
             PRECC = self.globalAnnual("PRECC")
             PRECL = self.globalAnnual("PRECL")
-            v = 1.e3*(PRECC+PRECL)
+            v = 1.0e3 * (PRECC + PRECL)
 
         else:
 

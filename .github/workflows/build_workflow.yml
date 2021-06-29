@@ -21,6 +21,26 @@ jobs:
           cancel_others: true
           paths_ignore: '["**/README.md", "**/docs/**"]'
 
+  pre-commit-hooks:
+    needs: check-jobs-to-skip
+    if: ${{ needs.check-jobs-to-skip.outputs.should_skip != 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      # Run all pre-commit hooks on all the files.
+      # Getting only staged files can be tricky in case a new PR is opened
+      # since the action is run on a branch in detached head state
+      - name: Install and Run Pre-commit
+        uses: pre-commit/action@v2.0.0
+
   build:
     needs: check-jobs-to-skip
     if: ${{ needs.check-jobs-to-skip.outputs.should_skip != 'true' }}

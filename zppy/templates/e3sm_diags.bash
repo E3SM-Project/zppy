@@ -183,7 +183,7 @@ ts_param.end_yr = end_yr
 params.append(ts_param)
 {%- endif %}
 
-{%- if "diurnal_cycle" in sets %} 
+{%- if "diurnal_cycle" in sets %}
 dc_param = DiurnalCycleParameter()
 dc_param.reference_data_path = '{{ dc_obs_climo }}'
 dc_param.test_data_path = 'climo_{{ climo_diurnal_subsection }}'
@@ -284,4 +284,3 @@ echo "Elapsed time: $ELAPSEDTIME seconds"
 echo ==============================================
 echo 'OK' > {{ prefix }}.status
 exit 0
-

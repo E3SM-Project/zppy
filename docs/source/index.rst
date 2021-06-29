@@ -54,5 +54,6 @@ It also shows possible dependencies in ``zppy`` tasks.
    getting_started
    tutorial
    parameters
+   dev_guide/index
    contributing
 

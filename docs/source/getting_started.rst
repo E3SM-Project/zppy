@@ -172,12 +172,10 @@ you can update ``zppy`` by doing the following:  ::
 Unlike the latest stable release (i.e., the user environment), the development
 environment does not include ``zppy``.
 Instead, the developer will ``python -m pip install .`` to build ``zppy`` with changes
-(see step 6 below).
+(see step 7 below).
 
-..
-    # TODO: Add the QA tools
-    #Furthermore, the dev environment includes quality assurance (QA) tools such as code formatters, linters, and ``pre-commit``.
-    #**NOTE**: These QA tools are enforced using ``pre-commit`` checks in the continuous integration/continuous delivery (CI/CD) build, so you must use the dev environment for all contributions.
+Furthermore, the dev environment includes quality assurance (QA) tools such as code formatters, linters, and ``pre-commit``.
+**NOTE**: These QA tools are enforced using ``pre-commit`` checks in the continuous integration/continuous delivery (CI/CD) build, so you must use the dev environment for all contributions.
 
 1. Follow :ref:`"Others/Local" <conda_environment_others>` section for installing conda.
 
@@ -249,33 +247,30 @@ Instead, the developer will ``python -m pip install .`` to build ``zppy`` with c
         conda env create -f conda/dev.yml
         conda activate zppy_dev
 
-..
-    6. Install ``pre-commit``.
+6. Install ``pre-commit``.
 
-        ::
+    ::
 
-            pre-commit install
+        pre-commit install
 
-6. Make the desired changes to ``zppy``, then rebuild and install with:
+7. Make the desired changes to ``zppy``, then rebuild and install with:
 
     ::
 
         pip install .
 
-..
-    8. Commit changes and make sure ``pre-commit`` checks pass
+8. Commit changes and make sure ``pre-commit`` checks pass
 
-8. Commit changes
+9. Commit changes
 
     ::
 
         git commit -m "commit-message"
 
-..
-        .. figure:: _static/pre-commit-passing.png
-           :alt: pre-commit Output
+    .. figure:: _static/pre-commit-passing.png
+       :alt: pre-commit Output
 
-           ``pre-commit`` Output
+       ``pre-commit`` Output
 
 
 Configuration file

@@ -1,14 +1,18 @@
 # Script to plot some global atmosphere and ocean time series
 import math
-import numpy as np
-import matplotlib.pyplot as plt
-from readTS import TS
+
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+from readTS import TS
+
 mpl.use('Agg')
-import shutil
 import glob
-from netCDF4 import Dataset
+import shutil
 import sys
+
+from netCDF4 import Dataset
+
 
 ##---additional function to get moc time series
 def getmoc(dir_in):
@@ -51,7 +55,7 @@ def add_line(year, var, year1, year2, ax, format="%4.2f", lw=1, color='b'):
 
 # -----------------------------------------------------------------------------
 # Function to add line showing linear trend over a specified period
-def add_trend(year, var, year1, year2, ax, format="%4.2f", lw=1, color='b', 
+def add_trend(year, var, year1, year2, ax, format="%4.2f", lw=1, color='b',
               verbose=False, ohc=False, vol=False):
 
   i1 = (np.abs(year-year1)).argmin()
@@ -76,21 +80,21 @@ def add_trend(year, var, year1, year2, ax, format="%4.2f", lw=1, color='b',
   return
 
 # -----------------------------------------------------------------------------
-# These are the "Tableau 20" colors as RGB.    
-t20 = [(31, 119, 180), (174, 199, 232), (255, 127, 14), (255, 187, 120),    
-       (44, 160, 44), (152, 223, 138), (214, 39, 40), (255, 152, 150),    
-       (148, 103, 189), (197, 176, 213), (140, 86, 75), (196, 156, 148),    
-       (227, 119, 194), (247, 182, 210), (127, 127, 127), (199, 199, 199),    
-       (188, 189, 34), (219, 219, 141), (23, 190, 207), (158, 218, 229)]    
-# Scale the RGB values to the [0, 1] range, which is the format matplotlib accepts.    
-for i in range(len(t20)):    
-    r, g, b = t20[i]    
-    t20[i] = (r / 255., g / 255., b / 255.)  
+# These are the "Tableau 20" colors as RGB.
+t20 = [(31, 119, 180), (174, 199, 232), (255, 127, 14), (255, 187, 120),
+       (44, 160, 44), (152, 223, 138), (214, 39, 40), (255, 152, 150),
+       (148, 103, 189), (197, 176, 213), (140, 86, 75), (196, 156, 148),
+       (227, 119, 194), (247, 182, 210), (127, 127, 127), (199, 199, 199),
+       (188, 189, 34), (219, 219, 141), (23, 190, 207), (158, 218, 229)]
+# Scale the RGB values to the [0, 1] range, which is the format matplotlib accepts.
+for i in range(len(t20)):
+    r, g, b = t20[i]
+    t20[i] = (r / 255., g / 255., b / 255.)
 
 # "Tableau 10" uses every other color
 t10 = []
-for i in range(0,len(t20),2):    
-    t10.append(t20[i])  
+for i in range(0,len(t20),2):
+    t10.append(t20[i])
 
 # -----------------------------------------------------------------------------
 # --- Atmos data ---
@@ -295,7 +299,7 @@ ax.set_xlim(xlim)
 for exp in exps:
   if exp['vol'] != None:
     year_vol = np.array(exp['annual']['year']) + exp['yoffset']
-    var = 1e3*np.array(exp['annual']['volume'])/(4.0*math.pi*(6371229.)**2*0.7)  
+    var = 1e3*np.array(exp['annual']['volume'])/(4.0*math.pi*(6371229.)**2*0.7)
     ax.plot(year_vol,var,lw=1.5,marker=None,c=exp['color'],label=exp['name'])
     for yrs in exp['yr']:
       add_trend(year_vol,var,yrs[0],yrs[1],format="%5.3f",ax=ax,lw=3,color=exp['color'],verbose=True,vol=True)
@@ -330,4 +334,3 @@ fig.tight_layout()
 fig.savefig(figstr+".pdf")
 fig.savefig(figstr+".png",dpi=150)
 plt.clf()
-
