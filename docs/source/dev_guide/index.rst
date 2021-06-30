@@ -6,4 +6,5 @@ Developer Guide
    :maxdepth: 2
 
    project-standards
+   testing
    release
