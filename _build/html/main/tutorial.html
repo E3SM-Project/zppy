@@ -170,6 +170,11 @@
             
   <div class="section" id="tutorial">
 <span id="id1"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<p>These examples are for use on LCRC machines (e.g., Chrysalis). Some parameters
+must be changed for use on other machines. These include the paths for
+<code class="docutils literal notranslate"><span class="pre">input</span></code>, <code class="docutils literal notranslate"><span class="pre">output</span></code>, <code class="docutils literal notranslate"><span class="pre">www</span></code>, <code class="docutils literal notranslate"><span class="pre">mapping_file</span></code>, <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code>, <code class="docutils literal notranslate"><span class="pre">obs_ts</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">dc_obs_climo</span></code>. Different machines also have different partition names, so
+<code class="docutils literal notranslate"><span class="pre">partition</span></code> may need to be changed as well.</p>
 <div class="section" id="example-1">
 <h2>Example 1<a class="headerlink" href="#example-1" title="Permalink to this headline">¶</a></h2>
 <p>Let’s say we want to post-process 100 years of an existing simulation.</p>
@@ -272,7 +277,7 @@
 <span class="linenos"> 96</span><span class="na">parallelTaskCount</span> <span class="o">=</span> <span class="s">6</span>
 <span class="linenos"> 97</span><span class="na">ts_years</span> <span class="o">=</span> <span class="s">&quot;1-50&quot;, &quot;1-100&quot;,</span>
 <span class="linenos"> 98</span><span class="na">enso_years</span> <span class="o">=</span> <span class="s">&quot;11-50&quot;, &quot;11-100&quot;,</span>
-<span class="linenos"> 99</span><span class="na">climo_years</span> <span class="o">=</span><span class="s">&quot;21-50&quot;, &quot;51-100&quot;,</span>
+<span class="linenos"> 99</span><span class="na">climo_years</span> <span class="o">=</span> <span class="s">&quot;21-50&quot;, &quot;51-100&quot;,</span>
 <span class="linenos">100</span><span class="na">mesh</span> <span class="o">=</span> <span class="s">&quot;EC30to60E2r2&quot;</span>
 <span class="linenos">101</span>
 <span class="linenos">102</span><span class="c1"># Global time series plots</span>
@@ -284,6 +289,7 @@
 <span class="linenos">108</span><span class="na">moc_file</span><span class="o">=</span><span class="s">mocTimeSeries_0001-0100.nc</span>
 <span class="linenos">109</span><span class="na">experiment_name</span><span class="o">=</span><span class="s">20210122.v2_test01.piControl.chrysalis</span>
 <span class="linenos">110</span><span class="na">ts_years</span> <span class="o">=</span> <span class="s">&quot;1-50&quot;, &quot;1-100&quot;,</span>
+<span class="linenos">111</span><span class="na">climo_years</span> <span class="o">=</span> <span class="s">&quot;21-50&quot;, &quot;51-100&quot;,</span>
 </pre></div>
 </div>
 <p>Now we can run <code class="docutils literal notranslate"><span class="pre">zppy</span> <span class="pre">-c</span> <span class="pre">post.mysimulation.cfg</span></code>.</p>
