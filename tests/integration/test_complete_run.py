@@ -71,7 +71,10 @@ def compare_images(
 
 class TestCompleteRun(unittest.TestCase):
     def test_complete_run(self):
-        # Run `zppy -c test_complete_run.cfg` prior to running this test!!!
+        # Run the following lines prior to running this test!!!
+        # `rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_www/20210122.v2_test01.piControl.ne30pg2_EC30to60E2r2-1900_ICG.chrysalis`
+        # `rm -rf /lcrc/group/e3sm/ac.forsyth2/zppy_test_output/20210122.v2_test01.piControl.ne30pg2_EC30to60E2r2-1900_ICG.chrysalis/post`
+        # `zppy -c tests/integration/test_complete_run.cfg`
         actual_images_dir = "/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_www/20210122.v2_test01.piControl.ne30pg2_EC30to60E2r2-1900_ICG.chrysalis"
 
         # The expected_images_file lists all images we expect to compare.
