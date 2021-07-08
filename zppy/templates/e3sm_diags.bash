@@ -77,6 +77,7 @@ do
   done
   # xml file will cover the whole period from year1 to year2
   xml_name=${v}_${Y1}01_${Y2}12.xml
+  export CDMS_NO_MPI=true
   cdscan -x ${xml_name} -f ${v}_files.txt
   if [ $? != 0 ]; then
       cd ../..

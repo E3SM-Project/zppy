@@ -38,6 +38,7 @@ global_ts_dir={{ global_time_series_dir }}
 ################################################################################
 
 echo 'Create xml files for atm'
+export CDMS_NO_MPI=true
 cd ${case_dir}/post/atm/glb/ts/monthly/10yr
 cdscan -x glb.xml *.nc
 
@@ -47,6 +48,7 @@ mkdir -p ${case_dir}/post/ocn/glb/ts/monthly/10yr
 python ocean_month.py {{ input }} ${case_dir} ${start_yr} ${end_yr}
 
 echo 'Create xml for for ocn'
+export CDMS_NO_MPI=true
 cd ${case_dir}/post/ocn/glb/ts/monthly/10yr
 cdscan -x glb.xml *.nc
 
