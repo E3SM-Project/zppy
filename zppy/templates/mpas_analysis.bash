@@ -310,7 +310,7 @@ size=`wc -c ${identifier}/logs/taskProgress.log | awk '{print $1}'`
 error=`grep ERROR ${identifier}/logs/taskProgress.log | wc -l`
 if [ "${size}" = "" ] || [ "${size}" = "0" ] || [ "${error}" != "0" ];then
   echo 'ERROR (2)' > {{ scriptDir }}/{{ prefix }}.status
-  exit 1
+  exit 2
 fi
 
 {% if cache == true %}
@@ -334,7 +334,7 @@ f=${www}/${case}/mpas_analysis/${identifier}/
 mkdir -p ${f}
 if [ $? != 0 ]; then
   echo 'ERROR (3)' > {{ scriptDir }}/{{ prefix }}.status
-  exit 1
+  exit 3
 fi
 
 {% if machine == 'cori' %}
@@ -355,7 +355,7 @@ done
 rsync -a --delete ${identifier}/html/ ${www}/${case}/mpas_analysis/${identifier}/
 if [ $? != 0 ]; then
   echo 'ERROR (4)' > {{ scriptDir }}/{{ prefix }}.status
-  exit 1
+  exit 4
 fi
 
 {% if machine == 'cori' %}

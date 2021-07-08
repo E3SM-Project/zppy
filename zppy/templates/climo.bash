@@ -108,6 +108,7 @@ ncclimo \
 
 {% else %}
 # --- Unsupported climatology mode ---
+cd {{ scriptDir }}
 echo 'Frequency '{{ frequency }}' is not a valid option'
 echo 'ERROR (1)' > {{ prefix }}.status
 exit 1
@@ -115,7 +116,7 @@ exit 1
 {%- endif %}
 
 if [ $? != 0 ]; then
-  cd ..
+  cd {{ scriptDir }}
   echo 'ERROR (2)' > {{ prefix }}.status
   exit 2
 fi
@@ -138,7 +139,7 @@ fi
 {%- endif %}
 
 if [ $? != 0 ]; then
-  cd ..
+  cd {{ scriptDir }}
   echo 'ERROR (3)' > {{ prefix }}.status
   exit 3
 fi

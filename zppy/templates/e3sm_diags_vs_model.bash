@@ -109,7 +109,7 @@ EOF
 # Run diagnostics
 time python e3sm.py
 if [ $? != 0 ]; then
-  cd ..
+  cd {{ scriptDir }}
   echo 'ERROR (1)' > {{ prefix }}.status
   exit 1
 fi
@@ -123,7 +123,7 @@ echo
 f=${www}/${case}/e3sm_diags/{{ grid }}
 mkdir -p ${f}
 if [ $? != 0 ]; then
-  cd ..
+  cd {{ scriptDir }}
   echo 'ERROR (2)' > {{ prefix }}.status
   exit 1
 fi
@@ -145,7 +145,7 @@ done
 # Copy files
 rsync -a --delete ${results_dir} ${www}/${case}/e3sm_diags/{{ grid }}/
 if [ $? != 0 ]; then
-  cd ..
+  cd {{ scriptDir }}
   echo 'ERROR (3)' > {{ prefix }}.status
   exit 1
 fi

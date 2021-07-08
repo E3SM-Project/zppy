@@ -82,7 +82,7 @@ ncclimo \
 {{ case }}.{{ input_files }}.????-*.nc
 
 if [ $? != 0 ]; then
-  cd ..
+  cd {{ scriptDir }}
   echo 'ERROR (1)' > {{ prefix }}.status
   exit 1
 fi
@@ -94,7 +94,7 @@ fi
   mv output/*.nc ${dest}
 }
 if [ $? != 0 ]; then
-  cd ..
+  cd {{ scriptDir }}
   echo 'ERROR (2)' > {{ prefix }}.status
   exit 2
 fi

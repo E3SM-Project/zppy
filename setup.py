@@ -29,7 +29,7 @@ setup(
     description="Post-processing software for E3SM",
     python_requires=">=3.6",
     intall_requires=["configobj", "jinja2"],
-    packages=find_packages(exclude=["*.test", "*.test.*", "test.*", "test"]),
+    packages=find_packages(include=["zppy", "zppy.*"]),
     package_data={"": data_files},
     entry_points={"console_scripts": ["zppy=zppy.__main__:main"]},
 )

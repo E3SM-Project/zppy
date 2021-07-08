@@ -80,8 +80,8 @@ do
   export CDMS_NO_MPI=true
   cdscan -x ${xml_name} -f ${v}_files.txt
   if [ $? != 0 ]; then
-      cd ../..
-      echo 'ERROR (4)' > {{ prefix }}.status
+      cd {{ scriptDir }}
+      echo 'ERROR (1)' > {{ prefix }}.status
       exit 1
   fi
 done
@@ -213,9 +213,9 @@ command="python -u e3sm.py"
 # Run diagnostics
 time ${command}
 if [ $? != 0 ]; then
-  cd ..
-  echo 'ERROR (1)' > {{ prefix }}.status
-  exit 1
+  cd {{ scriptDir }}
+  echo 'ERROR (2)' > {{ prefix }}.status
+  exit 2
 fi
 
 # Copy output to web server
@@ -227,9 +227,9 @@ echo
 f=${www}/${case}/e3sm_diags/{{ grid }}
 mkdir -p ${f}
 if [ $? != 0 ]; then
-  cd ..
-  echo 'ERROR (2)' > {{ prefix }}.status
-  exit 1
+  cd {{ scriptDir }}
+  echo 'ERROR (3)' > {{ prefix }}.status
+  exit 3
 fi
 
 {% if machine == 'cori' %}
@@ -249,9 +249,9 @@ done
 # Copy files
 rsync -a --delete ${results_dir} ${www}/${case}/e3sm_diags/{{ grid }}/
 if [ $? != 0 ]; then
-  cd ..
-  echo 'ERROR (3)' > {{ prefix }}.status
-  exit 1
+  cd {{ scriptDir }}
+  echo 'ERROR (4)' > {{ prefix }}.status
+  exit 4
 fi
 
 {% if machine == 'cori' %}
