@@ -148,7 +148,10 @@ mapParallelExec = srun --mpi=pmi2
 {% if machine == 'cori' and partition == 'knl' %}
 # Cori-KNL does not support creating mapping files in parallel
 ncremapParallelExec = None
-{% elif machine in ['cori', 'anvil', 'chrysalis'] %}
+{% elif machine in ['cori'] %}
+# Cori-Haswell compute nodes work fine without a prefix for calling ncremap
+ncremapParallelExec = None
+{% elif machine in ['anvil', 'chrysalis'] %}
 ncremapParallelExec = srun -n 1
 {% elif machine in ['compy'] %}
 ncremapParallelExec = srun --mpi=pmi2 -n 1
