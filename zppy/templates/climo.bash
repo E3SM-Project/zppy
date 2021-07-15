@@ -83,8 +83,9 @@ then
 fi
 {%- endraw %}
 
+ls {{ case }}.{{ input_files }}.????-*.nc > input.txt
 # Now, call ncclimo
-ncclimo \
+cat input.txt | ncclimo \
 --case={{ case }}.{{ input_files }} \
 {%- if exclude %}
 -n '-x' \
@@ -103,8 +104,7 @@ ncclimo \
 --output=trash \
 --regrid=output \
 {%- endif %}
---climatology_mode=hfc \
-{{ case }}.{{ input_files }}.????-*.nc
+--climatology_mode=hfc
 
 {% else %}
 # --- Unsupported climatology mode ---

@@ -56,8 +56,9 @@ fi
 {%- endraw %}
 {%- endif %}
 
+ls {{ case }}.{{ input_files }}.????-*.nc > input.txt
 # Generate time series files
-ncclimo \
+cat input.txt | ncclimo \
 -c {{ case }} \
 -v {{ vars }} \
 --yr_srt={{ yr_start }} \
@@ -79,7 +80,6 @@ ncclimo \
 --dpf={{ dpf }} \
 --tpd={{ tpd }} \
 {%- endif %}
-{{ case }}.{{ input_files }}.????-*.nc
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
