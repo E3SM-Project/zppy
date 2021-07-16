@@ -105,10 +105,10 @@ experiment_name = sys.argv[2]
 figstr = sys.argv[3]
 exps = [
 
-  {'atmos':'{}/post/atm/glb/ts/monthly/10yr/glb.xml'.format(case_dir),
-   'ocean':'{}/post/ocn/glb/ts/monthly/10yr/glb.xml'.format(case_dir),
-   'moc':'{}/post/ocn/glb/ts/monthly/10yr/'.format(case_dir),
-   'vol':'{}/post/ocn/glb/ts/monthly/10yr/glb.xml'.format(case_dir),
+  {'atmos':'{}/post/atm/glb/ts/monthly/{{ ts_num_years }}yr/glb.xml'.format(case_dir),
+   'ocean':'{}/post/ocn/glb/ts/monthly/{{ ts_num_years }}yr/glb.xml'.format(case_dir),
+   'moc':'{}/post/ocn/glb/ts/monthly/{{ ts_num_years }}yr/'.format(case_dir),
+   'vol':'{}/post/ocn/glb/ts/monthly/{{ ts_num_years }}yr/glb.xml'.format(case_dir),
    'name': experiment_name,
    'yoffset':0.0,
    'yr':([{{ year1 }},{{ year2 }}],),
