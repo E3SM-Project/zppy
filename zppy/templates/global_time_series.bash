@@ -29,6 +29,7 @@ case={{ case }}
 # Years
 start_yr={{ year1 }}
 end_yr={{ year2 }}
+ts_num_years={{ ts_num_years }}
 
 # Paths
 www={{ www }}
@@ -39,7 +40,7 @@ global_ts_dir={{ global_time_series_dir }}
 
 echo 'Create xml files for atm'
 export CDMS_NO_MPI=true
-cd ${case_dir}/post/atm/glb/ts/monthly/10yr
+cd ${case_dir}/post/atm/glb/ts/monthly/${ts_num_years}yr
 cdscan -x glb.xml *.nc
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
@@ -49,12 +50,12 @@ fi
 
 echo 'Create ocean time series'
 cd ${global_ts_dir}
-mkdir -p ${case_dir}/post/ocn/glb/ts/monthly/10yr
-python ocean_month.py {{ input }} ${case_dir} ${start_yr} ${end_yr}
+mkdir -p ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
+python ocean_month.py {{ input }} ${case_dir} ${start_yr} ${end_yr} ${ts_num_years}
 
 echo 'Create xml for for ocn'
 export CDMS_NO_MPI=true
-cd ${case_dir}/post/ocn/glb/ts/monthly/10yr
+cd ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
 cdscan -x glb.xml *.nc
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
@@ -65,7 +66,7 @@ fi
 
 echo 'Copy moc file'
 cd ${case_dir}/post/analysis/mpas_analysis/cache/timeseries/moc
-cp ${moc_file} ../../../../../ocn/glb/ts/monthly/10yr/
+cp ${moc_file} ../../../../../ocn/glb/ts/monthly/${ts_num_years}yr/
 
 echo 'Update time series figures'
 cd ${global_ts_dir}
