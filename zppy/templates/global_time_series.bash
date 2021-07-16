@@ -70,7 +70,7 @@ cp ${moc_file} ../../../../../ocn/glb/ts/monthly/${ts_num_years}yr/
 
 echo 'Update time series figures'
 cd ${global_ts_dir}
-python coupled_global.py ${case_dir} ${experiment_name} ${figstr}
+python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years}
 
 echo 'Copy images to directory'
 results_dir={{ prefix }}_results
