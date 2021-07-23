@@ -1,0 +1,717 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Testing zppy for E3SM Unified release &mdash; zppy  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Contributing to This Documentation" href="../contributing.html" />
+    <link rel="prev" title="How to Prepare a Release" href="release.html" />
+    <link href="../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> zppy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Zppy documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parameters.html">Parameters</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="project-standards.html">Project Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html">How to Prepare a Release</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Testing zppy for E3SM Unified release</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#parameters">Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#testing-zppy-on-a-small-simulation">Testing zppy on a small simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#archive-simulation-using-zstash">Archive simulation using zstash</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transfer-simulation-to-other-machines">Transfer simulation to other machines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#transfer-to-cori">Transfer to Cori</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#transfer-to-compy">Transfer to Compy</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#check-transfers-were-successful">Check transfers were successful</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#cori">Cori</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#compy">Compy</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#extract-the-data-from-the-archives">Extract the data from the archives</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Cori</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Compy</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#testing-zppy-on-other-machines">Testing zppy on other machines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#sample-configuration-files-for-compy-and-cori">Sample configuration files for Compy and Cori</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#run-unit-tests-and-integration-tests">Run unit tests and integration tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to This Documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">zppy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Developer Guide</a> &raquo;</li>
+        
+      <li>Testing zppy for E3SM Unified release</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/dev_guide/testing_e3sm_unified.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="testing-zppy-for-e3sm-unified-release">
+<span id="testing-e3sm-unified"></span><h1>Testing zppy for E3SM Unified release<a class="headerlink" href="#testing-zppy-for-e3sm-unified-release" title="Permalink to this headline">¶</a></h1>
+<p>This tutorial covers testing <code class="docutils literal notranslate"><span class="pre">zppy</span></code> for an E3SM Unified release.
+Examples are from testing for E3SM Unified v1.5.0.</p>
+<div class="section" id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h2>
+<p>Only a few parameters in the configuration file need to change for different machines.
+Be sure to change the file paths to fit your own workspaces.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Also consider the space quotas or purge policies for the file paths you use.
+You’ll be storing about 2 TB of data.</p>
+</div>
+<p>Chrysalis:</p>
+<ul class="simple">
+<li><p>&lt;INPUT&gt;: /lcrc/group/e3sm/ac.forsyth2/E3SM_simulations/e3sm_unified_test_simulation/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis</p></li>
+<li><p>&lt;OUTPUT&gt;: /lcrc/group/e3sm/ac.forsyth2/E3SM_simulations/e3sm_unified_test_simulation/</p></li>
+<li><p>&lt;WWW&gt;: /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/E3SM/e3sm_unified_test_simulation/</p></li>
+<li><p>&lt;PARTITION&gt;: compute</p></li>
+<li><p>&lt;ENVIRONMENT_COMMANDS&gt;: source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.5.0rc8_chrysalis.sh</p></li>
+<li><p>&lt;MAPPING_FILE&gt;: /home/ac.zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</p></li>
+<li><p>&lt;REFERENCE_DATA_PATH&gt;: /lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/climatology</p></li>
+<li><p>&lt;OBS_TS&gt;: /lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/time-series</p></li>
+<li><p>&lt;DC_OBS_CLIMO&gt;: /lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/climatology</p></li>
+</ul>
+<p>Compy:</p>
+<ul class="simple">
+<li><p>&lt;INPUT&gt;: /compyfs/fors729/e3sm_unified_test_zppy/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis</p></li>
+<li><p>&lt;OUTPUT&gt;: /compyfs/fors729/e3sm_unified_test_zppy/</p></li>
+<li><p>&lt;WWW&gt;: /compyfs/www/fors729/E3SM/e3sm_unified_test_simulation/</p></li>
+<li><p>&lt;PARTITION&gt;: slurm</p></li>
+<li><p>&lt;ENVIRONMENT_COMMANDS&gt;: source /share/apps/E3SM/conda_envs/test_e3sm_unified_1.5.0rc8_compy.sh</p></li>
+<li><p>&lt;MAPPING_FILE&gt;: /compyfs/zender/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</p></li>
+<li><p>&lt;REFERENCE_DATA_PATH&gt;: /compyfs/e3sm_diags_data/obs_for_e3sm_diags/climatology</p></li>
+<li><p>&lt;OBS_TS&gt;: /compyfs/e3sm_diags_data/obs_for_e3sm_diags/time-series</p></li>
+<li><p>&lt;DC_OBS_CLIMO&gt;: /compyfs/e3sm_diags_data/obs_for_e3sm_diags/climatology</p></li>
+</ul>
+<p>Cori:</p>
+<ul class="simple">
+<li><p>&lt;INPUT&gt;: /global/cscratch1/sd/forsyth/e3sm_unified_test_zppy/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis</p></li>
+<li><p>&lt;OUTPUT&gt;: /global/cscratch1/sd/forsyth/e3sm_unified_test_zppy/</p></li>
+<li><p>&lt;WWW&gt;: /global/cfs/cdirs/e3sm/www/forsyth/E3SM/e3sm_unified_test_simulation/</p></li>
+<li><p>&lt;PARTITION&gt;: haswell</p></li>
+<li><p>&lt;ENVIRONMENT_COMMANDS&gt;: source /global/common/software/e3sm/anaconda_envs/test_e3sm_unified_1.5.0rc8_cori-haswell.sh</p></li>
+<li><p>&lt;MAPPING_FILE&gt;: /global/homes/z/zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</p></li>
+<li><p>&lt;REFERENCE_DATA_PATH&gt;: /global/cfs/cdirs/e3sm/acme_diags/obs_for_e3sm_diags/climatology</p></li>
+<li><p>&lt;OBS_TS&gt;: /global/cfs/cdirs/e3sm/acme_diags/obs_for_e3sm_diags/time-series</p></li>
+<li><p>&lt;DC_OBS_CLIMO&gt;: /global/cfs/cdirs/e3sm/acme_diags/obs_for_e3sm_diags/climatology</p></li>
+</ul>
+<p>These values don’t appear in the configuration file but are still useful to specify
+here:</p>
+<p>Chrysalis:</p>
+<ul class="simple">
+<li><p>&lt;HTML&gt;: <a class="reference external" href="https://web.lcrc.anl.gov/public/e3sm/diagnostic_output/ac.forsyth2/E3SM/e3sm_unified_test_simulation/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/">https://web.lcrc.anl.gov/public/e3sm/diagnostic_output/ac.forsyth2/E3SM/e3sm_unified_test_simulation/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/</a></p></li>
+<li><p>&lt;ZSTASH_OUTPUT_DIR&gt;: /lcrc/group/e3sm/ac.forsyth2/zstash_dir</p></li>
+<li><p>&lt;ZSTASH_CACHE_DIR&gt;: /lcrc/group/e3sm/ac.forsyth2/e3sm_unified_test_zstash/unified_test_cache</p></li>
+</ul>
+<p>Compy:</p>
+<ul class="simple">
+<li><p>&lt;HTML&gt;: <a class="reference external" href="https://compy-dtn.pnl.gov/fors729/E3SM/e3sm_unified_test_simulation/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/">https://compy-dtn.pnl.gov/fors729/E3SM/e3sm_unified_test_simulation/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/</a></p></li>
+<li><p>&lt;ZSTASH_OUTPUT_DIR&gt;: /compyfs/fors729/e3sm_unified_test_zstash</p></li>
+<li><p>&lt;ZSTASH_CACHE_DIR&gt;: /compyfs/fors729/e3sm_unified_test_zstash/unified_test_cache</p></li>
+</ul>
+<p>Cori:</p>
+<ul class="simple">
+<li><p>&lt;HTML&gt;: <a class="reference external" href="http://portal.nersc.gov/cfs/e3sm/forsyth/E3SM/e3sm_unified_test_simulation/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/">http://portal.nersc.gov/cfs/e3sm/forsyth/E3SM/e3sm_unified_test_simulation/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/</a></p></li>
+<li><p>&lt;ZSTASH_OUTPUT_DIR&gt;: /global/cscratch1/sd/forsyth/e3sm_unified_test_zstash</p></li>
+<li><p>&lt;ZSTASH_CACHE_DIR&gt;: /global/cscratch1/sd/forsyth/e3sm_unified_test_zstash/unified_test_cache</p></li>
+</ul>
+</div>
+<div class="section" id="testing-zppy-on-a-small-simulation">
+<h2>Testing zppy on a small simulation<a class="headerlink" href="#testing-zppy-on-a-small-simulation" title="Permalink to this headline">¶</a></h2>
+<p>1. Find a simulation to test on. In this example, we’ll use a simulation on Chrysalis:
+<code class="docutils literal notranslate"><span class="pre">/lcrc/group/e3sm/ac.golaz/E3SM_simulations/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/</span></code>.</p>
+<p>2. The simulation might be too large to reasonably test on. We can copy over a
+subsection to a testing directory with a script like the following. In this example,
+the simulation data starts at year 51. We want to have at least 20 years, so we’ll
+copy over years 51-79 using the pattern <code class="docutils literal notranslate"><span class="pre">*.00[5-7]*</span></code>. This subsection turns out to be
+about 2 terabytes in size.</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>#!/bin/bash
+
+input=/lcrc/group/e3sm/ac.golaz/E3SM_simulations/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/
+output=e3sm_unified_test_simulation/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/
+
+# For E3SM Diags: About 40 minutes to run
+# Copy over years xx5x - xx7x
+cp ${input}archive/atm/hist/*.00[5-7]* ${output}archive/atm/hist
+cp ${input}archive/cpl/hist/*.00[5-7]* ${output}archive/cpl/hist
+cp ${input}archive/ice/hist/*.00[5-7]* ${output}archive/ice/hist
+cp ${input}archive/lnd/hist/*.00[5-7]* ${output}archive/lnd/hist
+cp ${input}archive/ocn/hist/*.00[5-7]* ${output}archive/ocn/hist
+cp ${input}archive/rof/hist/*.00[5-7]* ${output}archive/rof/hist
+
+# For MPAS-Analysis: Less than a minute to run
+cp ${input}run/mpaso_in ${output}run/mpaso_in
+cp ${input}run/mpassi_in ${output}run/mpassi_in
+cp ${input}run/streams.ocean ${output}run/streams.ocean
+cp ${input}run/streams.seaice ${output}run/streams.seaice
+cp ${input}run/*rst* ${output}run/
+</pre></div>
+</div>
+</div></blockquote>
+<p>3. Now we need to load <code class="docutils literal notranslate"><span class="pre">zppy</span></code>. We first want to test out <code class="docutils literal notranslate"><span class="pre">zppy</span></code> from
+the new unified environment release candidate.
+We can do this by running <code class="docutils literal notranslate"><span class="pre">&lt;ENVIRONMENT_COMMANDS&gt;</span></code>.
+See 3a-c below if errors are encountered in later steps.</p>
+<p>3a. If <code class="docutils literal notranslate"><span class="pre">zppy</span></code> has problems in later steps,
+we’ll have to make changes in the <code class="docutils literal notranslate"><span class="pre">zppy</span></code> code and
+create a new release candidate; until the new <code class="docutils literal notranslate"><span class="pre">zppy</span></code> release candidate is included in the
+new unified environment release candidate,
+we’ll have to just use the <code class="docutils literal notranslate"><span class="pre">zppy</span></code> development environment.
+This will require running <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">.</span></code> in that environment from the top level of
+the repo.</p>
+<p>3b. It may be the case that the configuration file had an error and thus neither
+<code class="docutils literal notranslate"><span class="pre">zppy</span></code> nor any package that <code class="docutils literal notranslate"><span class="pre">zppy</span></code> runs actually failed. In that case, fix the
+configuration file.</p>
+<p>3c. Keep in mind if you run <code class="docutils literal notranslate"><span class="pre">zppy</span> <span class="pre">-c</span></code> multiple times, it will only rerun tasks that
+have failed. This may or may not be what we want. For example, if we change the
+environment we’re using, we probably want to rerun everything using the new environment.</p>
+<ol class="arabic simple" start="4">
+<li><p>Create a configuration file <code class="docutils literal notranslate"><span class="pre">e3sm_unified_test_simulation.cfg</span></code>.</p></li>
+</ol>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="k">[default]</span>
+<span class="linenos"> 2</span><span class="na">input</span> <span class="o">=</span> <span class="s">&lt;INPUT&gt;</span>
+<span class="linenos"> 3</span><span class="na">input_subdir</span> <span class="o">=</span> <span class="s">archive/atm/hist</span>
+<span class="linenos"> 4</span><span class="c1"># The directory that the `post` directory is placed in.</span>
+<span class="linenos"> 5</span><span class="na">output</span> <span class="o">=</span> <span class="s">&lt;OUTPUT&gt;</span>
+<span class="linenos"> 6</span><span class="na">case</span> <span class="o">=</span> <span class="s">20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis</span>
+<span class="linenos"> 7</span><span class="na">www</span> <span class="o">=</span> <span class="s">&lt;WWW&gt;</span>
+<span class="linenos"> 8</span><span class="na">e3sm_unified</span> <span class="o">=</span> <span class="s">latest</span>
+<span class="linenos"> 9</span><span class="na">partition</span> <span class="o">=</span> <span class="s">&lt;PARTITION&gt;</span>
+<span class="linenos">10</span><span class="na">environment_commands</span> <span class="o">=</span> <span class="s">&quot;&lt;ENVIRONMENT_COMMANDS&gt;&quot;</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span><span class="k">[climo]</span>
+<span class="linenos">13</span><span class="na">active</span> <span class="o">=</span> <span class="s">True</span>
+<span class="linenos">14</span><span class="na">years</span> <span class="o">=</span> <span class="s">&quot;51:70:20&quot;,</span>
+<span class="linenos">15</span><span class="c1"># Use default vars</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span>  <span class="k">[[ atm_monthly_180x360_aave ]]</span>
+<span class="linenos">18</span>  <span class="na">mapping_file</span> <span class="o">=</span> <span class="s">&lt;MAPPING_FILE&gt;</span>
+<span class="linenos">19</span>  <span class="na">frequency</span> <span class="o">=</span> <span class="s">&quot;monthly&quot;</span>
+<span class="linenos">20</span>
+<span class="linenos">21</span>  <span class="k">[[ atm_monthly_diurnal_8xdaily_180x360_aave ]]</span>
+<span class="linenos">22</span>  <span class="na">input_subdir</span> <span class="o">=</span> <span class="s">&quot;archive/atm/hist&quot;</span>
+<span class="linenos">23</span>  <span class="na">input_files</span> <span class="o">=</span> <span class="s">&quot;eam.h4&quot;</span>
+<span class="linenos">24</span>  <span class="na">mapping_file</span> <span class="o">=</span> <span class="s">&lt;MAPPING_FILE&gt;</span>
+<span class="linenos">25</span>  <span class="na">vars</span> <span class="o">=</span> <span class="s">&quot;PRECT&quot;</span>
+<span class="linenos">26</span>  <span class="na">frequency</span> <span class="o">=</span> <span class="s">&quot;monthly_diurnal_8xdaily&quot;</span>
+<span class="linenos">27</span>
+<span class="linenos">28</span><span class="k">[ts]</span>
+<span class="linenos">29</span><span class="na">active</span> <span class="o">=</span> <span class="s">True</span>
+<span class="linenos">30</span><span class="na">years</span> <span class="o">=</span> <span class="s">&quot;51:70:10&quot;,</span>
+<span class="linenos">31</span>
+<span class="linenos">32</span>  <span class="k">[[ atm_monthly_180x360_aave ]]</span>
+<span class="linenos">33</span>  <span class="na">input_subdir</span> <span class="o">=</span> <span class="s">&quot;archive/atm/hist&quot;</span>
+<span class="linenos">34</span>  <span class="na">input_files</span> <span class="o">=</span> <span class="s">&quot;eam.h0&quot;</span>
+<span class="linenos">35</span>  <span class="na">frequency</span> <span class="o">=</span> <span class="s">&quot;monthly&quot;</span>
+<span class="linenos">36</span>  <span class="na">mapping_file</span> <span class="o">=</span> <span class="s">&lt;MAPPING_FILE&gt;</span>
+<span class="linenos">37</span>  <span class="c1"># Use default vars</span>
+<span class="linenos">38</span>
+<span class="linenos">39</span>  <span class="k">[[ atm_daily_180x360_aave ]]</span>
+<span class="linenos">40</span>  <span class="na">input_subdir</span> <span class="o">=</span> <span class="s">&quot;archive/atm/hist&quot;</span>
+<span class="linenos">41</span>  <span class="na">input_files</span> <span class="o">=</span> <span class="s">&quot;eam.h1&quot;</span>
+<span class="linenos">42</span>  <span class="na">frequency</span> <span class="o">=</span> <span class="s">&quot;daily&quot;</span>
+<span class="linenos">43</span>  <span class="na">mapping_file</span> <span class="o">=</span> <span class="s">&lt;MAPPING_FILE&gt;</span>
+<span class="linenos">44</span>  <span class="na">vars</span> <span class="o">=</span> <span class="s">&quot;PRECT&quot;</span>
+<span class="linenos">45</span>
+<span class="linenos">46</span>  <span class="k">[[ atm_monthly_glb ]]</span>
+<span class="linenos">47</span>  <span class="na">input_subdir</span> <span class="o">=</span> <span class="s">&quot;archive/atm/hist&quot;</span>
+<span class="linenos">48</span>  <span class="na">input_files</span> <span class="o">=</span> <span class="s">&quot;eam.h0&quot;</span>
+<span class="linenos">49</span>  <span class="na">frequency</span> <span class="o">=</span> <span class="s">&quot;monthly&quot;</span>
+<span class="linenos">50</span>  <span class="na">mapping_file</span> <span class="o">=</span> <span class="s">&quot;glb&quot;</span>
+<span class="linenos">51</span>  <span class="c1"># Use default vars</span>
+<span class="linenos">52</span>
+<span class="linenos">53</span>  <span class="k">[[ land_monthly ]]</span>
+<span class="linenos">54</span>  <span class="na">input_subdir</span> <span class="o">=</span> <span class="s">&quot;archive/lnd/hist&quot;</span>
+<span class="linenos">55</span>  <span class="na">input_files</span> <span class="o">=</span> <span class="s">&quot;elm.h0&quot;</span>
+<span class="linenos">56</span>  <span class="na">frequency</span> <span class="o">=</span> <span class="s">&quot;monthly&quot;</span>
+<span class="linenos">57</span>  <span class="na">mapping_file</span> <span class="o">=</span> <span class="s">&lt;MAPPING_FILE&gt;</span>
+<span class="linenos">58</span>  <span class="na">vars</span> <span class="o">=</span> <span class="s">&quot;FSH,RH2M&quot;</span>
+<span class="linenos">59</span>
+<span class="linenos">60</span><span class="k">[e3sm_diags]</span>
+<span class="linenos">61</span><span class="na">active</span> <span class="o">=</span> <span class="s">True</span>
+<span class="linenos">62</span><span class="na">years</span> <span class="o">=</span> <span class="s">&quot;51:70:20&quot;,</span>
+<span class="linenos">63</span><span class="na">ts_num_years</span> <span class="o">=</span> <span class="s">10</span>
+<span class="linenos">64</span><span class="na">ref_start_yr</span> <span class="o">=</span> <span class="s">1979</span>
+<span class="linenos">65</span><span class="na">ref_final_yr</span> <span class="o">=</span> <span class="s">2016</span>
+<span class="linenos">66</span>
+<span class="linenos">67</span>  <span class="k">[[ atm_monthly_180x360_aave ]]</span>
+<span class="linenos">68</span>  <span class="na">short_name</span> <span class="o">=</span> <span class="s">&quot;20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis&quot;</span>
+<span class="linenos">69</span>  <span class="na">grid</span> <span class="o">=</span> <span class="s">&quot;180x360_aave&quot;</span>
+<span class="linenos">70</span>  <span class="na">reference_data_path</span> <span class="o">=</span> <span class="s">&quot;&lt;REFERENCE_DATA_PATH&gt;&quot;</span>
+<span class="linenos">71</span>  <span class="na">obs_ts</span> <span class="o">=</span> <span class="s">&quot;&lt;OBS_TS&gt;&quot;</span>
+<span class="linenos">72</span>  <span class="na">dc_obs_climo</span> <span class="o">=</span> <span class="s">&quot;&lt;DC_OBS_CLIMO&gt;&quot;</span>
+<span class="linenos">73</span>  <span class="na">climo_diurnal_subsection</span> <span class="o">=</span> <span class="s">&quot;atm_monthly_diurnal_8xdaily_180x360_aave&quot;</span>
+<span class="linenos">74</span>
+<span class="linenos">75</span><span class="k">[e3sm_diags_vs_model]</span>
+<span class="linenos">76</span><span class="na">active</span> <span class="o">=</span> <span class="s">False</span>
+<span class="linenos">77</span>
+<span class="linenos">78</span><span class="k">[amwg]</span>
+<span class="linenos">79</span><span class="na">active</span> <span class="o">=</span> <span class="s">False</span>
+<span class="linenos">80</span>
+<span class="linenos">81</span><span class="k">[mpas_analysis]</span>
+<span class="linenos">82</span><span class="na">active</span> <span class="o">=</span> <span class="s">True</span>
+<span class="linenos">83</span><span class="na">walltime</span> <span class="o">=</span> <span class="s">&quot;24:00:00&quot;</span>
+<span class="linenos">84</span><span class="na">parallelTaskCount</span> <span class="o">=</span> <span class="s">6</span>
+<span class="linenos">85</span><span class="na">ts_years</span> <span class="o">=</span> <span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">86</span><span class="na">enso_years</span> <span class="o">=</span> <span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">87</span><span class="na">climo_years</span> <span class="o">=</span><span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">88</span><span class="na">mesh</span> <span class="o">=</span> <span class="s">&quot;EC30to60E2r2&quot;</span>
+<span class="linenos">89</span><span class="na">anomalyRefYear</span> <span class="o">=</span> <span class="s">51</span>
+<span class="linenos">90</span>
+<span class="linenos">91</span><span class="k">[global_time_series]</span>
+<span class="linenos">92</span><span class="na">active</span> <span class="o">=</span> <span class="s">True</span>
+<span class="linenos">93</span><span class="na">years</span> <span class="o">=</span> <span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">94</span><span class="na">ts_num_years</span> <span class="o">=</span> <span class="s">10</span>
+<span class="linenos">95</span><span class="na">figstr</span><span class="o">=</span><span class="s">coupled_v2rc3e</span>
+<span class="linenos">96</span><span class="na">moc_file</span><span class="o">=</span><span class="s">mocTimeSeries_0051-0070.nc</span>
+<span class="linenos">97</span><span class="na">experiment_name</span><span class="o">=</span><span class="s">20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis</span>
+<span class="linenos">98</span><span class="na">ts_years</span> <span class="o">=</span> <span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">99</span><span class="na">climo_years</span> <span class="o">=</span><span class="s">&quot;51-70&quot;,</span>
+</pre></div>
+</div>
+<p>5. We can now test out <code class="docutils literal notranslate"><span class="pre">zppy</span></code> by running <code class="docutils literal notranslate"><span class="pre">zppy</span> <span class="pre">-c</span> <span class="pre">e3sm_unified_test_simulation.cfg</span></code>.
+If that command fails, return to step 3.</p>
+<ol class="arabic" start="6">
+<li><dl>
+<dt>If the above command completes successfully, run:</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># cd into output directory</span>
+<span class="n">cd</span> <span class="o">&lt;</span><span class="n">OUTPUT</span><span class="o">&gt;/</span><span class="n">post</span><span class="o">/</span><span class="n">scripts</span>
+<span class="c1"># Check status of files that either failed or are still running.</span>
+<span class="n">grep</span> <span class="o">-</span><span class="n">v</span> <span class="s2">&quot;OK&quot;</span> <span class="o">*</span><span class="n">status</span>
+<span class="c1"># If there is an error, return to step 3.</span>
+<span class="c1"># If you want to remove all output run the following two steps:</span>
+<span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="o">&lt;</span><span class="n">OUTPUT</span><span class="o">&gt;/</span><span class="n">post</span>
+<span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="o">&lt;</span><span class="n">WWW</span><span class="o">&gt;/</span><span class="mf">20210528.</span><span class="n">v2rc3e</span><span class="o">.</span><span class="n">piControl</span><span class="o">.</span><span class="n">ne30pg2_EC30to60E2r2</span><span class="o">.</span><span class="n">chrysalis</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+</ol>
+<p>7. Output can be viewed at the web link corresponding to <code class="docutils literal notranslate"><span class="pre">&lt;WWW&gt;</span></code> in the configuration
+file (i.e., <code class="docutils literal notranslate"><span class="pre">&lt;HTML&gt;</span></code> defined in “Parameters” above).</p>
+</div>
+<div class="section" id="archive-simulation-using-zstash">
+<h2>Archive simulation using zstash<a class="headerlink" href="#archive-simulation-using-zstash" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><dl>
+<dt>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_create.bash</span></code> to run <code class="docutils literal notranslate"><span class="pre">zstash</span></code>.</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+
+<span class="c1">#SBATCH  --job-name=zstash_create</span>
+<span class="c1">#SBATCH  --nodes=1</span>
+<span class="c1">#SBATCH  --output=&lt;ZSTASH_OUTPUT_DIR&gt;/zstash_create.o%j</span>
+<span class="c1">#SBATCH  --exclusive</span>
+<span class="c1">#SBATCH  --time=04:00:00</span>
+
+<span class="o">&lt;</span><span class="n">ENVIRONMENT_COMMANDS</span><span class="o">&gt;</span>
+<span class="n">zstash</span> <span class="n">create</span> <span class="o">--</span><span class="n">hpss</span><span class="o">=</span><span class="n">none</span> <span class="o">--</span><span class="n">cache</span><span class="o">=&lt;</span><span class="n">ZSTASH_CACHE_DIR</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">OUTPUT</span><span class="o">&gt;/</span><span class="mf">20210528.</span><span class="n">v2rc3e</span><span class="o">.</span><span class="n">piControl</span><span class="o">.</span><span class="n">ne30pg2_EC30to60E2r2</span><span class="o">.</span><span class="n">chrysalis</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><p>Run with <code class="docutils literal notranslate"><span class="pre">sbatch</span> <span class="pre">zstash_create.bash</span></code>. This example takes about 2.5 hours to run.</p></li>
+</ol>
+</div>
+<div class="section" id="transfer-simulation-to-other-machines">
+<h2>Transfer simulation to other machines<a class="headerlink" href="#transfer-simulation-to-other-machines" title="Permalink to this headline">¶</a></h2>
+<p>We can follow an adapted version of the steps at
+<a class="reference external" href="https://e3sm-project.github.io/zstash/_build/html/master/best_practices.html#transfer-to-nersc-hpss">https://e3sm-project.github.io/zstash/_build/html/master/best_practices.html#transfer-to-nersc-hpss</a>
+to transfer the data.</p>
+<p>Login to Globus: <a class="reference external" href="https://www.globus.org/">https://www.globus.org/</a> (using NERSC credentials)</p>
+<div class="section" id="transfer-to-cori">
+<h3>Transfer to Cori<a class="headerlink" href="#transfer-to-cori" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><p>On the left sidebar, choose “ENDPOINTS”.</p></li>
+<li><p>Search for “NERSC DTN”. Click on Green power button to activate endpoint.</p></li>
+<li><p>On the left sidebar, choose “ENDPOINTS”.</p></li>
+</ol>
+<p>4. Search for “lcrc#dtn_bebop”. Click on Green power button to activate endpoint.
+Log in using LCRC credentials.</p>
+<p>5. Paste the path to the <code class="docutils literal notranslate"><span class="pre">zstash</span></code> archive (<code class="docutils literal notranslate"><span class="pre">&lt;ZSTASH_CACHE_DIR&gt;</span></code> for Chrysalis)
+in the “Path” box.</p>
+<ol class="arabic simple" start="6">
+<li><p>Click “Transfer or Sync to…” on the right side. The screen will now be split.</p></li>
+<li><p>On the left side, choose “Select all”</p></li>
+<li><p>On the right side, put “NERSC DTN” for collection.</p></li>
+</ol>
+<p>9. Paste the NERSC path you want the archive copied to
+(<code class="docutils literal notranslate"><span class="pre">&lt;ZSTASH_CACHE_DIR&gt;</span></code> for Cori). This path needs to already exist.</p>
+<ol class="arabic simple" start="10">
+<li><p>Click “Transfer &amp; Sync Options” in the center.</p></li>
+</ol>
+<p>11. Choose “sync - only transfer new or changed files”
+(choose “modification time is newer” in the dropdown box),
+“preserve source file modification times”, and “verify file integrity after transfer”.</p>
+<ol class="arabic simple" start="12">
+<li><p>For “Label This Transfer”, put something like “zstash archive LCRC to NERSC”.</p></li>
+<li><p>On the left side, click “Start &gt;”. This will start the transfer from LCRC to NERSC.</p></li>
+</ol>
+</div>
+<div class="section" id="transfer-to-compy">
+<h3>Transfer to Compy<a class="headerlink" href="#transfer-to-compy" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><p>On the left sidebar, choose “ENDPOINTS”.</p></li>
+</ol>
+<p>2. Search for “pic#compy-dtn”. Click on Green power button to activate endpoint.
+Log in using Compy credentials.</p>
+<ol class="arabic simple" start="3">
+<li><p>On the left sidebar, choose “File Manager.” The screen will now be split.</p></li>
+<li><p>On the left side, put “lcrc#dtn_bebop” for “Collection”.</p></li>
+</ol>
+<p>5. On the left side, paste the path to the <code class="docutils literal notranslate"><span class="pre">zstash</span></code> archive
+(<code class="docutils literal notranslate"><span class="pre">&lt;ZSTASH_CACHE_DIR&gt;</span></code> for Chrysalis) in the “Path” box.</p>
+<ol class="arabic simple" start="6">
+<li><p>On the left side, choose “Select all”.</p></li>
+<li><p>On the right side, put “pic#compy-dtn” for “Collection”.</p></li>
+</ol>
+<p>8. Paste the Compy path you want the archive copied to
+(<code class="docutils literal notranslate"><span class="pre">&lt;ZSTASH_CACHE_DIR&gt;</span></code> for Compy).
+This path needs to already exist.</p>
+<ol class="arabic simple" start="9">
+<li><p>Click “Transfer &amp; Sync Options” in the center.</p></li>
+</ol>
+<p>10. Choose “sync - only transfer new or changed files”
+(choose “modification time is newer” in the dropdown box),
+“preserve source file modification times”, and “verify file integrity after transfer”.</p>
+<ol class="arabic simple" start="11">
+<li><p>For “Label This Transfer”, put something like “zstash archive LCRC to Compy”.</p></li>
+<li><p>On the left side, click “Start &gt;”. This will start the transfer from LCRC to Compy.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="check-transfers-were-successful">
+<h2>Check transfers were successful<a class="headerlink" href="#check-transfers-were-successful" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="cori">
+<h3>Cori<a class="headerlink" href="#cori" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_check.bash</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="c1">#SBATCH  --job-name=zstash_check</span>
+<span class="c1">#SBATCH  --nodes=1</span>
+<span class="c1">#SBATCH  --output=&lt;ZSTASH_OUTPUT_DIR&gt;/zstash_check.o%j</span>
+<span class="c1">#SBATCH  --exclusive</span>
+<span class="c1">#SBATCH  --time=3:00:00</span>
+<span class="c1">#SBATCH  -q regular</span>
+<span class="c1">#SBATCH  --constraint=haswell</span>
+
+<span class="o">&lt;</span><span class="n">ENVIRONMENT_COMMANDS</span><span class="o">&gt;</span>
+<span class="n">zstash</span> <span class="n">check</span> <span class="o">--</span><span class="n">hpss</span><span class="o">=</span><span class="n">none</span> <span class="o">--</span><span class="n">cache</span><span class="o">=&lt;</span><span class="n">ZSTASH_CACHE_DIR</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">sbatch</span> <span class="pre">zstash_check.bash</span></code>. This takes about an hour to run.</p></li>
+</ol>
+</div>
+<div class="section" id="compy">
+<h3>Compy<a class="headerlink" href="#compy" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_check.bash</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="c1">#SBATCH  --job-name=zstash_check</span>
+<span class="c1">#SBATCH  --nodes=1</span>
+<span class="c1">#SBATCH  --output=&lt;ZSTASH_OUTPUT_DIR&gt;/zstash_check.o%j</span>
+<span class="c1">#SBATCH  --exclusive</span>
+<span class="c1">#SBATCH  --time=3:00:00</span>
+
+<span class="o">&lt;</span><span class="n">ENVIRONMENT_COMMANDS</span><span class="o">&gt;</span>
+<span class="n">zstash</span> <span class="n">check</span> <span class="o">--</span><span class="n">hpss</span><span class="o">=</span><span class="n">none</span> <span class="o">--</span><span class="n">cache</span><span class="o">=&lt;</span><span class="n">ZSTASH_CACHE_DIR</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">sbatch</span> <span class="pre">zstash_check.bash</span></code>. This takes over 3 hours to run.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="extract-the-data-from-the-archives">
+<h2>Extract the data from the archives<a class="headerlink" href="#extract-the-data-from-the-archives" title="Permalink to this headline">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">zstash</span> <span class="pre">extract</span></code>.</p>
+<div class="section" id="id1">
+<h3>Cori<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p><code class="docutils literal notranslate"><span class="pre">mkdir</span> <span class="pre">unified_test_extraction</span></code>.</p></li>
+<li><p>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_extract.bash</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="c1">#SBATCH  --job-name=zstash_extract</span>
+<span class="c1">#SBATCH  --nodes=1</span>
+<span class="c1">#SBATCH  --output=&lt;ZSTASH_OUTPUT_DIR&gt;/zstash_extract.o%j</span>
+<span class="c1">#SBATCH  --exclusive</span>
+<span class="c1">#SBATCH  --time=4:00:00</span>
+<span class="c1">#SBATCH  -q regular</span>
+<span class="c1">#SBATCH  --constraint=haswell</span>
+
+<span class="o">&lt;</span><span class="n">ENVIRONMENT_COMMANDS</span><span class="o">&gt;</span>
+<span class="n">cd</span> <span class="n">unified_test_extraction</span>
+<span class="n">zstash</span> <span class="n">extract</span> <span class="o">--</span><span class="n">hpss</span><span class="o">=</span><span class="n">none</span> <span class="o">--</span><span class="n">cache</span><span class="o">=&lt;</span><span class="n">ZSTASH_CACHE_DIR</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">sbatch</span> <span class="pre">zstash_extract.bash</span></code>.</p></li>
+</ol>
+</div>
+<div class="section" id="id2">
+<h3>Compy<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p><code class="docutils literal notranslate"><span class="pre">mkdir</span> <span class="pre">unified_test_extraction</span></code>.</p></li>
+<li><p>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_extract.bash</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="c1">#SBATCH  --job-name=zstash_extract</span>
+<span class="c1">#SBATCH  --nodes=1</span>
+<span class="c1">#SBATCH  --output=&lt;ZSTASH_OUTPUT_DIR&gt;/zstash_extract.o%j</span>
+<span class="c1">#SBATCH  --exclusive</span>
+<span class="c1">#SBATCH  --time=6:00:00</span>
+
+<span class="o">&lt;</span><span class="n">ENVIRONMENT_COMMANDS</span><span class="o">&gt;</span>
+<span class="n">cd</span> <span class="n">unified_test_extraction</span>
+<span class="n">zstash</span> <span class="n">extract</span> <span class="o">--</span><span class="n">hpss</span><span class="o">=</span><span class="n">none</span> <span class="o">--</span><span class="n">cache</span><span class="o">=&lt;</span><span class="n">ZSTASH_CACHE_DIR</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">sbatch</span> <span class="pre">zstash_extract.bash</span></code>.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="testing-zppy-on-other-machines">
+<h2>Testing zppy on other machines<a class="headerlink" href="#testing-zppy-on-other-machines" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mv</span> <span class="pre">e3sm_unified_test_zstash/unified_test_extraction</span> <span class="pre">e3sm_unified_test_zppy/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis</span></code>.</p>
+<p>Go through steps 3-7 of “Testing zppy on a small simulation” but for
+Cori (haswell) and Compy.</p>
+<div class="section" id="sample-configuration-files-for-compy-and-cori">
+<h3>Sample configuration files for Compy and Cori<a class="headerlink" href="#sample-configuration-files-for-compy-and-cori" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;OUTPUT&gt;/e3sm_unified_test_simulation.cfg</span></code>:
+Use the configuration file from “Testing zppy on a small simulation” step 4, updating
+the appropriate parameters for Compy or Cori.</p>
+</div>
+</div>
+<div class="section" id="run-unit-tests-and-integration-tests">
+<h2>Run unit tests and integration tests<a class="headerlink" href="#run-unit-tests-and-integration-tests" title="Permalink to this headline">¶</a></h2>
+<p>Run the unit tests and integration tests on Chrysalis:</p>
+<p><code class="docutils literal notranslate"><span class="pre">cd</span></code> into your clone of the <code class="docutils literal notranslate"><span class="pre">zppy</span></code> repo. Then:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">checkout</span> <span class="n">main</span> <span class="c1"># if not already on the `main` branch</span>
+<span class="n">git</span> <span class="n">fetch</span> <span class="n">upstream</span>
+<span class="n">git</span> <span class="n">rebase</span> <span class="n">upstream</span><span class="o">/</span><span class="n">main</span>
+<span class="o">&lt;</span><span class="n">ENVIRONMENT_COMMANDS</span><span class="o">&gt;</span> <span class="c1"># Load the appropriate environment</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_</span><span class="o">*.</span><span class="n">py</span> <span class="c1"># Run unit tests</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_</span><span class="o">*.</span><span class="n">py</span> <span class="c1"># Run integration tests</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../contributing.html" class="btn btn-neutral float-right" title="Contributing to This Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="release.html" class="btn btn-neutral float-left" title="How to Prepare a Release" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, E3SM.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../v1.0.0/index.html">v1.0.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="testing_e3sm_unified.html">main</a></dd>
+    </dl>
+  </div>
+</div>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
