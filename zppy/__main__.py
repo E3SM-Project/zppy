@@ -59,26 +59,26 @@ def main():
         if tmp.startswith("compy"):
             machine = "compy"
             environment_commands = (
-                "source /share/apps/E3SM/conda_envs/load_{}_e3sm_unified.sh".format(
+                "source /share/apps/E3SM/conda_envs/load_{}_e3sm_unified_compy.sh".format(
                     config["default"]["e3sm_unified"]
                 )
             )
         elif tmp.startswith("cori"):
             machine = "cori"
-            environment_commands = "source /global/cfs/cdirs/e3sm/software/anaconda_envs/load_{}_e3sm_unified.sh".format(
+            environment_commands = "source /global/cfs/cdirs/e3sm/software/anaconda_envs/load_{}_e3sm_unified_cori.sh".format(
                 config["default"]["e3sm_unified"]
             )
         elif tmp.startswith("blues"):
             machine = "anvil"
             environment_commands = (
-                "source /lcrc/soft/climate/e3sm-unified/load_{}_e3sm_unified.sh".format(
+                "source /lcrc/soft/climate/e3sm-unified/load_{}_e3sm_unified_anvil.sh".format(
                     config["default"]["e3sm_unified"]
                 )
             )
         elif tmp.startswith("chr"):
             machine = "chrysalis"
             environment_commands = (
-                "source /lcrc/soft/climate/e3sm-unified/load_{}_e3sm_unified.sh".format(
+                "source /lcrc/soft/climate/e3sm-unified/load_{}_e3sm_unified_chrysalis.sh".format(
                     config["default"]["e3sm_unified"]
                 )
             )
