@@ -65,7 +65,7 @@ def main():
             )
         elif tmp.startswith("cori"):
             machine = "cori"
-            environment_commands = "source /global/cfs/cdirs/e3sm/software/anaconda_envs/load_{}_e3sm_unified_cori.sh".format(
+            environment_commands = "source /global/cfs/cdirs/e3sm/software/anaconda_envs/load_{}_e3sm_unified_cori-haswell.sh".format(
                 config["default"]["e3sm_unified"]
             )
         elif tmp.startswith("blues"):
