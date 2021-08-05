@@ -126,12 +126,10 @@ jobs:
         run: |
           # gh-pages branch must already exist
           git clone https://github.com/E3SM-Project/zppy.git --branch gh-pages --single-branch gh-pages
+          # Only replace main docs with latest changes. Docs for tags should be untouched.
           cd gh-pages
-          rm -r *
-          touch .nojekyll
-          # Add index.html to point to `main` branch automatically
-          printf '<meta http-equiv="refresh" content="0; url=./_build/html/main/index.html" />' >> index.html
-          cp -r ../docs/_build .
+          rm -r _build/html/main
+          cp -r ../docs/_build/html/main _build/html/main
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           # The below command will fail if no changes were present, so we ignore it
