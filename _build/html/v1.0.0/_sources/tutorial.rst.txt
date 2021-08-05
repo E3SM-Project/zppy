@@ -8,7 +8,8 @@ These examples are for use on LCRC machines (e.g., Chrysalis). Some parameters
 must be changed for use on other machines. These include the paths for
 ``input``, ``output``, ``www``, ``mapping_file``, ``reference_data_path``, ``obs_ts``,
 and ``dc_obs_climo``. Different machines also have different partition names, so
-``partition`` may need to be changed as well.
+``partition`` may need to be changed as well. ``environment_commands`` must also be
+updated between machines -- see :ref:`"Activate e3sm_unified environment" <activate>`.
 
 
 Example 1

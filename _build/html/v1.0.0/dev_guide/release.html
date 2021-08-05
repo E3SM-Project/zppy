@@ -4,7 +4,8 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>How to Prepare a Release &mdash; zppy  documentation</title>
@@ -13,8 +14,6 @@
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
 
   
   
@@ -31,7 +30,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
@@ -89,7 +87,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Zppy documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
@@ -177,7 +175,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="how-to-prepare-a-release">
+  <section id="how-to-prepare-a-release">
 <h1>How to Prepare a Release<a class="headerlink" href="#how-to-prepare-a-release" title="Permalink to this headline">¶</a></h1>
 <p>In this guide, we’ll cover:</p>
 <ul class="simple">
@@ -186,7 +184,7 @@
 <li><p>Releasing The Software On Anaconda</p></li>
 <li><p>Creating a New Version of the Documentation</p></li>
 </ul>
-<div class="section" id="preparing-the-code-for-release">
+<section id="preparing-the-code-for-release">
 <h2>Preparing The Code For Release<a class="headerlink" href="#preparing-the-code-for-release" title="Permalink to this headline">¶</a></h2>
 <p>These steps entail modifying files before a release is made.</p>
 <p>1. Pull the lastest code from whatever branch you want to release from.
@@ -248,8 +246,8 @@ from here <strong>does not</strong> build the package based on your local code.<
 </li>
 <li><p>Create a pull request to the main repo and merge it.</p></li>
 </ol>
-</div>
-<div class="section" id="creating-a-release-on-github">
+</section>
+<section id="creating-a-release-on-github">
 <span id="github-release"></span><h2>Creating A Release On GitHub<a class="headerlink" href="#creating-a-release-on-github" title="Permalink to this headline">¶</a></h2>
 <p>1. Go to the Releases on the GitHub repo of the project
 <a class="reference external" href="https://github.com/E3SM-Project/zppy/releases">here</a>.
@@ -267,8 +265,8 @@ this is specified after the tag (&#64; Target: <code class="docutils literal not
 <ol class="arabic simple" start="3">
 <li><p>Click “Publish release”.</p></li>
 </ol>
-</div>
-<div class="section" id="releasing-the-software-on-anaconda">
+</section>
+<section id="releasing-the-software-on-anaconda">
 <h2>Releasing The Software On Anaconda<a class="headerlink" href="#releasing-the-software-on-anaconda" title="Permalink to this headline">¶</a></h2>
 <p>1. Be sure to have already completed <a class="reference internal" href="#github-release"><span class="std std-ref">Creating A Release On GitHub</span></a>.
 This triggers the CI/CD workflow that handles Anaconda releases.</p>
@@ -282,8 +280,8 @@ Be sure to only update the <code class="docutils literal notranslate"><span clas
 the E3SM Unified environment. This is almost certainly one of the versions listed under
 “Next versions”. If you are uncertain of which to update, leave a comment on the page
 asking.</p>
-</div>
-<div class="section" id="creating-a-new-version-of-the-documentation">
+</section>
+<section id="creating-a-new-version-of-the-documentation">
 <h2>Creating a New Version of the Documentation<a class="headerlink" href="#creating-a-new-version-of-the-documentation" title="Permalink to this headline">¶</a></h2>
 <p>1. Be sure to have already completed <a class="reference internal" href="#github-release"><span class="std std-ref">Creating A Release On GitHub</span></a>.
 This triggers the CI/CD workflow that handles publishing documentation versions.</p>
@@ -291,8 +289,8 @@ This triggers the CI/CD workflow that handles publishing documentation versions.
 <a class="reference external" href="https://github.com/E3SM-Project/zppy/actions">All Workflows</a>.</p>
 <p>3. Changes will be available on the
 <a class="reference external" href="https://e3sm-project.github.io/zppy/">zppy documentation page</a>.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -329,24 +327,6 @@ This triggers the CI/CD workflow that handles publishing documentation versions.
 
   </div>
   
-<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
-  <span class="rst-current-version" data-toggle="rst-current-version">
-    <span class="fa fa-book"> Other Versions</span>
-    v: v1.0.0
-    <span class="fa fa-caret-down"></span>
-  </span>
-  <div class="rst-other-versions">
-    <dl>
-      <dt>Tags</dt>
-      <dd><a href="release.html">v1.0.0</a></dd>
-    </dl>
-    <dl>
-      <dt>Branches</dt>
-      <dd><a href="../../main/dev_guide/release.html">main</a></dd>
-      <dd><a href="../../tangq/e3sm_unified_path/dev_guide/release.html">tangq/e3sm_unified_path</a></dd>
-    </dl>
-  </div>
-</div>
 
   <script type="text/javascript">
       jQuery(function () {

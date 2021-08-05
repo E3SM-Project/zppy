@@ -4,6 +4,8 @@
 Getting started
 ***************
 
+.. _activate:
+
 Activate e3sm_unified environment
 =================================
 

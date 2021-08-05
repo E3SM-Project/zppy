@@ -4,7 +4,8 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Parameters &mdash; zppy  documentation</title>
@@ -13,8 +14,6 @@
   
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
 
   
   
@@ -31,7 +30,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
@@ -89,7 +87,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Zppy documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
@@ -164,7 +162,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="parameters">
+  <section id="parameters">
 <span id="id1"></span><h1>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h1>
 <p>Parameters make use of inheritance. Parameters set in <code class="docutils literal notranslate"><span class="pre">[default]</span></code> can
 be overridden by parameters set in a <code class="docutils literal notranslate"><span class="pre">[section]</span></code>, which can themselves
@@ -200,6 +198,10 @@ types and default values for the parameters.</p>
 <span class="n">e3sm_unified</span> <span class="o">=</span> <span class="n">option</span><span class="p">(</span><span class="s1">&#39;latest&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;latest&#39;</span><span class="p">)</span>
 <span class="c1"># This should be set to True if you don&#39;t want the batch jobs to be submitted</span>
 <span class="n">dry_run</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="c1"># The following parameter is not defined in `default.ini`</span>
+<span class="c1"># Set up the environment -- this is where you can tell zppy to use a custom conda environment.</span>
+<span class="c1"># To use a custom conda environment, you can set `environment_commands=&quot;source &lt;path to conda.sh&gt;; conda activate &lt;custom environment&gt;&quot;`.</span>
+<span class="n">environment_commands</span> <span class="o">=</span> <span class="n">string</span>
 
 <span class="p">[</span><span class="n">climo</span><span class="p">]</span>
 <span class="c1"># Set to True to run this section</span>
@@ -357,6 +359,8 @@ types and default values for the parameters.</p>
 <span class="n">stream_ocn</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;streams.ocean&quot;</span><span class="p">)</span>
 <span class="n">stream_ice</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;streams.seaice&quot;</span><span class="p">)</span>
 <span class="n">generate</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="s1">&#39;no_landIceCavities&#39;</span><span class="p">,</span> <span class="s1">&#39;no_BGC&#39;</span><span class="p">,</span> <span class="s1">&#39;no_icebergs&#39;</span><span class="p">,</span> <span class="s1">&#39;no_min&#39;</span><span class="p">,</span> <span class="s1">&#39;no_max&#39;</span><span class="p">,</span> <span class="s1">&#39;no_sose&#39;</span><span class="p">,</span> <span class="s1">&#39;no_climatologyMapAntarcticMelt&#39;</span><span class="p">,</span> <span class="s1">&#39;no_regionalTSDiagrams&#39;</span><span class="p">,</span> <span class="s1">&#39;no_timeSeriesAntarcticMelt&#39;</span><span class="p">,</span> <span class="s1">&#39;no_timeSeriesOceanRegions&#39;</span><span class="p">,</span> <span class="s1">&#39;no_climatologyMapSose&#39;</span><span class="p">,</span> <span class="s1">&#39;no_woceTransects&#39;</span><span class="p">,</span> <span class="s1">&#39;no_soseTransects&#39;</span><span class="p">,</span> <span class="s1">&#39;no_geojsonTransects&#39;</span><span class="p">,</span> <span class="s1">&#39;no_oceanRegionalProfiles&#39;</span><span class="p">,</span> <span class="s1">&#39;no_hovmollerOceanRegions&#39;</span><span class="p">))</span>
+<span class="c1"># Note that `environment_commands` needs to be the same for all related runs of `mpas_analysis`.</span>
+<span class="c1"># For example, if years 1-50 are run using one environment and years 51-100 are run using another, MPAS-Analysis may fail.</span>
 
 <span class="p">[</span><span class="n">global_time_series</span><span class="p">]</span>
 <span class="c1"># Set to True to run this section</span>
@@ -379,7 +383,7 @@ types and default values for the parameters.</p>
 <span class="n">climo_years</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
+</section>
 
 
            </div>
@@ -416,24 +420,6 @@ types and default values for the parameters.</p>
 
   </div>
   
-<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
-  <span class="rst-current-version" data-toggle="rst-current-version">
-    <span class="fa fa-book"> Other Versions</span>
-    v: v1.0.0
-    <span class="fa fa-caret-down"></span>
-  </span>
-  <div class="rst-other-versions">
-    <dl>
-      <dt>Tags</dt>
-      <dd><a href="parameters.html">v1.0.0</a></dd>
-    </dl>
-    <dl>
-      <dt>Branches</dt>
-      <dd><a href="../main/parameters.html">main</a></dd>
-      <dd><a href="../tangq/e3sm_unified_path/parameters.html">tangq/e3sm_unified_path</a></dd>
-    </dl>
-  </div>
-</div>
 
   <script type="text/javascript">
       jQuery(function () {

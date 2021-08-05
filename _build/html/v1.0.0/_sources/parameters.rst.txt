@@ -40,6 +40,10 @@ types and default values for the parameters. ::
         e3sm_unified = option('latest', 'test', default='latest')
         # This should be set to True if you don't want the batch jobs to be submitted
         dry_run = boolean(default=False)
+        # The following parameter is not defined in `default.ini`
+        # Set up the environment -- this is where you can tell zppy to use a custom conda environment.
+        # To use a custom conda environment, you can set `environment_commands="source <path to conda.sh>; conda activate <custom environment>"`.
+        environment_commands = string
 
         [climo]
         # Set to True to run this section
@@ -197,6 +201,8 @@ types and default values for the parameters. ::
         stream_ocn = string(default="streams.ocean")
         stream_ice = string(default="streams.seaice")
         generate = string_list(default=list('all', 'no_landIceCavities', 'no_BGC', 'no_icebergs', 'no_min', 'no_max', 'no_sose', 'no_climatologyMapAntarcticMelt', 'no_regionalTSDiagrams', 'no_timeSeriesAntarcticMelt', 'no_timeSeriesOceanRegions', 'no_climatologyMapSose', 'no_woceTransects', 'no_soseTransects', 'no_geojsonTransects', 'no_oceanRegionalProfiles', 'no_hovmollerOceanRegions'))
+        # Note that `environment_commands` needs to be the same for all related runs of `mpas_analysis`.
+        # For example, if years 1-50 are run using one environment and years 51-100 are run using another, MPAS-Analysis may fail.
 
         [global_time_series]
         # Set to True to run this section
