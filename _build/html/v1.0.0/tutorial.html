@@ -174,7 +174,9 @@
 must be changed for use on other machines. These include the paths for
 <code class="docutils literal notranslate"><span class="pre">input</span></code>, <code class="docutils literal notranslate"><span class="pre">output</span></code>, <code class="docutils literal notranslate"><span class="pre">www</span></code>, <code class="docutils literal notranslate"><span class="pre">mapping_file</span></code>, <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code>, <code class="docutils literal notranslate"><span class="pre">obs_ts</span></code>,
 and <code class="docutils literal notranslate"><span class="pre">dc_obs_climo</span></code>. Different machines also have different partition names, so
-<code class="docutils literal notranslate"><span class="pre">partition</span></code> may need to be changed as well.</p>
+<code class="docutils literal notranslate"><span class="pre">partition</span></code> may need to be changed as well. <code class="docutils literal notranslate"><span class="pre">environment_commands</span></code> must also be
+updated between machines – see <a class="reference internal" href="getting_started.html#activate"><span class="std std-ref">“Activate e3sm_unified environment”</span></a>.</p>
+
 <div class="section" id="example-1">
 <h2>Example 1<a class="headerlink" href="#example-1" title="Permalink to this headline">¶</a></h2>
 <p>Let’s say we want to post-process 100 years of an existing simulation.</p>
@@ -184,8 +186,8 @@ and <code class="docutils literal notranslate"><span class="pre">dc_obs_climo</s
 <span class="linenos">  3</span><span class="na">input_subdir</span> <span class="o">=</span> <span class="s">archive/atm/hist</span>
 <span class="linenos">  4</span><span class="na">output</span> <span class="o">=</span> <span class="s">&lt;output&gt;</span>
 <span class="linenos">  5</span><span class="na">case</span> <span class="o">=</span> <span class="s">20210122.v2_test01.piControl.ne30pg2_EC30to60E2r2-1900_ICG.chrysalis</span>
-<span class="linenos">  6</span><span class="na">www</span> <span class="o">=</span> <span class="s">&lt;wwww&gt;</span>
-<span class="linenos">  7</span><span class="na">e3sm_unified</span> <span class="o">=</span> <span class="s">latest</span>
+<span class="linenos">  6</span><span class="na">www</span> <span class="o">=</span> <span class="s">&lt;www&gt;</span>
+<span class="linenos">  7</span><span class="na">environment_commands</span> <span class="o">=</span> <span class="s">&quot;source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh&quot;</span>
 <span class="linenos">  8</span><span class="na">partition</span> <span class="o">=</span> <span class="s">compute</span>
 <span class="linenos">  9</span>
 <span class="linenos"> 10</span><span class="c1"># Regridded atmosphere climatologies every 20 and 50 years</span>
@@ -316,7 +318,7 @@ the global time series plots will be visible online.</p>
 <span class="linenos"> 4</span><span class="na">output</span> <span class="o">=</span> <span class="s">&lt;output&gt;</span>
 <span class="linenos"> 5</span><span class="na">case</span> <span class="o">=</span> <span class="s">20210603.v2rc3c.piControl.northamericax4v1pg2_WC14to60E2r3.chrysalis</span>
 <span class="linenos"> 6</span><span class="na">www</span> <span class="o">=</span> <span class="s">&lt;www&gt;</span>
-<span class="linenos"> 7</span><span class="na">e3sm_unified</span> <span class="o">=</span> <span class="s">latest</span>
+<span class="linenos"> 7</span><span class="na">environment_commands</span> <span class="o">=</span> <span class="s">&quot;source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh&quot;</span>
 <span class="linenos"> 8</span><span class="na">partition</span> <span class="o">=</span> <span class="s">debug</span>
 <span class="linenos"> 9</span>
 <span class="linenos">10</span><span class="k">[climo]</span>
