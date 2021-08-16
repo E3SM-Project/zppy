@@ -39,18 +39,12 @@ are handled and passed to SLURM. Internally, each batch job is created by
 instantiating `Jinja <https://jinja.palletsprojects.com>`_ template scripts 
 (usually written in bash, but other languages are supported as well).
 
-The figure below illustrates schematically how zppy functions.
-It also shows possible dependencies in ``zppy`` tasks.
-
-.. image:: figures/zppy_schematic.svg
-   :scale: 80%
-
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    self
+   schematics
    getting_started
    tutorial
    parameters
