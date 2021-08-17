@@ -4,3 +4,5 @@
 
 pdf2svg zppy_schematic.pdf zppy_schematic.svg
 
+# Generating png file from PowerPoint
+# (1) Export as png
