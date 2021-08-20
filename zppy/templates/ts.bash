@@ -61,6 +61,9 @@ ls {{ case }}.{{ input_files }}.????-*.nc > input.txt
 cat input.txt | ncclimo \
 -c {{ case }} \
 -v {{ vars }} \
+{%- if extra_vars != '' %}
+--var_xtr={{extra_vars}} \
+{%- endif %}
 --yr_srt={{ yr_start }} \
 --yr_end={{ yr_end }} \
 --ypf={{ ypf }} \
