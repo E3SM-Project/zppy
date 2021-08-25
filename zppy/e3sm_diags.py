@@ -81,6 +81,14 @@ def e3sm_diags(config, scriptDir):
                             % (sub, start_yr, end_yr, c["ts_num_years"]),
                         )
                     )
+                    if "streamflow" in c["sets"]:
+                        dependencies.append(
+                            os.path.join(
+                                scriptDir,
+                                "ts_rof_monthly_%04d-%04d-%04d.status"
+                                % (start_yr, end_yr, c["ts_num_years"]),
+                            )
+                        )
 
             if not c["dry_run"]:
                 # Submit job

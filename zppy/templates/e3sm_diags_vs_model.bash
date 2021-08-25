@@ -68,8 +68,8 @@ echo
 cat > e3sm.py << EOF
 import os
 import numpy
-from acme_diags.parameter.core_parameter import CoreParameter
-from acme_diags.run import runner
+from e3sm_diags.parameter.core_parameter import CoreParameter
+from e3sm_diags.run import runner
 
 param = CoreParameter()
 

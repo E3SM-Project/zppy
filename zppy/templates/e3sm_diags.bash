@@ -88,6 +88,16 @@ done
 cd ..
 {%- endif %}
 
+{%- if "streamflow" in sets %}
+rofDir="{{ output }}/post/rof/native/ts/monthly/{{ ts_num_years }}yr"
+mkdir -p rof_links
+cd rof_links
+v="RIVER_DISCHARGE_OVER_LAND_LIQ"
+xml_name=${v}_${Y1}01_${Y2}12.xml
+cdscan -x ${xml_name} ${rofDir}/${v}_*.nc
+cd ..
+{%- endif %}
+
 # Run E3SM Diags
 echo
 echo ===== RUN E3SM DIAGS model_vs_obs =====
@@ -98,19 +108,23 @@ cat > e3sm.py << EOF
 import os
 import numpy
 {%- if "area_mean_time_series" in sets %}
-from acme_diags.parameter.area_mean_time_series_parameter import AreaMeanTimeSeriesParameter
+from e3sm_diags.parameter.area_mean_time_series_parameter import AreaMeanTimeSeriesParameter
 {%- endif %}
-from acme_diags.parameter.core_parameter import CoreParameter
+from e3sm_diags.parameter.core_parameter import CoreParameter
 {%- if "diurnal_cycle" in sets %}
-from acme_diags.parameter.diurnal_cycle_parameter import DiurnalCycleParameter
+from e3sm_diags.parameter.diurnal_cycle_parameter import DiurnalCycleParameter
 {%- endif %}
 {%- if "enso_diags" in sets %}
-from acme_diags.parameter.enso_diags_parameter import EnsoDiagsParameter
+from e3sm_diags.parameter.enso_diags_parameter import EnsoDiagsParameter
 {%- endif %}
 {%- if "qbo" in sets %}
-from acme_diags.parameter.qbo_parameter import QboParameter
+from e3sm_diags.parameter.qbo_parameter import QboParameter
 {%- endif %}
-from acme_diags.run import runner
+{%- if "streamflow" in sets %}
+from e3sm_diags.parameter.streamflow_parameter import StreamflowParameter
+{%- endif %}
+
+from e3sm_diags.run import runner
 
 short_name = '${short}'
 test_ts = 'ts_links'
@@ -192,6 +206,18 @@ dc_param.short_test_name = short_name
 # Plotting diurnal cycle amplitude on different scales. Default is True
 dc_param.normalize_test_amp = False
 params.append(dc_param)
+{%- endif %}
+
+{%- if "streamflow" in sets %}
+streamflow_param = StreamflowParameter()
+streamflow_param.reference_data_path = '{{ streamflow_obs_ts }}'
+streamflow_param.test_data_path = 'rof_links'
+streamflow_param.test_name = short_name
+streamflow_param.test_start_yr = start_yr
+streamflow_param.test_end_yr = end_yr # Streamflow gauge station data range from year 1986 to 1995
+streamflow_param.ref_start_yr = "1986"
+streamflow_param.ref_end_yr = "1995"
+params.append(streamflow_param)
 {%- endif %}
 
 # Run
