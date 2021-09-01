@@ -7,7 +7,7 @@ Tutorial
 These examples are for use on LCRC machines (e.g., Chrysalis). Some parameters
 must be changed for use on other machines. These include the paths for
 ``input``, ``output``, ``www``, ``mapping_file``, ``reference_data_path``, ``obs_ts``,
-and ``dc_obs_climo``. Different machines also have different partition names, so
+``streamflow_obs_ts``, and ``dc_obs_climo``. Different machines also have different partition names, so
 ``partition`` may need to be changed as well.
 
 
