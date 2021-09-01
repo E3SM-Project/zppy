@@ -140,8 +140,10 @@ types and default values for the parameters. ::
         # The following parameters aren't defined in `default.ini`
         # Path to observation data for diurnal cycle runs
         dc_obs_climo = string
-        # Path to observation data for time-series-required ("enso_diags","qbo","area_mean_time_series") runs
+        # Path to observation data for most time-series-required ("enso_diags","qbo","area_mean_time_series") runs
         obs_ts = string
+	# Path to observation data for streamflow diagnostics
+	streamflow_obs_ts = string
         # Start year for the reference data
         ref_start_yr = string
         # End year (i.e., the last year to use) for the reference data
