@@ -26,6 +26,21 @@ def e3sm_diags(config, scriptDir):
         if "ts_num_years" in c.keys():
             c["ts_num_years"] = int(c["ts_num_years"])
 
+        if c["campaign"] == "water_cycle":
+            c["sets"] = [
+                "lat_lon",
+                "zonal_mean_xy",
+                "zonal_mean_2d",
+                "polar",
+                "cosp_histogram",
+                "meridional_mean_2d",
+                "enso_diags",
+                "qbo",
+                "diurnal_cycle",
+                "annual_cycle_zonal_mean",
+                "streamflow",
+            ]
+
         # Loop over year sets
         year_sets = getYears(c["years"])
         for s in year_sets:

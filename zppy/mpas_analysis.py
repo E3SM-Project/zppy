@@ -37,6 +37,27 @@ def mpas_analysis(config, scriptDir):
             c["subdir_ocean"] = "/run"
             c["subdir_ice"] = "/run"
 
+        if c["campaign"] == "water_cycle":
+            c["generate"] = [
+                "all",
+                "no_landIceCavities",
+                "no_BGC",
+                "no_icebergs",
+                "no_min",
+                "no_max",
+                "no_sose",
+                "no_climatologyMapAntarcticMelt",
+                "no_regionalTSDiagrams",
+                "no_timeSeriesAntarcticMelt",
+                "no_timeSeriesOceanRegions",
+                "no_climatologyMapSose",
+                "no_woceTransects",
+                "no_soseTransects",
+                "no_geojsonTransects",
+                "no_oceanRegionalProfiles",
+                "no_hovmollerOceanRegions",
+            ]
+
         # Loop over year sets
         ts_year_sets = getYears(c["ts_years"])
         if c["climo_years"] != [""]:
