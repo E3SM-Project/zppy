@@ -26,15 +26,16 @@ cd ${workdir}
 # --- Monthly climatologies ---
 ncclimo \
 --case={{ case }} \
+--jobs=${SLURM_NNODES} \
+--mem_mb=0 \
+--thr=1 \
 {%- if exclude %}
 -n '-x' \
 {%- endif %}
 {%- if vars != '' %}
 --vars={{ vars }} \
 {%- endif %}
---no_amwg_link \
 --parallel=mpi \
---december_mode=sdd \
 --yr_srt={{ yr_start }} \
 --yr_end={{ yr_end }} \
 --input={{ input }}/{{ input_subdir }} \
@@ -87,6 +88,9 @@ ls {{ case }}.{{ input_files }}.????-*.nc > input.txt
 # Now, call ncclimo
 cat input.txt | ncclimo \
 --case={{ case }}.{{ input_files }} \
+--jobs=${SLURM_NNODES} \
+--mem_mb=0 \
+--thr=1 \
 {%- if exclude %}
 -n '-x' \
 {%- endif %}
@@ -94,7 +98,6 @@ cat input.txt | ncclimo \
 --vars={{ vars }} \
 {%- endif %}
 --parallel=mpi \
---december_mode=sdd \
 --yr_srt={{ yr_start }} \
 --yr_end={{ yr_end }} \
 {% if mapping_file == '' -%}
