@@ -31,6 +31,7 @@ def main():
     # Read configuration file and validate it
     default_config = os.path.join(templateDir, "default.ini")
     user_config = ConfigObj(args.config, configspec=default_config)
+    _validate_config(user_config)
     campaign = user_config["default"]["campaign"]
     if campaign != "custom":
         campaign_file = os.path.join(templateDir, "{}.cfg".format(campaign))
@@ -39,20 +40,12 @@ def main():
                 "{} does not appear to be a known campaign".format(campaign)
             )
         config = ConfigObj(campaign_file, configspec=default_config)
+        _validate_config(config)
         # merge such that user_config takes priority
         config.merge(user_config)
     else:
         # no need to merge
         config = user_config
-
-    validator = Validator()
-
-    result = config.validate(validator)
-    if result is not True:
-        print("Validation results={}".format(result))
-        raise Exception("Configuration file validation failed")
-    else:
-        print("Configuration file validation passed")
 
     # Add templateDir to config
     config["default"]["templateDir"] = templateDir
@@ -115,3 +108,14 @@ def main():
 
     # global time series tasks
     global_time_series(config, scriptDir)
+
+
+def _validate_config(config):
+    validator = Validator()
+
+    result = config.validate(validator)
+    if result is not True:
+        print("Validation results={}".format(result))
+        raise Exception("Configuration file validation failed")
+    else:
+        print("Configuration file validation passed")
