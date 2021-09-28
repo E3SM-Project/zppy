@@ -201,6 +201,8 @@ types and default values for the parameters.</p>
 <span class="n">e3sm_unified</span> <span class="o">=</span> <span class="n">option</span><span class="p">(</span><span class="s1">&#39;latest&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;latest&#39;</span><span class="p">)</span>
 <span class="c1"># This should be set to True if you don&#39;t want the batch jobs to be submitted</span>
 <span class="n">dry_run</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="c1"># Specify which campaign you are running.</span>
+<span class="n">campaign</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
 <span class="c1"># The following parameter is not defined in `default.ini`</span>
 <span class="c1"># Set up the environment -- this is where you can tell zppy to use a custom conda environment.</span>
 <span class="c1"># To use a custom conda environment, you can set `environment_commands=&quot;source &lt;path to conda.sh&gt;; conda activate &lt;custom environment&gt;&quot;`.</span>
