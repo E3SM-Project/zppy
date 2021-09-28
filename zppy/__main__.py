@@ -33,7 +33,7 @@ def main():
     user_config = ConfigObj(args.config, configspec=default_config)
     _validate_config(user_config)
     campaign = user_config["default"]["campaign"]
-    if campaign != "custom":
+    if campaign != "none":
         campaign_file = os.path.join(templateDir, "{}.cfg".format(campaign))
         if not os.path.exists(campaign_file):
             raise ValueError(
