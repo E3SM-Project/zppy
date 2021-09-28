@@ -7,6 +7,7 @@ zppy.egg-info/
 
 tests/integration/image_check_failures
 test_bash_generation_output
+*.cfg.txt
 
 # Sphinx documentation
 docs/_build/
