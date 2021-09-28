@@ -1,4 +1,5 @@
 import os
+import pprint
 import unittest
 
 from configobj import ConfigObj
@@ -20,6 +21,14 @@ def get_config(test_case, config_file):
     # Add templateDir to config
     config["default"]["templateDir"] = templateDir
 
+    # For debugging
+    DISPLAY_CONFIG = False
+    if DISPLAY_CONFIG:
+        with open("{}.txt".format(config_file), "w") as output:
+            p = pprint.PrettyPrinter(indent=2, stream=output)
+            p.pprint(config)
+        test_case.maxDiff = None
+
     return config
 
 
@@ -39,6 +48,7 @@ class TestAllSets(unittest.TestCase):
             "debug": False,
             "e3sm_unified": "latest",
             "dry_run": False,
+            "campaign": "none",
             "templateDir": "zppy/templates",
         }
         self.assertEqual(actual_default, expected_default)
@@ -69,6 +79,7 @@ class TestAllSets(unittest.TestCase):
         expected_task = {
             "active": True,
             "area_nm": "area",
+            "campaign": "none",
             "case": "CASE",
             "debug": False,
             "dpf": 30,
@@ -117,6 +128,7 @@ class TestAllSets(unittest.TestCase):
         actual_task = actual_tasks[0]
         expected_task = {
             "active": True,
+            "campaign": "none",
             "case": "CASE",
             "debug": False,
             "dry_run": False,
@@ -156,6 +168,7 @@ class TestAllSets(unittest.TestCase):
             "debug": False,
             "e3sm_unified": "latest",
             "dry_run": False,
+            "campaign": "none",
             "templateDir": "zppy/templates",
         }
         self.assertEqual(actual_default, expected_default)
@@ -218,6 +231,7 @@ class TestAllSets(unittest.TestCase):
         expected_task = {
             "active": True,
             "area_nm": "area",
+            "campaign": "none",
             "case": "CASE",
             "debug": False,
             "dpf": 30,
@@ -247,6 +261,7 @@ class TestAllSets(unittest.TestCase):
         expected_task = {
             "active": True,
             "area_nm": "area",
+            "campaign": "none",
             "case": "CASE",
             "debug": False,
             "dpf": 30,
@@ -322,6 +337,7 @@ class TestAllSets(unittest.TestCase):
         actual_task = actual_tasks[0]
         expected_task = {
             "active": True,
+            "campaign": "none",
             "case": "CASE",
             "debug": False,
             "dry_run": False,
@@ -348,6 +364,7 @@ class TestAllSets(unittest.TestCase):
         actual_task = actual_tasks[1]
         expected_task = {
             "active": True,
+            "campaign": "none",
             "case": "CASE",
             "debug": False,
             "dry_run": False,
