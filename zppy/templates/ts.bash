@@ -61,6 +61,7 @@ ls {{ case }}.{{ input_files }}.????-*.nc > input.txt
 cat input.txt | ncclimo \
 -c {{ case }} \
 -v {{ vars }} \
+--mem_mb=0 \
 {%- if extra_vars != '' %}
 --var_xtr={{extra_vars}} \
 {%- endif %}
