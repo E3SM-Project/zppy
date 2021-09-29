@@ -1,4 +1,5 @@
 import os
+import pprint
 import re
 
 import jinja2
@@ -70,6 +71,7 @@ def ts(config, scriptDir):
             c["prefix"] = prefix
             scriptFile = os.path.join(scriptDir, "%s.bash" % (prefix))
             statusFile = os.path.join(scriptDir, "%s.status" % (prefix))
+            settingsFile = os.path.join(scriptDir, "%s.settings" % (prefix))
             skip = checkStatus(statusFile)
             if skip:
                 continue
@@ -77,6 +79,11 @@ def ts(config, scriptDir):
             # Create script
             with open(scriptFile, "w") as f:
                 f.write(template.render(**c))
+
+            with open(settingsFile, "w") as sf:
+                p = pprint.PrettyPrinter(indent=2, stream=sf)
+                p.pprint(c)
+                p.pprint(s)
 
             if not c["dry_run"]:
                 # Submit job
