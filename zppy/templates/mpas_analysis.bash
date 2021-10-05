@@ -302,7 +302,13 @@ mpi="--mpi=pmi2"
 mpi=""
 {% endif %}
 
-srun ${mpi} -N 1 -n 1 mpas_analysis ${purge} --verbose cfg/mpas_analysis_${identifier}.cfg
+{% if campaign == 'cryosphere' %}
+extra_config="--polar_regions"
+{% else %}
+extra_config=""
+{% endif %}
+
+srun ${mpi} -N 1 -n 1 mpas_analysis ${purge} --verbose ${extra_config} cfg/mpas_analysis_${identifier}.cfg
 if [ $? != 0 ]; then
   echo 'ERROR (1)' > {{ scriptDir }}/{{ prefix }}.status
   exit 1
