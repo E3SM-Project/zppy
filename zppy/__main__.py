@@ -31,21 +31,23 @@ def main():
     # Read configuration file and validate it
     default_config = os.path.join(templateDir, "default.ini")
     user_config = ConfigObj(args.config, configspec=default_config)
-    _validate_config(user_config)
-    campaign = user_config["default"]["campaign"]
+    if "campaign" in user_config["default"]:
+        campaign = user_config["default"]["campaign"]
+    else:
+        campaign = "none"
     if campaign != "none":
         campaign_file = os.path.join(templateDir, "{}.cfg".format(campaign))
         if not os.path.exists(campaign_file):
             raise ValueError(
                 "{} does not appear to be a known campaign".format(campaign)
             )
-        config = ConfigObj(campaign_file, configspec=default_config)
-        _validate_config(config)
-        # merge such that user_config takes priority
-        config.merge(user_config)
+        campaign_config = ConfigObj(campaign_file, configspec=default_config)
+        # merge such that user_config takes priority over campaign_config
+        campaign_config.merge(user_config)
+        config = campaign_config
     else:
-        # no need to merge
         config = user_config
+    _validate_config(config)
 
     # Add templateDir to config
     config["default"]["templateDir"] = templateDir
