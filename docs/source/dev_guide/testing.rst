@@ -64,6 +64,25 @@ To replace the expected bash files for ``test_bash_generation.py`` run the follo
        # Rerun test
        python -m unittest tests/integration/test_bash_generation.py       
 
+To replace the expected files for ``test_campaign.py`` run the following:
+
+    .. code::
+
+       rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_none_expected_files 
+       rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_water_cycle_expected_files
+       rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_water_cycle_override_expected_files
+       mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_none_expected_files
+       mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_water_cycle_expected_files
+       mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_water_cycle_override_expected_files
+       cd <top level of zppy repo>
+       # Your output will now become the new expectation.
+       # You can just move (i.e., not copy) the output since re-running this test will re-generate the output.
+       mv test_campaign_none_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_none_expected_files 
+       mv test_campaign_water_cycle_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_water_cycle_expected_files
+       mv test_campaign_water_cycle_override_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_water_cycle_override_expected_files
+       # Rerun test
+       python -m unittest tests/integration/test_campaign.py       
+
        
 To replace the expected images for ``test_complete_run.py`` run the following:
 
