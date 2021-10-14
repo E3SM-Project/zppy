@@ -3,6 +3,42 @@ import unittest
 
 
 class TestCampaign(unittest.TestCase):
+    def test_campaign_cryosphere(self):
+        self.assertEqual(
+            os.system("zppy -c tests/integration/test_campaign_cryosphere.cfg"), 0
+        )
+        self.assertEqual(
+            os.system("rm test_campaign_cryosphere_output/post/scripts/*.bash"), 0
+        )
+        self.assertEqual(
+            os.system(
+                "diff -u test_campaign_cryosphere_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_cryosphere_expected_files"
+            ),
+            0,
+        )
+        self.assertEqual(os.system("rm -r test_campaign_cryosphere_output"), 0)
+
+    def test_campaign_cryosphere_override(self):
+        self.assertEqual(
+            os.system(
+                "zppy -c tests/integration/test_campaign_cryosphere_override.cfg"
+            ),
+            0,
+        )
+        self.assertEqual(
+            os.system(
+                "rm test_campaign_cryosphere_override_output/post/scripts/*.bash"
+            ),
+            0,
+        )
+        self.assertEqual(
+            os.system(
+                "diff -u test_campaign_cryosphere_override_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_cryosphere_override_expected_files"
+            ),
+            0,
+        )
+        self.assertEqual(os.system("rm -r test_campaign_cryosphere_override_output"), 0)
+
     def test_campaign_none(self):
         self.assertEqual(
             os.system("zppy -c tests/integration/test_campaign_none.cfg"), 0
