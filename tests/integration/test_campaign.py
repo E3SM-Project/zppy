@@ -12,7 +12,7 @@ class TestCampaign(unittest.TestCase):
         )
         self.assertEqual(
             os.system(
-                "diff -u test_campaign_cryosphere_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_cryosphere_expected_files"
+                "diff -u -I 'templateDir' test_campaign_cryosphere_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_cryosphere_expected_files"
             ),
             0,
         )
@@ -33,7 +33,7 @@ class TestCampaign(unittest.TestCase):
         )
         self.assertEqual(
             os.system(
-                "diff -u test_campaign_cryosphere_override_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_cryosphere_override_expected_files"
+                "diff -u -I 'templateDir' test_campaign_cryosphere_override_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_cryosphere_override_expected_files"
             ),
             0,
         )
@@ -48,7 +48,7 @@ class TestCampaign(unittest.TestCase):
         )
         self.assertEqual(
             os.system(
-                "diff -u test_campaign_none_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_none_expected_files"
+                "diff -u -I 'templateDir' test_campaign_none_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_none_expected_files"
             ),
             0,
         )
@@ -63,7 +63,7 @@ class TestCampaign(unittest.TestCase):
         )
         self.assertEqual(
             os.system(
-                "diff -u test_campaign_water_cycle_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_water_cycle_expected_files"
+                "diff -u -I 'templateDir' test_campaign_water_cycle_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_water_cycle_expected_files"
             ),
             0,
         )
@@ -84,7 +84,7 @@ class TestCampaign(unittest.TestCase):
         )
         self.assertEqual(
             os.system(
-                "diff -u test_campaign_water_cycle_override_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_water_cycle_override_expected_files"
+                "diff -u -I 'templateDir' test_campaign_water_cycle_override_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_water_cycle_override_expected_files"
             ),
             0,
         )
