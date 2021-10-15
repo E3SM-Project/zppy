@@ -33,8 +33,8 @@ test:
   commands:
     - zppy --help
     - pip check
-about:
 
+about:
   home: https://github.com/E3SM-Project/zppy
   license: BSD-3-Clause
   license_family: BSD
