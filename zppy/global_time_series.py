@@ -73,26 +73,27 @@ def global_time_series(config, scriptDir):
                         % ("atm_monthly_glb", start_yr, end_yr, c["ts_num_years"]),
                     )
                 )
-            # Add MPAS Analysis dependencies
-            ts_year_sets = getYears(c["ts_years"])
-            climo_year_sets = getYears(c["climo_years"])
-            for ts_year_set, climo_year_set in zip(ts_year_sets, climo_year_sets):
-                c["ts_year1"] = ts_year_set[0]
-                c["ts_year2"] = ts_year_set[1]
-                c["climo_year1"] = climo_year_set[0]
-                c["climo_year2"] = climo_year_set[1]
-                dependencies.append(
-                    os.path.join(
-                        scriptDir,
-                        "mpas_analysis_ts_%04d-%04d_climo_%04d-%04d.status"
-                        % (
-                            c["ts_year1"],
-                            c["ts_year2"],
-                            c["climo_year1"],
-                            c["climo_year2"],
-                        ),
+            if not c["atmosphere_only"]:
+                # Add MPAS Analysis dependencies
+                ts_year_sets = getYears(c["ts_years"])
+                climo_year_sets = getYears(c["climo_years"])
+                for ts_year_set, climo_year_set in zip(ts_year_sets, climo_year_sets):
+                    c["ts_year1"] = ts_year_set[0]
+                    c["ts_year2"] = ts_year_set[1]
+                    c["climo_year1"] = climo_year_set[0]
+                    c["climo_year2"] = climo_year_set[1]
+                    dependencies.append(
+                        os.path.join(
+                            scriptDir,
+                            "mpas_analysis_ts_%04d-%04d_climo_%04d-%04d.status"
+                            % (
+                                c["ts_year1"],
+                                c["ts_year2"],
+                                c["climo_year1"],
+                                c["climo_year2"],
+                            ),
+                        )
                     )
-                )
 
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)

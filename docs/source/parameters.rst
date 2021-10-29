@@ -211,6 +211,8 @@ types and default values for the parameters. ::
         [global_time_series]
         # Set to True to run this section
         active = boolean(default=True)
+	# The specific subdirectory with the ocean data
+	input_subdir = string(default="archive/ocn/hist")
         # The number of nodes to use
         nodes = integer(default=1)
         # The maximum time to run
@@ -227,3 +229,5 @@ types and default values for the parameters. ::
         experiment_name = string(default="")
         ts_years = string_list(default=list(""))
         climo_years = string_list(default=list(""))
+	# Set to True to skip figures requiring ocean data.
+	atmosphere_only = boolean(default=False)
