@@ -118,7 +118,7 @@ types and default values for the parameters. ::
         # They also require `obs_ts` and `ref_start_yr` to be set.
         # "qbo" requires `ref_final_yr` to be set as well.
         # "diurnal_cycle" requires `climo_diurnal_subsection` and `ds_obs_climo` to be set.
-	sets = string_list(default=list("lat_lon","zonal_mean_xy","zonal_mean_2d","polar","cosp_histogram","meridional_mean_2d","enso_diags","qbo","diurnal_cycle","annual_cycle_zonal_mean","streamflow"))
+        sets = string_list(default=list("lat_lon","zonal_mean_xy","zonal_mean_2d","polar","cosp_histogram","meridional_mean_2d","enso_diags","qbo","diurnal_cycle","annual_cycle_zonal_mean","streamflow","zonal_mean_2d_stratosphere"))
         # See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html
         backend = string(default="mpl")
         # See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html

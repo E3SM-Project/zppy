@@ -13,9 +13,8 @@ end_yr = int(sys.argv[4])
 ts_num_years = int(sys.argv[5])
 
 # Run directories
-input_dir = sys.argv[1]
+path_in = sys.argv[1]
 case_dir = sys.argv[2]
-path_in = "{}/archive/ocn/hist".format(input_dir)
 path_out = "{}/post/ocn/glb/ts/monthly/{}yr".format(case_dir, ts_num_years)
 
 # Ocean constants
