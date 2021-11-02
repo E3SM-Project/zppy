@@ -58,7 +58,7 @@ if [[ ${atmosphere_only} == "false" ]]; then
     cd ${global_ts_dir}
     mkdir -p ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
     input={{ input }}/{{ input_subdir }}
-    python ocean_month.py {{ input }} ${case_dir} ${start_yr} ${end_yr} ${ts_num_years}
+    python ocean_month.py ${input} ${case_dir} ${start_yr} ${end_yr} ${ts_num_years}
 
     echo 'Create xml for for ocn'
     export CDMS_NO_MPI=true

@@ -153,7 +153,10 @@ year1 = sys.argv[4]
 year2 = sys.argv[5]
 color = sys.argv[6]
 ts_num_years = sys.argv[7]
-atmosphere_only = bool(sys.argv[8])
+if sys.argv[8].lower() == "false":
+    atmosphere_only = False
+else:
+    atmosphere_only = True
 exps = [
     {
         "atmos": "{}/post/atm/glb/ts/monthly/{}yr/glb.xml".format(
