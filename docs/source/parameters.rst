@@ -118,7 +118,7 @@ types and default values for the parameters. ::
         # They also require `obs_ts` and `ref_start_yr` to be set.
         # "qbo" requires `ref_final_yr` to be set as well.
         # "diurnal_cycle" requires `climo_diurnal_subsection` and `ds_obs_climo` to be set.
-        sets = string_list(default=list("lat_lon","zonal_mean_xy","zonal_mean_2d","polar","cosp_histogram","meridional_mean_2d","enso_diags","qbo","area_mean_time_series","diurnal_cycle"))
+        sets = string_list(default=list("lat_lon","zonal_mean_xy","zonal_mean_2d","polar","cosp_histogram","meridional_mean_2d","enso_diags","qbo","diurnal_cycle","annual_cycle_zonal_mean","streamflow","zonal_mean_2d_stratosphere"))
         # See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html
         backend = string(default="mpl")
         # See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html
@@ -211,6 +211,8 @@ types and default values for the parameters. ::
         [global_time_series]
         # Set to True to run this section
         active = boolean(default=True)
+        # The specific subdirectory with the ocean data
+        input_subdir = string(default="archive/ocn/hist")
         # The number of nodes to use
         nodes = integer(default=1)
         # The maximum time to run
@@ -227,3 +229,5 @@ types and default values for the parameters. ::
         experiment_name = string(default="")
         ts_years = string_list(default=list(""))
         climo_years = string_list(default=list(""))
+        # Set to True to skip figures requiring ocean data.
+        atmosphere_only = boolean(default=False)

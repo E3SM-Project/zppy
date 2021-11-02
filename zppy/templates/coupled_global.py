@@ -153,16 +153,24 @@ year1 = sys.argv[4]
 year2 = sys.argv[5]
 color = sys.argv[6]
 ts_num_years = sys.argv[7]
+if sys.argv[8].lower() == "false":
+    atmosphere_only = False
+else:
+    atmosphere_only = True
 exps = [
     {
         "atmos": "{}/post/atm/glb/ts/monthly/{}yr/glb.xml".format(
             case_dir, ts_num_years
         ),
-        "ocean": "{}/post/ocn/glb/ts/monthly/{}yr/glb.xml".format(
-            case_dir, ts_num_years
-        ),
-        "moc": "{}/post/ocn/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
-        "vol": "{}/post/ocn/glb/ts/monthly/{}yr/glb.xml".format(case_dir, ts_num_years),
+        "ocean": None
+        if atmosphere_only
+        else "{}/post/ocn/glb/ts/monthly/{}yr/glb.xml".format(case_dir, ts_num_years),
+        "moc": None
+        if atmosphere_only
+        else "{}/post/ocn/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
+        "vol": None
+        if atmosphere_only
+        else "{}/post/ocn/glb/ts/monthly/{}yr/glb.xml".format(case_dir, ts_num_years),
         "name": experiment_name,
         "yoffset": 0.0,
         "yr": ([{{year1}}, {{year2}}],),

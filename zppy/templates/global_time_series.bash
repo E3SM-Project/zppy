@@ -36,6 +36,10 @@ www={{ www }}
 case_dir={{ output }}
 global_ts_dir={{ global_time_series_dir }}
 
+# Options
+atmosphere_only={{ atmosphere_only }}
+atmosphere_only=${atmosphere_only,,}
+
 ################################################################################
 
 echo 'Create xml files for atm'
@@ -48,29 +52,32 @@ if [ $? != 0 ]; then
   exit 1
 fi
 
-echo 'Create ocean time series'
-cd ${global_ts_dir}
-mkdir -p ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
-python ocean_month.py {{ input }} ${case_dir} ${start_yr} ${end_yr} ${ts_num_years}
+if [[ ${atmosphere_only} == "false" ]]; then
 
-echo 'Create xml for for ocn'
-export CDMS_NO_MPI=true
-cd ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
-cdscan -x glb.xml *.nc
-if [ $? != 0 ]; then
-  cd {{ scriptDir }}
-  echo 'ERROR (2)' > {{ prefix }}.status
-  exit 2
+    echo 'Create ocean time series'
+    cd ${global_ts_dir}
+    mkdir -p ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
+    input={{ input }}/{{ input_subdir }}
+    python ocean_month.py ${input} ${case_dir} ${start_yr} ${end_yr} ${ts_num_years}
+
+    echo 'Create xml for for ocn'
+    export CDMS_NO_MPI=true
+    cd ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
+    cdscan -x glb.xml *.nc
+    if [ $? != 0 ]; then
+	cd {{ scriptDir }}
+	echo 'ERROR (2)' > {{ prefix }}.status
+	exit 2
+    fi
+
+    echo 'Copy moc file'
+    cd ${case_dir}/post/analysis/mpas_analysis/cache/timeseries/moc
+    cp ${moc_file} ../../../../../ocn/glb/ts/monthly/${ts_num_years}yr/
 fi
-
-
-echo 'Copy moc file'
-cd ${case_dir}/post/analysis/mpas_analysis/cache/timeseries/moc
-cp ${moc_file} ../../../../../ocn/glb/ts/monthly/${ts_num_years}yr/
 
 echo 'Update time series figures'
 cd ${global_ts_dir}
-python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years}
+python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} ${atmosphere_only}
 
 echo 'Copy images to directory'
 results_dir={{ prefix }}_results

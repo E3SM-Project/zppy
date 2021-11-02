@@ -25,6 +25,8 @@ The paths to ``e3sm_unified`` activation scripts are machine dependent:
 
      source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_cori-haswell.sh
 
+Note that Cori-Haswell should be used rather than Cori-knl.
+
 **Anvil**
     ::
 
