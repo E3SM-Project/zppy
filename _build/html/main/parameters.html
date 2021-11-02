@@ -279,7 +279,7 @@ types and default values for the parameters.</p>
 <span class="c1"># They also require `obs_ts` and `ref_start_yr` to be set.</span>
 <span class="c1"># &quot;qbo&quot; requires `ref_final_yr` to be set as well.</span>
 <span class="c1"># &quot;diurnal_cycle&quot; requires `climo_diurnal_subsection` and `ds_obs_climo` to be set.</span>
-<span class="n">sets</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;lat_lon&quot;</span><span class="p">,</span><span class="s2">&quot;zonal_mean_xy&quot;</span><span class="p">,</span><span class="s2">&quot;zonal_mean_2d&quot;</span><span class="p">,</span><span class="s2">&quot;polar&quot;</span><span class="p">,</span><span class="s2">&quot;cosp_histogram&quot;</span><span class="p">,</span><span class="s2">&quot;meridional_mean_2d&quot;</span><span class="p">,</span><span class="s2">&quot;enso_diags&quot;</span><span class="p">,</span><span class="s2">&quot;qbo&quot;</span><span class="p">,</span><span class="s2">&quot;area_mean_time_series&quot;</span><span class="p">,</span><span class="s2">&quot;diurnal_cycle&quot;</span><span class="p">))</span>
+<span class="n">sets</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;lat_lon&quot;</span><span class="p">,</span><span class="s2">&quot;zonal_mean_xy&quot;</span><span class="p">,</span><span class="s2">&quot;zonal_mean_2d&quot;</span><span class="p">,</span><span class="s2">&quot;polar&quot;</span><span class="p">,</span><span class="s2">&quot;cosp_histogram&quot;</span><span class="p">,</span><span class="s2">&quot;meridional_mean_2d&quot;</span><span class="p">,</span><span class="s2">&quot;enso_diags&quot;</span><span class="p">,</span><span class="s2">&quot;qbo&quot;</span><span class="p">,</span><span class="s2">&quot;diurnal_cycle&quot;</span><span class="p">,</span><span class="s2">&quot;annual_cycle_zonal_mean&quot;</span><span class="p">,</span><span class="s2">&quot;streamflow&quot;</span><span class="p">,</span><span class="s2">&quot;zonal_mean_2d_stratosphere&quot;</span><span class="p">))</span>
 <span class="c1"># See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html</span>
 <span class="n">backend</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;mpl&quot;</span><span class="p">)</span>
 <span class="c1"># See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html</span>
@@ -372,6 +372,8 @@ types and default values for the parameters.</p>
 <span class="p">[</span><span class="n">global_time_series</span><span class="p">]</span>
 <span class="c1"># Set to True to run this section</span>
 <span class="n">active</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># The specific subdirectory with the ocean data</span>
+<span class="n">input_subdir</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;archive/ocn/hist&quot;</span><span class="p">)</span>
 <span class="c1"># The number of nodes to use</span>
 <span class="n">nodes</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="c1"># The maximum time to run</span>
@@ -388,6 +390,8 @@ types and default values for the parameters.</p>
 <span class="n">experiment_name</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="n">ts_years</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
 <span class="n">climo_years</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+<span class="c1"># Set to True to skip figures requiring ocean data.</span>
+<span class="n">atmosphere_only</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
