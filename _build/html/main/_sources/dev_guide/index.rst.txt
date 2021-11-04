@@ -10,3 +10,4 @@ Developer Guide
    release
    testing_e3sm_unified
    new_diags_set
+   new_task
