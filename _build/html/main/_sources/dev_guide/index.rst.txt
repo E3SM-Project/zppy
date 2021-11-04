@@ -9,3 +9,4 @@ Developer Guide
    testing
    release
    testing_e3sm_unified
+   new_diags_set
