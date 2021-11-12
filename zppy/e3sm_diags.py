@@ -91,6 +91,14 @@ def e3sm_diags(config, scriptDir):
                                 % (start_yr, end_yr, c["ts_num_years"]),
                             )
                         )
+                    if "tc_analysis" in c["sets"]:
+                        dependencies.append(
+                            os.path.join(
+                                scriptDir,
+                                "postprocess_tc_%04d-%04d.status"
+                                % (c["year1"], c["year2"]),
+                            )
+                        )
 
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)

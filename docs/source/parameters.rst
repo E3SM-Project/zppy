@@ -97,6 +97,21 @@ types and default values for the parameters. ::
         # Time-steps per day
         tpd = integer(default=1)
 
+	[postprocess_tc]
+	# Set to True to run this section
+	active = boolean(default=True)
+	# Quality of service
+	qos = string(default="regular")
+	# The number of nodes to use
+	nodes = integer(default=1)
+	# The maximum time to run
+	walltime = string(default="02:00:00")
+	# The years to run; "1:100:10" would mean process years 1-100 in 10-year increments
+	years = string_list(default=list(""))
+	# The following parameters aren't defined in `default.ini`
+	# The scratch directory
+	scratch = string
+
         [e3sm_diags]
         # Set to True to run this section
         active = boolean(default=True)
@@ -148,6 +163,8 @@ types and default values for the parameters. ::
         obs_ts = string
 	# Path to observation data for streamflow diagnostics
 	streamflow_obs_ts = string
+	# Path to observation data for tropical cyclone diagnostics
+	tc_obs = string
         # Start year for the reference data
         ref_start_yr = string
         # End year (i.e., the last year to use) for the reference data
