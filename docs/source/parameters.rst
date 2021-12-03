@@ -108,7 +108,9 @@ types and default values for the parameters. ::
 	walltime = string(default="02:00:00")
 	# The years to run; "1:100:10" would mean process years 1-100 in 10-year increments
 	years = string_list(default=list(""))
-	# The following parameters aren't defined in `default.ini`
+	# Which files to use as input
+	input_files = string(default="eam.h2")
+	# The following parameter isn't defined in `default.ini`
 	# The scratch directory
 	scratch = string
 

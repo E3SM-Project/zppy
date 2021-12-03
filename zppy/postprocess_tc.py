@@ -30,6 +30,10 @@ def postprocess_tc(config, scriptDir):
             c["year1"] = s[0]
             c["year2"] = s[1]
             c["scriptDir"] = scriptDir
+            if c["input_files"]:
+                c["atm_name"] = c["input_files"].split(".")[0]
+            else:
+                raise Exception("No value was given for `input_files`.")
             prefix = "postprocess_tc_%04d-%04d" % (
                 c["year1"],
                 c["year2"],

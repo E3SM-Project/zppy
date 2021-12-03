@@ -227,7 +227,7 @@ params.append(streamflow_param)
 {%- if "tc_analysis" in sets %}
 tc_param = TCAnalysisParameter()
 tc_param.reference_data_path = '{{ tc_obs }}'
-tc_param.test_data_path = "{{ output }}/post/atm/tc/tc-analysis"
+tc_param.test_data_path = "{{ output }}/post/atm/tc-analysis"
 tc_param.short_test_name = "e3sm_v2"
 tc_param.test_start_yr = start_yr
 tc_param.test_end_yr = end_yr

@@ -240,4 +240,3 @@ Streamflow: The new parameter had to be included:
           streamflow_obs_ts = '/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/time-series/'
 
 The expected files will have to be updated as well.
-

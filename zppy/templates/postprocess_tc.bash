@@ -22,8 +22,6 @@ echo "RUNNING ${id}" > {{ prefix }}.status
 # A Bash script to post-process E3SM 6 hourly (h2) instantaneous output to generate a text file storing Tropical Cyclone tracks
 # tempestremap and tempestextremes are built in e3sm-unified from version 1.5.0.
 
-source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_cori-haswell.sh
-
 #For typical EAM v2 ne gp2 grids.
 start="{{ '%04d' % (year1) }}"
 end="{{ '%04d' % (year2) }}"
@@ -31,13 +29,26 @@ caseid="{{ case }}"
 drc_in={{ input }}/{{ input_subdir }}
 # Warning: tempest-remap can only write grid file on SCRATCH space.
 # The result files will be moved to another path at the end.
-result_dir_fin={{ output }}/post/atm/tc # Directory will be {{ output }}/post/atm/tc/tc-analysis
+result_dir_fin={{ output }}/post/atm # Directory will be {{ output }}/post/atm/tc-analysis
 mkdir -p $result_dir_fin
 result_dir={{ scratch }}/tc-analysis/
 
-res=30               # res = 30/120 for ne30/ne120 grids
-pg2=true             # Set false for v1 production simulations
-atm_name="eam"       # Use "cam" for v1 production simulations
+atm_name={{ atm_name }}
+
+# Determine res and pg2
+first_file=`echo $(ls ${drc_in}/${caseid}.{{ input_files }}.*.nc | head -n 1)`
+topography_file=`echo $(ncks --trd -M -m ${first_file} | grep -E -i "^global attribute [0-9]+: topography_file" | cut -f 11- -d ' ' | sort)`
+res=""
+pg2=false
+if [[ $topography_file =~ /.*_(.*)_.*nc ]]; then
+    grid=${BASH_REMATCH[1]}
+    if [[ $grid =~ ne([0-9]*) ]]; then
+	res=${BASH_REMATCH[1]}
+    fi
+    if [[ $grid =~ pg2 ]]; then
+	pg2=true
+    fi
+fi
 
 mkdir -p $result_dir
 file_name=${caseid}_${start}_${end}
