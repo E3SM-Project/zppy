@@ -13,6 +13,11 @@ Code snippets are from the following two pull requests:
 - `Diurnal Cycle <https://github.com/E3SM-Project/zppy/pull/34>`_
 - `Streamflow <https://github.com/E3SM-Project/zppy/pull/126/files>`_
 
+.. warning ::
+
+    Code blocks in this guide are taken from these pull requests.
+    They may be outdated because of more recent changes.
+
 Handle dependencies
 ===================
 
