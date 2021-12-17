@@ -48,7 +48,7 @@ ncclimo \
 {%- endif %}
 --model={{ input_files.split(".")[0] }}
 
-{% elif frequency.startswith('monthly_diurnal') %}
+{% elif frequency.startswith('diurnal') %}
 
 # --- Diurnal cycle climatologies ---
 
@@ -125,21 +125,19 @@ if [ $? != 0 ]; then
 fi
 
 # Move regridded climo files to final destination
+subdir=""
 {% if frequency == 'monthly' %}
 {
-  dest={{ output }}/post/{{ component }}/{{ grid }}/clim/{{ '%dyr' % (yr_end-yr_start+1) }}
-  mkdir -p ${dest}
-  mv output/*.nc ${dest}
+ subdir=clim
 }
-
-{% elif frequency.startswith('monthly_diurnal') %}
+{% elif frequency.startswith('diurnal') %}
 {
-  dest={{ output }}/post/{{ component }}/{{ grid }}/clim_{{ subsection }}/{{ '%dyr' % (yr_end-yr_start+1) }}
-  mkdir -p ${dest}
-  mv output/*.nc ${dest}
+ subdir=clim_{{ frequency }}
 }
-
 {%- endif %}
+dest={{ output }}/post/{{ component }}/{{ grid }}/${subdir}/{{ '%dyr' % (yr_end-yr_start+1) }}
+mkdir -p ${dest}
+mv output/*.nc ${dest}
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}

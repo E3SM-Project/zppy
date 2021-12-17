@@ -48,8 +48,8 @@ cd ..
 
 {%- if "diurnal_cycle" in sets %}
 # Create local links to input diurnal cycle climo files
-climoDir={{ output }}/post/atm/{{ grid }}/clim_{{ climo_diurnal_subsection }}/{{ '%dyr' % (year2-year1+1) }}
-climoDirCopy=climo_{{ climo_diurnal_subsection }}
+climoDir={{ output }}/post/atm/{{ grid }}/clim_{{ climo_diurnal_frequency }}/{{ '%dyr' % (year2-year1+1) }}
+climoDirCopy=climo_{{ climo_diurnal_frequency }}
 mkdir -p ${climoDirCopy}
 cd ${climoDirCopy}
 cp -s ${climoDir}/${case}.eam.h4_*_${Y1}??_${Y2}??_climo.nc .
@@ -201,7 +201,7 @@ params.append(ts_param)
 {%- if "diurnal_cycle" in sets %}
 dc_param = DiurnalCycleParameter()
 dc_param.reference_data_path = '{{ dc_obs_climo }}'
-dc_param.test_data_path = 'climo_{{ climo_diurnal_subsection }}'
+dc_param.test_data_path = 'climo_{{ climo_diurnal_frequency }}'
 dc_param.short_test_name = short_name
 # Plotting diurnal cycle amplitude on different scales. Default is True
 dc_param.normalize_test_amp = False
