@@ -58,7 +58,7 @@ types and default values for the parameters. ::
         walltime = string(default="02:00:00")
         # Which files to use as input
         input_files = string(default="eam.h0")
-        # The frequency of the data. Options include "monthly", "monthly_diurnal_8xdaily"
+        # The frequency of the data. Options include "monthly", "diurnal_8xdaily"
         frequency = string(default="monthly")
         # The mapping file to use
         mapping_file = string(default="")
@@ -81,7 +81,7 @@ types and default values for the parameters. ::
         walltime = string(default="02:00:00")
         # Which files to use as input
         input_files = string(default="eam.h0")
-        # The frequency of the data. Options include "monthly", "monthly_diurnal_8xdaily"
+        # The frequency of the data. Options include "monthly", "diurnal_8xdaily"
         frequency = string(default="monthly")
         # The mapping file to use
         mapping_file = string(default="")
@@ -117,7 +117,7 @@ types and default values for the parameters. ::
         # Note that "enso_diags","qbo","area_mean_time_series" require time-series data.
         # They also require `obs_ts` and `ref_start_yr` to be set.
         # "qbo" requires `ref_final_yr` to be set as well.
-        # "diurnal_cycle" requires `climo_diurnal_subsection` and `ds_obs_climo` to be set.
+        # "diurnal_cycle" requires `climo_diurnal_subsection`, `climo_diurnal_frequency`, and `ds_obs_climo` to be set.
         sets = string_list(default=list("lat_lon","zonal_mean_xy","zonal_mean_2d","polar","cosp_histogram","meridional_mean_2d","enso_diags","qbo","diurnal_cycle","annual_cycle_zonal_mean","streamflow","zonal_mean_2d_stratosphere"))
         # See https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html
         backend = string(default="mpl")
@@ -139,6 +139,8 @@ types and default values for the parameters. ::
         vars = string(default="FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,TAUX,TAUY,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT,CLDTOT,CLDHGH,CLDMED,CLDLOW,U")
         # Name of the subsection of `[climo]` to use for "diurnal_cycle" runs
         climo_diurnal_subsection = string(default="")
+        # Name of the frequency from `[climo]` to use for "diurnal_cycle" runs
+        climo_diurnal_frequency = string(default="")
         # The following parameters aren't defined in `default.ini`
         # Path to observation data for diurnal cycle runs
         dc_obs_climo = string
