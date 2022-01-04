@@ -11,7 +11,7 @@ from zppy.e3sm_diags import e3sm_diags
 from zppy.e3sm_diags_vs_model import e3sm_diags_vs_model
 from zppy.global_time_series import global_time_series
 from zppy.mpas_analysis import mpas_analysis
-from zppy.postprocess_tc import postprocess_tc
+from zppy.tc_analysis import tc_analysis
 from zppy.ts import ts
 
 
@@ -97,8 +97,8 @@ def main():
     # time series tasks
     ts(config, scriptDir)
 
-    # postprocess_tc tasks
-    postprocess_tc(config, scriptDir)
+    # tc_analysis tasks
+    tc_analysis(config, scriptDir)
 
     # e3sm_diags tasks
     e3sm_diags(config, scriptDir)

@@ -7,17 +7,17 @@ from zppy.utils import checkStatus, getTasks, getYears, submitScript
 
 
 # -----------------------------------------------------------------------------
-def postprocess_tc(config, scriptDir):
+def tc_analysis(config, scriptDir):
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
         searchpath=config["default"]["templateDir"]
     )
     templateEnv = jinja2.Environment(loader=templateLoader)
-    template = templateEnv.get_template("postprocess_tc.bash")
+    template = templateEnv.get_template("tc_analysis.bash")
 
     # --- List of <task-name> tasks ---
-    tasks = getTasks(config, "postprocess_tc")
+    tasks = getTasks(config, "tc_analysis")
     if len(tasks) == 0:
         return
 
@@ -34,7 +34,7 @@ def postprocess_tc(config, scriptDir):
                 c["atm_name"] = c["input_files"].split(".")[0]
             else:
                 raise Exception("No value was given for `input_files`.")
-            prefix = "postprocess_tc_%04d-%04d" % (
+            prefix = "tc_analysis_%04d-%04d" % (
                 c["year1"],
                 c["year2"],
             )

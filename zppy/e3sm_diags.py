@@ -95,7 +95,7 @@ def e3sm_diags(config, scriptDir):
                         dependencies.append(
                             os.path.join(
                                 scriptDir,
-                                "postprocess_tc_%04d-%04d.status"
+                                "tc_analysis_%04d-%04d.status"
                                 % (c["year1"], c["year2"]),
                             )
                         )

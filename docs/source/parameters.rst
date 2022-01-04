@@ -97,7 +97,7 @@ types and default values for the parameters. ::
         # Time-steps per day
         tpd = integer(default=1)
 
-	[postprocess_tc]
+	[tc_analysis]
 	# Set to True to run this section
 	active = boolean(default=True)
 	# Quality of service
