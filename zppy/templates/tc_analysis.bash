@@ -3,6 +3,8 @@
 
 {{ environment_commands }}
 
+set -e # Stop running script on error
+
 # Turn on debug output if needed
 debug={{ debug }}
 if [[ "${debug,,}" == "true" ]]; then
@@ -29,9 +31,13 @@ caseid="{{ case }}"
 drc_in={{ input }}/{{ input_subdir }}
 # Warning: tempest-remap can only write grid file on SCRATCH space.
 # The result files will be moved to another path at the end.
-result_dir_fin={{ output }}/post/atm # Directory will be {{ output }}/post/atm/tc-analysis
+result_dir_fin={{ output }}/post/atm # Directory will be {{ output }}/post/atm/tc-analysis_${Y1}_${Y2}
 mkdir -p $result_dir_fin
-result_dir={{ scratch }}/tc-analysis/
+y1={{ year1 }}
+y2={{ year2 }}
+Y1="{{ '%04d' % (year1) }}"
+Y2="{{ '%04d' % (year2) }}"
+result_dir={{ scratch }}/tc-analysis_${Y1}_${Y2}/
 
 atm_name={{ atm_name }}
 
