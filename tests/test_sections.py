@@ -48,6 +48,7 @@ class TestAllSets(unittest.TestCase):
             "debug": False,
             "dry_run": False,
             "campaign": "none",
+            "environment_commands": "",
             "templateDir": "zppy/templates",
         }
         self.assertEqual(actual_default, expected_default)
@@ -83,6 +84,7 @@ class TestAllSets(unittest.TestCase):
             "debug": False,
             "dpf": 30,
             "dry_run": False,
+            "environment_commands": "",
             "frequency": "monthly",
             "grid": "",
             "input": "INPUT",
@@ -130,6 +132,7 @@ class TestAllSets(unittest.TestCase):
             "case": "CASE",
             "debug": False,
             "dry_run": False,
+            "environment_commands": "",
             "exclude": False,
             "frequency": "monthly",
             "grid": "",
@@ -165,6 +168,7 @@ class TestAllSets(unittest.TestCase):
             "debug": False,
             "dry_run": False,
             "campaign": "none",
+            "environment_commands": "",
             "templateDir": "zppy/templates",
         }
         self.assertEqual(actual_default, expected_default)
@@ -232,6 +236,7 @@ class TestAllSets(unittest.TestCase):
             "debug": False,
             "dpf": 30,
             "dry_run": False,
+            "environment_commands": "",
             "frequency": "monthly",
             "grid": "",
             "input": "INPUT",
@@ -261,6 +266,7 @@ class TestAllSets(unittest.TestCase):
             "debug": False,
             "dpf": 30,
             "dry_run": False,
+            "environment_commands": "",
             "frequency": "monthly",
             "grid": "",
             "input": "INPUT",
@@ -335,6 +341,7 @@ class TestAllSets(unittest.TestCase):
             "case": "CASE",
             "debug": False,
             "dry_run": False,
+            "environment_commands": "",
             "exclude": False,
             "frequency": "monthly",
             "grid": "",
@@ -361,6 +368,7 @@ class TestAllSets(unittest.TestCase):
             "case": "CASE",
             "debug": False,
             "dry_run": False,
+            "environment_commands": "",
             "exclude": False,
             "frequency": "monthly",
             "grid": "",

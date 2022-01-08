@@ -81,7 +81,7 @@ def main():
             machine = "chrysalis"
             environment_commands = "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh"
     config["default"]["machine"] = machine
-    if "environment_commands" not in config["default"].keys():
+    if config["default"]["environment_commands"] == "":
         config["default"]["environment_commands"] = environment_commands
 
     # climo tasks
