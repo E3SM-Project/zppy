@@ -36,8 +36,6 @@ types and default values for the parameters. ::
         debug = boolean(default=False)
         # The partition of the machine to run on
         partition = string(default="")
-        # The version of E3SM Unified to use
-        e3sm_unified = option('latest', 'test', default='latest')
         # This should be set to True if you don't want the batch jobs to be submitted
         dry_run = boolean(default=False)
         # Specify which campaign you are running.
