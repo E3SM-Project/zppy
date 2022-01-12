@@ -36,13 +36,10 @@ types and default values for the parameters. ::
         debug = boolean(default=False)
         # The partition of the machine to run on
         partition = string(default="")
-        # The version of E3SM Unified to use
-        e3sm_unified = option('latest', 'test', default='latest')
         # This should be set to True if you don't want the batch jobs to be submitted
         dry_run = boolean(default=False)
         # Specify which campaign you are running.
         campaign = string(default="none")
-        # The following parameter is not defined in `default.ini`
         # Set up the environment -- this is where you can tell zppy to use a custom conda environment.
         # To use a custom conda environment, you can set `environment_commands="source <path to conda.sh>; conda activate <custom environment>"`.
         environment_commands = string
