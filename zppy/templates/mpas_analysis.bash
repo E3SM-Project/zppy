@@ -296,11 +296,6 @@ purge="--purge"
 {% else %}
 purge=""
 {% endif %}
-{% if machine in ['compy'] %}
-mpi="--mpi=pmi2"
-{% else %}
-mpi=""
-{% endif %}
 
 {% if campaign == 'cryosphere' %}
 extra_config="--polar_regions"
@@ -308,7 +303,7 @@ extra_config="--polar_regions"
 extra_config=""
 {% endif %}
 
-srun ${mpi} -N 1 -n 1 mpas_analysis ${purge} --verbose ${extra_config} cfg/mpas_analysis_${identifier}.cfg
+mpas_analysis ${purge} --verbose ${extra_config} cfg/mpas_analysis_${identifier}.cfg
 if [ $? != 0 ]; then
   echo 'ERROR (1)' > {{ scriptDir }}/{{ prefix }}.status
   exit 1
