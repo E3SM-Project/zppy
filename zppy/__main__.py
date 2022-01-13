@@ -73,7 +73,13 @@ def main():
             )
         elif tmp.startswith("cori"):
             machine = "cori"
-            environment_commands = "source /global/cfs/cdirs/e3sm/software/anaconda_envs/load_latest_e3sm_unified_cori-haswell.sh"
+            partition = config["default"]["partition"]
+            if partition not in ["haswell", "knl"]:
+                raise ValueError(
+                    f'Expected Cori parition to be "haswell" or '
+                    f'"knl" but got: {partition}'
+                )
+            environment_commands = f"source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_cori-{partition}.sh"
         elif tmp.startswith("blues"):
             machine = "anvil"
             environment_commands = "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_anvil.sh"
