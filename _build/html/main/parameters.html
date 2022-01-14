@@ -255,6 +255,23 @@ types and default values for the parameters.</p>
 <span class="c1"># Time-steps per day</span>
 <span class="n">tpd</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
+<span class="p">[</span><span class="n">tc_analysis</span><span class="p">]</span>
+<span class="c1"># Set to True to run this section</span>
+<span class="n">active</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Quality of service</span>
+<span class="n">qos</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;regular&quot;</span><span class="p">)</span>
+<span class="c1"># The number of nodes to use</span>
+<span class="n">nodes</span> <span class="o">=</span> <span class="n">integer</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># The maximum time to run</span>
+<span class="n">walltime</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;02:00:00&quot;</span><span class="p">)</span>
+<span class="c1"># The years to run; &quot;1:100:10&quot; would mean process years 1-100 in 10-year increments</span>
+<span class="n">years</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+<span class="c1"># Which files to use as input</span>
+<span class="n">input_files</span> <span class="o">=</span> <span class="n">string</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;eam.h2&quot;</span><span class="p">)</span>
+<span class="c1"># The following parameter isn&#39;t defined in `default.ini`</span>
+<span class="c1"># The scratch directory</span>
+<span class="n">scratch</span> <span class="o">=</span> <span class="n">string</span>
+
 <span class="p">[</span><span class="n">e3sm_diags</span><span class="p">]</span>
 <span class="c1"># Set to True to run this section</span>
 <span class="n">active</span> <span class="o">=</span> <span class="n">boolean</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -306,6 +323,8 @@ types and default values for the parameters.</p>
 <span class="n">obs_ts</span> <span class="o">=</span> <span class="n">string</span>
 <span class="c1"># Path to observation data for streamflow diagnostics</span>
 <span class="n">streamflow_obs_ts</span> <span class="o">=</span> <span class="n">string</span>
+<span class="c1"># Path to observation data for tropical cyclone diagnostics</span>
+<span class="n">tc_obs</span> <span class="o">=</span> <span class="n">string</span>
 <span class="c1"># Start year for the reference data</span>
 <span class="n">ref_start_yr</span> <span class="o">=</span> <span class="n">string</span>
 <span class="c1"># End year (i.e., the last year to use) for the reference data</span>

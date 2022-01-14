@@ -107,6 +107,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#the-task-s-python-file">The task’s Python file</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-main-file">The main file</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#update-defaults">Update defaults</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#update-the-tutorial">Update the tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#explain-new-parameters">Explain new parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#update-the-tests">Update the tests</a></li>
 </ul>
 </li>
 </ul>
@@ -185,7 +188,7 @@
 <h1>Adding a new task<a class="headerlink" href="#adding-a-new-task" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="the-task-s-bash-file">
 <h2>The task’s bash file<a class="headerlink" href="#the-task-s-bash-file" title="Permalink to this headline">¶</a></h2>
-<p>Create <code class="docutils literal notranslate"><span class="pre">zppy/templates/&lt;task-name&gt;.py</span></code>.
+<p>Create <code class="docutils literal notranslate"><span class="pre">zppy/templates/&lt;task-name&gt;.bash</span></code>.
 This is where the bulk of the work required for a task will be.
 Most of the file is task-specific, so it is difficult to describe precise steps.
 Some key parts, however, are displayed below:</p>
@@ -341,6 +344,31 @@ below example, adapted from <code class="docutils literal notranslate"><span cla
 </pre></div>
 </div>
 </div></blockquote>
+</div>
+<div class="section" id="update-the-tutorial">
+<h2>Update the tutorial<a class="headerlink" href="#update-the-tutorial" title="Permalink to this headline">¶</a></h2>
+<p>Add example values for parameters in <code class="docutils literal notranslate"><span class="pre">docs/source/post.mysimulation.cfg</span></code>.</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="o">&lt;</span><span class="n">task</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span> <span class="p">]</span>
+<span class="o">...</span> <span class="c1"># Specify parameters that would likely apply to all sub-tasks</span>
+
+    <span class="p">[[</span> <span class="o">&lt;</span><span class="n">subtask</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span> <span class="p">]]</span> <span class="c1"># Only if the task supports sub-tasks</span>
+    <span class="o">...</span> <span class="c1"># Specify parameters that make more sense defined in the sub-tasks</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="explain-new-parameters">
+<h2>Explain new parameters<a class="headerlink" href="#explain-new-parameters" title="Permalink to this headline">¶</a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">docs/source/parameters.rst</span></code></p>
+<p>Copy defaults from <code class="docutils literal notranslate"><span class="pre">zppy/templates/default.ini</span></code> and add a comment line
+above each explaining the parameter.</p>
+</div>
+<div class="section" id="update-the-tests">
+<h2>Update the tests<a class="headerlink" href="#update-the-tests" title="Permalink to this headline">¶</a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">tests/integration/test_*.cfg</span></code></p>
+<p>Copy example values from <code class="docutils literal notranslate"><span class="pre">docs/source/post.mysimulation.cfg</span></code>.
+The expected files will have to be updated as well.</p>
 </div>
 </div>
 
