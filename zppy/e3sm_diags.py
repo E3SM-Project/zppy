@@ -22,6 +22,8 @@ def e3sm_diags(config, scriptDir):
         return
 
     # --- Generate and submit e3sm_diags scripts ---
+    dependencies = []
+
     for c in tasks:
 
         if "ts_num_years" in c.keys():
@@ -57,12 +59,12 @@ def e3sm_diags(config, scriptDir):
                 f.write(template.render(**c))
 
             # List of dependencies
-            dependencies = [
+            dependencies.append(
                 os.path.join(
                     scriptDir,
                     "climo_%s_%04d-%04d.status" % (sub, c["year1"], c["year2"]),
                 ),
-            ]
+            )
             if "diurnal_cycle" in c["sets"]:
                 dependencies.append(
                     os.path.join(
@@ -118,3 +120,11 @@ def e3sm_diags(config, scriptDir):
                     # Update status file
                     with open(statusFile, "w") as f:
                         f.write("WAITING %d\n" % (jobid))
+
+                # Due to a `socket.gaierror: [Errno -2] Name or service not known` error when running e3sm_diags with tc_analysis
+                # on multiple year_sets, if tc_analysis is in sets, then e3sm_diags should be run sequentially.
+                if "tc_analysis" in c["sets"]:
+                    # Note that this line should still be executed even if jobid == -1
+                    # The later tc_analysis-using e3sm_diags tasks still depend on this task (and thus will also fail).
+                    # Add to the dependency list
+                    dependencies.append(statusFile)

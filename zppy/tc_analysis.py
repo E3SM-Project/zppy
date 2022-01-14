@@ -1,5 +1,6 @@
 import os
 import pprint
+from typing import List
 
 import jinja2
 
@@ -25,7 +26,7 @@ def tc_analysis(config, scriptDir):
 
     # There is a `GenerateConnectivityFile: error while loading shared libraries: libnetcdf.so.11: cannot open shared object file: No such file or directory` error
     # when multiple year_sets are run simultaneously. Therefore, we will wait for the completion of one year_set before moving on to the next.
-    dependencies = []
+    dependencies: List[str] = []
 
     for c in tasks:
 
@@ -63,7 +64,9 @@ def tc_analysis(config, scriptDir):
 
             if not c["dry_run"]:
                 # Submit job
-                jobid = submitScript(scriptFile, export="NONE")
+                jobid = submitScript(
+                    scriptFile, dependFiles=dependencies, export="NONE"
+                )
 
                 if jobid != -1:
                     # Update status file

@@ -229,8 +229,8 @@ tc_param = TCAnalysisParameter()
 tc_param.reference_data_path = '{{ tc_obs }}'
 tc_param.test_data_path = "{{ output }}/post/atm/tc-analysis_${Y1}_${Y2}"
 tc_param.short_test_name = "e3sm_v2"
-tc_param.test_start_yr = start_yr
-tc_param.test_end_yr = end_yr
+tc_param.test_start_yr = "${Y1}"
+tc_param.test_end_yr = "${Y2}"
 # For model vs obs, the ref start and end year can be any four digit strings
 # For now, use all available years from obs by default
 tc_param.ref_start_yr = "1979"
