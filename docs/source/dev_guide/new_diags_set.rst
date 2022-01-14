@@ -26,7 +26,7 @@ Sometimes a new set may require first editing the ``climo`` or ``ts`` functional
 Add dependencies in the Python file
 -----------------------------------
 
-In ``zppy/templates/e3sm_diags.py``
+In ``zppy/e3sm_diags.py``
 
 Diurnal Cycle: ``e3sm_diags`` had to be set up to depend on a new climatology subtask:
 
@@ -134,7 +134,8 @@ Streamflow: the ``rof_monthly`` subtask of ``ts`` had to be included:
           vars = "RIVER_DISCHARGE_OVER_LAND_LIQ"
           extra_vars = 'areatotal2'
 
-
+The expected files will have to be updated as well.
+	  
 Add the new set
 ===============
 
@@ -237,3 +238,5 @@ Streamflow: The new parameter had to be included:
     .. code::
 
           streamflow_obs_ts = '/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/time-series/'
+
+The expected files will have to be updated as well.

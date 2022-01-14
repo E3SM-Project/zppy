@@ -22,6 +22,8 @@ def e3sm_diags(config, scriptDir):
         return
 
     # --- Generate and submit e3sm_diags scripts ---
+    dependencies = []
+
     for c in tasks:
 
         if "ts_num_years" in c.keys():
@@ -57,12 +59,12 @@ def e3sm_diags(config, scriptDir):
                 f.write(template.render(**c))
 
             # List of dependencies
-            dependencies = [
+            dependencies.append(
                 os.path.join(
                     scriptDir,
                     "climo_%s_%04d-%04d.status" % (sub, c["year1"], c["year2"]),
                 ),
-            ]
+            )
             if "diurnal_cycle" in c["sets"]:
                 dependencies.append(
                     os.path.join(
@@ -71,18 +73,30 @@ def e3sm_diags(config, scriptDir):
                         % (c["climo_diurnal_subsection"], c["year1"], c["year2"]),
                     )
                 )
+            if "tc_analysis" in c["sets"]:
+                dependencies.append(
+                    os.path.join(
+                        scriptDir,
+                        "tc_analysis_%04d-%04d.status" % (c["year1"], c["year2"]),
+                    )
+                )
             # Iterate from year1 to year2 incrementing by the number of years per time series file.
             if "ts_num_years" in c.keys():
                 for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
                     start_yr = yr
                     end_yr = yr + c["ts_num_years"] - 1
-                    dependencies.append(
-                        os.path.join(
-                            scriptDir,
-                            "ts_%s_%04d-%04d-%04d.status"
-                            % (sub, start_yr, end_yr, c["ts_num_years"]),
+                    if (
+                        ("enso_diags" in c["sets"])
+                        or ("qbo" in c["sets"])
+                        or ("area_mean_time_series" in c["sets"])
+                    ):
+                        dependencies.append(
+                            os.path.join(
+                                scriptDir,
+                                "ts_%s_%04d-%04d-%04d.status"
+                                % (sub, start_yr, end_yr, c["ts_num_years"]),
+                            )
                         )
-                    )
                     if "streamflow" in c["sets"]:
                         dependencies.append(
                             os.path.join(
@@ -91,7 +105,6 @@ def e3sm_diags(config, scriptDir):
                                 % (start_yr, end_yr, c["ts_num_years"]),
                             )
                         )
-
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)
                 p.pprint(c)
@@ -107,3 +120,11 @@ def e3sm_diags(config, scriptDir):
                     # Update status file
                     with open(statusFile, "w") as f:
                         f.write("WAITING %d\n" % (jobid))
+
+                # Due to a `socket.gaierror: [Errno -2] Name or service not known` error when running e3sm_diags with tc_analysis
+                # on multiple year_sets, if tc_analysis is in sets, then e3sm_diags should be run sequentially.
+                if "tc_analysis" in c["sets"]:
+                    # Note that this line should still be executed even if jobid == -1
+                    # The later tc_analysis-using e3sm_diags tasks still depend on this task (and thus will also fail).
+                    # Add to the dependency list
+                    dependencies.append(statusFile)

@@ -5,7 +5,7 @@ Adding a new task
 The task's bash file
 =====================
 
-Create ``zppy/templates/<task-name>.py``.
+Create ``zppy/templates/<task-name>.bash``.
 This is where the bulk of the work required for a task will be.
 Most of the file is task-specific, so it is difficult to describe precise steps.
 Some key parts, however, are displayed below:
@@ -170,3 +170,29 @@ Add default values for parameters in ``zppy/templates/default.ini``.
             [[__many__]] # Only if the task supports sub-tasks
             ... # List the same parameters but with `default=None`
 
+Update the tutorial
+===================
+Add example values for parameters in ``docs/source/post.mysimulation.cfg``.
+
+    .. code::
+
+        [ <task-name> ]
+        ... # Specify parameters that would likely apply to all sub-tasks
+
+            [[ <subtask-name> ]] # Only if the task supports sub-tasks
+            ... # Specify parameters that make more sense defined in the sub-tasks
+
+Explain new parameters
+======================
+In ``docs/source/parameters.rst``
+
+Copy defaults from ``zppy/templates/default.ini`` and add a comment line
+above each explaining the parameter.
+
+
+Update the tests
+================
+In ``tests/integration/test_*.cfg``
+
+Copy example values from ``docs/source/post.mysimulation.cfg``.
+The expected files will have to be updated as well.

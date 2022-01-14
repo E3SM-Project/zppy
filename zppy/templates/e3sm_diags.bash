@@ -123,6 +123,10 @@ from e3sm_diags.parameter.qbo_parameter import QboParameter
 {%- if "streamflow" in sets %}
 from e3sm_diags.parameter.streamflow_parameter import StreamflowParameter
 {%- endif %}
+{%- if "tc_analysis" in sets %}
+from e3sm_diags.parameter.tc_analysis_parameter import TCAnalysisParameter
+{%- endif %}
+
 
 from e3sm_diags.run import runner
 
@@ -214,10 +218,24 @@ streamflow_param.reference_data_path = '{{ streamflow_obs_ts }}'
 streamflow_param.test_data_path = 'rof_links'
 streamflow_param.test_name = short_name
 streamflow_param.test_start_yr = start_yr
-streamflow_param.test_end_yr = end_yr # Streamflow gauge station data range from year 1986 to 1995
-streamflow_param.ref_start_yr = "1986"
+streamflow_param.test_end_yr = end_yr
+streamflow_param.ref_start_yr = "1986" # Streamflow gauge station data range from year 1986 to 1995
 streamflow_param.ref_end_yr = "1995"
 params.append(streamflow_param)
+{%- endif %}
+
+{%- if "tc_analysis" in sets %}
+tc_param = TCAnalysisParameter()
+tc_param.reference_data_path = '{{ tc_obs }}'
+tc_param.test_data_path = "{{ output }}/post/atm/tc-analysis_${Y1}_${Y2}"
+tc_param.short_test_name = "e3sm_v2"
+tc_param.test_start_yr = "${Y1}"
+tc_param.test_end_yr = "${Y2}"
+# For model vs obs, the ref start and end year can be any four digit strings
+# For now, use all available years from obs by default
+tc_param.ref_start_yr = "1979"
+tc_param.ref_end_yr = "2018"
+params.append(tc_param)
 {%- endif %}
 
 # Run
