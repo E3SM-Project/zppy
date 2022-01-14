@@ -39,6 +39,21 @@ class TestCampaign(unittest.TestCase):
         )
         self.assertEqual(os.system("rm -r test_campaign_cryosphere_override_output"), 0)
 
+    def test_campaign_high_res_v1(self):
+        self.assertEqual(
+            os.system("zppy -c tests/integration/test_campaign_high_res_v1.cfg"), 0
+        )
+        self.assertEqual(
+            os.system("rm test_campaign_high_res_v1_output/post/scripts/*.bash"), 0
+        )
+        self.assertEqual(
+            os.system(
+                "diff -u -I 'templateDir' test_campaign_high_res_v1_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_high_res_v1_expected_files"
+            ),
+            0,
+        )
+        self.assertEqual(os.system("rm -r test_campaign_high_res_v1_output"), 0)
+
     def test_campaign_none(self):
         self.assertEqual(
             os.system("zppy -c tests/integration/test_campaign_none.cfg"), 0
