@@ -22,6 +22,11 @@ def tc_analysis(config, scriptDir):
         return
 
     # --- Generate and submit <task-name> scripts ---
+
+    # There is a `GenerateConnectivityFile: error while loading shared libraries: libnetcdf.so.11: cannot open shared object file: No such file or directory` error
+    # when multiple year_sets are run simultaneously. Therefore, we will wait for the completion of one year_set before moving on to the next.
+    dependencies = []
+
     for c in tasks:
 
         # Loop over year sets
@@ -64,3 +69,8 @@ def tc_analysis(config, scriptDir):
                     # Update status file
                     with open(statusFile, "w") as f:
                         f.write("WAITING %d\n" % (jobid))
+
+                # Note that this line should still be executed even if jobid == -1
+                # The later tc_analysis tasks still depend on this task (and thus will also fail).
+                # Add to the dependency list
+                dependencies.append(statusFile)
