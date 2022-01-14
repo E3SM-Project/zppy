@@ -48,5 +48,6 @@ instantiating `Jinja <https://jinja.palletsprojects.com>`_ template scripts
    getting_started
    tutorial
    parameters
+   campaigns
    dev_guide/index
    contributing
