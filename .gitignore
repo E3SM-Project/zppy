@@ -5,14 +5,9 @@ zppy.egg-info/
 *~
 \#*
 
+test_*_output
+tests/*.cfg.txt
 tests/integration/image_check_failures
-test_bash_generation_output
-test_campaign_cryosphere_output
-test_campaign_cryosphere_override_output
-test_campaign_none_output
-test_campaign_water_cycle_output
-test_campaign_water_cycle_override_output
-*.cfg.txt
 
 # Sphinx documentation
 docs/_build/

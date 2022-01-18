@@ -39,6 +39,8 @@ class TestAllSets(unittest.TestCase):
         # default
         actual_default = config["default"]
         expected_default = {
+            "active": False,
+            "campaign": "none",
             "input": "INPUT",
             "input_subdir": "INPUT_SUBDIR",
             "output": "OUTPUT",
@@ -57,7 +59,7 @@ class TestAllSets(unittest.TestCase):
         section_name = "ts"
         actual_section = config[section_name]
         expected_section = {
-            "active": True,
+            "active": "True",
             "vars": "FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT",
             "extra_vars": "",
             "mapping_file": "MAPPING_FILE_TS",
@@ -77,7 +79,7 @@ class TestAllSets(unittest.TestCase):
         self.assertEqual(len(actual_tasks), 1)
         actual_task = actual_tasks[0]
         expected_task = {
-            "active": True,
+            "active": "True",
             "area_nm": "area",
             "campaign": "none",
             "case": "CASE",
@@ -110,7 +112,7 @@ class TestAllSets(unittest.TestCase):
         section_name = "climo"
         actual_section = config[section_name]
         expected_section = {
-            "active": True,
+            "active": "True",
             "years": ["0001:0050:50"],
             "mapping_file": "MAPPING_FILE_CLIMO",
             "qos": "regular",
@@ -127,7 +129,7 @@ class TestAllSets(unittest.TestCase):
         self.assertEqual(len(actual_tasks), 1)
         actual_task = actual_tasks[0]
         expected_task = {
-            "active": True,
+            "active": "True",
             "campaign": "none",
             "case": "CASE",
             "debug": False,
@@ -153,12 +155,29 @@ class TestAllSets(unittest.TestCase):
         }
         self.assertEqual(actual_task, expected_task)
 
+        # tc_analysis: test an inactive task
+        section_name = "tc_analysis"
+        actual_section = config[section_name]
+        self.assertTrue(actual_section["active"] == "False")
+        actual_tasks = getTasks(config, section_name)
+        self.assertEqual(len(actual_tasks), 1)
+        actual_task = actual_tasks[0]
+        self.assertTrue(actual_task["active"] == "False")
+
+        # e3sm_diags: test an excluded task
+        section_name = "e3sm_diags"
+        actual_section = config[section_name]
+        self.assertTrue("active" not in actual_section.keys())
+        actual_tasks = getTasks(config, section_name)
+        self.assertEqual(len(actual_tasks), 0)
+
     def test_subsections(self):
         config = get_config(self, "tests/test_subsections.cfg")
 
         # default
         actual_default = config["default"]
         expected_default = {
+            "active": False,
             "input": "INPUT",
             "input_subdir": "INPUT_SUBDIR",
             "output": "OUTPUT",
@@ -177,7 +196,7 @@ class TestAllSets(unittest.TestCase):
         section_name = "ts"
         actual_section = config[section_name]
         expected_section = {
-            "active": True,
+            "active": "True",
             "vars": "FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT",
             "extra_vars": "",
             "qos": "regular",
@@ -194,7 +213,6 @@ class TestAllSets(unittest.TestCase):
             "ts_grid1": {
                 "mapping_file": "MAPPING_FILE_TS_GRID1",
                 "years": ["0001:0020:5"],
-                "active": None,
                 "qos": None,
                 "nodes": None,
                 "walltime": None,
@@ -210,7 +228,6 @@ class TestAllSets(unittest.TestCase):
             "ts_grid2": {
                 "mapping_file": "MAPPING_FILE_TS_GRID2",
                 "years": ["0001:0020:10"],
-                "active": None,
                 "qos": None,
                 "nodes": None,
                 "walltime": None,
@@ -229,7 +246,7 @@ class TestAllSets(unittest.TestCase):
         self.assertEqual(len(actual_tasks), 2)
         actual_task = actual_tasks[0]
         expected_task = {
-            "active": True,
+            "active": "True",
             "area_nm": "area",
             "campaign": "none",
             "case": "CASE",
@@ -259,7 +276,7 @@ class TestAllSets(unittest.TestCase):
         self.assertEqual(actual_task, expected_task)
         actual_task = actual_tasks[1]
         expected_task = {
-            "active": True,
+            "active": "True",
             "area_nm": "area",
             "campaign": "none",
             "case": "CASE",
@@ -292,7 +309,7 @@ class TestAllSets(unittest.TestCase):
         section_name = "climo"
         actual_section = config[section_name]
         expected_section = {
-            "active": True,
+            "active": "True",
             "years": ["0001:0050:50"],
             "mapping_file": "MAPPING_FILE_CLIMO",
             "qos": "regular",
@@ -305,7 +322,6 @@ class TestAllSets(unittest.TestCase):
             "vars": "",
             "climo_grid1": {
                 "mapping_file": "MAPPING_FILE_CLIMO_GRID1",
-                "active": None,
                 "qos": None,
                 "nodes": None,
                 "walltime": None,
@@ -320,7 +336,6 @@ class TestAllSets(unittest.TestCase):
                 "mapping_file": "MAPPING_FILE_CLIMO_GRID2",
                 "years": ["0001:0100:50"],
                 "partition": "LONG",
-                "active": None,
                 "qos": None,
                 "nodes": None,
                 "walltime": None,
@@ -336,7 +351,7 @@ class TestAllSets(unittest.TestCase):
         self.assertEqual(len(actual_tasks), 2)
         actual_task = actual_tasks[0]
         expected_task = {
-            "active": True,
+            "active": "True",
             "campaign": "none",
             "case": "CASE",
             "debug": False,
@@ -363,7 +378,7 @@ class TestAllSets(unittest.TestCase):
         self.assertEqual(actual_task, expected_task)
         actual_task = actual_tasks[1]
         expected_task = {
-            "active": True,
+            "active": "True",
             "campaign": "none",
             "case": "CASE",
             "debug": False,
