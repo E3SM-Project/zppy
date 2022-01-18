@@ -93,9 +93,10 @@ def getYears(years_list):
             year2 = int(year2)
             year_sets.append((year1, year2))
 
-        else:
-            print("Error interpreting years %s" % (years))
-            raise Exception
+        elif years != "":
+            error_str = "Error interpreting years %s" % (years)
+            print(error_str)
+            raise ValueError(error_str)
 
     return year_sets
 
@@ -166,10 +167,11 @@ def submitScript(scriptFile, dependFiles=[], export="ALL"):
     out = stdout.decode().strip()
     print("...%s" % (out))
     if status != 0 or not out.startswith("Submitted batch job"):
-        print("Problem submitting script %s" % (scriptFile))
+        error_str = "Problem submitting script %s" % (scriptFile)
+        print(error_str)
         print(command)
         print(stderr)
-        raise Exception
+        raise Exception(error_str)
     jobid = int(out.split()[-1])
 
     # Small pause to avoid overloading queueing system
