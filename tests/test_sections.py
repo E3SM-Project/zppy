@@ -160,9 +160,7 @@ class TestAllSets(unittest.TestCase):
         actual_section = config[section_name]
         self.assertTrue(actual_section["active"] == "False")
         actual_tasks = getTasks(config, section_name)
-        self.assertEqual(len(actual_tasks), 1)
-        actual_task = actual_tasks[0]
-        self.assertTrue(actual_task["active"] == "False")
+        self.assertEqual(len(actual_tasks), 0)
 
         # e3sm_diags: test an excluded task
         section_name = "e3sm_diags"

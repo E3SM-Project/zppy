@@ -32,7 +32,7 @@ def getTasks(config, section_name):
         # Set 'subsection' in dictionary to None
         task["subsection"] = None
         # Add to list of tasks if it is active
-        if task["active"]:
+        if get_active_status(task):
             tasks.append(task)
 
     else:
@@ -56,10 +56,25 @@ def getTasks(config, section_name):
             # Finally, add name of subsection to dictionary
             task["subsection"] = sub_section_name
             # Add to list of tasks if it is active
-            if task["active"]:
+            if get_active_status(task):
                 tasks.append(task)
 
     return tasks
+
+
+# -----------------------------------------------------------------------------
+def get_active_status(task):
+    active = task["active"]
+    if type(active) == bool:
+        return active
+    elif type(active) == str:
+        active_lower_case = active.lower()
+        if active_lower_case == "true":
+            return True
+        elif active_lower_case == "false":
+            return False
+        raise ValueError("Invalid value {} for 'active'".format(active))
+    raise TypeError("Invalid type {} for 'active'".format(type(active)))
 
 
 # -----------------------------------------------------------------------------
