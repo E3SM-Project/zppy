@@ -32,7 +32,7 @@ def getTasks(config, section_name):
         # Set 'subsection' in dictionary to None
         task["subsection"] = None
         # Add to list of tasks if it is active
-        if task["active"]:
+        if get_active_status(task):
             tasks.append(task)
 
     else:
@@ -56,10 +56,25 @@ def getTasks(config, section_name):
             # Finally, add name of subsection to dictionary
             task["subsection"] = sub_section_name
             # Add to list of tasks if it is active
-            if task["active"]:
+            if get_active_status(task):
                 tasks.append(task)
 
     return tasks
+
+
+# -----------------------------------------------------------------------------
+def get_active_status(task):
+    active = task["active"]
+    if type(active) == bool:
+        return active
+    elif type(active) == str:
+        active_lower_case = active.lower()
+        if active_lower_case == "true":
+            return True
+        elif active_lower_case == "false":
+            return False
+        raise ValueError("Invalid value {} for 'active'".format(active))
+    raise TypeError("Invalid type {} for 'active'".format(type(active)))
 
 
 # -----------------------------------------------------------------------------
@@ -93,9 +108,10 @@ def getYears(years_list):
             year2 = int(year2)
             year_sets.append((year1, year2))
 
-        else:
-            print("Error interpreting years %s" % (years))
-            raise Exception
+        elif years != "":
+            error_str = "Error interpreting years %s" % (years)
+            print(error_str)
+            raise ValueError(error_str)
 
     return year_sets
 
@@ -166,10 +182,11 @@ def submitScript(scriptFile, dependFiles=[], export="ALL"):
     out = stdout.decode().strip()
     print("...%s" % (out))
     if status != 0 or not out.startswith("Submitted batch job"):
-        print("Problem submitting script %s" % (scriptFile))
+        error_str = "Problem submitting script %s" % (scriptFile)
+        print(error_str)
         print(command)
         print(stderr)
-        raise Exception
+        raise Exception(error_str)
     jobid = int(out.split()[-1])
 
     # Small pause to avoid overloading queueing system
