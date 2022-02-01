@@ -325,7 +325,7 @@ for exp in exps:
                 color=exp["color"],
             )
 
-ax.set_ylim(get_ylim([-1.5, 1.5], extreme_values))
+ax.set_ylim(get_ylim([13, 15.5], extreme_values))
 ax.set_title("Global surface air temperature")
 ax.set_xlabel("Year")
 ax.set_ylabel("degC")
@@ -349,7 +349,7 @@ for exp in exps:
     # ax.plot(year,var,lw=1.5,marker='o',ls=':',c=exp['color'])
     ax.plot(year, var, lw=1.0, marker=None, ls=":", c=exp["color"])
 
-ax.set_ylim(get_ylim([-1.5, 1.5], extreme_values))
+ax.set_ylim(get_ylim([235, 245], extreme_values))
 ax.set_title("TOA radiation: SW (solid), LW (dashed)")
 ax.set_xlabel("Year")
 ax.set_ylabel("W m-2")
