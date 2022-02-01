@@ -225,16 +225,35 @@ ncols = 2
 # nrows = 2
 # ncols = 2
 
+
+def get_ylim(standard_range, extreme_values):
+    standard_min = standard_range[0]
+    standard_max = standard_range[1]
+    extreme_min = np.amin(extreme_values)
+    extreme_max = np.amax(extreme_values)
+    if standard_min <= extreme_min:
+        ylim_min = standard_min
+    else:
+        ylim_min = extreme_min
+    if standard_max >= extreme_max:
+        ylim_max = standard_max
+    else:
+        ylim_max = extreme_max
+    return [ylim_min, ylim_max]
+
+
 # -----------
 # First panel
 # -----------
 ax = plt.subplot(nrows, ncols, 1)
 ax.set_xlim(xlim)
-ax.set_ylim([-1.5, 1.5])
 
+extreme_values = []
 for exp in exps:
     year = np.array(exp["annual"]["year"]) + exp["yoffset"]
     var = np.array(exp["annual"]["RESTOM"])
+    extreme_values.append(np.amax(var))
+    extreme_values.append(np.amin(var))
     # ax.plot(year,var,lw=1.5,marker='o',c=exp['color'],label=exp['name'])
     ax.plot(year, var, lw=1.0, marker=None, c=exp["color"], label=exp["name"])
     if exp["yr"] is not None:
@@ -261,6 +280,7 @@ for exp in exps:
                 color=exp["color"],
             )
 
+ax.set_ylim(get_ylim([-1.5, 1.5], extreme_values))
 ax.axhline(y=0, lw=1, c="0.5")
 ax.set_title("Net TOA flux (restom)")
 ax.set_xlabel("Year")
@@ -273,9 +293,12 @@ ax.legend(loc="best")
 ax = plt.subplot(nrows, ncols, 2)
 ax.set_xlim(xlim)
 
+extreme_values = []
 for exp in exps:
     year = np.array(exp["annual"]["year"]) + exp["yoffset"]
     var = np.array(exp["annual"]["TREFHT"]) - 273.15
+    extreme_values.append(np.amax(var))
+    extreme_values.append(np.amin(var))
     # ax.plot(year,var,lw=1.5,marker='o',c=exp['color'],label=exp['name'])
     ax.plot(year, var, lw=1.0, marker=None, c=exp["color"], label=exp["name"])
     if exp["yr"] is not None:
@@ -302,6 +325,7 @@ for exp in exps:
                 color=exp["color"],
             )
 
+ax.set_ylim(get_ylim([13, 15.5], extreme_values))
 ax.set_title("Global surface air temperature")
 ax.set_xlabel("Year")
 ax.set_ylabel("degC")
@@ -313,15 +337,19 @@ ax.set_ylabel("degC")
 ax = plt.subplot(nrows, ncols, 3)
 ax.set_xlim(xlim)
 
+extreme_values = []
 for exp in exps:
     year = np.array(exp["annual"]["year"]) + exp["yoffset"]
     var = np.array(exp["annual"]["FSNTOA"])
+    extreme_values.append(np.amax(var))
+    extreme_values.append(np.amin(var))
     # ax.plot(year,var,lw=1.5,marker='o',c=exp['color'],label=exp['name'])
     ax.plot(year, var, lw=1.0, marker=None, c=exp["color"], label=exp["name"])
     var = np.array(exp["annual"]["FLUT"])
     # ax.plot(year,var,lw=1.5,marker='o',ls=':',c=exp['color'])
     ax.plot(year, var, lw=1.0, marker=None, ls=":", c=exp["color"])
 
+ax.set_ylim(get_ylim([235, 245], extreme_values))
 ax.set_title("TOA radiation: SW (solid), LW (dashed)")
 ax.set_xlabel("Year")
 ax.set_ylabel("W m-2")
@@ -332,11 +360,13 @@ ax.set_ylabel("W m-2")
 # ------------
 ax = plt.subplot(nrows, ncols, 4)
 ax.set_xlim(xlim)
-ax.set_ylim([-0.3, 0.3])
 
+extreme_values = []
 for exp in exps:
     year = np.array(exp["annual"]["year"]) + exp["yoffset"]
     var = np.array(exp["annual"]["RESTOM"]) - np.array(exp["annual"]["RESSURF"])
+    extreme_values.append(np.amax(var))
+    extreme_values.append(np.amin(var))
     # ax.plot(year,var,lw=1.5,marker='o',c=exp['color'],label=exp['name'])
     ax.plot(year, var, lw=1.0, marker=None, c=exp["color"], label=exp["name"])
     if exp["yr"] is not None:
@@ -353,6 +383,7 @@ for exp in exps:
                 color=exp["color"],
             )
 
+ax.set_ylim(get_ylim([-0.3, 0.3], extreme_values))
 ax.set_title("Net atm energy imbalance (restom-ressurf)")
 ax.set_xlabel("Year")
 ax.set_ylabel("W m-2")
@@ -363,12 +394,14 @@ ax.set_ylabel("W m-2")
 # -----------
 ax = plt.subplot(nrows, ncols, 5)
 ax.set_xlim(xlim)
-ax.set_ylim([-0.3e24, 0.9e24])
 
+extreme_values = []
 for exp in exps:
     if exp["ocean"] is not None:
         year = np.array(exp["annual"]["year"]) + exp["yoffset"]
         var = np.array(exp["annual"]["ohc"])
+        extreme_values.append(np.amax(var))
+        extreme_values.append(np.amin(var))
         ax.plot(year, var, lw=1.5, marker=None, c=exp["color"], label=exp["name"])
         for yrs in exp["yr"]:
             add_trend(
@@ -383,6 +416,7 @@ for exp in exps:
                 ohc=True,
             )
 
+ax.set_ylim(get_ylim([-0.3e24, 0.9e24], extreme_values))
 ax.axhline(y=0, lw=1, c="0.5")
 ax.set_title("Change in ocean heat content")
 ax.set_xlabel("Year")
@@ -394,12 +428,14 @@ ax.legend(loc="best")
 # -----------
 ax = plt.subplot(nrows, ncols, 6)
 ax.set_xlim(xlim)
-ax.set_ylim([4, 22])
 
+extreme_values = []
 for exp in exps:
     if exp["moc"] is not None:
         [year_moc, var] = getmoc(exp["moc"])
         ax.plot(year_moc, var, lw=1.5, marker=None, c=exp["color"], label=exp["name"])
+        extreme_values.append(np.amax(var))
+        extreme_values.append(np.amin(var))
         for yrs in exp["yr"]:
             add_trend(
                 year_moc,
@@ -412,6 +448,8 @@ for exp in exps:
                 color=exp["color"],
                 verbose=True,
             )
+
+ax.set_ylim(get_ylim([4, 22], extreme_values))
 ax.axhline(y=10, lw=1, c="0.5")
 ax.set_title("Max MOC Atlantic streamfunction at 26.5N")
 ax.set_xlabel("Year")
@@ -423,8 +461,8 @@ ax.legend(loc="best")
 # -----------
 ax = plt.subplot(nrows, ncols, 7)
 ax.set_xlim(xlim)
-# ax.set_ylim([4,22])
 
+extreme_values = []
 for exp in exps:
     if exp["vol"] is not None:
         year_vol = np.array(exp["annual"]["year"]) + exp["yoffset"]
@@ -433,6 +471,8 @@ for exp in exps:
             * np.array(exp["annual"]["volume"])
             / (4.0 * math.pi * (6371229.0) ** 2 * 0.7)
         )
+        extreme_values.append(np.amax(var))
+        extreme_values.append(np.amin(var))
         ax.plot(year_vol, var, lw=1.5, marker=None, c=exp["color"], label=exp["name"])
         for yrs in exp["yr"]:
             add_trend(
@@ -447,6 +487,8 @@ for exp in exps:
                 verbose=True,
                 vol=True,
             )
+
+ax.set_ylim(get_ylim([4, 22], extreme_values))
 # ax.axhline(y=10,lw=1,c='0.5')
 ax.set_title("Change in sea level")
 ax.set_xlabel("Year")
@@ -458,8 +500,8 @@ ax.legend(loc="best")
 # ------------
 ax = plt.subplot(nrows, ncols, 8)
 ax.set_xlim(xlim)
-ax.set_ylim([-1, 1])
 
+extreme_values = []
 for exp in exps:
     year = np.array(exp["annual"]["year"]) + exp["yoffset"]
     var = (
@@ -471,6 +513,8 @@ for exp in exps:
             * (np.array(exp["annual"]["PRECC"]) + np.array(exp["annual"]["PRECL"]))
         )
     )
+    extreme_values.append(np.amax(var))
+    extreme_values.append(np.amin(var))
     ax.plot(year, var, lw=1.0, marker=None, c=exp["color"], label=exp["name"])
     if exp["yr"] is not None:
         print(exp["name"])
@@ -486,6 +530,7 @@ for exp in exps:
                 color=exp["color"],
             )
 
+ax.set_ylim(get_ylim([-1, 1], extreme_values))
 ax.set_title("Net atm water imbalance (evap-prec)")
 ax.set_xlabel("Year")
 ax.set_ylabel("mm yr-1")
