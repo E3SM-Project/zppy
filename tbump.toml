@@ -2,7 +2,7 @@
 github_url = "https://github.com/E3SM-Project/zppy.git"
 
 [version]
-current = "2.0.0rc3"
+current = "2.0.0"
 
 # Example of a semver regexp with support for PEP 440
 # release candidates.Make sure this matches current_version
