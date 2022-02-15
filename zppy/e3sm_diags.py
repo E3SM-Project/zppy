@@ -7,7 +7,8 @@ from zppy.utils import checkStatus, getTasks, getYears, submitScript
 
 
 # -----------------------------------------------------------------------------
-def e3sm_diags(config, scriptDir):
+# FIXME: C901 'e3sm_diags' is too complex (20)
+def e3sm_diags(config, scriptDir):  # noqa: C901
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
@@ -31,20 +32,38 @@ def e3sm_diags(config, scriptDir):
 
         # Loop over year sets
         year_sets = getYears(c["years"])
-        for s in year_sets:
+        if ("ref_years" in c.keys()) and (c["ref_years"] != [""]):
+            ref_year_sets = getYears(c["ref_years"])
+        else:
+            ref_year_sets = year_sets
+        for s, rs in zip(year_sets, ref_year_sets):
             c["year1"] = s[0]
             c["year2"] = s[1]
+            c["ref_year1"] = rs[0]
+            c["ref_year2"] = rs[1]
             c["scriptDir"] = scriptDir
             if c["subsection"]:
                 c["sub"] = c["subsection"]
             else:
                 c["sub"] = c["grid"]
-            prefix = "e3sm_diags_%s_%s_%04d-%04d" % (
-                c["sub"],
-                c["tag"],
-                c["year1"],
-                c["year2"],
-            )
+            if c["run_type"] == "model_vs_obs":
+                prefix = "e3sm_diags_%s_%s_%04d-%04d" % (
+                    c["sub"],
+                    c["tag"],
+                    c["year1"],
+                    c["year2"],
+                )
+            elif c["run_type"] == "model_vs_model":
+                prefix = "e3sm_diags_%s_%s_%04d-%04d_vs_%04d-%04d" % (
+                    c["sub"],
+                    c["tag"],
+                    c["year1"],
+                    c["year2"],
+                    c["ref_year1"],
+                    c["ref_year2"],
+                )
+            else:
+                raise ValueError("Invalid run_type={}".format(c["run_type"]))
             print(prefix)
             c["prefix"] = prefix
             scriptFile = os.path.join(scriptDir, "%s.bash" % (prefix))
@@ -59,7 +78,7 @@ def e3sm_diags(config, scriptDir):
                 f.write(template.render(**c))
 
             # List of dependencies
-            if "climo_subsection" in c.keys():
+            if "climo_subsection" in c.keys() and c["climo_subsection"] != "":
                 climo_sub = c["climo_subsection"]
             else:
                 climo_sub = c["sub"]
@@ -94,7 +113,7 @@ def e3sm_diags(config, scriptDir):
                         or ("qbo" in c["sets"])
                         or ("area_mean_time_series" in c["sets"])
                     ):
-                        if "ts_subsection" in c.keys():
+                        if "ts_subsection" in c.keys() and c["ts_subsection"] != "":
                             ts_sub = c["ts_subsection"]
                         else:
                             ts_sub = c["sub"]

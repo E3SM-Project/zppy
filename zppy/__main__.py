@@ -8,7 +8,6 @@ from validate import Validator
 from zppy.amwg import amwg
 from zppy.climo import climo
 from zppy.e3sm_diags import e3sm_diags
-from zppy.e3sm_diags_vs_model import e3sm_diags_vs_model
 from zppy.global_time_series import global_time_series
 from zppy.mpas_analysis import mpas_analysis
 from zppy.tc_analysis import tc_analysis
@@ -102,9 +101,6 @@ def main():
 
     # e3sm_diags tasks
     e3sm_diags(config, scriptDir)
-
-    # e3sm_diags_vs_model tasks
-    e3sm_diags_vs_model(config, scriptDir)
 
     # amwg tasks
     amwg(config, scriptDir)
