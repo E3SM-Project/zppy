@@ -33,6 +33,9 @@ do
   done
 done
 
+ts_fmt={{ ts_fmt }}
+echo $ts_fmt
+
 {%- if frequency != 'monthly' %}
 # For non-monthly input files, need to add the last file of the previous year
 year={{ yr_start - 1 }}
@@ -86,7 +89,7 @@ cat input.txt | ncclimo \
 {%- endif %}
 {%- if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam'%}
 --prc_typ={{ input_files.split(".")[0] }}
-{%- else -%}
+{%- else %}
 --prc_typ=sgs
 {%- endif %}
 
@@ -108,6 +111,54 @@ if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (2)' > {{ prefix }}.status
   exit 2
+fi
+
+# Generate CMIP ts
+cat > default_metadata.json << EOF
+{% include cmip_metadata %}
+EOF
+{
+  if [ "$ts_fmt" != "ts_only" ]; then
+
+      export cmortables_dir=/lcrc/group/acme/public_html/diagnostics/cmip6-cmor-tables/Tables
+      input_dir={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
+      dest_cmip={{ output }}/post/{{ component }}/{{ grid }}/cmip_ts/{{ frequency }}
+      mkdir -p ${dest_cmip}
+      e3sm_to_cmip \
+      --output-path \
+      ${dest_cmip}/tmp \
+      {% if input_files == 'elm.h0' -%}
+      --var-list \
+      'mrsos, mrso, mrfso, mrros, mrro, prveg, evspsblveg, evspsblsoi, tran, tsl, lai, cLitter, cProduct, cSoilFast,cSoilMedium,cSoilSlow fFire, fHarvest, cVeg, nbp, gpp, ra, rh' \
+      --realm \
+      lnd \
+      {% endif -%}
+      {% if input_files == 'eam.h0' -%}
+      --var-list \
+      'pr, tas, rsds, rlds, rsus' \
+      --realm \
+      atm \
+      {% endif -%}
+      --input-path \
+      ${input_dir}\
+      --user-metadata \
+      {{ scriptDir }}/${workdir}/default_metadata.json \
+      --num-proc \
+      12 \
+      --tables-path \
+      ${cmortables_dir}
+
+
+      # Move output ts files to final destination
+      mv ${dest_cmip}/tmp/CMIP6/CMIP/*/*/*/*/*/*/*/*/*.nc ${dest_cmip}
+      rm -r ${dest_cmip}/tmp
+
+  fi
+}
+if [ $? != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'ERROR (3)' > {{ prefix }}.status
+  exit 3
 fi
 
 # Delete temporary workdir
