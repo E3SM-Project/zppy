@@ -33,6 +33,9 @@ do
   done
 done
 
+ts_fmt={{ ts_fmt }}
+echo $ts_fmt
+
 {%- if frequency != 'monthly' %}
 # For non-monthly input files, need to add the last file of the previous year
 year={{ yr_start - 1 }}
@@ -101,6 +104,40 @@ if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (2)' > {{ prefix }}.status
   exit 2
+fi
+
+# Generate CMIP ts
+{
+  if [ "$ts_fmt" != "ts_only" ]; then
+      input_dir={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
+      dest_cmip={{ output }}/post/{{ component }}/{{ grid }}/cmip_ts/{{ frequency }}
+      mkdir -p ${dest_cmip}
+      e3sm_to_cmip \
+      --output-path \
+      ${dest_cmip}/tmp\
+      --var-list \
+      'lai' \
+      --input-path \
+      ${input_dir}\
+      --user-metadata \
+       ~/CMIP6-Metadata/E3SM-1-0/historical_r1i1p1f1.json\
+      --realm \
+      lnd \
+      --num-proc \
+      12 \
+      --tables-path \
+      ~/cmip6-cmor-tables/Tables/
+
+      # Move output ts files to final destination
+      mv ${dest_cmip}/tmp/CMIP6/CMIP6/*/*/*/*/*/*/*/*/*.nc ${dest_cmip}
+      rm -r ${dest_cmip}/tmp
+
+  fi
+}
+if [ $? != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'ERROR (3)' > {{ prefix }}.status
+  exit 3
 fi
 
 # Delete temporary workdir
