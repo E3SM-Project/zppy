@@ -114,22 +114,30 @@ fi
       mkdir -p ${dest_cmip}
       e3sm_to_cmip \
       --output-path \
-      ${dest_cmip}/tmp\
+      ${dest_cmip}/tmp \
+      {% if input_files == 'elm.h0' -%}
       --var-list \
-      'lai' \
+      'mrsos, mrso, mrfso, mrros, mrro, prveg, evspsblveg, evspsblsoi, tran, tsl, lai, cLitter, cProduct, cSoilFast,cSoilMedium,cSoilSlow fFire, fHarvest, cVeg, nbp, gpp, ra, rh' \
+      --realm \
+      lnd \
+      {% endif -%}
+      {% if input_files == 'eam.h0' -%}
+      --var-list \
+      'pr' \
+      --realm \
+      atm \
+      {% endif -%}
       --input-path \
       ${input_dir}\
       --user-metadata \
        ~/CMIP6-Metadata/E3SM-1-0/historical_r1i1p1f1.json\
-      --realm \
-      lnd \
       --num-proc \
       12 \
       --tables-path \
       ~/cmip6-cmor-tables/Tables/
 
       # Move output ts files to final destination
-      mv ${dest_cmip}/tmp/CMIP6/CMIP6/*/*/*/*/*/*/*/*/*.nc ${dest_cmip}
+      mv ${dest_cmip}/tmp/CMIP6/CMIP/*/*/*/*/*/*/*/*/*.nc ${dest_cmip}
       rm -r ${dest_cmip}/tmp
 
   fi
