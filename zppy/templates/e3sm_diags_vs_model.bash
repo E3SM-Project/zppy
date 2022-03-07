@@ -2,13 +2,6 @@
 {% include 'slurm_header.sh' %}
 {{ environment_commands }}
 
-# To load custom E3SM Diags environment, comment out line above using {# ... #}
-# and uncomment lines below
-
-#module load anaconda3/2019.03
-#source /share/apps/anaconda3/2019.03/etc/profile.d/conda.sh
-#conda activate e3sm_diags_env_dev
-
 # Turn on debug output if needed
 debug={{ debug }}
 if [[ "${debug,,}" == "true" ]]; then
