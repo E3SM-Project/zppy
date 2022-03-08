@@ -36,11 +36,11 @@ def e3sm_diags(config, scriptDir):
             c["year2"] = s[1]
             c["scriptDir"] = scriptDir
             if c["subsection"]:
-                sub = c["subsection"]
+                c["sub"] = c["subsection"]
             else:
-                sub = c["grid"]
+                c["sub"] = c["grid"]
             prefix = "e3sm_diags_%s_%s_%04d-%04d" % (
-                sub,
+                c["sub"],
                 c["tag"],
                 c["year1"],
                 c["year2"],
@@ -59,10 +59,14 @@ def e3sm_diags(config, scriptDir):
                 f.write(template.render(**c))
 
             # List of dependencies
+            if "climo_subsection" in c.keys():
+                climo_sub = c["climo_subsection"]
+            else:
+                climo_sub = c["sub"]
             dependencies.append(
                 os.path.join(
                     scriptDir,
-                    "climo_%s_%04d-%04d.status" % (sub, c["year1"], c["year2"]),
+                    "climo_%s_%04d-%04d.status" % (climo_sub, c["year1"], c["year2"]),
                 ),
             )
             if "diurnal_cycle" in c["sets"]:
@@ -90,11 +94,15 @@ def e3sm_diags(config, scriptDir):
                         or ("qbo" in c["sets"])
                         or ("area_mean_time_series" in c["sets"])
                     ):
+                        if "ts_subsection" in c.keys():
+                            ts_sub = c["ts_subsection"]
+                        else:
+                            ts_sub = c["sub"]
                         dependencies.append(
                             os.path.join(
                                 scriptDir,
                                 "ts_%s_%04d-%04d-%04d.status"
-                                % (sub, start_yr, end_yr, c["ts_num_years"]),
+                                % (ts_sub, start_yr, end_yr, c["ts_num_years"]),
                             )
                         )
                     if "streamflow" in c["sets"]:
