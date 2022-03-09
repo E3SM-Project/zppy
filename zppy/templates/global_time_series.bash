@@ -8,8 +8,6 @@ if [[ "${debug,,}" == "true" ]]; then
   set -x
 fi
 
-set -e # Don't continue on error
-
 # Get jobid
 id=${SLURM_JOBID}
 
@@ -59,25 +57,43 @@ if [[ ${atmosphere_only} == "false" ]]; then
     mkdir -p ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
     input={{ input }}/{{ input_subdir }}
     python ocean_month.py ${input} ${case_dir} ${start_yr} ${end_yr} ${ts_num_years}
+    if [ $? != 0 ]; then
+      cd {{ scriptDir }}
+      echo 'ERROR (2)' > {{ prefix }}.status
+      exit 2
+    fi
+
 
     echo 'Create xml for for ocn'
     export CDMS_NO_MPI=true
     cd ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
     cdscan -x glb.xml *.nc
     if [ $? != 0 ]; then
-	cd {{ scriptDir }}
-	echo 'ERROR (2)' > {{ prefix }}.status
-	exit 2
+      cd {{ scriptDir }}
+      echo 'ERROR (3)' > {{ prefix }}.status
+      exit 3
     fi
 
     echo 'Copy moc file'
     cd ${case_dir}/post/analysis/mpas_analysis/cache/timeseries/moc
     cp ${moc_file} ../../../../../ocn/glb/ts/monthly/${ts_num_years}yr/
+    if [ $? != 0 ]; then
+      cd {{ scriptDir }}
+      echo 'ERROR (4)' > {{ prefix }}.status
+      exit 4
+    fi
+
 fi
 
 echo 'Update time series figures'
 cd ${global_ts_dir}
 python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} ${atmosphere_only}
+if [ $? != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'ERROR (5)' > {{ prefix }}.status
+  exit 5
+fi
+
 
 echo 'Copy images to directory'
 results_dir={{ prefix }}_results
@@ -97,8 +113,8 @@ f=${www}/${case}/global_time_series
 mkdir -p ${f}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (3)' > {{ prefix }}.status
-  exit 3
+  echo 'ERROR (6)' > {{ prefix }}.status
+  exit 6
 fi
 
 {% if machine == 'cori' %}
@@ -119,8 +135,8 @@ done
 rsync -a --delete ${results_dir_absolute_path} ${www}/${case}/global_time_series
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (4)' > {{ prefix }}.status
-  exit 4
+  echo 'ERROR (7)' > {{ prefix }}.status
+  exit 7
 fi
 
 {% if machine == 'cori' %}

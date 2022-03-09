@@ -268,8 +268,8 @@ echo ===== COPY FILES TO WEB SERVER =====
 echo
 
 # Create top-level directory
-f=${www}/${case}/e3sm_diags/{{ grid }}
-mkdir -p ${f}
+web_dir=${www}/${case}/e3sm_diags/{{ sub }}
+mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (3)' > {{ prefix }}.status
@@ -278,7 +278,7 @@ fi
 
 {% if machine == 'cori' %}
 # For NERSC cori, make sure it is world readable
-f=`realpath ${f}`
+f=`realpath ${web_dir}`
 while [[ $f != "/" ]]
 do
   owner=`stat --format '%U' $f`
@@ -291,7 +291,7 @@ done
 {% endif %}
 
 # Copy files
-rsync -a --delete ${results_dir} ${www}/${case}/e3sm_diags/{{ grid }}/
+rsync -a --delete ${results_dir} ${web_dir}/
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (4)' > {{ prefix }}.status
@@ -300,7 +300,7 @@ fi
 
 {% if machine == 'cori' %}
 # For NERSC cori, change permissions of new files
-pushd ${www}/${case}/e3sm_diags/{{ grid }}/
+pushd ${web_dir}/
 chgrp -R e3sm ${results_dir}
 chmod -R go+rX,go-w ${results_dir}
 popd
@@ -308,7 +308,7 @@ popd
 
 {% if machine in ['anvil', 'chrysalis'] %}
 # For LCRC, change permissions of new files
-pushd ${www}/${case}/e3sm_diags/{{ grid }}/
+pushd ${web_dir}/
 chmod -R go+rX,go-w ${results_dir}
 popd
 {% endif %}
