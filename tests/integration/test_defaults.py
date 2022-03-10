@@ -8,6 +8,12 @@ class TestDefaults(unittest.TestCase):
         self.assertEqual(os.system("rm test_defaults_output/post/scripts/*.bash"), 0)
         self.assertEqual(
             os.system(
+                "rm -rf test_defaults_output/post/scripts/global_time_series_0001-0020_dir"
+            ),
+            0,
+        )
+        self.assertEqual(
+            os.system(
                 "diff -bur -I 'templateDir' test_defaults_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_defaults_expected_files"
             ),
             0,
