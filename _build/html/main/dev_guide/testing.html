@@ -223,7 +223,7 @@
 </div>
 <div class="section" id="commands-to-run-to-replace-outdated-expected-files">
 <h3>Commands to run to replace outdated expected files<a class="headerlink" href="#commands-to-run-to-replace-outdated-expected-files" title="Permalink to this headline">¶</a></h3>
-<p>To replace the expected bash files for <code class="docutils literal notranslate"><span class="pre">test_bash_generation.py</span></code> run the following:</p>
+<p>To replace the expected files for <code class="docutils literal notranslate"><span class="pre">test_bash_generation.py</span></code> run the following:</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">expected_bash_files</span>
 <span class="n">cd</span> <span class="o">&lt;</span><span class="n">top</span> <span class="n">level</span> <span class="n">of</span> <span class="n">zppy</span> <span class="n">repo</span><span class="o">&gt;</span>
@@ -239,6 +239,16 @@
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">&lt;</span><span class="n">top</span> <span class="n">level</span> <span class="n">of</span> <span class="n">zppy</span> <span class="n">repo</span><span class="o">&gt;</span>
 <span class="o">./</span><span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">update_campaign_expected_files</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>To replace the expected files for <code class="docutils literal notranslate"><span class="pre">test_defaults.py</span></code> run the following:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">test_defaults_expected_files</span>
+<span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">test_defaults_expected_files</span>
+<span class="c1"># Your output will now become the new expectation.</span>
+<span class="c1"># You can just move (i.e., not copy) the output since re-running this test will re-generate the output.</span>
+<span class="n">mv</span> <span class="n">test_defaults_output</span><span class="o">/</span><span class="n">post</span><span class="o">/</span><span class="n">scripts</span><span class="o">/*.</span><span class="n">settings</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">test_defaults_expected_files</span>
 </pre></div>
 </div>
 </div></blockquote>

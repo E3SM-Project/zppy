@@ -40,7 +40,7 @@ Before running ``tests/integration/test_complete_run.py`` run the following:
 Commands to run to replace outdated expected files
 --------------------------------------------------
        
-To replace the expected bash files for ``test_bash_generation.py`` run the following:
+To replace the expected files for ``test_bash_generation.py`` run the following:
 
     .. code::
 
@@ -58,6 +58,16 @@ To replace the expected files for ``test_campaign.py`` run the following:
 
        cd <top level of zppy repo>
        ./tests/integration/update_campaign_expected_files.sh
+
+To replace the expected files for ``test_defaults.py`` run the following:
+
+    .. code::
+
+       rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/test_defaults_expected_files
+       mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/test_defaults_expected_files
+       # Your output will now become the new expectation.
+       # You can just move (i.e., not copy) the output since re-running this test will re-generate the output.
+       mv test_defaults_output/post/scripts/*.settings /lcrc/group/e3sm/public_html/zppy_test_resources/test_defaults_expected_files
 
 To replace the expected images for ``test_complete_run.py`` run the following:
 
