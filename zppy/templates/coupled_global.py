@@ -229,6 +229,8 @@ ncols = 2
 def get_ylim(standard_range, extreme_values):
     standard_min = standard_range[0]
     standard_max = standard_range[1]
+    if extreme_values == []:
+        return [standard_min, standard_max]
     extreme_min = np.amin(extreme_values)
     extreme_max = np.amax(extreme_values)
     if standard_min <= extreme_min:
