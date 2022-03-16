@@ -78,16 +78,32 @@ def e3sm_diags(config, scriptDir):  # noqa: C901
                 f.write(template.render(**c))
 
             # List of dependencies
-            if "climo_subsection" in c.keys() and c["climo_subsection"] != "":
-                climo_sub = c["climo_subsection"]
-            else:
-                climo_sub = c["sub"]
-            dependencies.append(
-                os.path.join(
-                    scriptDir,
-                    "climo_%s_%04d-%04d.status" % (climo_sub, c["year1"], c["year2"]),
-                ),
+            depend_on_climo = set(
+                [
+                    "lat_lon",
+                    "zonal_mean_xy",
+                    "zonal_mean_2d",
+                    "polar",
+                    "cosp_histogram",
+                    "meridional_mean_2d",
+                    "annual_cycle_zonal_mean",
+                    "zonal_mean_2d_stratosphere",
+                ]
             )
+            in_sets = set(c["sets"])
+            # Check if any requested sets depend on climo:
+            if depend_on_climo & in_sets:
+                if "climo_subsection" in c.keys() and c["climo_subsection"] != "":
+                    climo_sub = c["climo_subsection"]
+                else:
+                    climo_sub = c["sub"]
+                dependencies.append(
+                    os.path.join(
+                        scriptDir,
+                        "climo_%s_%04d-%04d.status"
+                        % (climo_sub, c["year1"], c["year2"]),
+                    ),
+                )
             if "diurnal_cycle" in c["sets"]:
                 dependencies.append(
                     os.path.join(
@@ -108,15 +124,15 @@ def e3sm_diags(config, scriptDir):  # noqa: C901
                 for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
                     start_yr = yr
                     end_yr = yr + c["ts_num_years"] - 1
+                    if "ts_subsection" in c.keys() and c["ts_subsection"] != "":
+                        ts_sub = c["ts_subsection"]
+                    else:
+                        ts_sub = c["sub"]
                     if (
                         ("enso_diags" in c["sets"])
                         or ("qbo" in c["sets"])
                         or ("area_mean_time_series" in c["sets"])
                     ):
-                        if "ts_subsection" in c.keys() and c["ts_subsection"] != "":
-                            ts_sub = c["ts_subsection"]
-                        else:
-                            ts_sub = c["sub"]
                         dependencies.append(
                             os.path.join(
                                 scriptDir,

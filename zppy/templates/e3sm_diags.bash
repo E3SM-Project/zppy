@@ -138,6 +138,7 @@ create_links_ts_rof()
   cd ..
 }
 
+{%- if ("lat_lon" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
 {% if run_type == "model_vs_obs" %}
 climo_dir_primary=climo
 {% elif run_type == "model_vs_model" %}
@@ -151,6 +152,7 @@ create_links_climo ${climo_dir_source} ${climo_dir_primary} ${case} ${Y1} ${Y2} 
 climo_dir_source={{ reference_data_path }}/{{ '%dyr' % (ref_year2-ref_year1+1) }}
 climo_dir_ref=climo_ref
 create_links_climo ${climo_dir_source} ${climo_dir_ref} {{ ref_name }} ${ref_Y1} ${ref_Y2} 2
+{%- endif %}
 {%- endif %}
 
 {%- if "diurnal_cycle" in sets %}
@@ -245,10 +247,13 @@ ref_start_yr = {{ ref_start_yr }}
 param = CoreParameter()
 
 # Model
+{%- if ("lat_lon" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
 param.test_data_path = '${climo_dir_primary}'
+{%- endif %}
 param.test_name = '${case}'
 param.short_test_name = short_name
 
+{%- if ("lat_lon" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
 {% if run_type == "model_vs_obs" %}
 # Obs
 param.reference_data_path = '{{ reference_data_path }}'
@@ -262,6 +267,7 @@ if {{ swap_test_ref }}:
    param.test_data_path, param.reference_data_path = param.reference_data_path, param.test_data_path
    param.test_name, param.ref_name = param.ref_name, param.test_name
    param.short_test_name, param.short_ref_name = param.short_ref_name, param.short_test_name
+{%- endif %}
 {%- endif %}
 
 # Output dir
