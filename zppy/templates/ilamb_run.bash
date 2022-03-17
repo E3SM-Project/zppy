@@ -10,8 +10,8 @@ if [[ "${debug,,}" == "true" ]]; then
 fi
 
 # Point to obsersvation data
-# TODO: need to use a shared directory
-export ILAMB_ROOT=/lcrc/group/e3sm/ac.zhang40/ilamb_data
+# TODO: need to update these data to other supported machines
+export ILAMB_ROOT=/lcrc/group/acme/public_html/diagnostics/ilamb_data
 
 # Script dir
 cd {{ scriptDir }}
