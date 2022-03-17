@@ -25,7 +25,6 @@ def ilamb_run(config, scriptDir):
     dependencies = []
 
     for c in tasks:
-        print(tasks)
 
         if "ts_num_years" in c.keys():
             c["ts_num_years"] = int(c["ts_num_years"])
@@ -33,7 +32,6 @@ def ilamb_run(config, scriptDir):
         # Loop over year sets
         year_sets = getYears(c["years"])
         for s in year_sets:
-            print(year_sets)
             c["year1"] = s[0]
             c["year2"] = s[1]
             c["scriptDir"] = scriptDir
@@ -64,8 +62,8 @@ def ilamb_run(config, scriptDir):
                 c["year1"],
                 c["year2"],
             )
-            print(prefix)
             c["prefix"] = prefix
+            print(prefix)
             scriptFile = os.path.join(scriptDir, "%s.bash" % (prefix))
             statusFile = os.path.join(scriptDir, "%s.status" % (prefix))
             settingsFile = os.path.join(scriptDir, "%s.settings" % (prefix))
