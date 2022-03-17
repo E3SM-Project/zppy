@@ -273,6 +273,7 @@ def plot_change_ohc(ax, xlim, exps):
             var = np.array(exp["annual"]["ohc"])
             extreme_values.append(np.amax(var))
             extreme_values.append(np.amin(var))
+            year = year[: len(var)]
             ax.plot(year, var, lw=1.5, marker=None, c=exp["color"], label=exp["name"])
             for yrs in exp["yr"]:
                 add_trend(
@@ -342,6 +343,7 @@ def plot_change_sea_level(ax, xlim, exps):
             )
             extreme_values.append(np.amax(var))
             extreme_values.append(np.amin(var))
+            year_vol = year_vol[: len(var)]
             ax.plot(
                 year_vol, var, lw=1.5, marker=None, c=exp["color"], label=exp["name"]
             )
