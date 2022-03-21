@@ -39,6 +39,8 @@ def e3sm_diags(config, scriptDir):  # noqa: C901
         for s, rs in zip(year_sets, ref_year_sets):
             c["year1"] = s[0]
             c["year2"] = s[1]
+            if ("last_year" in c.keys()) and (c["year2"] > c["last_year"]):
+                continue  # Skip this year set
             c["ref_year1"] = rs[0]
             c["ref_year2"] = rs[1]
             c["scriptDir"] = scriptDir

@@ -55,6 +55,8 @@ def ts(config, scriptDir):
 
             c["yr_start"] = s[0]
             c["yr_end"] = s[1]
+            if ("last_year" in c.keys()) and (c["yr_end"] > c["last_year"]):
+                continue  # Skip this year set
             c["ypf"] = s[1] - s[0] + 1
             c["scriptDir"] = scriptDir
             if c["subsection"]:
