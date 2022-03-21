@@ -3,11 +3,11 @@ import pprint
 
 import jinja2
 
-from zppy.utils import checkStatus, getTasks, getYears, submitScript
+from zppy.utils import checkStatus, getTasks, getYears, handle_bundles, submitScript
 
 
 # -----------------------------------------------------------------------------
-def amwg(config, scriptDir):
+def amwg(config, scriptDir, existing_bundles):
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
@@ -19,7 +19,7 @@ def amwg(config, scriptDir):
     # --- List of amwg tasks ---
     tasks = getTasks(config, "amwg")
     if len(tasks) == 0:
-        return
+        return existing_bundles
 
     # --- Generate and submit amwg scripts ---
     for c in tasks:
@@ -65,13 +65,20 @@ def amwg(config, scriptDir):
                 p.pprint(c)
                 p.pprint(s)
 
-            if not c["dry_run"]:
+            export = "NONE"
+            existing_bundles = handle_bundles(
+                c,
+                scriptFile,
+                export,
+                dependFiles=dependencies,
+                existing_bundles=existing_bundles,
+            )
+            if not ((c["bundle"] != "") or c["dry_run"]):
                 # Submit job
-                jobid = submitScript(
-                    scriptFile, dependFiles=dependencies, export="NONE"
-                )
+                jobid = submitScript(scriptFile, export, dependFiles=dependencies)
 
                 if jobid != -1:
                     # Update status file
                     with open(statusFile, "w") as f:
                         f.write("WAITING %d\n" % (jobid))
+    return existing_bundles

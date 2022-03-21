@@ -4,11 +4,18 @@ import re
 
 import jinja2
 
-from zppy.utils import checkStatus, getComponent, getTasks, getYears, submitScript
+from zppy.utils import (
+    checkStatus,
+    getComponent,
+    getTasks,
+    getYears,
+    handle_bundles,
+    submitScript,
+)
 
 
 # -----------------------------------------------------------------------------
-def ts(config, scriptDir):
+def ts(config, scriptDir, existing_bundles):
 
     # --- Initialize jinja2 template engine ---
     templateLoader = jinja2.FileSystemLoader(
@@ -20,7 +27,7 @@ def ts(config, scriptDir):
     # --- List of tasks ---
     tasks = getTasks(config, "ts")
     if len(tasks) == 0:
-        return
+        return existing_bundles
 
     # --- Generate and submit ts scripts ---
     for c in tasks:
@@ -87,11 +94,16 @@ def ts(config, scriptDir):
                 p.pprint(c)
                 p.pprint(s)
 
-            if not c["dry_run"]:
+            export = "ALL"
+            existing_bundles = handle_bundles(
+                c, scriptFile, export, existing_bundles=existing_bundles
+            )
+            if not ((c["bundle"] != "") or c["dry_run"]):
                 # Submit job
-                jobid = submitScript(scriptFile)
+                jobid = submitScript(scriptFile, export)
 
                 if jobid != -1:
                     # Update status file
                     with open(statusFile, "w") as f:
                         f.write("WAITING %d\n" % (jobid))
+    return existing_bundles

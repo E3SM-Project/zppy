@@ -4,11 +4,11 @@ from typing import List
 
 import jinja2
 
-from zppy.utils import checkStatus, getTasks, getYears, submitScript
+from zppy.utils import checkStatus, getTasks, getYears, handle_bundles, submitScript
 
 
 # -----------------------------------------------------------------------------
-def tc_analysis(config, scriptDir):
+def tc_analysis(config, scriptDir, existing_bundles):
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
@@ -20,7 +20,7 @@ def tc_analysis(config, scriptDir):
     # --- List of <task-name> tasks ---
     tasks = getTasks(config, "tc_analysis")
     if len(tasks) == 0:
-        return
+        return existing_bundles
 
     # --- Generate and submit <task-name> scripts ---
 
@@ -64,11 +64,17 @@ def tc_analysis(config, scriptDir):
                 p.pprint(c)
                 p.pprint(s)
 
-            if not c["dry_run"]:
+            export = "NONE"
+            existing_bundles = handle_bundles(
+                c,
+                scriptFile,
+                export,
+                dependFiles=dependencies,
+                existing_bundles=existing_bundles,
+            )
+            if not ((c["bundle"] != "") or c["dry_run"]):
                 # Submit job
-                jobid = submitScript(
-                    scriptFile, dependFiles=dependencies, export="NONE"
-                )
+                jobid = submitScript(scriptFile, export, dependFiles=dependencies)
 
                 if jobid != -1:
                     # Update status file
@@ -79,3 +85,4 @@ def tc_analysis(config, scriptDir):
                 # The later tc_analysis tasks still depend on this task (and thus will also fail).
                 # Add to the dependency list
                 dependencies.append(statusFile)
+    return existing_bundles

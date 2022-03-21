@@ -1,7 +1,10 @@
 import os
+import os.path
+import re
 import shlex
 import time
 from subprocess import PIPE, Popen
+from typing import Set
 
 # -----------------------------------------------------------------------------
 # Process specified section and its sub-sections to build list of tasks
@@ -140,9 +143,135 @@ def getComponent(input_files):
 
 
 # -----------------------------------------------------------------------------
-def submitScript(scriptFile, dependFiles=[], export="ALL"):
+# Bundles
+class Bundle(object):
+    def __init__(self, c):
+        self.bundle_name: str = c["bundle"]
+        self.dry_run: bool = c[
+            "dry_run"
+        ]  # Value is taken from the first task in the bundle
+        self.script_dir: str = c[
+            "scriptDir"
+        ]  # Value is taken from the first task in the bundle
 
-    # Handle dependency
+        self.bundle_file: str = f"{self.script_dir}/{self.bundle_name}.bash"
+        self.bundle_output: str = self.bundle_file.strip(".bash") + ".o%j"
+
+        self.dependencies_in_bundle_file: Set[str] = set()
+        self.dependencies_not_in_bundle_file: Set[str] = set()
+
+        self.export: str = "NONE"
+
+    def create_header(self, scriptFile):
+        if os.path.exists(self.bundle_file):
+            error_message = f"create_header is being applied to an existing bundle: {self.bundle_name}. If {self.bundle_name} was running and you re-ran zppy, that is the likely cause of this error. If {self.bundle_name} is not currently running, delete {self.bundle_file} and run zppy again."
+            # By failing, zppy is prevented from restarting / overwriting work the bundle is currently doing.
+            raise FileExistsError(error_message)
+
+        # Create header or structure to keep info for the header.
+        with open(self.bundle_file, "w") as destination_file:
+            destination_file.write("#!/bin/bash\n")
+            with open(scriptFile, "r") as source_file:
+                for line in source_file:
+                    # Copy to bundle_file all lines from script_file that contain "SBATCH"
+                    if re.search("SBATCH", line):
+                        if re.search("--output", line):
+                            destination_file.write(
+                                f"#SBATCH --output={self.bundle_output}\n"
+                            )
+                        elif re.search("--job-name", line):
+                            destination_file.write(
+                                f"#SBATCH --job-name={self.bundle_name}\n"
+                            )
+                        else:
+                            destination_file.write(line)
+                # If any script fails, no new ones should try to run.
+                # It's possible the failed script is a dependency for later scripts.
+                destination_file.write("set -e # Exit on failure\n")
+                destination_file.write(f"cd {self.script_dir}\n")
+
+    def handle_dependencies(self, dependFiles):
+        # Handle dependencies
+        for dependFile in dependFiles:
+            required_script = os.path.split(dependFile)[-1].rstrip(".status") + ".bash"
+            with open(self.bundle_file, "r") as f:
+                for line in f:
+                    if re.search(required_script, line):
+                        # The required script is actually in this bundle.
+                        # Therefore, this dependency will be fulfilled
+                        # by the time we get to the current script
+                        # (since __main__.py runs the tasks in dependency order).
+                        # So, continue on to next dependency.
+                        self.dependencies_in_bundle_file.add(
+                            dependFile
+                        )  # Useful for debugging
+                        break
+                else:
+                    # If we're in this block, then we did not `break` from the for-loop.
+                    # So, the dependency is not in this bundle.
+                    # So, the dependency will need to be finished before we can run this bundle.
+                    # We must pass this information on via dependencies_not_in_bundle_file
+                    self.dependencies_not_in_bundle_file.add(dependFile)
+
+    def add_script(self, scriptFile):
+        # Add script file to bundle
+        with open(self.bundle_file, "a") as f:
+            # Add scriptFile to the list of scripts to run
+            # The header in scriptFile will simply be ignored
+            file_name_only = os.path.split(scriptFile)[-1]
+            # Put blank line between each script call
+            f.write("\n")
+            # Allow script to be run
+            f.write(f"chmod 760 {file_name_only}\n")  # Default is 660
+            # Run script
+            f.write(f"./{file_name_only}\n")
+
+    # Useful for debugging
+    def display_dependencies(self):
+        print(f"Displaying dependencies for {self.bundle_name}")
+        print("dependencies_in_bundle_file:")
+        for dependency in self.dependencies_in_bundle_file:
+            d = os.path.split(dependency)[-1]
+            print(f"  {d}")
+        else:
+            # If we're in this block, then the list is empty.
+            print("  None")
+        print("dependencies_not_in_bundle_file:")
+        for dependency in self.dependencies_not_in_bundle_file:
+            d = os.path.split(dependency)[-1]
+            print(f"  {d}")
+        else:
+            # If we're in this block, then the list is empty.
+            print("  None")
+
+
+def handle_bundles(c, scriptFile, export, dependFiles=[], existing_bundles=[]):
+    bundle_name = c["bundle"]
+    if bundle_name == "":
+        return existing_bundles
+    for b in existing_bundles:
+        if b.bundle_name == bundle_name:
+            # This bundle already exists
+            bundle = b
+            break
+    else:
+        # If we're in this block, then we did not `break` from the for-loop.
+        # So, the bundle does not already exist
+        bundle = Bundle(c)
+        bundle.create_header(scriptFile)
+        existing_bundles.append(bundle)
+    bundle.handle_dependencies(dependFiles)
+    bundle.add_script(scriptFile)
+    if export == "ALL":
+        # If one task requires export="ALL", then the bundle script will need it as well
+        bundle.export = export
+    return existing_bundles
+
+
+# -----------------------------------------------------------------------------
+def submitScript(scriptFile, export, dependFiles=[]):
+
+    # Handle dependencies
     dependIds = []
     for dependFile in dependFiles:
         if os.path.isfile(dependFile):
