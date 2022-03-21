@@ -127,6 +127,10 @@ below example, adapted from ``zppy/e3sm_diags.py``.
                     # List of dependencies
                     dependencies = []
 
+                   # Add dependencies
+                   # Example:
+                   dependencies.append(os.path.join(scriptDir, "%s_%04d-%04d.status" % (<name-of-dependency>, c["year1"], c["year2"]),))
+		    
                     with open(settingsFile, "w") as sf:
                         p = pprint.PrettyPrinter(indent=2, stream=sf)
                         p.pprint(c)
