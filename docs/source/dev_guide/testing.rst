@@ -20,6 +20,7 @@ Integration tests must be run on an LCRC machine. Run all integration tests by d
     .. code::
 
         pip install . # Install your changes (`python -m pip install .` also works)
+	# Run steps in the section below ("Commands to run before running integration tests")
         python -m unittest tests/integration/test_*.py # Run all integration tests
 
 Commands to run before running integration tests
@@ -36,6 +37,19 @@ Before running ``tests/integration/test_complete_run.py`` run the following:
        rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_complete_run_www/v2.LR.historical_0201
        rm -rf /lcrc/group/e3sm/ac.forsyth2/zppy_test_complete_run_output/v2.LR.historical_0201/post
        zppy -c tests/integration/test_complete_run.cfg
+
+Before running ``tests/integration/test_bundles.py`` run the following:
+
+    .. code::
+
+       rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_bundles_www/v2.LR.historical_0201
+       rm -rf /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post
+       zppy -c tests/integration/test_bundles.cfg
+       # bundle1 and bundle2 should run. After they finish, run:
+       rm /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle3.bash
+       # (If this file isn't deleted, zppy will fail because it assumes bundle3 is already running).
+       zppy -c tests/integration/test_bundles.cfg
+       # bundle3 and ilamb_run should run
 
 Commands to run to replace outdated expected files
 --------------------------------------------------
@@ -85,7 +99,24 @@ To replace the expected images for ``test_complete_run.py`` run the following:
        cd <top level of zppy repo>
        # Rerun test
        python -m unittest tests/integration/test_complete_run.py
-       
+
+To replace the expected images for ``test_bundles.py`` run the following:
+
+    .. code::
+      
+       # rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
+       # Your output will now become the new expectation.
+       # Copy output so you don't have to rerun zppy to generate the output.
+       # cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_bundles_www/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
+       # mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
+       # cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
+       # cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
+       # This file will list all the expected images.
+       # find . -type f -name '*.png' > ../image_list_expected_bundles.txt
+       cd <top level of zppy repo>
+       # Rerun test
+       # python -m unittest tests/integration/test_bundles.py
+
 Automated tests
 ===============
 

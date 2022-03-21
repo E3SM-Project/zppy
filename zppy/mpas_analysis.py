@@ -3,11 +3,11 @@ import pprint
 
 import jinja2
 
-from zppy.utils import checkStatus, getTasks, getYears, submitScript
+from zppy.utils import checkStatus, getTasks, getYears, handle_bundles, submitScript
 
 
 # -----------------------------------------------------------------------------
-def mpas_analysis(config, scriptDir):
+def mpas_analysis(config, scriptDir, existing_bundles):
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
@@ -19,7 +19,7 @@ def mpas_analysis(config, scriptDir):
     # --- List of mpas_analysis tasks ---
     tasks = getTasks(config, "mpas_analysis")
     if len(tasks) == 0:
-        return
+        return existing_bundles
 
     # --- Generate and submit mpas_analysis scripts ---
 
@@ -101,9 +101,17 @@ def mpas_analysis(config, scriptDir):
                 p.pprint(c)
                 p.pprint(s)
 
-            if not c["dry_run"]:
+            export = "ALL"
+            existing_bundles = handle_bundles(
+                c,
+                scriptFile,
+                export,
+                dependFiles=dependencies,
+                existing_bundles=existing_bundles,
+            )
+            if not ((c["bundle"] != "") or c["dry_run"]):
                 # Submit job
-                jobid = submitScript(scriptFile, dependFiles=dependencies)
+                jobid = submitScript(scriptFile, export, dependFiles=dependencies)
 
                 if jobid != -1:
                     # Update status file
@@ -114,3 +122,4 @@ def mpas_analysis(config, scriptDir):
                 # The later MPAS-Analysis tasks still depend on this task (and thus will also fail).
                 # Add to the dependency list
                 dependencies.append(statusFile)
+    return existing_bundles
