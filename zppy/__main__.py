@@ -23,6 +23,9 @@ def main():
     parser.add_argument(
         "-c", "--config", type=str, help="configuration file", required=True
     )
+    parser.add_argument(
+        "-l", "--last-year", type=int, help="last year to process", required=False
+    )
     args = parser.parse_args()
 
     # Subdirectory where templates are located
@@ -89,6 +92,9 @@ def main():
     config["default"]["machine"] = machine
     if config["default"]["environment_commands"] == "":
         config["default"]["environment_commands"] = environment_commands
+
+    if args.last_year:
+        config["default"]["last_year"] = args.last_year
 
     # climo tasks
     climo(config, scriptDir)

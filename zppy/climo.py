@@ -53,6 +53,8 @@ def climo(config, scriptDir):
 
             c["yr_start"] = s[0]
             c["yr_end"] = s[1]
+            if ("last_year" in c.keys()) and (c["yr_end"] > c["last_year"]):
+                continue  # Skip this year set
             c["scriptDir"] = scriptDir
             if c["subsection"]:
                 sub = c["subsection"]
