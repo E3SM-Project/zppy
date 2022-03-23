@@ -27,8 +27,6 @@ cd ${workdir}
 ncclimo \
 --case={{ case }} \
 --jobs=${SLURM_NNODES} \
---mem_mb=0 \
---thr=1 \
 {%- if exclude %}
 -n '-x' \
 {%- endif %}
@@ -46,7 +44,7 @@ ncclimo \
 --output=trash \
 --regrid=output \
 {%- endif %}
---model={{ input_files.split(".")[0] }}
+--prc_typ={{ input_files.split(".")[0] }}
 
 {% elif frequency.startswith('diurnal') %}
 
@@ -89,8 +87,6 @@ ls {{ case }}.{{ input_files }}.????-*.nc > input.txt
 cat input.txt | ncclimo \
 --case={{ case }}.{{ input_files }} \
 --jobs=${SLURM_NNODES} \
---mem_mb=0 \
---thr=1 \
 {%- if exclude %}
 -n '-x' \
 {%- endif %}

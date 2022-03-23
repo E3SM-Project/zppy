@@ -84,6 +84,7 @@ cat input.txt | ncclimo \
 --dpf={{ dpf }} \
 --tpd={{ tpd }} \
 {%- endif %}
+--prc_typ={{ input_files.split(".")[0] }}
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
