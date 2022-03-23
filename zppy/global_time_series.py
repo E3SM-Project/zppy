@@ -31,6 +31,8 @@ def global_time_series(config, scriptDir):
         for s in year_sets:
             c["year1"] = s[0]
             c["year2"] = s[1]
+            if ("last_year" in c.keys()) and (c["year2"] > c["last_year"]):
+                continue  # Skip this year set
             c["scriptDir"] = scriptDir
             prefix = "global_time_series_%04d-%04d" % (c["year1"], c["year2"])
             print(prefix)

@@ -8,7 +8,6 @@ from validate import Validator
 from zppy.amwg import amwg
 from zppy.climo import climo
 from zppy.e3sm_diags import e3sm_diags
-from zppy.e3sm_diags_vs_model import e3sm_diags_vs_model
 from zppy.global_time_series import global_time_series
 from zppy.ilamb_run import ilamb_run
 from zppy.mpas_analysis import mpas_analysis
@@ -24,6 +23,9 @@ def main():
     )
     parser.add_argument(
         "-c", "--config", type=str, help="configuration file", required=True
+    )
+    parser.add_argument(
+        "-l", "--last-year", type=int, help="last year to process", required=False
     )
     args = parser.parse_args()
 
@@ -92,6 +94,9 @@ def main():
     if config["default"]["environment_commands"] == "":
         config["default"]["environment_commands"] = environment_commands
 
+    if args.last_year:
+        config["default"]["last_year"] = args.last_year
+
     # climo tasks
     climo(config, scriptDir)
 
@@ -103,9 +108,6 @@ def main():
 
     # e3sm_diags tasks
     e3sm_diags(config, scriptDir)
-
-    # e3sm_diags_vs_model tasks
-    e3sm_diags_vs_model(config, scriptDir)
 
     # amwg tasks
     amwg(config, scriptDir)

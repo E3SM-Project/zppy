@@ -43,7 +43,7 @@ the global time series plots will be visible online.
 
 Because we have specified ``campaign = "water_cycle"``, some parameters will
 be automatically set. ``zppy/templates/water_cycle.cfg`` specifies what
-``[e3sm_diags] > sets``, ``[e3sm_diags_vs_model] > sets``, and
+``[e3sm_diags] > sets``, and
 ``[mpas_analysis] > generate`` should be for the water cycle campaign.
 Users may specify their own values for any of these parameters,
 allowing for easy configuration changes. For example, a user could set

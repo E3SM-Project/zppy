@@ -76,7 +76,7 @@ cat input.txt | ncclimo \
 {%- elif mapping_file == 'glb' -%}
 -o output \
 --glb_avg \
---area_nm={{ area_nm }} \
+--area={{ area_nm }} \
 {%- else -%}
 --map={{ mapping_file }} \
 -o trash \
@@ -87,6 +87,13 @@ cat input.txt | ncclimo \
 --dpf={{ dpf }} \
 --tpd={{ tpd }} \
 {%- endif %}
+{%- if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam'%}
+--prc_typ={{ input_files.split(".")[0] }}
+{%- else -%}
+--prc_typ=sgs
+{%- endif %}
+
+
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}

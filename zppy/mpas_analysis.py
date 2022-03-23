@@ -53,10 +53,16 @@ def mpas_analysis(config, scriptDir):
 
             c["ts_year1"] = s[0]
             c["ts_year2"] = s[1]
+            if ("last_year" in c.keys()) and (c["ts_year2"] > c["last_year"]):
+                continue  # Skip this year set
             c["climo_year1"] = rs[0]
             c["climo_year2"] = rs[1]
+            if ("last_year" in c.keys()) and (c["climo_year2"] > c["last_year"]):
+                continue  # Skip this year set
             c["enso_year1"] = es[0]
             c["enso_year2"] = es[1]
+            if ("last_year" in c.keys()) and (c["enso_year2"] > c["last_year"]):
+                continue  # Skip this year set
             c["scriptDir"] = scriptDir
             if c["subsection"]:
                 prefix = "mpas_analysis_%s_ts_%04d-%04d_climo_%04d-%04d" % (

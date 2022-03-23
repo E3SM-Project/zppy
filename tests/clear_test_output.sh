@@ -8,6 +8,6 @@ rm tests/*.cfg.txt
 rm tests/*~
 rm -r tests/__pycache__
 
-rm -r tests/integration/image_check_failures
+rm -r tests/integration/image_check_failures*
 rm tests/integration/*~
 rm -r tests/integration/__pycache__

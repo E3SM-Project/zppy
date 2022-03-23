@@ -10,7 +10,7 @@ source:
   git_rev: v{{ version }}
 
 build:
-  number: 0
+  number: 1
   script: "{{ PYTHON }} -m pip install . --no-deps -vv"
   noarch: python
   entry_points:
@@ -18,10 +18,10 @@ build:
 
 requirements:
   host:
-    - python >=3.6,<=3.9
+    - python >=3.6
     - pip
   run:
-    - python >=3.6,<=3.9
+    - python >=3.6
     - configobj >=5.0.0,<6.0.0
     - jinja2 >=2.0.0,<3.0.0
 
