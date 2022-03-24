@@ -114,8 +114,13 @@ if [ $? != 0 ]; then
 fi
 
 # Generate CMIP ts
+cat > default_metadata.json << EOF
+{% include cmip_metadata %}
+EOF
 {
   if [ "$ts_fmt" != "ts_only" ]; then
+
+      export cmortables_dir=/lcrc/group/acme/public_html/diagnostics/cmip6-cmor-tables/Tables
       input_dir={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
       dest_cmip={{ output }}/post/{{ component }}/{{ grid }}/cmip_ts/{{ frequency }}
       mkdir -p ${dest_cmip}
@@ -130,18 +135,19 @@ fi
       {% endif -%}
       {% if input_files == 'eam.h0' -%}
       --var-list \
-      'pr' \
+      'pr, tas, rsds, rlds, rsus' \
       --realm \
       atm \
       {% endif -%}
       --input-path \
       ${input_dir}\
       --user-metadata \
-       ~/CMIP6-Metadata/E3SM-1-0/historical_r1i1p1f1.json\
+      {{ scriptDir }}/${workdir}/default_metadata.json \
       --num-proc \
       12 \
       --tables-path \
-      ~/cmip6-cmor-tables/Tables/
+      ${cmortables_dir}
+
 
       # Move output ts files to final destination
       mv ${dest_cmip}/tmp/CMIP6/CMIP/*/*/*/*/*/*/*/*/*.nc ${dest_cmip}
