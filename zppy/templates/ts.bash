@@ -89,7 +89,7 @@ cat input.txt | ncclimo \
 {%- endif %}
 {%- if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam'%}
 --prc_typ={{ input_files.split(".")[0] }}
-{%- else -%}
+{%- else %}
 --prc_typ=sgs
 {%- endif %}
 
