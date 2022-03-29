@@ -58,7 +58,6 @@ echo ===== RUN ILAMB =====
 echo
 
 # Run diagnostics
-# Note --export=All is needed to make sure the executable is copied and executed  on the nodes.
 # TODO: find the mpi run format for different platforms
 
 # include cfg file
@@ -69,12 +68,12 @@ EOF
 echo ${workdir}
 echo {{ scriptDir }}
 
-srun --export=ALL -N 1 ilamb-run --config ilamb_run.cfg --model_root $model_root  --regions global --model_year ${Y1} 2000
+ilamb-run --config ilamb_run.cfg --model_root $model_root  --regions global --model_year ${Y1} 2000
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (2)' > {{ prefix }}.status
-  exit 2
+  echo 'ERROR (1)' > {{ prefix }}.status
+  exit 1
 fi
 
 # Copy output to web server
@@ -82,23 +81,58 @@ echo
 echo ===== COPY FILES TO WEB SERVER =====
 echo
 
-# TODO copy _build from $workdir to web server
+# Create top-level directory
+web_dir=${www}/${case}/ilamb/{{ sub }}_${Y1}-${Y2}
+mkdir -p ${web_dir}
+if [ $? != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'ERROR (2)' > {{ prefix }}.status
+  exit 2
+fi
 
-## Create top-level directory
-#f=${www}/${case}/ilamb/{{ grid }}
-#mkdir -p ${f}
-#if [ $? != 0 ]; then
-#  cd {{ scriptDir }}
-#  echo 'ERROR (3)' > {{ prefix }}.status
-#  exit 3
-#fi
-#
-## Delete temporary workdir
-#cd ${workdir}
-#cd ..
-#if [[ "${debug,,}" != "true" ]]; then
-#  rm -rf ${workdir}
-#fi
+{% if machine == 'cori' %}
+# For NERSC cori, make sure it is world readable
+f=`realpath ${web_dir}`
+while [[ $f != "/" ]]
+do
+  owner=`stat --format '%U' $f`
+  if [ "${owner}" = "${USER}" ]; then
+    chgrp e3sm $f
+    chmod go+rx $f
+  fi
+  f=$(dirname $f)
+done
+{% endif %}
+
+# Copy files
+results_dir=_build/
+rsync -a --delete ${results_dir} ${web_dir}/
+if [ $? != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'ERROR (3)' > {{ prefix }}.status
+  exit 3
+fi
+
+{% if machine == 'cori' %}
+# For NERSC cori, change permissions of new files
+pushd ${web_dir}/
+chgrp -R e3sm .
+chmod -R go+rX,go-w .
+popd
+{% endif %}
+
+{% if machine in ['anvil', 'chrysalis'] %}
+# For LCRC, change permissions of new files
+pushd ${web_dir}/
+chmod -R go+rX,go-w .
+popd
+{% endif %}
+
+# Delete temporary workdir
+cd ..
+if [[ "${debug,,}" != "true" ]]; then
+  rm -rf ${workdir}
+fi
 
 # Update status file and exit
 {% raw %}

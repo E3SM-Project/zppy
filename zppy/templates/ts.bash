@@ -113,6 +113,8 @@ if [ $? != 0 ]; then
   exit 2
 fi
 
+tmp_dir=tmp_{{ prefix }}
+
 # Generate CMIP ts
 cat > default_metadata.json << EOF
 {% include cmip_metadata %}
@@ -126,7 +128,7 @@ EOF
       mkdir -p ${dest_cmip}
       e3sm_to_cmip \
       --output-path \
-      ${dest_cmip}/tmp \
+      ${dest_cmip}/${tmp_dir} \
       {% if input_files == 'elm.h0' -%}
       --var-list \
       'mrsos, mrso, mrfso, mrros, mrro, prveg, evspsblveg, evspsblsoi, tran, tsl, lai, cLitter, cProduct, cSoilFast,cSoilMedium,cSoilSlow fFire, fHarvest, cVeg, nbp, gpp, ra, rh' \
@@ -148,17 +150,27 @@ EOF
       --tables-path \
       ${cmortables_dir}
 
-
+      if [ $? != 0 ]; then
+	  cd {{ scriptDir }}
+	  echo 'ERROR (3)' > {{ prefix }}.status
+	  exit 3
+      fi
       # Move output ts files to final destination
-      mv ${dest_cmip}/tmp/CMIP6/CMIP/*/*/*/*/*/*/*/*/*.nc ${dest_cmip}
-      rm -r ${dest_cmip}/tmp
+      mv ${dest_cmip}/${tmp_dir}/CMIP6/CMIP/*/*/*/*/*/*/*/*/*.nc ${dest_cmip}
+      if [ $? != 0 ]; then
+	  cd {{ scriptDir }}
+	  echo 'ERROR (4)' > {{ prefix }}.status
+	  exit 4
+      fi
+
+      rm -r ${dest_cmip}/${tmp_dir}
 
   fi
 }
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (3)' > {{ prefix }}.status
-  exit 3
+  echo 'ERROR (5)' > {{ prefix }}.status
+  exit 5
 fi
 
 # Delete temporary workdir

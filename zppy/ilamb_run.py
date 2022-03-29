@@ -35,13 +35,22 @@ def ilamb_run(config, scriptDir):
             c["year1"] = s[0]
             c["year2"] = s[1]
             c["scriptDir"] = scriptDir
+            if c["subsection"]:
+                c["sub"] = c["subsection"]
+            else:
+                c["sub"] = c["grid"]
 
             # List of dependencies
             dependencies.append(
                 os.path.join(
                     scriptDir,
                     "ts_%s_%04d-%04d-%04d.status"
-                    % ("land_monthly", c["year1"], c["year2"], c["ts_num_years"]),
+                    % (
+                        c["ts_land_subsection"],
+                        c["year1"],
+                        c["year2"],
+                        c["ts_num_years"],
+                    ),
                 ),
             )
             if not c["land_only"]:
@@ -50,7 +59,7 @@ def ilamb_run(config, scriptDir):
                         scriptDir,
                         "ts_%s_%04d-%04d-%04d.status"
                         % (
-                            "atm_monthly_180x360_aave",
+                            c["ts_atm_subsection"],
                             c["year1"],
                             c["year2"],
                             c["ts_num_years"],
@@ -82,9 +91,8 @@ def ilamb_run(config, scriptDir):
 
             if not c["dry_run"]:
                 # Submit job
-                jobid = submitScript(
-                    scriptFile, dependFiles=dependencies, export="NONE"
-                )
+                # Note --export=All is needed to make sure the executable is copied and executed on the nodes.
+                jobid = submitScript(scriptFile, dependFiles=dependencies, export="ALL")
 
                 if jobid != -1:
                     # Update status file
