@@ -9,6 +9,7 @@ from zppy.amwg import amwg
 from zppy.climo import climo
 from zppy.e3sm_diags import e3sm_diags
 from zppy.global_time_series import global_time_series
+from zppy.ilamb_run import ilamb_run
 from zppy.mpas_analysis import mpas_analysis
 from zppy.tc_analysis import tc_analysis
 from zppy.ts import ts
@@ -116,6 +117,9 @@ def main():
 
     # global time series tasks
     global_time_series(config, scriptDir)
+
+    # ilamb_run tasks
+    ilamb_run(config, scriptDir)
 
 
 def _validate_config(config):
