@@ -155,6 +155,7 @@ class Bundle(object):
         ]  # Value is taken from the first task in the bundle
 
         self.bundle_file: str = f"{self.script_dir}/{self.bundle_name}.bash"
+        self.bundle_status: str = f"{self.script_dir}/{self.bundle_name}.status"
         self.bundle_output: str = self.bundle_file.strip(".bash") + ".o%j"
 
         self.dependencies_in_bundle_file: Set[str] = set()
@@ -163,8 +164,8 @@ class Bundle(object):
         self.export: str = "NONE"
 
     def create_header(self, scriptFile):
-        if os.path.exists(self.bundle_file):
-            error_message = f"create_header is being applied to an existing bundle: {self.bundle_name}. If {self.bundle_name} was running and you re-ran zppy, that is the likely cause of this error. If {self.bundle_name} is not currently running, delete {self.bundle_file} and run zppy again."
+        if os.path.exists(f"{self.bundle_status}"):
+            error_message = f"create_header is being applied to an existing bundle: {self.bundle_name}. If {self.bundle_name} was running and you re-ran zppy, that is the likely cause of this error. If {self.bundle_name} is not currently running, delete {self.bundle_name}.status and run zppy again."
             # By failing, zppy is prevented from restarting / overwriting work the bundle is currently doing.
             raise FileExistsError(error_message)
 
@@ -188,7 +189,15 @@ class Bundle(object):
                 # If any script fails, no new ones should try to run.
                 # It's possible the failed script is a dependency for later scripts.
                 destination_file.write("set -e # Exit on failure\n")
+                # Enter directory
                 destination_file.write(f"cd {self.script_dir}\n")
+                # Create status file
+                # We can only determine if the bundle has begun running.
+                # The script exits on failure (`set -e` above), so we can't set the status to "ERROR".
+                # We can't tell which call to `add_script` is the last, so we don't know when we can set the status to "OK".
+                destination_file.write(
+                    f"echo 'HAS BEGUN RUNNING' > {self.bundle_name}.status\n"
+                )
 
     def handle_dependencies(self, dependFiles):
         # Handle dependencies
@@ -225,6 +234,14 @@ class Bundle(object):
             f.write(f"chmod 760 {file_name_only}\n")  # Default is 660
             # Run script
             f.write(f"./{file_name_only}\n")
+            # Add exit logic
+            # If any script fails, no new ones should try to run.
+            # It's possible the failed script is a dependency for later scripts.
+            # f.write("if [ $? != 0 ]; then\n")
+            # f.write(f"  cd {self.script_dir}\n")
+            # f.write(f"  echo 'ERROR on {file_name_only}' > {self.bundle_name}.status\n")
+            # f.write("  exit 1\n")
+            # f.write("fi\n")
 
     # Useful for debugging
     def display_dependencies(self):
