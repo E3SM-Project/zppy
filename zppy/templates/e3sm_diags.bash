@@ -96,7 +96,7 @@ create_links_ts()
   for v in ${variables//,/ }
   do
     # Go through the time series files for between year1 and year2, using a step size equal to the number of years per time series file
-    for (( year=${begin_year}; year<=${end_year}; year+={{ ts_num_years }} ))
+    for year in `seq ${begin_year} {{ ts_num_years }} ${end_year}`;
     do
       YYYY=`printf "%04d" ${year}`
       for file in ${ts_dir_source}/${v}_${YYYY}*.nc
