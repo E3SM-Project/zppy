@@ -25,7 +25,6 @@ EXPANSIONS = {
         "tc_obs": "/compyfs/e3sm_diags_data/obs_for_e3sm_diags/tc-analysis",
         # [e3sm_diags] > [[ atm_monthly_180x360_aave_mvm ]]
         "gauges_path": "/compyfs/e3sm_diags_data/obs_for_e3sm_diags/time-series/GSIM/GSIM_catchment_characteristics_all_1km2.csv",
-        "ref_name": "20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis",
         "reference_data_path_mvm": "/qfs/people/fors729/zppy_complete_run_compy_output/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/post/atm/180x360_aave/clim",
         "reference_data_path_climo_diurnal": "/qfs/people/fors729/zppy_complete_run_compy_output/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/post/atm/180x360_aave/clim_diurnal_8xdaily",
         "reference_data_path_tc": "/qfs/people/fors729/zppy_complete_run_compy_output/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/post/atm/tc-analysis_51_52",
@@ -33,7 +32,35 @@ EXPANSIONS = {
         "reference_data_path_ts_rof": "/qfs/people/fors729/zppy_complete_run_compy_output/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/post/rof/native/ts/monthly",
         # [mpas_analysis]
         "partition_mpas": "slurm",
-    }
+    },
+    "cori_haswell": {
+        # [default]
+        "environment_commands": "source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_cori-haswell.sh",
+        "input": "/global/cscratch1/sd/forsyth/zppy_complete_run_nersc_output/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis",
+        "mapping_file": "/global/homes/z/zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc",
+        "output": "/global/cscratch1/sd/forsyth/zppy_complete_run_nersc_output/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis",
+        "partition": "haswell",
+        "www": "/global/cfs/cdirs/e3sm/www/forsyth/zppy_complete_run_nersc_output",
+        # [tc_analysis]
+        "scratch": "/global/cscratch1/sd/forsyth",
+        # [e3sm_diags]
+        "obs_ts": "/global/cfs/cdirs/e3sm/e3sm_diags/obs_for_e3sm_diags/time-series",
+        "reference_data_path": "/global/cfs/cdirs/e3sm/e3sm_diags/obs_for_e3sm_diags/climatology",
+        # [e3sm_diags] > [[ atm_monthly_180x360_aave ]]
+        "dc_obs_climo": "/global/cfs/cdirs/e3sm/e3sm_diags/obs_for_e3sm_diags/climatology",
+        "streamflow_obs_ts": "/global/cfs/cdirs/e3sm/e3sm_diags/obs_for_e3sm_diags/time-series",
+        # [e3sm_diags] > [[ atm_monthly_180x360_aave_tc_analysis ]]
+        "tc_obs": "/global/cfs/cdirs/e3sm/e3sm_diags/obs_for_e3sm_diags/tc_analysis",
+        # [e3sm_diags] > [[ atm_monthly_180x360_aave_mvm ]]
+        "gauges_path": "/global/cfs/cdirs/e3sm/e3sm_diags/obs_for_e3sm_diags/time-series/GSIM/GSIM_catchment_characteristics_all_1km2.csv",
+        "reference_data_path_mvm": "/global/cscratch1/sd/forsyth/zppy_complete_run_nersc_output/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/post/atm/180x360_aave/clim",
+        "reference_data_path_climo_diurnal": "/global/cscratch1/sd/forsyth/zppy_complete_run_nersc_output/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/post/atm/180x360_aave/clim_diurnal_8xdaily",
+        "reference_data_path_tc": "/global/cscratch1/sd/forsyth/zppy_complete_run_nersc_output/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/post/atm/tc-analysis_51_52",
+        "reference_data_path_ts": "/global/cscratch1/sd/forsyth/zppy_complete_run_nersc_output/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/post/atm/180x360_aave/ts/monthly",
+        "reference_data_path_ts_rof": "/global/cscratch1/sd/forsyth/zppy_complete_run_nersc_output/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/post/rof/native/ts/monthly",
+        # [mpas_analysis]
+        "partition_mpas": "haswell",
+    },
 }
 
 
