@@ -13,7 +13,7 @@ repos:
 
   # Can run individually with `pre-commit run black --all-files`
   - repo: https://github.com/psf/black
-    rev: 21.5b2
+    rev: 22.3.0
     hooks:
       - id: black
 
