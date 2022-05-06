@@ -2,6 +2,7 @@ import os
 import os.path
 import re
 import shlex
+import stat
 import time
 from subprocess import PIPE, Popen
 from typing import Set
@@ -143,150 +144,10 @@ def getComponent(input_files):
 
 
 # -----------------------------------------------------------------------------
-# Bundles
-class Bundle(object):
-    def __init__(self, c):
-        self.bundle_name: str = c["bundle"]
-        self.dry_run: bool = c[
-            "dry_run"
-        ]  # Value is taken from the first task in the bundle
-        self.script_dir: str = c[
-            "scriptDir"
-        ]  # Value is taken from the first task in the bundle
+def submitScript(scriptFile, statusFile, export, dependFiles=[]):
 
-        self.bundle_file: str = f"{self.script_dir}/{self.bundle_name}.bash"
-        self.bundle_status: str = f"{self.script_dir}/{self.bundle_name}.status"
-        self.bundle_output: str = self.bundle_file.strip(".bash") + ".o%j"
-
-        self.dependencies_in_bundle_file: Set[str] = set()
-        self.dependencies_not_in_bundle_file: Set[str] = set()
-
-        self.export: str = "NONE"
-
-    def create_header(self, scriptFile):
-        if os.path.exists(f"{self.bundle_status}"):
-            error_message = f"create_header is being applied to an existing bundle: {self.bundle_name}. If {self.bundle_name} was running and you re-ran zppy, that is the likely cause of this error. If {self.bundle_name} is not currently running, delete {self.bundle_name}.status and run zppy again."
-            # By failing, zppy is prevented from restarting / overwriting work the bundle is currently doing.
-            raise FileExistsError(error_message)
-
-        # Create header or structure to keep info for the header.
-        with open(self.bundle_file, "w") as destination_file:
-            destination_file.write("#!/bin/bash\n")
-            with open(scriptFile, "r") as source_file:
-                for line in source_file:
-                    # Copy to bundle_file all lines from script_file that contain "SBATCH"
-                    if re.search("SBATCH", line):
-                        if re.search("--output", line):
-                            destination_file.write(
-                                f"#SBATCH --output={self.bundle_output}\n"
-                            )
-                        elif re.search("--job-name", line):
-                            destination_file.write(
-                                f"#SBATCH --job-name={self.bundle_name}\n"
-                            )
-                        else:
-                            destination_file.write(line)
-                # If any script fails, no new ones should try to run.
-                # It's possible the failed script is a dependency for later scripts.
-                destination_file.write("set -e # Exit on failure\n")
-                # Enter directory
-                destination_file.write(f"cd {self.script_dir}\n")
-                # Create status file
-                # We can only determine if the bundle has begun running.
-                # The script exits on failure (`set -e` above), so we can't set the status to "ERROR".
-                # We can't tell which call to `add_script` is the last, so we don't know when we can set the status to "OK".
-                destination_file.write(
-                    f"echo 'HAS BEGUN RUNNING' > {self.bundle_name}.status\n"
-                )
-
-    def handle_dependencies(self, dependFiles):
-        # Handle dependencies
-        for dependFile in dependFiles:
-            required_script = os.path.split(dependFile)[-1].rstrip(".status") + ".bash"
-            with open(self.bundle_file, "r") as f:
-                for line in f:
-                    if re.search(required_script, line):
-                        # The required script is actually in this bundle.
-                        # Therefore, this dependency will be fulfilled
-                        # by the time we get to the current script
-                        # (since __main__.py runs the tasks in dependency order).
-                        # So, continue on to next dependency.
-                        self.dependencies_in_bundle_file.add(
-                            dependFile
-                        )  # Useful for debugging
-                        break
-                else:
-                    # If we're in this block, then we did not `break` from the for-loop.
-                    # So, the dependency is not in this bundle.
-                    # So, the dependency will need to be finished before we can run this bundle.
-                    # We must pass this information on via dependencies_not_in_bundle_file
-                    self.dependencies_not_in_bundle_file.add(dependFile)
-
-    def add_script(self, scriptFile):
-        # Add script file to bundle
-        with open(self.bundle_file, "a") as f:
-            # Add scriptFile to the list of scripts to run
-            # The header in scriptFile will simply be ignored
-            file_name_only = os.path.split(scriptFile)[-1]
-            # Put blank line between each script call
-            f.write("\n")
-            # Allow script to be run
-            f.write(f"chmod 760 {file_name_only}\n")  # Default is 660
-            # Run script
-            f.write(f"./{file_name_only}\n")
-            # Add exit logic
-            # If any script fails, no new ones should try to run.
-            # It's possible the failed script is a dependency for later scripts.
-            # f.write("if [ $? != 0 ]; then\n")
-            # f.write(f"  cd {self.script_dir}\n")
-            # f.write(f"  echo 'ERROR on {file_name_only}' > {self.bundle_name}.status\n")
-            # f.write("  exit 1\n")
-            # f.write("fi\n")
-
-    # Useful for debugging
-    def display_dependencies(self):
-        print(f"Displaying dependencies for {self.bundle_name}")
-        print("dependencies_in_bundle_file:")
-        for dependency in self.dependencies_in_bundle_file:
-            d = os.path.split(dependency)[-1]
-            print(f"  {d}")
-        else:
-            # If we're in this block, then the list is empty.
-            print("  None")
-        print("dependencies_not_in_bundle_file:")
-        for dependency in self.dependencies_not_in_bundle_file:
-            d = os.path.split(dependency)[-1]
-            print(f"  {d}")
-        else:
-            # If we're in this block, then the list is empty.
-            print("  None")
-
-
-def handle_bundles(c, scriptFile, export, dependFiles=[], existing_bundles=[]):
-    bundle_name = c["bundle"]
-    if bundle_name == "":
-        return existing_bundles
-    for b in existing_bundles:
-        if b.bundle_name == bundle_name:
-            # This bundle already exists
-            bundle = b
-            break
-    else:
-        # If we're in this block, then we did not `break` from the for-loop.
-        # So, the bundle does not already exist
-        bundle = Bundle(c)
-        bundle.create_header(scriptFile)
-        existing_bundles.append(bundle)
-    bundle.handle_dependencies(dependFiles)
-    bundle.add_script(scriptFile)
-    if export == "ALL":
-        # If one task requires export="ALL", then the bundle script will need it as well
-        bundle.export = export
-    return existing_bundles
-
-
-# -----------------------------------------------------------------------------
-def submitScript(scriptFile, export, dependFiles=[]):
+    # id of submitted job, or -1 if not submitted
+    jobid = None
 
     # Handle dependencies
     dependIds = []
@@ -300,46 +161,55 @@ def submitScript(scriptFile, export, dependFiles=[]):
                 dependIds.append(int(tmp[1]))
             else:
                 print("...skipping because dependency says '%s'" % (tmp[0]))
-                return -1
+                jobid = -1
+                break
         else:
             print(
                 "...skipping because of dependency status file missing\n   %s"
                 % (dependFile)
             )
-            return -1
+            jobid = -1
+            break
 
-    # Submit command
-    if len(dependIds) == 0:
-        command = "sbatch --export=%s %s" % (export, scriptFile)
-    else:
-        jobs = ""
-        for i in dependIds:
-            jobs += ":{:d}".format(i)
-        command = "sbatch --export=%s --dependency=afterok%s %s" % (
-            export,
-            jobs,
-            scriptFile,
-        )
+    # If no exception occurred during dependency check, proceed with submission
+    if jobid != -1:
 
-    # Actual submission
-    p1 = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE)
-    (stdout, stderr) = p1.communicate()
-    status = p1.returncode
-    out = stdout.decode().strip()
-    print("...%s" % (out))
-    if status != 0 or not out.startswith("Submitted batch job"):
-        error_str = "Problem submitting script %s" % (scriptFile)
-        print(error_str)
-        print(command)
-        print(stderr)
-        raise Exception(error_str)
-    jobid = int(out.split()[-1])
+        # Submit command
+        if len(dependIds) == 0:
+            command = "sbatch --export=%s %s" % (export, scriptFile)
+        else:
+            jobs = ""
+            for i in dependIds:
+                jobs += ":{:d}".format(i)
+            command = "sbatch --export=%s --dependency=afterok%s %s" % (
+                export,
+                jobs,
+                scriptFile,
+            )
 
-    # Small pause to avoid overloading queueing system
-    time.sleep(0.5)
+        # Actual submission
+        p1 = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE)
+        (stdout, stderr) = p1.communicate()
+        status = p1.returncode
+        out = stdout.decode().strip()
+        print("...%s" % (out))
+        if status != 0 or not out.startswith("Submitted batch job"):
+            error_str = "Problem submitting script %s" % (scriptFile)
+            print(error_str)
+            print(command)
+            print(stderr)
+            raise Exception(error_str)
+        jobid = int(out.split()[-1])
+
+        # Small pause to avoid overloading queueing system
+        time.sleep(0.2)
+
+    # Create status file if job has been submitted
+    if jobid != -1:
+        with open(statusFile, "w") as f:
+            f.write("WAITING %d\n" % (jobid))
 
     return jobid
-
 
 # -----------------------------------------------------------------------------
 def checkStatus(statusFile):
@@ -353,3 +223,11 @@ def checkStatus(statusFile):
             print("...skipping because status file says '%s'" % (tmp[0]))
 
     return skip
+
+# -----------------------------------------------------------------------------
+def makeExecutable(scriptFile):
+
+    st = os.stat(scriptFile)
+    os.chmod(scriptFile, st.st_mode | stat.S_IEXEC)
+
+    return

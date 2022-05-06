@@ -10,7 +10,7 @@ Run all unit tests by doing the following:
     .. code::
 
         pip install . # Install your changes (`python -m pip install .` also works)
-        python -m unittest tests/test_*.py # Run all unit tests
+        python -u -m unittest tests/test_*.py # Run all unit tests
 
 Integration tests
 =================
@@ -21,7 +21,7 @@ Integration tests must be run on an LCRC machine. Run all integration tests by d
 
         pip install . # Install your changes (`python -m pip install .` also works)
 	# Run steps in the section below ("Commands to run before running integration tests")
-        python -m unittest tests/integration/test_*.py # Run all integration tests
+        python -u -m unittest tests/integration/test_*.py # Run all integration tests
 
 Commands to run before running integration tests
 ------------------------------------------------
@@ -45,9 +45,7 @@ Before running ``tests/integration/test_bundles.py`` run the following:
        rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_bundles_www/v2.LR.historical_0201
        rm -rf /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post
        zppy -c tests/integration/test_bundles.cfg
-       # bundle1 and bundle2 should run. After they finish, run:
-       rm /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle3.bash
-       # (If this file isn't deleted, zppy will fail because it assumes bundle3 is already running).
+       # bundle1 and bundle2 should run. After they finish, invoke zppy again to resolve remaining dependencies:
        zppy -c tests/integration/test_bundles.cfg
        # bundle3 and ilamb_run should run
 
@@ -64,7 +62,7 @@ To replace the expected files for ``test_bash_generation.py`` run the following:
        # You can just move (i.e., not copy) the output since re-running this test will re-generate the output.
        mv test_bash_generation_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bash_files
        # Rerun test
-       python -m unittest tests/integration/test_bash_generation.py       
+       python -u -m unittest tests/integration/test_bash_generation.py       
 
 To replace the expected files for ``test_campaign.py`` run the following:
 
@@ -83,7 +81,7 @@ To replace the expected files for ``test_defaults.py`` run the following:
        # You can just move (i.e., not copy) the output since re-running this test will re-generate the output.
        mv test_defaults_output/post/scripts/*.settings /lcrc/group/e3sm/public_html/zppy_test_resources/test_defaults_expected_files
        # Rerun test
-       python -m unittest tests/integration/test_defaults.py
+       python -u -m unittest tests/integration/test_defaults.py
 
 To replace the expected images for ``test_complete_run.py`` run the following:
 
@@ -98,7 +96,7 @@ To replace the expected images for ``test_complete_run.py`` run the following:
        find . -type f -name '*.png' > ../image_list_expected_complete_run.txt
        cd <top level of zppy repo>
        # Rerun test
-       python -m unittest tests/integration/test_complete_run.py
+       python -u -m unittest tests/integration/test_complete_run.py
 
 To replace the expected images for ``test_bundles.py`` run the following:
 
@@ -115,7 +113,7 @@ To replace the expected images for ``test_bundles.py`` run the following:
        # find . -type f -name '*.png' > ../image_list_expected_bundles.txt
        cd <top level of zppy repo>
        # Rerun test
-       # python -m unittest tests/integration/test_bundles.py
+       # python -u -m unittest tests/integration/test_bundles.py
 
 Automated tests
 ===============

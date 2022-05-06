@@ -3,7 +3,15 @@ import pprint
 
 import jinja2
 
-from zppy.utils import checkStatus, getTasks, getYears, handle_bundles, submitScript
+from zppy.bundle import handle_bundles
+
+from zppy.utils import (
+    checkStatus,
+    getTasks,
+    getYears,
+    makeExecutable,
+    submitScript,
+)
 
 
 # -----------------------------------------------------------------------------
@@ -116,6 +124,7 @@ def e3sm_diags(config, scriptDir, existing_bundles):  # noqa: C901
             # Create script
             with open(scriptFile, "w") as f:
                 f.write(template.render(**c))
+            makeExecutable(scriptFile)
 
             # List of dependencies
             depend_on_climo = set(
@@ -201,22 +210,19 @@ def e3sm_diags(config, scriptDir, existing_bundles):  # noqa: C901
                 dependFiles=dependencies,
                 existing_bundles=existing_bundles,
             )
-            if not ((c["bundle"] != "") or c["dry_run"]):
+            if not c["dry_run"]:
+                if c["bundle"] == "":
+                    # Submit job
+                    jobid = submitScript(scriptFile, statusFile, export, dependFiles=dependencies)
 
-                # Submit job
-                jobid = submitScript(scriptFile, export, dependFiles=dependencies)
-
-                if jobid != -1:
-                    # Update status file
-                    with open(statusFile, "w") as f:
-                        f.write("WAITING %d\n" % (jobid))
-
-                # Due to a `socket.gaierror: [Errno -2] Name or service not known` error when running e3sm_diags with tc_analysis
-                # on multiple year_sets, if tc_analysis is in sets, then e3sm_diags should be run sequentially.
-                if "tc_analysis" in c["sets"]:
-                    # Note that this line should still be executed even if jobid == -1
-                    # The later tc_analysis-using e3sm_diags tasks still depend on this task (and thus will also fail).
-                    # Add to the dependency list
-                    dependencies.append(statusFile)
+                    # Due to a `socket.gaierror: [Errno -2] Name or service not known` error when running e3sm_diags with tc_analysis
+                    # on multiple year_sets, if tc_analysis is in sets, then e3sm_diags should be run sequentially.
+                    if "tc_analysis" in c["sets"]:
+                        # Note that this line should still be executed even if jobid == -1
+                        # The later tc_analysis-using e3sm_diags tasks still depend on this task (and thus will also fail).
+                        # Add to the dependency list
+                        dependencies.append(statusFile)
+                else:
+                    print("...adding to bundle '%s'" % (c["bundle"]))
 
     return existing_bundles

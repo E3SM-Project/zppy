@@ -12,9 +12,10 @@ from zppy.e3sm_diags import e3sm_diags
 from zppy.global_time_series import global_time_series
 from zppy.ilamb_run import ilamb_run
 from zppy.mpas_analysis import mpas_analysis
+from zppy.bundle import Bundle, predefined_bundles
 from zppy.tc_analysis import tc_analysis
 from zppy.ts import ts
-from zppy.utils import Bundle, submitScript
+from zppy.utils import checkStatus, submitScript
 
 
 # FIXME: C901 'main' is too complex (19)
@@ -102,6 +103,9 @@ def main():  # noqa: C901
 
     existing_bundles: List[Bundle] = []
 
+    # predefined bundles
+    existing_bundles = predefined_bundles(config, scriptDir, existing_bundles)
+
     # climo tasks
     existing_bundles = climo(config, scriptDir, existing_bundles)
 
@@ -126,11 +130,16 @@ def main():  # noqa: C901
     # ilamb_run tasks
     existing_bundles = ilamb_run(config, scriptDir, existing_bundles)
 
+    # Submit bundle jobs
     for b in existing_bundles:
+        skip = checkStatus(b.bundle_status)
+        if skip:
+            continue
         b.display_dependencies()
+        b.render(config)
         if not b.dry_run:
             submitScript(
-                b.bundle_file, b.export, dependFiles=b.dependencies_not_in_bundle_file
+                b.bundle_file, b.bundle_status, b.export, dependFiles=b.dependencies_external
             )
 
 
