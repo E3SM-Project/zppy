@@ -9,13 +9,18 @@ from PIL import Image, ImageChops, ImageDraw
 # Copied from E3SM Diags
 def compare_images(
     test,
+    missing_images,
     mismatched_images,
     image_name,
     path_to_actual_png,
     path_to_expected_png,
 ):
     # https://stackoverflow.com/questions/35176639/compare-images-python-pil
-    actual_png = Image.open(path_to_actual_png).convert("RGB")
+    try:
+        actual_png = Image.open(path_to_actual_png).convert("RGB")
+    except FileNotFoundError:
+        missing_images.append(image_name)
+        return
     expected_png = Image.open(path_to_expected_png).convert("RGB")
     diff = ImageChops.difference(actual_png, expected_png)
 
@@ -80,6 +85,7 @@ class TestCompleteRun(unittest.TestCase):
             "/lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run"
         )
 
+        missing_images: List[str] = []
         mismatched_images: List[str] = []
 
         counter = 0
@@ -94,12 +100,23 @@ class TestCompleteRun(unittest.TestCase):
 
                 compare_images(
                     self,
+                    missing_images,
                     mismatched_images,
                     image_name,
                     path_to_actual_png,
                     path_to_expected_png,
                 )
 
+        if missing_images:
+            print("Missing images:")
+            for i in missing_images:
+                print(i)
+        if mismatched_images:
+            print("Mismatched images:")
+            for i in mismatched_images:
+                print(i)
+
+        self.assertEqual(missing_images, [])
         self.assertEqual(mismatched_images, [])
 
 

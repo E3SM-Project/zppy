@@ -64,6 +64,44 @@ def e3sm_diags(config, scriptDir):  # noqa: C901
                     c["ref_year1"],
                     c["ref_year2"],
                 )
+                reference_data_path = (
+                    c["reference_data_path"].split("/post")[0] + "/post"
+                )
+                if c["reference_data_path_climo_diurnal"] == "":
+                    c[
+                        "reference_data_path_climo_diurnal"
+                    ] = f"{reference_data_path}/atm/{c['grid']}/clim_diurnal_8xdaily"
+                if c["reference_data_path_tc"] == "":
+                    c[
+                        "reference_data_path_tc"
+                    ] = f"{reference_data_path}/atm/tc-analysis_{c['ref_year1']}_{c['ref_year2']}"
+                if c["reference_data_path_ts"] == "":
+                    c[
+                        "reference_data_path_ts"
+                    ] = f"{reference_data_path}/atm/{c['grid']}/ts/monthly"
+                if c["reference_data_path_ts_rof"] == "":
+                    c[
+                        "reference_data_path_ts_rof"
+                    ] = f"{reference_data_path}/rof/native/ts/monthly"
+                if c["gauges_path"] == "":
+                    gauges_path_suffix = (
+                        "time-series/GSIM/GSIM_catchment_characteristics_all_1km2.csv"
+                    )
+                    if c["machine"] == "compy":
+                        gauges_path_prefix = (
+                            "/compyfs/e3sm_diags_data/obs_for_e3sm_diags/"
+                        )
+                    elif c["machine"] == "cori":
+                        gauges_path_prefix = (
+                            "/global/cfs/cdirs/e3sm/e3sm_diags/obs_for_e3sm_diags/"
+                        )
+                    elif c["machine"] in ["anvil", "chrysalis"]:
+                        gauges_path_prefix = "/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/"
+                    else:
+                        raise ValueError(f"Invalid machine={c['machine']}")
+                    c["gauges_path"] = os.path.join(
+                        gauges_path_prefix, gauges_path_suffix
+                    )
             else:
                 raise ValueError("Invalid run_type={}".format(c["run_type"]))
             print(prefix)
