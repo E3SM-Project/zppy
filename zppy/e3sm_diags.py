@@ -4,14 +4,7 @@ import pprint
 import jinja2
 
 from zppy.bundle import handle_bundles
-
-from zppy.utils import (
-    checkStatus,
-    getTasks,
-    getYears,
-    makeExecutable,
-    submitScript,
-)
+from zppy.utils import checkStatus, getTasks, getYears, makeExecutable, submitScript
 
 
 # -----------------------------------------------------------------------------
@@ -213,7 +206,9 @@ def e3sm_diags(config, scriptDir, existing_bundles):  # noqa: C901
             if not c["dry_run"]:
                 if c["bundle"] == "":
                     # Submit job
-                    jobid = submitScript(scriptFile, statusFile, export, dependFiles=dependencies)
+                    submitScript(
+                        scriptFile, statusFile, export, dependFiles=dependencies
+                    )
 
                     # Due to a `socket.gaierror: [Errno -2] Name or service not known` error when running e3sm_diags with tc_analysis
                     # on multiple year_sets, if tc_analysis is in sets, then e3sm_diags should be run sequentially.

@@ -4,14 +4,7 @@ import pprint
 import jinja2
 
 from zppy.bundle import handle_bundles
-
-from zppy.utils import (
-    checkStatus,
-    getTasks,
-    getYears,
-    makeExecutable,
-    submitScript,
-)
+from zppy.utils import checkStatus, getTasks, getYears, makeExecutable, submitScript
 
 
 # -----------------------------------------------------------------------------
@@ -121,7 +114,9 @@ def mpas_analysis(config, scriptDir, existing_bundles):
             if not c["dry_run"]:
                 if c["bundle"] == "":
                     # Submit job
-                    jobid = submitScript(scriptFile, statusFile, export, dependFiles=dependencies)
+                    submitScript(
+                        scriptFile, statusFile, export, dependFiles=dependencies
+                    )
 
                     # Note that this line should still be executed even if jobid == -1
                     # The later MPAS-Analysis tasks still depend on this task (and thus will also fail).

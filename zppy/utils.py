@@ -1,11 +1,9 @@
 import os
 import os.path
-import re
 import shlex
 import stat
 import time
 from subprocess import PIPE, Popen
-from typing import Set
 
 # -----------------------------------------------------------------------------
 # Process specified section and its sub-sections to build list of tasks
@@ -176,15 +174,15 @@ def submitScript(scriptFile, statusFile, export, dependFiles=[]):
 
         # Submit command
         if len(dependIds) == 0:
-            command = "sbatch --export=%s %s" % (export, scriptFile)
+            command = f"sbatch --export={export} {scriptFile}"
         else:
             jobs = ""
             for i in dependIds:
                 jobs += ":{:d}".format(i)
-            command = "sbatch --export=%s --dependency=afterok%s %s" % (
-                export,
-                jobs,
-                scriptFile,
+            # Note that `--dependency` does handle bundles even though it lists individual tasks, not bundles.
+            # Since each task of a bundle lists "RUNNING <Job ID of bundle>", the bundle's job ID will be included.
+            command = (
+                f"sbatch --export={export} --dependency=afterok{jobs} {scriptFile}"
             )
 
         # Actual submission
@@ -192,9 +190,9 @@ def submitScript(scriptFile, statusFile, export, dependFiles=[]):
         (stdout, stderr) = p1.communicate()
         status = p1.returncode
         out = stdout.decode().strip()
-        print("...%s" % (out))
+        print(f"...{out}")
         if status != 0 or not out.startswith("Submitted batch job"):
-            error_str = "Problem submitting script %s" % (scriptFile)
+            error_str = f"Problem submitting script {scriptFile}"
             print(error_str)
             print(command)
             print(stderr)
@@ -211,6 +209,7 @@ def submitScript(scriptFile, statusFile, export, dependFiles=[]):
 
     return jobid
 
+
 # -----------------------------------------------------------------------------
 def checkStatus(statusFile):
 
@@ -220,9 +219,10 @@ def checkStatus(statusFile):
             tmp = f.read().split()
         if tmp[0] in ("OK", "WAITING", "RUNNING"):
             skip = True
-            print("...skipping because status file says '%s'" % (tmp[0]))
+            print(f"...skipping because status file says '{tmp[0]}'")
 
     return skip
+
 
 # -----------------------------------------------------------------------------
 def makeExecutable(scriptFile):

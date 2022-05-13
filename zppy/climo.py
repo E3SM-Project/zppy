@@ -5,7 +5,6 @@ import re
 import jinja2
 
 from zppy.bundle import handle_bundles
-
 from zppy.utils import (
     checkStatus,
     getComponent,
@@ -96,7 +95,7 @@ def climo(config, scriptDir, existing_bundles):
             if not c["dry_run"]:
                 if c["bundle"] == "":
                     # Submit job
-                    jobid = submitScript(scriptFile, statusFile, export)
+                    submitScript(scriptFile, statusFile, export)
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
 

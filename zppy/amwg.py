@@ -4,14 +4,7 @@ import pprint
 import jinja2
 
 from zppy.bundle import handle_bundles
-
-from zppy.utils import (
-    checkStatus,
-    getTasks,
-    getYears,
-    makeExecutable,
-    submitScript,
-)
+from zppy.utils import checkStatus, getTasks, getYears, makeExecutable, submitScript
 
 
 # -----------------------------------------------------------------------------
@@ -85,9 +78,10 @@ def amwg(config, scriptDir, existing_bundles):
             if not c["dry_run"]:
                 if c["bundle"] == "":
                     # Submit job
-                    jobid = submitScript(scriptFile, statusFile, export, dependFiles=dependencies)
+                    submitScript(
+                        scriptFile, statusFile, export, dependFiles=dependencies
+                    )
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
-
 
     return existing_bundles

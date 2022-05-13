@@ -7,12 +7,12 @@ from configobj import ConfigObj
 from validate import Validator
 
 from zppy.amwg import amwg
+from zppy.bundle import Bundle, predefined_bundles
 from zppy.climo import climo
 from zppy.e3sm_diags import e3sm_diags
 from zppy.global_time_series import global_time_series
 from zppy.ilamb_run import ilamb_run
 from zppy.mpas_analysis import mpas_analysis
-from zppy.bundle import Bundle, predefined_bundles
 from zppy.tc_analysis import tc_analysis
 from zppy.ts import ts
 from zppy.utils import checkStatus, submitScript
@@ -139,7 +139,10 @@ def main():  # noqa: C901
         b.render(config)
         if not b.dry_run:
             submitScript(
-                b.bundle_file, b.bundle_status, b.export, dependFiles=b.dependencies_external
+                b.bundle_file,
+                b.bundle_status,
+                b.export,
+                dependFiles=b.dependencies_external,
             )
 
 

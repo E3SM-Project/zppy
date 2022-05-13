@@ -46,4 +46,3 @@ else
   echo 'OK' > {{ prefix }}.status
   exit 0
 fi
-
