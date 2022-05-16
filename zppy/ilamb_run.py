@@ -4,7 +4,14 @@ import pprint
 import jinja2
 
 from zppy.bundle import handle_bundles
-from zppy.utils import checkStatus, getTasks, getYears, makeExecutable, submitScript
+from zppy.utils import (
+    checkStatus,
+    getTasks,
+    getYears,
+    makeExecutable,
+    print_url,
+    submitScript,
+)
 
 
 # -----------------------------------------------------------------------------
@@ -101,6 +108,7 @@ def ilamb_run(config, scriptDir, existing_bundles):
                 existing_bundles=existing_bundles,
             )
             if not c["dry_run"]:
+
                 if c["bundle"] == "":
                     # Submit job
                     submitScript(
@@ -108,5 +116,7 @@ def ilamb_run(config, scriptDir, existing_bundles):
                     )
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
+
+                print_url(c, "ilamb")
 
     return existing_bundles

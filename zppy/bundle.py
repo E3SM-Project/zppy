@@ -13,6 +13,7 @@ class Bundle(object):
     def __init__(self, c):
         # Values are taken from the first task in the bundle OR from the bundle section
         self.bundle_name: str = c["bundle"]
+        self.account: str = c["account"]
         self.dry_run: bool = c["dry_run"]
         self.debug: bool = c["debug"]
         self.script_dir: str = c["scriptDir"]
@@ -44,6 +45,7 @@ class Bundle(object):
         # Populate dictionary
         c = {}
         c["machine"] = config["default"]["machine"]
+        c["account"] = config["default"]["account"]
         c["debug"] = self.debug
         c["scriptDir"] = self.script_dir
         c["prefix"] = self.bundle_name

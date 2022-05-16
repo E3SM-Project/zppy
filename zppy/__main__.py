@@ -4,6 +4,7 @@ import os
 from typing import List
 
 from configobj import ConfigObj
+from mache import MachineInfo
 from validate import Validator
 
 from zppy.amwg import amwg
@@ -62,6 +63,8 @@ def main():  # noqa: C901
 
     # Output script directory
     output = config["default"]["output"]
+    username = os.environ.get("USER")
+    output = output.replace("$USER", username)
     scriptDir = os.path.join(output, "post/scripts")
     try:
         os.makedirs(scriptDir)
@@ -74,11 +77,14 @@ def main():  # noqa: C901
     # Determine machine to decide which header files to use
     tmp = os.getenv("HOSTNAME")
     if tmp:
+        machine_info = MachineInfo()
+        unified_base = machine_info.config.get("e3sm_unified", "base_path")
         if tmp.startswith("compy"):
             machine = "compy"
             environment_commands = (
-                "source /share/apps/E3SM/conda_envs/load_latest_e3sm_unified_compy.sh"
+                f"source {unified_base}/load_latest_e3sm_unified_compy.sh"
             )
+            account = "e3sm"
         elif tmp.startswith("cori"):
             machine = "cori"
             partition = config["default"]["partition"]
@@ -87,16 +93,27 @@ def main():  # noqa: C901
                     f'Expected Cori parition to be "haswell" or '
                     f'"knl" but got: {partition}'
                 )
-            environment_commands = f"source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_cori-{partition}.sh"
+            environment_commands = (
+                f"source {unified_base}/load_latest_e3sm_unified_cori-{partition}.sh"
+            )
+            account = "e3sm"
         elif tmp.startswith("blues"):
             machine = "anvil"
-            environment_commands = "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_anvil.sh"
+            environment_commands = (
+                f"source {unified_base}/load_latest_e3sm_unified_anvil.sh"
+            )
+            account = "condo"
         elif tmp.startswith("chr"):
             machine = "chrysalis"
-            environment_commands = "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh"
+            environment_commands = (
+                f"source {unified_base}/load_latest_e3sm_unified_chrysalis.sh"
+            )
+            account = "e3sm"
     config["default"]["machine"] = machine
     if config["default"]["environment_commands"] == "":
         config["default"]["environment_commands"] = environment_commands
+    if config["default"]["account"] == "":
+        config["default"]["account"] = account
 
     if args.last_year:
         config["default"]["last_year"] = args.last_year

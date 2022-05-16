@@ -2,9 +2,17 @@ import os
 import pprint
 
 import jinja2
+from mache import MachineInfo
 
 from zppy.bundle import handle_bundles
-from zppy.utils import checkStatus, getTasks, getYears, makeExecutable, submitScript
+from zppy.utils import (
+    checkStatus,
+    getTasks,
+    getYears,
+    makeExecutable,
+    print_url,
+    submitScript,
+)
 
 
 # -----------------------------------------------------------------------------
@@ -28,6 +36,8 @@ def e3sm_diags(config, scriptDir, existing_bundles):  # noqa: C901
 
     for c in tasks:
 
+        c["scriptDir"] = scriptDir
+
         if "ts_num_years" in c.keys():
             c["ts_num_years"] = int(c["ts_num_years"])
 
@@ -44,7 +54,6 @@ def e3sm_diags(config, scriptDir, existing_bundles):  # noqa: C901
                 continue  # Skip this year set
             c["ref_year1"] = rs[0]
             c["ref_year2"] = rs[1]
-            c["scriptDir"] = scriptDir
             if c["subsection"]:
                 c["sub"] = c["subsection"]
             else:
@@ -68,43 +77,41 @@ def e3sm_diags(config, scriptDir, existing_bundles):  # noqa: C901
                 reference_data_path = (
                     c["reference_data_path"].split("/post")[0] + "/post"
                 )
-                if c["reference_data_path_climo_diurnal"] == "":
+                if ("diurnal_cycle" in c["sets"]) and (
+                    c["reference_data_path_climo_diurnal"] == ""
+                ):
                     c[
                         "reference_data_path_climo_diurnal"
                     ] = f"{reference_data_path}/atm/{c['grid']}/clim_diurnal_8xdaily"
-                if c["reference_data_path_tc"] == "":
+                if ("tc_analysis" in c["sets"]) and (c["reference_data_path_tc"] == ""):
                     c[
                         "reference_data_path_tc"
                     ] = f"{reference_data_path}/atm/tc-analysis_{c['ref_year1']}_{c['ref_year2']}"
-                if c["reference_data_path_ts"] == "":
+                if ("ts_num_years" in c.keys()) and (c["reference_data_path_ts"] == ""):
                     c[
                         "reference_data_path_ts"
                     ] = f"{reference_data_path}/atm/{c['grid']}/ts/monthly"
-                if c["reference_data_path_ts_rof"] == "":
+                if ("streamflow" in c["sets"]) and (
+                    c["reference_data_path_ts_rof"] == ""
+                ):
                     c[
                         "reference_data_path_ts_rof"
                     ] = f"{reference_data_path}/rof/native/ts/monthly"
                 if c["gauges_path"] == "":
-                    gauges_path_suffix = (
-                        "time-series/GSIM/GSIM_catchment_characteristics_all_1km2.csv"
+                    machine_info = MachineInfo()
+                    gauges_path_prefix = machine_info.config.get(
+                        "diagnostics", "base_path"
                     )
-                    if c["machine"] == "compy":
-                        gauges_path_prefix = (
-                            "/compyfs/e3sm_diags_data/obs_for_e3sm_diags/"
-                        )
-                    elif c["machine"] == "cori":
-                        gauges_path_prefix = (
-                            "/global/cfs/cdirs/e3sm/e3sm_diags/obs_for_e3sm_diags/"
-                        )
-                    elif c["machine"] in ["anvil", "chrysalis"]:
-                        gauges_path_prefix = "/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/"
-                    else:
-                        raise ValueError(f"Invalid machine={c['machine']}")
+                    gauges_path_suffix = "observations/Atm/time-series/GSIM/GSIM_catchment_characteristics_all_1km2.csv"
                     c["gauges_path"] = os.path.join(
                         gauges_path_prefix, gauges_path_suffix
                     )
             else:
                 raise ValueError("Invalid run_type={}".format(c["run_type"]))
+            if ("diurnal_cycle" in c["sets"]) and (c["dc_obs_climo"] == ""):
+                c["dc_obs_climo"] = c["reference_data_path"]
+            if ("streamflow" in c["sets"]) and (c["streamflow_obs_ts"] == ""):
+                c["streamflow_obs_ts"] = c["obs_ts"]
             print(prefix)
             c["prefix"] = prefix
             scriptFile = os.path.join(scriptDir, "%s.bash" % (prefix))
@@ -219,5 +226,7 @@ def e3sm_diags(config, scriptDir, existing_bundles):  # noqa: C901
                         dependencies.append(statusFile)
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
+
+                print_url(c, "e3sm_diags")
 
     return existing_bundles

@@ -3,7 +3,7 @@
 # Running on compy
 
 #SBATCH  --job-name={{ prefix }}
-#SBATCH  --account=e3sm
+#SBATCH  --account={{ account }}
 #SBATCH  --nodes={{ nodes }}
 #SBATCH  --output={{ scriptDir }}/{{ prefix }}.o%j
 #SBATCH  --exclusive
@@ -16,7 +16,7 @@
 # Running on cori-haswell or cori-knl depending on 'partition'
 
 #SBATCH  --job-name={{ prefix }}
-#SBATCH  --account=e3sm
+#SBATCH  --account={{ account }}
 #SBATCH  --nodes={{ nodes }}
 #SBATCH  --output={{ scriptDir }}/{{ prefix }}.o%j
 #SBATCH  --exclusive
@@ -29,7 +29,7 @@
 # Running on anvil
 
 #SBATCH  --job-name={{ prefix }}
-#SBATCH  --account=condo
+#SBATCH  --account={{ account }}
 #SBATCH  --nodes={{ nodes }}
 #SBATCH  --output={{ scriptDir }}/{{ prefix }}.o%j
 #SBATCH  --exclusive
@@ -41,6 +41,7 @@
 # Running on chrysalis
 
 #SBATCH  --job-name={{ prefix }}
+#SBATCH  --account={{ account }}
 #SBATCH  --nodes={{ nodes }}
 #SBATCH  --output={{ scriptDir }}/{{ prefix }}.o%j
 #SBATCH  --exclusive
