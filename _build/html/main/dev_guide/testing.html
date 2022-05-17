@@ -192,7 +192,7 @@
 <p>Run all unit tests by doing the following:</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span> <span class="c1"># Install your changes (`python -m pip install .` also works)</span>
-<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_</span><span class="o">*.</span><span class="n">py</span> <span class="c1"># Run all unit tests</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">u</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">test_</span><span class="o">*.</span><span class="n">py</span> <span class="c1"># Run all unit tests</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -202,7 +202,8 @@
 <p>Integration tests must be run on an LCRC machine. Run all integration tests by doing the following:</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span> <span class="c1"># Install your changes (`python -m pip install .` also works)</span>
-<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_</span><span class="o">*.</span><span class="n">py</span> <span class="c1"># Run all integration tests</span>
+<span class="c1"># Run steps in the section below (&quot;Commands to run before running integration tests&quot;)</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">u</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_</span><span class="o">*.</span><span class="n">py</span> <span class="c1"># Run all integration tests</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -220,6 +221,17 @@
 </pre></div>
 </div>
 </div></blockquote>
+<p>Before running <code class="docutils literal notranslate"><span class="pre">tests/integration/test_bundles.py</span></code> run the following:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">diagnostic_output</span><span class="o">/</span><span class="n">ac</span><span class="o">.</span><span class="n">forsyth2</span><span class="o">/</span><span class="n">zppy_test_bundles_www</span><span class="o">/</span><span class="n">v2</span><span class="o">.</span><span class="n">LR</span><span class="o">.</span><span class="n">historical_0201</span>
+<span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">ac</span><span class="o">.</span><span class="n">forsyth2</span><span class="o">/</span><span class="n">zppy_test_bundles_output</span><span class="o">/</span><span class="n">v2</span><span class="o">.</span><span class="n">LR</span><span class="o">.</span><span class="n">historical_0201</span><span class="o">/</span><span class="n">post</span>
+<span class="n">zppy</span> <span class="o">-</span><span class="n">c</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_bundles</span><span class="o">.</span><span class="n">cfg</span>
+<span class="c1"># bundle1 and bundle2 should run. After they finish, invoke zppy again to resolve remaining dependencies:</span>
+<span class="n">zppy</span> <span class="o">-</span><span class="n">c</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_bundles</span><span class="o">.</span><span class="n">cfg</span>
+<span class="c1"># bundle3 and ilamb_run should run</span>
+</pre></div>
+</div>
+</div></blockquote>
 </div>
 <div class="section" id="commands-to-run-to-replace-outdated-expected-files">
 <h3>Commands to run to replace outdated expected files<a class="headerlink" href="#commands-to-run-to-replace-outdated-expected-files" title="Permalink to this headline">¶</a></h3>
@@ -231,7 +243,7 @@
 <span class="c1"># You can just move (i.e., not copy) the output since re-running this test will re-generate the output.</span>
 <span class="n">mv</span> <span class="n">test_bash_generation_output</span><span class="o">/</span><span class="n">post</span><span class="o">/</span><span class="n">scripts</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">expected_bash_files</span>
 <span class="c1"># Rerun test</span>
-<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_bash_generation</span><span class="o">.</span><span class="n">py</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">u</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_bash_generation</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -250,7 +262,7 @@
 <span class="c1"># You can just move (i.e., not copy) the output since re-running this test will re-generate the output.</span>
 <span class="n">mv</span> <span class="n">test_defaults_output</span><span class="o">/</span><span class="n">post</span><span class="o">/</span><span class="n">scripts</span><span class="o">/*.</span><span class="n">settings</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">test_defaults_expected_files</span>
 <span class="c1"># Rerun test</span>
-<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_defaults</span><span class="o">.</span><span class="n">py</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">u</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_defaults</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -265,7 +277,24 @@
 <span class="n">find</span> <span class="o">.</span> <span class="o">-</span><span class="nb">type</span> <span class="n">f</span> <span class="o">-</span><span class="n">name</span> <span class="s1">&#39;*.png&#39;</span> <span class="o">&gt;</span> <span class="o">../</span><span class="n">image_list_expected_complete_run</span><span class="o">.</span><span class="n">txt</span>
 <span class="n">cd</span> <span class="o">&lt;</span><span class="n">top</span> <span class="n">level</span> <span class="n">of</span> <span class="n">zppy</span> <span class="n">repo</span><span class="o">&gt;</span>
 <span class="c1"># Rerun test</span>
-<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_complete_run</span><span class="o">.</span><span class="n">py</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">u</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_complete_run</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>To replace the expected images for <code class="docutils literal notranslate"><span class="pre">test_bundles.py</span></code> run the following:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles</span>
+<span class="c1"># Your output will now become the new expectation.</span>
+<span class="c1"># Copy output so you don&#39;t have to rerun zppy to generate the output.</span>
+<span class="c1"># cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_bundles_www/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles</span>
+<span class="c1"># mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files</span>
+<span class="c1"># cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files</span>
+<span class="c1"># cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles</span>
+<span class="c1"># This file will list all the expected images.</span>
+<span class="c1"># find . -type f -name &#39;*.png&#39; &gt; ../image_list_expected_bundles.txt</span>
+<span class="n">cd</span> <span class="o">&lt;</span><span class="n">top</span> <span class="n">level</span> <span class="n">of</span> <span class="n">zppy</span> <span class="n">repo</span><span class="o">&gt;</span>
+<span class="c1"># Rerun test</span>
+<span class="c1"># python -u -m unittest tests/integration/test_bundles.py</span>
 </pre></div>
 </div>
 </div></blockquote>

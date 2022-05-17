@@ -362,5 +362,5 @@ Run the unit tests and integration tests on Chrysalis:
     git fetch upstream
     git rebase upstream/main
     <ENVIRONMENT_COMMANDS> # Load the appropriate environment
-    python -m unittest tests/test_*.py # Run unit tests
-    python -m unittest tests/integration/test_*.py # Run integration tests
+    python -u -m unittest tests/test_*.py # Run unit tests
+    python -u -m unittest tests/integration/test_*.py # Run integration tests
