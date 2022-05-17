@@ -3,11 +3,12 @@ import pprint
 
 import jinja2
 
-from zppy.utils import checkStatus, getTasks, getYears, submitScript
+from zppy.bundle import handle_bundles
+from zppy.utils import checkStatus, getTasks, getYears, makeExecutable, submitScript
 
 
 # -----------------------------------------------------------------------------
-def amwg(config, scriptDir):
+def amwg(config, scriptDir, existing_bundles):
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
@@ -19,7 +20,7 @@ def amwg(config, scriptDir):
     # --- List of amwg tasks ---
     tasks = getTasks(config, "amwg")
     if len(tasks) == 0:
-        return
+        return existing_bundles
 
     # --- Generate and submit amwg scripts ---
     for c in tasks:
@@ -51,6 +52,7 @@ def amwg(config, scriptDir):
             # Create script
             with open(scriptFile, "w") as f:
                 f.write(template.render(**c))
+            makeExecutable(scriptFile)
 
             # List of dependencies
             dependencies = [
@@ -65,13 +67,21 @@ def amwg(config, scriptDir):
                 p.pprint(c)
                 p.pprint(s)
 
+            export = "NONE"
+            existing_bundles = handle_bundles(
+                c,
+                scriptFile,
+                export,
+                dependFiles=dependencies,
+                existing_bundles=existing_bundles,
+            )
             if not c["dry_run"]:
-                # Submit job
-                jobid = submitScript(
-                    scriptFile, dependFiles=dependencies, export="NONE"
-                )
+                if c["bundle"] == "":
+                    # Submit job
+                    submitScript(
+                        scriptFile, statusFile, export, dependFiles=dependencies
+                    )
+                else:
+                    print("...adding to bundle '%s'" % (c["bundle"]))
 
-                if jobid != -1:
-                    # Update status file
-                    with open(statusFile, "w") as f:
-                        f.write("WAITING %d\n" % (jobid))
+    return existing_bundles

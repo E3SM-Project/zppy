@@ -1,5 +1,7 @@
 import os
+import os.path
 import shlex
+import stat
 import time
 from subprocess import PIPE, Popen
 
@@ -140,9 +142,12 @@ def getComponent(input_files):
 
 
 # -----------------------------------------------------------------------------
-def submitScript(scriptFile, dependFiles=[], export="ALL"):
+def submitScript(scriptFile, statusFile, export, dependFiles=[]):
 
-    # Handle dependency
+    # id of submitted job, or -1 if not submitted
+    jobid = None
+
+    # Handle dependencies
     dependIds = []
     for dependFile in dependFiles:
         if os.path.isfile(dependFile):
@@ -154,43 +159,53 @@ def submitScript(scriptFile, dependFiles=[], export="ALL"):
                 dependIds.append(int(tmp[1]))
             else:
                 print("...skipping because dependency says '%s'" % (tmp[0]))
-                return -1
+                jobid = -1
+                break
         else:
             print(
                 "...skipping because of dependency status file missing\n   %s"
                 % (dependFile)
             )
-            return -1
+            jobid = -1
+            break
 
-    # Submit command
-    if len(dependIds) == 0:
-        command = "sbatch --export=%s %s" % (export, scriptFile)
-    else:
-        jobs = ""
-        for i in dependIds:
-            jobs += ":{:d}".format(i)
-        command = "sbatch --export=%s --dependency=afterok%s %s" % (
-            export,
-            jobs,
-            scriptFile,
-        )
+    # If no exception occurred during dependency check, proceed with submission
+    if jobid != -1:
 
-    # Actual submission
-    p1 = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE)
-    (stdout, stderr) = p1.communicate()
-    status = p1.returncode
-    out = stdout.decode().strip()
-    print("...%s" % (out))
-    if status != 0 or not out.startswith("Submitted batch job"):
-        error_str = "Problem submitting script %s" % (scriptFile)
-        print(error_str)
-        print(command)
-        print(stderr)
-        raise Exception(error_str)
-    jobid = int(out.split()[-1])
+        # Submit command
+        if len(dependIds) == 0:
+            command = f"sbatch --export={export} {scriptFile}"
+        else:
+            jobs = ""
+            for i in dependIds:
+                jobs += ":{:d}".format(i)
+            # Note that `--dependency` does handle bundles even though it lists individual tasks, not bundles.
+            # Since each task of a bundle lists "RUNNING <Job ID of bundle>", the bundle's job ID will be included.
+            command = (
+                f"sbatch --export={export} --dependency=afterok{jobs} {scriptFile}"
+            )
 
-    # Small pause to avoid overloading queueing system
-    time.sleep(0.5)
+        # Actual submission
+        p1 = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE)
+        (stdout, stderr) = p1.communicate()
+        status = p1.returncode
+        out = stdout.decode().strip()
+        print(f"...{out}")
+        if status != 0 or not out.startswith("Submitted batch job"):
+            error_str = f"Problem submitting script {scriptFile}"
+            print(error_str)
+            print(command)
+            print(stderr)
+            raise Exception(error_str)
+        jobid = int(out.split()[-1])
+
+        # Small pause to avoid overloading queueing system
+        time.sleep(0.2)
+
+    # Create status file if job has been submitted
+    if jobid != -1:
+        with open(statusFile, "w") as f:
+            f.write("WAITING %d\n" % (jobid))
 
     return jobid
 
@@ -204,6 +219,15 @@ def checkStatus(statusFile):
             tmp = f.read().split()
         if tmp[0] in ("OK", "WAITING", "RUNNING"):
             skip = True
-            print("...skipping because status file says '%s'" % (tmp[0]))
+            print(f"...skipping because status file says '{tmp[0]}'")
 
     return skip
+
+
+# -----------------------------------------------------------------------------
+def makeExecutable(scriptFile):
+
+    st = os.stat(scriptFile)
+    os.chmod(scriptFile, st.st_mode | stat.S_IEXEC)
+
+    return

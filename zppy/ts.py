@@ -4,11 +4,19 @@ import re
 
 import jinja2
 
-from zppy.utils import checkStatus, getComponent, getTasks, getYears, submitScript
+from zppy.bundle import handle_bundles
+from zppy.utils import (
+    checkStatus,
+    getComponent,
+    getTasks,
+    getYears,
+    makeExecutable,
+    submitScript,
+)
 
 
 # -----------------------------------------------------------------------------
-def ts(config, scriptDir):
+def ts(config, scriptDir, existing_bundles):
 
     # --- Initialize jinja2 template engine ---
     templateLoader = jinja2.FileSystemLoader(
@@ -20,7 +28,7 @@ def ts(config, scriptDir):
     # --- List of tasks ---
     tasks = getTasks(config, "ts")
     if len(tasks) == 0:
-        return
+        return existing_bundles
 
     # --- Generate and submit ts scripts ---
     for c in tasks:
@@ -81,17 +89,22 @@ def ts(config, scriptDir):
             # Create script
             with open(scriptFile, "w") as f:
                 f.write(template.render(**c))
+            makeExecutable(scriptFile)
 
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)
                 p.pprint(c)
                 p.pprint(s)
 
+            export = "ALL"
+            existing_bundles = handle_bundles(
+                c, scriptFile, export, existing_bundles=existing_bundles
+            )
             if not c["dry_run"]:
-                # Submit job
-                jobid = submitScript(scriptFile)
+                if c["bundle"] == "":
+                    # Submit job
+                    submitScript(scriptFile, statusFile, export)
+                else:
+                    print("...adding to bundle '%s'" % (c["bundle"]))
 
-                if jobid != -1:
-                    # Update status file
-                    with open(statusFile, "w") as f:
-                        f.write("WAITING %d\n" % (jobid))
+    return existing_bundles

@@ -1,11 +1,13 @@
 import argparse
 import errno
 import os
+from typing import List
 
 from configobj import ConfigObj
 from validate import Validator
 
 from zppy.amwg import amwg
+from zppy.bundle import Bundle, predefined_bundles
 from zppy.climo import climo
 from zppy.e3sm_diags import e3sm_diags
 from zppy.global_time_series import global_time_series
@@ -13,9 +15,11 @@ from zppy.ilamb_run import ilamb_run
 from zppy.mpas_analysis import mpas_analysis
 from zppy.tc_analysis import tc_analysis
 from zppy.ts import ts
+from zppy.utils import checkStatus, submitScript
 
 
-def main():
+# FIXME: C901 'main' is too complex (19)
+def main():  # noqa: C901
 
     # Command line parser
     parser = argparse.ArgumentParser(
@@ -97,29 +101,49 @@ def main():
     if args.last_year:
         config["default"]["last_year"] = args.last_year
 
+    existing_bundles: List[Bundle] = []
+
+    # predefined bundles
+    existing_bundles = predefined_bundles(config, scriptDir, existing_bundles)
+
     # climo tasks
-    climo(config, scriptDir)
+    existing_bundles = climo(config, scriptDir, existing_bundles)
 
     # time series tasks
-    ts(config, scriptDir)
+    existing_bundles = ts(config, scriptDir, existing_bundles)
 
     # tc_analysis tasks
-    tc_analysis(config, scriptDir)
+    existing_bundles = tc_analysis(config, scriptDir, existing_bundles)
 
     # e3sm_diags tasks
-    e3sm_diags(config, scriptDir)
+    existing_bundles = e3sm_diags(config, scriptDir, existing_bundles)
 
     # amwg tasks
-    amwg(config, scriptDir)
+    existing_bundles = amwg(config, scriptDir, existing_bundles)
 
     # mpas_analysis tasks
-    mpas_analysis(config, scriptDir)
+    existing_bundles = mpas_analysis(config, scriptDir, existing_bundles)
 
     # global time series tasks
-    global_time_series(config, scriptDir)
+    existing_bundles = global_time_series(config, scriptDir, existing_bundles)
 
     # ilamb_run tasks
-    ilamb_run(config, scriptDir)
+    existing_bundles = ilamb_run(config, scriptDir, existing_bundles)
+
+    # Submit bundle jobs
+    for b in existing_bundles:
+        skip = checkStatus(b.bundle_status)
+        if skip:
+            continue
+        b.display_dependencies()
+        b.render(config)
+        if not b.dry_run:
+            submitScript(
+                b.bundle_file,
+                b.bundle_status,
+                b.export,
+                dependFiles=b.dependencies_external,
+            )
 
 
 def _validate_config(config):

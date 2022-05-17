@@ -3,11 +3,12 @@ import pprint
 
 import jinja2
 
-from zppy.utils import checkStatus, getTasks, getYears, submitScript
+from zppy.bundle import handle_bundles
+from zppy.utils import checkStatus, getTasks, getYears, makeExecutable, submitScript
 
 
 # -----------------------------------------------------------------------------
-def global_time_series(config, scriptDir):
+def global_time_series(config, scriptDir, existing_bundles):
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
@@ -19,7 +20,7 @@ def global_time_series(config, scriptDir):
     # --- List of global_time_series tasks ---
     tasks = getTasks(config, "global_time_series")
     if len(tasks) == 0:
-        return
+        return existing_bundles
 
     # --- Generate and submit global_time_series scripts ---
     for c in tasks:
@@ -56,10 +57,12 @@ def global_time_series(config, scriptDir):
                 script_file = os.path.join(c["global_time_series_dir"], script)
                 with open(script_file, "w") as f:
                     f.write(script_template.render(**c))
+                makeExecutable(script_file)
 
             # Create script
             with open(scriptFile, "w") as f:
                 f.write(template.render(**c))
+            makeExecutable(scriptFile)
 
             # List of dependencies
             dependencies = []
@@ -102,13 +105,21 @@ def global_time_series(config, scriptDir):
                 p.pprint(c)
                 p.pprint(s)
 
+            export = "NONE"
+            existing_bundles = handle_bundles(
+                c,
+                scriptFile,
+                export,
+                dependFiles=dependencies,
+                existing_bundles=existing_bundles,
+            )
             if not c["dry_run"]:
-                # Submit job
-                jobid = submitScript(
-                    scriptFile, dependFiles=dependencies, export="NONE"
-                )
+                if c["bundle"] == "":
+                    # Submit job
+                    submitScript(
+                        scriptFile, statusFile, export, dependFiles=dependencies
+                    )
+                else:
+                    print("...adding to bundle '%s'" % (c["bundle"]))
 
-                if jobid != -1:
-                    # Update status file
-                    with open(statusFile, "w") as f:
-                        f.write("WAITING %d\n" % (jobid))
+    return existing_bundles

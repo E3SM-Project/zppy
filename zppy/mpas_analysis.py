@@ -3,11 +3,12 @@ import pprint
 
 import jinja2
 
-from zppy.utils import checkStatus, getTasks, getYears, submitScript
+from zppy.bundle import handle_bundles
+from zppy.utils import checkStatus, getTasks, getYears, makeExecutable, submitScript
 
 
 # -----------------------------------------------------------------------------
-def mpas_analysis(config, scriptDir):
+def mpas_analysis(config, scriptDir, existing_bundles):
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
@@ -19,7 +20,7 @@ def mpas_analysis(config, scriptDir):
     # --- List of mpas_analysis tasks ---
     tasks = getTasks(config, "mpas_analysis")
     if len(tasks) == 0:
-        return
+        return existing_bundles
 
     # --- Generate and submit mpas_analysis scripts ---
 
@@ -95,22 +96,33 @@ def mpas_analysis(config, scriptDir):
             # Create script
             with open(scriptFile, "w") as f:
                 f.write(template.render(**c))
+            makeExecutable(scriptFile)
 
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)
                 p.pprint(c)
                 p.pprint(s)
 
+            export = "ALL"
+            existing_bundles = handle_bundles(
+                c,
+                scriptFile,
+                export,
+                dependFiles=dependencies,
+                existing_bundles=existing_bundles,
+            )
             if not c["dry_run"]:
-                # Submit job
-                jobid = submitScript(scriptFile, dependFiles=dependencies)
+                if c["bundle"] == "":
+                    # Submit job
+                    submitScript(
+                        scriptFile, statusFile, export, dependFiles=dependencies
+                    )
 
-                if jobid != -1:
-                    # Update status file
-                    with open(statusFile, "w") as f:
-                        f.write("WAITING %d\n" % (jobid))
+                    # Note that this line should still be executed even if jobid == -1
+                    # The later MPAS-Analysis tasks still depend on this task (and thus will also fail).
+                    # Add to the dependency list
+                    dependencies.append(statusFile)
+                else:
+                    print("...adding to bundle '%s'" % (c["bundle"]))
 
-                # Note that this line should still be executed even if jobid == -1
-                # The later MPAS-Analysis tasks still depend on this task (and thus will also fail).
-                # Add to the dependency list
-                dependencies.append(statusFile)
+    return existing_bundles

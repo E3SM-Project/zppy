@@ -3,12 +3,13 @@ import pprint
 
 import jinja2
 
-from zppy.utils import checkStatus, getTasks, getYears, submitScript
+from zppy.bundle import handle_bundles
+from zppy.utils import checkStatus, getTasks, getYears, makeExecutable, submitScript
 
 
 # -----------------------------------------------------------------------------
 # FIXME: C901 'e3sm_diags' is too complex (20)
-def e3sm_diags(config, scriptDir):  # noqa: C901
+def e3sm_diags(config, scriptDir, existing_bundles):  # noqa: C901
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
@@ -20,7 +21,7 @@ def e3sm_diags(config, scriptDir):  # noqa: C901
     # --- List of e3sm_diags tasks ---
     tasks = getTasks(config, "e3sm_diags")
     if len(tasks) == 0:
-        return
+        return existing_bundles
 
     # --- Generate and submit e3sm_diags scripts ---
     dependencies = []
@@ -116,6 +117,7 @@ def e3sm_diags(config, scriptDir):  # noqa: C901
             # Create script
             with open(scriptFile, "w") as f:
                 f.write(template.render(**c))
+            makeExecutable(scriptFile)
 
             # List of dependencies
             depend_on_climo = set(
@@ -193,21 +195,29 @@ def e3sm_diags(config, scriptDir):  # noqa: C901
                 p.pprint(c)
                 p.pprint(s)
 
+            export = "NONE"
+            existing_bundles = handle_bundles(
+                c,
+                scriptFile,
+                export,
+                dependFiles=dependencies,
+                existing_bundles=existing_bundles,
+            )
             if not c["dry_run"]:
-                # Submit job
-                jobid = submitScript(
-                    scriptFile, dependFiles=dependencies, export="NONE"
-                )
+                if c["bundle"] == "":
+                    # Submit job
+                    submitScript(
+                        scriptFile, statusFile, export, dependFiles=dependencies
+                    )
 
-                if jobid != -1:
-                    # Update status file
-                    with open(statusFile, "w") as f:
-                        f.write("WAITING %d\n" % (jobid))
+                    # Due to a `socket.gaierror: [Errno -2] Name or service not known` error when running e3sm_diags with tc_analysis
+                    # on multiple year_sets, if tc_analysis is in sets, then e3sm_diags should be run sequentially.
+                    if "tc_analysis" in c["sets"]:
+                        # Note that this line should still be executed even if jobid == -1
+                        # The later tc_analysis-using e3sm_diags tasks still depend on this task (and thus will also fail).
+                        # Add to the dependency list
+                        dependencies.append(statusFile)
+                else:
+                    print("...adding to bundle '%s'" % (c["bundle"]))
 
-                # Due to a `socket.gaierror: [Errno -2] Name or service not known` error when running e3sm_diags with tc_analysis
-                # on multiple year_sets, if tc_analysis is in sets, then e3sm_diags should be run sequentially.
-                if "tc_analysis" in c["sets"]:
-                    # Note that this line should still be executed even if jobid == -1
-                    # The later tc_analysis-using e3sm_diags tasks still depend on this task (and thus will also fail).
-                    # Add to the dependency list
-                    dependencies.append(statusFile)
+    return existing_bundles

@@ -64,6 +64,7 @@ class TestAllSets(unittest.TestCase):
         actual_default = config["default"]
         expected_default = {
             "active": False,
+            "bundle": "",
             "campaign": "none",
             "case": "CASE",
             "debug": False,
@@ -108,6 +109,7 @@ class TestAllSets(unittest.TestCase):
         actual_task = actual_tasks[0]
         expected_task = {
             "active": "True",
+            "bundle": "",
             "area_nm": "area",
             "campaign": "none",
             "case": "CASE",
@@ -155,6 +157,7 @@ class TestAllSets(unittest.TestCase):
         actual_task = actual_tasks[0]
         expected_task = {
             "active": "True",
+            "bundle": "",
             "campaign": "none",
             "case": "CASE",
             "debug": False,
@@ -201,6 +204,7 @@ class TestAllSets(unittest.TestCase):
         actual_default = config["default"]
         expected_default = {
             "active": False,
+            "bundle": "",
             "campaign": "none",
             "case": "CASE",
             "debug": False,
@@ -264,6 +268,7 @@ class TestAllSets(unittest.TestCase):
         expected_task = {
             "active": "True",
             "area_nm": "area",
+            "bundle": "",
             "campaign": "none",
             "case": "CASE",
             "cmip_metadata": "e3sm_to_cmip/default_metadata.json",
@@ -296,6 +301,7 @@ class TestAllSets(unittest.TestCase):
         expected_task = {
             "active": "True",
             "area_nm": "area",
+            "bundle": "",
             "campaign": "none",
             "case": "CASE",
             "cmip_metadata": "e3sm_to_cmip/default_metadata.json",
@@ -356,6 +362,7 @@ class TestAllSets(unittest.TestCase):
         actual_task = actual_tasks[0]
         expected_task = {
             "active": "True",
+            "bundle": "",
             "campaign": "none",
             "case": "CASE",
             "debug": False,
@@ -383,6 +390,7 @@ class TestAllSets(unittest.TestCase):
         actual_task = actual_tasks[1]
         expected_task = {
             "active": "True",
+            "bundle": "",
             "campaign": "none",
             "case": "CASE",
             "debug": False,
