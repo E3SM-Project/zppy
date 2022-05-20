@@ -202,6 +202,7 @@
 <p>Integration tests must be run on an LCRC machine. Run all integration tests by doing the following:</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span> <span class="c1"># Install your changes (`python -m pip install .` also works)</span>
+
 <span class="c1"># Run steps in the section below (&quot;Commands to run before running integration tests&quot;)</span>
 <span class="n">python</span> <span class="o">-</span><span class="n">u</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_</span><span class="o">*.</span><span class="n">py</span> <span class="c1"># Run all integration tests</span>
 </pre></div>
@@ -211,24 +212,24 @@
 <h3>Commands to run before running integration tests<a class="headerlink" href="#commands-to-run-before-running-integration-tests" title="Permalink to this headline">¶</a></h3>
 <p>Before running <code class="docutils literal notranslate"><span class="pre">tests/integration/test_complete_run.py</span></code> run the following:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># You&#39;ll need to set some paths to your own directories:</span>
-<span class="c1"># 1) Edit the paths below</span>
-<span class="c1"># 2) Edit `output` and `www` parameters in `tests/integration/test_complete_run.cfg`</span>
-<span class="c1"># 3) Edit `actual_images_dir` in `tests/integration/test_complete_run.py`</span>
-<span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">diagnostic_output</span><span class="o">/</span><span class="n">ac</span><span class="o">.</span><span class="n">forsyth2</span><span class="o">/</span><span class="n">zppy_test_complete_run_www</span><span class="o">/</span><span class="n">v2</span><span class="o">.</span><span class="n">LR</span><span class="o">.</span><span class="n">historical_0201</span>
-<span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">ac</span><span class="o">.</span><span class="n">forsyth2</span><span class="o">/</span><span class="n">zppy_test_complete_run_output</span><span class="o">/</span><span class="n">v2</span><span class="o">.</span><span class="n">LR</span><span class="o">.</span><span class="n">historical_0201</span><span class="o">/</span><span class="n">post</span>
-<span class="n">zppy</span> <span class="o">-</span><span class="n">c</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_complete_run</span><span class="o">.</span><span class="n">cfg</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span># You&#39;ll need to set some paths to your own directories:
+# 1) Edit the paths below
+# 2) Edit `output` and `www` parameters in `tests/integration/test_complete_run.cfg`
+# 3) Edit `actual_images_dir` in `tests/integration/test_complete_run.py`
+rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/$USER/zppy_test_complete_run_www/v2.LR.historical_0201
+rm -rf /lcrc/group/e3sm/$USER/zppy_test_complete_run_output/v2.LR.historical_0201/post
+zppy -c tests/integration/test_complete_run.cfg
 </pre></div>
 </div>
 </div></blockquote>
 <p>Before running <code class="docutils literal notranslate"><span class="pre">tests/integration/test_bundles.py</span></code> run the following:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">diagnostic_output</span><span class="o">/</span><span class="n">ac</span><span class="o">.</span><span class="n">forsyth2</span><span class="o">/</span><span class="n">zppy_test_bundles_www</span><span class="o">/</span><span class="n">v2</span><span class="o">.</span><span class="n">LR</span><span class="o">.</span><span class="n">historical_0201</span>
-<span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">ac</span><span class="o">.</span><span class="n">forsyth2</span><span class="o">/</span><span class="n">zppy_test_bundles_output</span><span class="o">/</span><span class="n">v2</span><span class="o">.</span><span class="n">LR</span><span class="o">.</span><span class="n">historical_0201</span><span class="o">/</span><span class="n">post</span>
-<span class="n">zppy</span> <span class="o">-</span><span class="n">c</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_bundles</span><span class="o">.</span><span class="n">cfg</span>
-<span class="c1"># bundle1 and bundle2 should run. After they finish, invoke zppy again to resolve remaining dependencies:</span>
-<span class="n">zppy</span> <span class="o">-</span><span class="n">c</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_bundles</span><span class="o">.</span><span class="n">cfg</span>
-<span class="c1"># bundle3 and ilamb_run should run</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/$USER/zppy_test_bundles_www/v2.LR.historical_0201
+rm -rf /lcrc/group/e3sm/$USER/zppy_test_bundles_output/v2.LR.historical_0201/post
+zppy -c tests/integration/test_bundles.cfg
+# bundle1 and bundle2 should run. After they finish, invoke zppy again to resolve remaining dependencies:
+zppy -c tests/integration/test_bundles.cfg
+# bundle3 and ilamb_run should run
 </pre></div>
 </div>
 </div></blockquote>
@@ -268,33 +269,33 @@
 </div></blockquote>
 <p>To replace the expected images for <code class="docutils literal notranslate"><span class="pre">test_complete_run.py</span></code> run the following:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">expected_complete_run</span>
-<span class="c1"># Your output will now become the new expectation.</span>
-<span class="c1"># Copy output so you don&#39;t have to rerun zppy to generate the output.</span>
-<span class="n">cp</span> <span class="o">-</span><span class="n">r</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">diagnostic_output</span><span class="o">/</span><span class="n">ac</span><span class="o">.</span><span class="n">forsyth2</span><span class="o">/</span><span class="n">zppy_test_complete_run_www</span><span class="o">/</span><span class="n">v2</span><span class="o">.</span><span class="n">LR</span><span class="o">.</span><span class="n">historical_0201</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">expected_complete_run</span>
-<span class="n">cd</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">expected_complete_run</span>
-<span class="c1"># This file will list all the expected images.</span>
-<span class="n">find</span> <span class="o">.</span> <span class="o">-</span><span class="nb">type</span> <span class="n">f</span> <span class="o">-</span><span class="n">name</span> <span class="s1">&#39;*.png&#39;</span> <span class="o">&gt;</span> <span class="o">../</span><span class="n">image_list_expected_complete_run</span><span class="o">.</span><span class="n">txt</span>
-<span class="n">cd</span> <span class="o">&lt;</span><span class="n">top</span> <span class="n">level</span> <span class="n">of</span> <span class="n">zppy</span> <span class="n">repo</span><span class="o">&gt;</span>
-<span class="c1"># Rerun test</span>
-<span class="n">python</span> <span class="o">-</span><span class="n">u</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_complete_run</span><span class="o">.</span><span class="n">py</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
+# Your output will now become the new expectation.
+# Copy output so you don&#39;t have to rerun zppy to generate the output.
+cp -r /lcrc/group/e3sm/public_html/diagnostic_output/$USER/zppy_test_complete_run_www/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
+cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
+# This file will list all the expected images.
+find . -type f -name &#39;*.png&#39; &gt; ../image_list_expected_complete_run.txt
+cd &lt;top level of zppy repo&gt;
+# Rerun test
+python -u -m unittest tests/integration/test_complete_run.py
 </pre></div>
 </div>
 </div></blockquote>
 <p>To replace the expected images for <code class="docutils literal notranslate"><span class="pre">test_bundles.py</span></code> run the following:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles</span>
-<span class="c1"># Your output will now become the new expectation.</span>
-<span class="c1"># Copy output so you don&#39;t have to rerun zppy to generate the output.</span>
-<span class="c1"># cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_bundles_www/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles</span>
-<span class="c1"># mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files</span>
-<span class="c1"># cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files</span>
-<span class="c1"># cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles</span>
-<span class="c1"># This file will list all the expected images.</span>
-<span class="c1"># find . -type f -name &#39;*.png&#39; &gt; ../image_list_expected_bundles.txt</span>
-<span class="n">cd</span> <span class="o">&lt;</span><span class="n">top</span> <span class="n">level</span> <span class="n">of</span> <span class="n">zppy</span> <span class="n">repo</span><span class="o">&gt;</span>
-<span class="c1"># Rerun test</span>
-<span class="c1"># python -u -m unittest tests/integration/test_bundles.py</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
+# Your output will now become the new expectation.
+# Copy output so you don&#39;t have to rerun zppy to generate the output.
+cp -r /lcrc/group/e3sm/public_html/diagnostic_output/$USER/zppy_test_bundles_www/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
+mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
+cp -r /lcrc/group/e3sm/$USER/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
+cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
+# This file will list all the expected images.
+find . -type f -name &#39;*.png&#39; &gt; ../image_list_expected_bundles.txt
+cd &lt;top level of zppy repo&gt;
+# Rerun test
+python -u -m unittest tests/integration/test_bundles.py
 </pre></div>
 </div>
 </div></blockquote>
