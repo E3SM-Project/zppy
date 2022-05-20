@@ -534,5 +534,6 @@ ELAPSEDTIME=$(($ENDTIME - $STARTTIME))
 echo ==============================================
 echo "Elapsed time: $ELAPSEDTIME seconds"
 echo ==============================================
+rm -f {{ prefix }}.status
 echo 'OK' > {{ prefix }}.status
 exit 0

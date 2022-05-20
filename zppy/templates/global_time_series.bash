@@ -164,5 +164,6 @@ echo ==============================================
 echo "Elapsed time: $ELAPSEDTIME seconds"
 echo ==============================================
 cd {{ scriptDir }}
+rm -f {{ prefix }}.status
 echo 'OK' > {{ prefix }}.status
 exit 0

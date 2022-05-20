@@ -43,6 +43,7 @@ if [ ${error} = true ]; then
   echo 'ERROR' > {{ prefix }}.status
   exit 1
 else
+  rm -f {{ prefix }}.status
   echo 'OK' > {{ prefix }}.status
   exit 0
 fi
