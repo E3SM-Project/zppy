@@ -7,7 +7,8 @@ from tests.integration.utils import check_mismatched_images
 class TestBundles(unittest.TestCase):
     def test_bundles_bash_file_list(self):
         # Check that the correct bash files are generated
-        directory = "/lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts"
+        username = os.environ.get("USER")
+        directory = f"/lcrc/group/e3sm/{username}/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts"
         bash_file_list = f"{directory}/bash_file_list.txt"
         cmd = f"cd {directory} && find . -type f -name '*.bash' > {bash_file_list}"
         os.system(cmd)
@@ -48,7 +49,8 @@ class TestBundles(unittest.TestCase):
         self.assertEqual(actual_bash_files, expected_bash_files)
 
     def test_bundles_bash_file_content(self):
-        actual_directory = "/lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts"
+        username = os.environ.get("USER")
+        actual_directory = f"/lcrc/group/e3sm/{username}/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts"
         expected_directory = "/lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files"
         # Check that bundle files are correct
         self.assertEqual(
@@ -73,7 +75,8 @@ class TestBundles(unittest.TestCase):
     def test_bundles_images(self):
         # Check that correct images were generated
         # See docs/source/dev_guide/testing.rst for steps to run before running this test.
-        actual_images_dir = "/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_bundles_www/v2.LR.historical_0201"
+        username = os.environ.get("USER")
+        actual_images_dir = f"/lcrc/group/e3sm/public_html/diagnostic_output/{username}/zppy_test_bundles_www/v2.LR.historical_0201"
 
         # The expected_images_file lists all images we expect to compare.
         expected_images_file = "/lcrc/group/e3sm/public_html/zppy_test_resources/image_list_expected_bundles.txt"

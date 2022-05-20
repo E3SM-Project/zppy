@@ -5,6 +5,8 @@ import stat
 import time
 from subprocess import PIPE, Popen
 
+from mache import MachineInfo
+
 # -----------------------------------------------------------------------------
 # Process specified section and its sub-sections to build list of tasks
 #
@@ -60,6 +62,13 @@ def getTasks(config, section_name):
             # Add to list of tasks if it is active
             if get_active_status(task):
                 tasks.append(task)
+
+    # This replaces `$USER` from the cfg file with the actual username
+    username = os.environ.get("USER")
+    for c in tasks:
+        for key in c:
+            if (type(c[key]) == str) and ("$USER" in c[key]):
+                c[key] = c[key].replace("$USER", username)
 
     return tasks
 
@@ -231,3 +240,18 @@ def makeExecutable(scriptFile):
     os.chmod(scriptFile, st.st_mode | stat.S_IEXEC)
 
     return
+
+
+# -----------------------------------------------------------------------------
+def print_url(c, task):
+    machine_info = MachineInfo()
+    base_path = machine_info.config.get("web_portal", "base_path")
+    base_url = machine_info.config.get("web_portal", "base_url")
+    www = c["www"]
+    if www.startswith(base_path):
+        # TODO: python 3.9 introduces `removeprefix`
+        # This will begin with a "/"
+        www_suffix = www[len(base_path) :]
+        print(f"URL: {base_url}{www_suffix}/{task}")
+    else:
+        print(f"Could not determine URL from www={www}")

@@ -4,7 +4,14 @@ import pprint
 import jinja2
 
 from zppy.bundle import handle_bundles
-from zppy.utils import checkStatus, getTasks, getYears, makeExecutable, submitScript
+from zppy.utils import (
+    checkStatus,
+    getTasks,
+    getYears,
+    makeExecutable,
+    print_url,
+    submitScript,
+)
 
 
 # -----------------------------------------------------------------------------
@@ -121,5 +128,7 @@ def global_time_series(config, scriptDir, existing_bundles):
                     )
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
+
+                print_url(c, "global_time_series")
 
     return existing_bundles

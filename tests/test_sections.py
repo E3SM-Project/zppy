@@ -64,6 +64,7 @@ class TestAllSets(unittest.TestCase):
         actual_default = config["default"]
         expected_default = {
             "active": False,
+            "account": "",
             "bundle": "",
             "campaign": "none",
             "case": "CASE",
@@ -109,6 +110,7 @@ class TestAllSets(unittest.TestCase):
         actual_task = actual_tasks[0]
         expected_task = {
             "active": "True",
+            "account": "",
             "bundle": "",
             "area_nm": "area",
             "campaign": "none",
@@ -157,6 +159,7 @@ class TestAllSets(unittest.TestCase):
         actual_task = actual_tasks[0]
         expected_task = {
             "active": "True",
+            "account": "",
             "bundle": "",
             "campaign": "none",
             "case": "CASE",
@@ -204,6 +207,7 @@ class TestAllSets(unittest.TestCase):
         actual_default = config["default"]
         expected_default = {
             "active": False,
+            "account": "",
             "bundle": "",
             "campaign": "none",
             "case": "CASE",
@@ -267,6 +271,7 @@ class TestAllSets(unittest.TestCase):
         actual_task = actual_tasks[0]
         expected_task = {
             "active": "True",
+            "account": "",
             "area_nm": "area",
             "bundle": "",
             "campaign": "none",
@@ -300,6 +305,7 @@ class TestAllSets(unittest.TestCase):
         actual_task = actual_tasks[1]
         expected_task = {
             "active": "True",
+            "account": "",
             "area_nm": "area",
             "bundle": "",
             "campaign": "none",
@@ -362,6 +368,7 @@ class TestAllSets(unittest.TestCase):
         actual_task = actual_tasks[0]
         expected_task = {
             "active": "True",
+            "account": "",
             "bundle": "",
             "campaign": "none",
             "case": "CASE",
@@ -390,6 +397,7 @@ class TestAllSets(unittest.TestCase):
         actual_task = actual_tasks[1]
         expected_task = {
             "active": "True",
+            "account": "",
             "bundle": "",
             "campaign": "none",
             "case": "CASE",

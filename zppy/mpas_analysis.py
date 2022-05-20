@@ -4,7 +4,14 @@ import pprint
 import jinja2
 
 from zppy.bundle import handle_bundles
-from zppy.utils import checkStatus, getTasks, getYears, makeExecutable, submitScript
+from zppy.utils import (
+    checkStatus,
+    getTasks,
+    getYears,
+    makeExecutable,
+    print_url,
+    submitScript,
+)
 
 
 # -----------------------------------------------------------------------------
@@ -112,6 +119,7 @@ def mpas_analysis(config, scriptDir, existing_bundles):
                 existing_bundles=existing_bundles,
             )
             if not c["dry_run"]:
+
                 if c["bundle"] == "":
                     # Submit job
                     submitScript(
@@ -124,5 +132,7 @@ def mpas_analysis(config, scriptDir, existing_bundles):
                     dependencies.append(statusFile)
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
+
+                print_url(c, "mpas_analysis")
 
     return existing_bundles
