@@ -9,9 +9,8 @@ if [[ "${debug,,}" == "true" ]]; then
   set -x
 fi
 
-# Point to obsersvation data
-# TODO: need to update these data to other supported machines
-export ILAMB_ROOT=/lcrc/group/acme/public_html/diagnostics/ilamb_data
+# Point to observation data
+export ILAMB_ROOT={{ ilamb_obs }}
 
 # Script dir
 cd {{ scriptDir }}
@@ -58,6 +57,7 @@ echo ===== RUN ILAMB =====
 echo
 
 # Run diagnostics
+# Not required TODO?
 # TODO: find the mpi run format for different platforms
 
 # include cfg file
