@@ -68,7 +68,7 @@ EOF
 echo ${workdir}
 echo {{ scriptDir }}
 
-ilamb-run --config ilamb_run.cfg --model_root $model_root  --regions global --model_year ${Y1} 2000
+srun -N 1 ilamb-run --config ilamb_run.cfg --model_root $model_root  --regions global --model_year ${Y1} 2000
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
