@@ -121,7 +121,7 @@ cat > default_metadata.json << EOF
 {% include cmip_metadata %}
 EOF
 {
-  export cmortables_dir=/lcrc/group/acme/public_html/diagnostics/cmip6-cmor-tables/Tables
+  export cmortables_dir={{ cmor_tables_prefix }}/cmip6-cmor-tables/Tables
   input_dir={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
   dest_cmip={{ output }}/post/{{ component }}/{{ grid }}/cmip_ts/{{ frequency }}
   mkdir -p ${dest_cmip}

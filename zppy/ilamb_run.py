@@ -2,6 +2,7 @@ import os
 import pprint
 
 import jinja2
+from mache import MachineInfo
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
@@ -47,6 +48,11 @@ def ilamb_run(config, scriptDir, existing_bundles):
                 c["sub"] = c["subsection"]
             else:
                 c["sub"] = c["grid"]
+
+            if c["ilamb_obs"] == "":
+                ilamb_obs_prefix = MachineInfo().config.get("diagnostics", "base_path")
+                ilamb_obs_suffix = "ilamb_data"
+                c["ilamb_obs"] = os.path.join(ilamb_obs_prefix, ilamb_obs_suffix)
 
             # List of dependencies
             dependencies.append(

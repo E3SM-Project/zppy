@@ -3,6 +3,7 @@ import pprint
 import re
 
 import jinja2
+from mache import MachineInfo
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
@@ -56,6 +57,10 @@ def ts(config, scriptDir, existing_bundles):
 
         # Component
         c["component"] = getComponent(c["input_files"])
+
+        machine_info = MachineInfo()
+        cmor_tables_prefix = machine_info.config.get("diagnostics", "base_path")
+        c["cmor_tables_prefix"] = cmor_tables_prefix
 
         # Loop over year sets
         year_sets = getYears(c["years"])
