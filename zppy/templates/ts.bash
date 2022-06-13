@@ -125,7 +125,7 @@ EOF
   input_dir={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
   dest_cmip={{ output }}/post/{{ component }}/{{ grid }}/cmip_ts/{{ frequency }}
   mkdir -p ${dest_cmip}
-  e3sm_to_cmip \
+  srun -N 1 e3sm_to_cmip \
   --output-path \
   ${dest_cmip}/${tmp_dir} \
   {% if input_files == 'elm.h0' -%}
