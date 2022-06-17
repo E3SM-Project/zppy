@@ -70,8 +70,7 @@ def main():  # noqa: C901
         os.makedirs(scriptDir)
     except OSError as exc:
         if exc.errno != errno.EEXIST:
-            print("Cannot create script directory")
-            raise Exception
+            raise OSError("Cannot create script directory")
         pass
 
     # Determine machine to decide which header files to use
@@ -169,6 +168,8 @@ def _validate_config(config):
     result = config.validate(validator)
     if result is not True:
         print("Validation results={}".format(result))
-        raise Exception("Configuration file validation failed")
+        raise ValueError(
+            "Configuration file validation failed. Parameters listed as false in the validation results have invalid values."
+        )
     else:
-        print("Configuration file validation passed")
+        print("Configuration file validation passed.")

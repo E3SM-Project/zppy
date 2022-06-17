@@ -42,7 +42,7 @@ def tc_analysis(config, scriptDir, existing_bundles):
             if c["input_files"]:
                 c["atm_name"] = c["input_files"].split(".")[0]
             else:
-                raise Exception("No value was given for `input_files`.")
+                raise ValueError("No value was given for `input_files`.")
             prefix = "tc_analysis_%04d-%04d" % (
                 c["year1"],
                 c["year2"],

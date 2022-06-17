@@ -143,7 +143,7 @@ def getComponent(input_files):
     elif tmp in ("mosart",):
         component = "rof"
     else:
-        raise Exception(
+        raise ValueError(
             "Cannot extract component name from input_files %s" % (input_files)
         )
 
@@ -205,7 +205,7 @@ def submitScript(scriptFile, statusFile, export, dependFiles=[]):
             print(error_str)
             print(command)
             print(stderr)
-            raise Exception(error_str)
+            raise RuntimeError(error_str)
         jobid = int(out.split()[-1])
 
         # Small pause to avoid overloading queueing system
