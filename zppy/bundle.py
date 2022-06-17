@@ -16,6 +16,7 @@ class Bundle(object):
         self.account: str = c["account"]
         self.dry_run: bool = c["dry_run"]
         self.debug: bool = c["debug"]
+        self.environment_commands: str = c["environment_commands"]
         self.script_dir: str = c["scriptDir"]
         self.nodes: int = c["nodes"]
         self.partition: str = c["partition"]
@@ -47,6 +48,7 @@ class Bundle(object):
         c["machine"] = config["default"]["machine"]
         c["account"] = config["default"]["account"]
         c["debug"] = self.debug
+        c["environment_commands"] = self.environment_commands
         c["scriptDir"] = self.script_dir
         c["prefix"] = self.bundle_name
         c["nodes"] = self.nodes

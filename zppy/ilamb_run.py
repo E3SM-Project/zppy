@@ -28,7 +28,7 @@ def ilamb_run(config, scriptDir, existing_bundles):
     # --- List of ilamb_run tasks ---
     tasks = getTasks(config, "ilamb_run")
     if len(tasks) == 0:
-        return []
+        return existing_bundles
 
     # --- Generate and submit ilamb_run scripts ---
     dependencies = []
