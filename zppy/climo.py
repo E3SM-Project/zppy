@@ -47,7 +47,7 @@ def climo(config, scriptDir, existing_bundles):
                 if tmp[0] == "map":
                     c["grid"] = "%s_%s" % (tmp[-2], tmp[-1])
                 else:
-                    raise Exception(
+                    raise ValueError(
                         "Cannot extract target grid name from mapping file %s"
                         % (c["mapping_file"])
                     )
