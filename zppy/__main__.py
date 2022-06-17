@@ -90,9 +90,10 @@ def main():  # noqa: C901
             partition = config["default"]["partition"]
             if partition not in ["haswell", "knl"]:
                 raise ValueError(
-                    f'Expected Cori parition to be "haswell" or '
+                    f'Expected Cori partition to be "haswell" or '
                     f'"knl" but got: {partition}'
                 )
+            # This will be the [default] environment_commands
             environment_commands = (
                 f"source {unified_base}/load_latest_e3sm_unified_cori-{partition}.sh"
             )
