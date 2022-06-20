@@ -23,7 +23,7 @@ error=false
 echo === {{ task }}  ===
 task={{ task }}
 taskStatusFile="${task%.*}.status"
-if [ ! -f ${taskStatusFile} ] || [ `cat ${taskStatusFile}` != "OK" ] ; then
+if [ ! -f ${taskStatusFile} ] || [ "`cat ${taskStatusFile}`" != "OK" ] ; then
   ./{{ task }}
   if [ $? -ne 0 ]; then
     error=true
