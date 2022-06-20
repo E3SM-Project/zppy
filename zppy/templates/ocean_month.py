@@ -29,10 +29,10 @@ tcalendar = "noleap"
 tunits = "days since 0001-01-01 00:00:00"
 
 # Loop over year sets
-for y in range(start_yr, end_yr, 10):
+for y in range(start_yr, end_yr, ts_num_years):
 
     year1 = y
-    year2 = y + 10 - 1
+    year2 = y + ts_num_years - 1
     files = []
     for year in range(year1, year2 + 1):
         print("year=", year)
