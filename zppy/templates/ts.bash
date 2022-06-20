@@ -65,6 +65,7 @@ cat input.txt | ncclimo \
 -c {{ case }} \
 -v {{ vars }} \
 --mem_mb=0 \
+--split \
 {%- if extra_vars != '' %}
 --var_xtr={{extra_vars}} \
 {%- endif %}
@@ -130,7 +131,7 @@ EOF
   ${dest_cmip}/${tmp_dir} \
   {% if input_files == 'elm.h0' -%}
   --var-list \
-  'mrsos, mrso, mrfso, mrros, mrro, prveg, evspsblveg, evspsblsoi, tran, tsl, lai, cLitter, cProduct, cSoilFast,cSoilMedium,cSoilSlow fFire, fHarvest, cVeg, nbp, gpp, ra, rh' \
+  'mrsos, mrso, mrfso, mrros, mrro, prveg, evspsblveg, evspsblsoi, tran, tsl, lai, cLitter, cProduct, cSoilFast, cSoilMedium, cSoilSlow, fFire, fHarvest, cVeg, nbp, gpp, ra, rh' \
   --realm \
   lnd \
   {% endif -%}
