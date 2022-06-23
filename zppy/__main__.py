@@ -12,7 +12,7 @@ from zppy.bundle import Bundle, predefined_bundles
 from zppy.climo import climo
 from zppy.e3sm_diags import e3sm_diags
 from zppy.global_time_series import global_time_series
-from zppy.ilamb_run import ilamb_run
+from zppy.ilamb import ilamb
 from zppy.mpas_analysis import mpas_analysis
 from zppy.tc_analysis import tc_analysis
 from zppy.ts import ts
@@ -144,8 +144,8 @@ def main():  # noqa: C901
     # global time series tasks
     existing_bundles = global_time_series(config, scriptDir, existing_bundles)
 
-    # ilamb_run tasks
-    existing_bundles = ilamb_run(config, scriptDir, existing_bundles)
+    # ilamb tasks
+    existing_bundles = ilamb(config, scriptDir, existing_bundles)
 
     # Submit bundle jobs
     for b in existing_bundles:

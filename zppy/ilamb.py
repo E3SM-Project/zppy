@@ -16,21 +16,21 @@ from zppy.utils import (
 
 
 # -----------------------------------------------------------------------------
-def ilamb_run(config, scriptDir, existing_bundles):
+def ilamb(config, scriptDir, existing_bundles):
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
         searchpath=config["default"]["templateDir"]
     )
     templateEnv = jinja2.Environment(loader=templateLoader)
-    template = templateEnv.get_template("ilamb_run.bash")
+    template = templateEnv.get_template("ilamb.bash")
 
-    # --- List of ilamb_run tasks ---
-    tasks = getTasks(config, "ilamb_run")
+    # --- List of ilamb tasks ---
+    tasks = getTasks(config, "ilamb")
     if len(tasks) == 0:
         return existing_bundles
 
-    # --- Generate and submit ilamb_run scripts ---
+    # --- Generate and submit ilamb scripts ---
     dependencies = []
 
     for c in tasks:
@@ -81,7 +81,7 @@ def ilamb_run(config, scriptDir, existing_bundles):
                     ),
                 )
 
-            prefix = "ilamb_run_%04d-%04d" % (
+            prefix = "ilamb_%04d-%04d" % (
                 c["year1"],
                 c["year2"],
             )

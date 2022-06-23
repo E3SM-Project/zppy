@@ -32,7 +32,7 @@ class TestBundles(unittest.TestCase):
                 "e3sm_diags_atm_monthly_180x360_aave_model_vs_obs_1852-1853.bash",
                 "e3sm_diags_atm_monthly_180x360_aave_mvm_model_vs_model_1850-1851_vs_1850-1851.bash",
                 "global_time_series_1850-1860.bash",
-                "ilamb_run_1850-1851.bash",
+                "ilamb_1850-1851.bash",
                 "tc_analysis_1850-1851.bash",
                 "ts_atm_daily_180x360_aave_1850-1851-0002.bash",
                 "ts_atm_daily_180x360_aave_1852-1853-0002.bash",
