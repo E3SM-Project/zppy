@@ -61,14 +61,14 @@ echo
 # TODO: find the mpi run format for different platforms
 
 # include cfg file
-cat > ilamb_run.cfg << EOF
+cat > ilamb.cfg << EOF
 {% include cfg %}
 EOF
 
 echo ${workdir}
 echo {{ scriptDir }}
 
-srun -N 1 ilamb-run --config ilamb_run.cfg --model_root $model_root  --regions global --model_year ${Y1} 2000
+srun -N 1 ilamb-run --config ilamb.cfg --model_root $model_root  --regions global --model_year ${Y1} 2000
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}

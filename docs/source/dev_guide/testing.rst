@@ -48,7 +48,7 @@ Before running ``tests/integration/test_bundles.py`` run the following:
        zppy -c tests/integration/test_bundles.cfg
        # bundle1 and bundle2 should run. After they finish, invoke zppy again to resolve remaining dependencies:
        zppy -c tests/integration/test_bundles.cfg
-       # bundle3 and ilamb_run should run
+       # bundle3 and ilamb should run
 
 Commands to run to replace outdated expected files
 --------------------------------------------------
