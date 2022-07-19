@@ -1,14 +1,16 @@
 import os
 import unittest
 
-from tests.integration.utils import check_mismatched_images
+from tests.integration.utils import check_mismatched_images, get_expansions
 
 
 class TestBundles(unittest.TestCase):
     def test_bundles_bash_file_list(self):
         # Check that the correct bash files are generated
-        username = os.environ.get("USER")
-        directory = f"/lcrc/group/e3sm/{username}/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts"
+        user_output = get_expansions()["user_output"]
+        directory = (
+            f"{user_output}zppy_test_bundles_output/v2.LR.historical_0201/post/scripts"
+        )
         bash_file_list = f"{directory}/bash_file_list.txt"
         cmd = f"cd {directory} && find . -type f -name '*.bash' > {bash_file_list}"
         os.system(cmd)
@@ -49,9 +51,13 @@ class TestBundles(unittest.TestCase):
         self.assertEqual(actual_bash_files, expected_bash_files)
 
     def test_bundles_bash_file_content(self):
-        username = os.environ.get("USER")
-        actual_directory = f"/lcrc/group/e3sm/{username}/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts"
-        expected_directory = "/lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files"
+        expansions = get_expansions()
+        user_output = expansions["user_output"]
+        expected_dir = expansions["expected_dir"]
+        actual_directory = (
+            f"{user_output}zppy_test_bundles_output/v2.LR.historical_0201/post/scripts"
+        )
+        expected_directory = f"{expected_dir}expected_bundles/bundle_files"
         # Check that bundle files are correct
         self.assertEqual(
             os.system(
@@ -75,14 +81,14 @@ class TestBundles(unittest.TestCase):
     def test_bundles_images(self):
         # Check that correct images were generated
         # See docs/source/dev_guide/testing.rst for steps to run before running this test.
-        username = os.environ.get("USER")
-        actual_images_dir = f"/lcrc/group/e3sm/public_html/diagnostic_output/{username}/zppy_test_bundles_www/v2.LR.historical_0201"
+        expansions = get_expansions()
+        expected_dir = expansions["expected_dir"]
+        user_www = expansions["user_www"]
+        actual_images_dir = f"{user_www}zppy_test_bundles_www/v2.LR.historical_0201"
 
         # The expected_images_file lists all images we expect to compare.
-        expected_images_file = "/lcrc/group/e3sm/public_html/zppy_test_resources/image_list_expected_bundles.txt"
-        expected_images_dir = (
-            "/lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles"
-        )
+        expected_images_file = f"{expected_dir}image_list_expected_bundles.txt"
+        expected_images_dir = f"{expected_dir}expected_bundles"
 
         # The directory to place differences in.
         diff_dir = "tests/integration/image_check_failures_bundles"

@@ -1,9 +1,12 @@
 import os
 import unittest
 
+from tests.integration.utils import get_expansions
+
 
 class TestDefaults(unittest.TestCase):
     def test_defaults(self):
+        # cfg is not machine-specific
         self.assertEqual(os.system("zppy -c tests/integration/test_defaults.cfg"), 0)
         self.assertEqual(os.system("rm test_defaults_output/post/scripts/*.bash"), 0)
         self.assertEqual(
@@ -12,9 +15,10 @@ class TestDefaults(unittest.TestCase):
             ),
             0,
         )
+        expected_dir = get_expansions()["expected_dir"]
         self.assertEqual(
             os.system(
-                "diff -bur -I 'templateDir' test_defaults_output/post/scripts /lcrc/group/e3sm/public_html/zppy_test_resources/test_defaults_expected_files"
+                f"diff -bur -I 'templateDir' test_defaults_output/post/scripts {expected_dir}test_defaults_expected_files"
             ),
             0,
         )

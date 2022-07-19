@@ -4,7 +4,8 @@ import unittest
 
 class TestLastYear(unittest.TestCase):
     def test_last_year(self):
-        # Note that this integration test does not have any expected files in /lcrc/group/e3sm/public_html/zppy_test_resources/
+        # Note that this integration test does not have any expected files in `tests.integration.utils.get_expansions()["expected_dir"]`
+        # cfg is not machine-specific
         self.assertEqual(
             os.system("zppy -c tests/integration/test_last_year.cfg --last-year 12"), 0
         )
