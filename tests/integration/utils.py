@@ -1,8 +1,13 @@
 import os
+import re
 import shutil
+import subprocess
 from typing import List
 
+from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
+
+# Image checking ##########################################################
 
 
 # Copied from E3SM Diags
@@ -110,3 +115,93 @@ def check_mismatched_images(
 
     test.assertEqual(missing_images, [])
     test.assertEqual(mismatched_images, [])
+
+
+# Multi-machine testing ##########################################################
+
+# Inspired by https://github.com/E3SM-Project/e3sm_diags/blob/master/docs/source/quickguides/generate_quick_guides.py
+
+
+def get_chyrsalis_expansions(config):
+    diags_base_path = config.get("diagnostics", "base_path")
+    unified_path = config.get("e3sm_unified", "base_path")
+    # Note: `os.environ.get("USER")` also works. Here we're already using mache but not os, so using mache.
+    username = config.get("web_portal", "username")
+    web_base_path = config.get("web_portal", "base_path")
+    d = {
+        # To run this test, replace conda environment with your e3sm_diags dev environment
+        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220614",
+        "diags_obs_climo": f"{diags_base_path}/observations/Atm/climatology/",
+        "diags_obs_tc": f"{diags_base_path}/observations/Atm/tc-analysis/",
+        "diags_obs_ts": f"{diags_base_path}/observations/Atm/time-series/",
+        "environment_commands": f"source {unified_path}/load_latest_e3sm_unified_chrysalis.sh",
+        "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
+        "mapping_path": "/home/ac.zender/data/maps/",
+        "scratch": f"/lcrc/globalscratch/{username}/",
+        "user_input": "/lcrc/group/e3sm/ac.forsyth2/",
+        "user_output": f"/lcrc/group/e3sm/{username}/",
+        "user_www": f"{web_base_path}/{username}/",
+    }
+    return d
+
+
+def get_expansions():
+    machine_info = MachineInfo()
+    config = machine_info.config
+    machine = machine_info.machine
+    if machine == "chrysalis":
+        expansions = get_chyrsalis_expansions(config)
+    else:
+        raise ValueError(f"Unsupported machine={machine}")
+    expansions["machine"] = machine
+    return expansions
+
+
+def substitute_expansions(expansions, file_in, file_out):
+    with open(file_in, "r") as file_read:
+        with open(file_out, "w") as file_write:
+            # For line in file, if line matches #expand <expansion_name>#, then replace text with <expansion>.
+            # Send output to the corresponding specific cfg file.
+            for line in file_read:
+                match_object = re.search("#expand ([^#]*)#", line)
+                while match_object is not None:
+                    expansion_indicator = match_object.group(0)
+                    expansion_name = match_object.group(1)
+                    expansion = expansions[expansion_name]
+                    line = line.replace(expansion_indicator, expansion)
+                    match_object = re.search("#expand ([^#]*)#", line)
+                file_write.write(line)
+
+
+def generate_cfgs():
+    git_top_level = (
+        subprocess.check_output("git rev-parse --show-toplevel".split())
+        .strip()
+        .decode("utf-8")
+    )
+    expansions = get_expansions()
+    machine = expansions["machine"]
+
+    cfg_names = ["bundles", "complete_run"]
+    for cfg_name in cfg_names:
+        cfg_template = f"{git_top_level}/tests/integration/template_{cfg_name}.cfg"
+        cfg_generated = (
+            f"{git_top_level}/tests/integration/generated/test_{cfg_name}.cfg"
+        )
+        substitute_expansions(expansions, cfg_template, cfg_generated)
+
+    directions_template = f"{git_top_level}/tests/integration/template_directions.md"
+    directions_generated = (
+        f"{git_top_level}/tests/integration/generated/directions_{machine}.md"
+    )
+    substitute_expansions(expansions, directions_template, directions_generated)
+
+    script_template = (
+        f"{git_top_level}/tests/integration/template_update_campaign_expected_files.sh"
+    )
+    script_generated = f"{git_top_level}/tests/integration/generated/update_campaign_expected_files_{machine}.sh"
+    substitute_expansions(expansions, script_template, script_generated)
+
+
+if __name__ == "__main__":
+    generate_cfgs()
