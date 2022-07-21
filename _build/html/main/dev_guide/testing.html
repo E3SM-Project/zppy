@@ -101,11 +101,7 @@
 <li class="toctree-l2"><a class="reference internal" href="project-standards.html">Project Standards</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Testing zppy</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#unit-tests">Unit tests</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#integration-tests">Integration tests</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#commands-to-run-before-running-integration-tests">Commands to run before running integration tests</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#commands-to-run-to-replace-outdated-expected-files">Commands to run to replace outdated expected files</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#integration-tests">Integration tests</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#automated-tests">Automated tests</a></li>
 </ul>
 </li>
@@ -199,107 +195,16 @@
 </div>
 <div class="section" id="integration-tests">
 <h2>Integration tests<a class="headerlink" href="#integration-tests" title="Permalink to this headline">¶</a></h2>
-<p>Integration tests must be run on an LCRC machine. Run all integration tests by doing the following:</p>
+<p>Integration tests can be run on Chrysalis, Compy, or Cori.
+First review <a class="reference external" href="https://github.com/E3SM-Project/zppy/tree/main/tests/integration/generated">machine-specific directions</a>.</p>
+<p>Run all integration tests by doing the following:</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span> <span class="c1"># Install your changes (`python -m pip install .` also works)</span>
 
-<span class="c1"># Run steps in the section below (&quot;Commands to run before running integration tests&quot;)</span>
 <span class="n">python</span> <span class="o">-</span><span class="n">u</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_</span><span class="o">*.</span><span class="n">py</span> <span class="c1"># Run all integration tests</span>
 </pre></div>
 </div>
 </div></blockquote>
-<div class="section" id="commands-to-run-before-running-integration-tests">
-<h3>Commands to run before running integration tests<a class="headerlink" href="#commands-to-run-before-running-integration-tests" title="Permalink to this headline">¶</a></h3>
-<p>Before running <code class="docutils literal notranslate"><span class="pre">tests/integration/test_complete_run.py</span></code> run the following:</p>
-<blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span># You&#39;ll need to set some paths to your own directories:
-# 1) Edit the paths below
-# 2) Edit `output` and `www` parameters in `tests/integration/test_complete_run.cfg`
-# 3) Edit `actual_images_dir` in `tests/integration/test_complete_run.py`
-rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/$USER/zppy_test_complete_run_www/v2.LR.historical_0201
-rm -rf /lcrc/group/e3sm/$USER/zppy_test_complete_run_output/v2.LR.historical_0201/post
-zppy -c tests/integration/test_complete_run.cfg
-</pre></div>
-</div>
-</div></blockquote>
-<p>Before running <code class="docutils literal notranslate"><span class="pre">tests/integration/test_bundles.py</span></code> run the following:</p>
-<blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/$USER/zppy_test_bundles_www/v2.LR.historical_0201
-rm -rf /lcrc/group/e3sm/$USER/zppy_test_bundles_output/v2.LR.historical_0201/post
-zppy -c tests/integration/test_bundles.cfg
-# bundle1 and bundle2 should run. After they finish, invoke zppy again to resolve remaining dependencies:
-zppy -c tests/integration/test_bundles.cfg
-# bundle3 and ilamb should run
-</pre></div>
-</div>
-</div></blockquote>
-</div>
-<div class="section" id="commands-to-run-to-replace-outdated-expected-files">
-<h3>Commands to run to replace outdated expected files<a class="headerlink" href="#commands-to-run-to-replace-outdated-expected-files" title="Permalink to this headline">¶</a></h3>
-<p>To replace the expected files for <code class="docutils literal notranslate"><span class="pre">test_bash_generation.py</span></code> run the following:</p>
-<blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">expected_bash_files</span>
-<span class="n">cd</span> <span class="o">&lt;</span><span class="n">top</span> <span class="n">level</span> <span class="n">of</span> <span class="n">zppy</span> <span class="n">repo</span><span class="o">&gt;</span>
-<span class="c1"># Your output will now become the new expectation.</span>
-<span class="c1"># You can just move (i.e., not copy) the output since re-running this test will re-generate the output.</span>
-<span class="n">mv</span> <span class="n">test_bash_generation_output</span><span class="o">/</span><span class="n">post</span><span class="o">/</span><span class="n">scripts</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">expected_bash_files</span>
-<span class="c1"># Rerun test</span>
-<span class="n">python</span> <span class="o">-</span><span class="n">u</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_bash_generation</span><span class="o">.</span><span class="n">py</span>
-</pre></div>
-</div>
-</div></blockquote>
-<p>To replace the expected files for <code class="docutils literal notranslate"><span class="pre">test_campaign.py</span></code> run the following:</p>
-<blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">&lt;</span><span class="n">top</span> <span class="n">level</span> <span class="n">of</span> <span class="n">zppy</span> <span class="n">repo</span><span class="o">&gt;</span>
-<span class="o">./</span><span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">update_campaign_expected_files</span><span class="o">.</span><span class="n">sh</span>
-</pre></div>
-</div>
-</div></blockquote>
-<p>To replace the expected files for <code class="docutils literal notranslate"><span class="pre">test_defaults.py</span></code> run the following:</p>
-<blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">test_defaults_expected_files</span>
-<span class="n">mkdir</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">test_defaults_expected_files</span>
-<span class="c1"># Your output will now become the new expectation.</span>
-<span class="c1"># You can just move (i.e., not copy) the output since re-running this test will re-generate the output.</span>
-<span class="n">mv</span> <span class="n">test_defaults_output</span><span class="o">/</span><span class="n">post</span><span class="o">/</span><span class="n">scripts</span><span class="o">/*.</span><span class="n">settings</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">group</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">public_html</span><span class="o">/</span><span class="n">zppy_test_resources</span><span class="o">/</span><span class="n">test_defaults_expected_files</span>
-<span class="c1"># Rerun test</span>
-<span class="n">python</span> <span class="o">-</span><span class="n">u</span> <span class="o">-</span><span class="n">m</span> <span class="n">unittest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_defaults</span><span class="o">.</span><span class="n">py</span>
-</pre></div>
-</div>
-</div></blockquote>
-<p>To replace the expected images for <code class="docutils literal notranslate"><span class="pre">test_complete_run.py</span></code> run the following:</p>
-<blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
-# Your output will now become the new expectation.
-# Copy output so you don&#39;t have to rerun zppy to generate the output.
-cp -r /lcrc/group/e3sm/public_html/diagnostic_output/$USER/zppy_test_complete_run_www/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
-cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
-# This file will list all the expected images.
-find . -type f -name &#39;*.png&#39; &gt; ../image_list_expected_complete_run.txt
-cd &lt;top level of zppy repo&gt;
-# Rerun test
-python -u -m unittest tests/integration/test_complete_run.py
-</pre></div>
-</div>
-</div></blockquote>
-<p>To replace the expected images for <code class="docutils literal notranslate"><span class="pre">test_bundles.py</span></code> run the following:</p>
-<blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
-# Your output will now become the new expectation.
-# Copy output so you don&#39;t have to rerun zppy to generate the output.
-cp -r /lcrc/group/e3sm/public_html/diagnostic_output/$USER/zppy_test_bundles_www/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
-mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
-cp -r /lcrc/group/e3sm/$USER/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
-cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
-# This file will list all the expected images.
-find . -type f -name &#39;*.png&#39; &gt; ../image_list_expected_bundles.txt
-cd &lt;top level of zppy repo&gt;
-# Rerun test
-python -u -m unittest tests/integration/test_bundles.py
-</pre></div>
-</div>
-</div></blockquote>
-</div>
 </div>
 <div class="section" id="automated-tests">
 <h2>Automated tests<a class="headerlink" href="#automated-tests" title="Permalink to this headline">¶</a></h2>
