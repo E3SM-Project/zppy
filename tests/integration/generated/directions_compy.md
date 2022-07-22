@@ -1,12 +1,12 @@
-# Testing directions for #expand machine#
+# Testing directions for compy
 
 ## Commands to run before running integration tests
 
 ### test_bundles
 
 ```
-rm -rf #expand user_www#zppy_test_bundles_www/v2.LR.historical_0201
-rm -rf #expand user_output#zppy_test_bundles_output/v2.LR.historical_0201/post
+rm -rf /compyfs/www//fors729/zppy_test_bundles_www/v2.LR.historical_0201
+rm -rf /compyfs/fors729/zppy_test_bundles_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
 zppy -c tests/integration/generated/test_bundles.cfg
@@ -18,8 +18,8 @@ zppy -c tests/integration/generated/test_bundles.cfg
 ### test_complete_run
 
 ```
-rm -rf #expand user_www#zppy_test_complete_run_www/v2.LR.historical_0201
-rm -rf #expand user_output#zppy_test_complete_run_output/v2.LR.historical_0201/post
+rm -rf /compyfs/www//fors729/zppy_test_complete_run_www/v2.LR.historical_0201
+rm -rf /compyfs/fors729/zppy_test_complete_run_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
 zppy -c tests/integration/generated/test_complete_run.cfg
@@ -30,11 +30,11 @@ zppy -c tests/integration/generated/test_complete_run.cfg
 ### test_bash_generation
 
 ```
-rm -rf #expand expected_dir#expected_bash_files
+rm -rf /compyfs/www/zppy_test_resources/expected_bash_files
 cd <top level of zppy repo>
 # Your output will now become the new expectation.
 # You can just move (i.e., not copy) the output since re-running this test will re-generate the output.
-mv test_bash_generation_output/post/scripts #expand expected_dir#expected_bash_files
+mv test_bash_generation_output/post/scripts /compyfs/www/zppy_test_resources/expected_bash_files
 # Rerun test
 python -u -m unittest tests/integration/test_bash_generation.py
 ```
@@ -42,13 +42,13 @@ python -u -m unittest tests/integration/test_bash_generation.py
 #### test_bundles
 
 ```
-rm -rf #expand expected_dir#expected_bundles
+rm -rf /compyfs/www/zppy_test_resources/expected_bundles
 # Your output will now become the new expectation.
 # Copy output so you don't have to rerun zppy to generate the output.
-cp -r #expand user_www#zppy_test_bundles_www/v2.LR.historical_0201 #expand expected_dir#expected_bundles
-mkdir -p #expand expected_dir#expected_bundles/bundle_files
-cp -r #expand user_output#zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash #expand expected_dir#expected_bundles/bundle_files
-cd #expand expected_dir#expected_bundles
+cp -r /compyfs/www//fors729/zppy_test_bundles_www/v2.LR.historical_0201 /compyfs/www/zppy_test_resources/expected_bundles
+mkdir -p /compyfs/www/zppy_test_resources/expected_bundles/bundle_files
+cp -r /compyfs/fors729/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash /compyfs/www/zppy_test_resources/expected_bundles/bundle_files
+cd /compyfs/www/zppy_test_resources/expected_bundles
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_bundles.txt
 cd <top level of zppy repo>
@@ -60,17 +60,17 @@ python -u -m unittest tests/integration/test_bundles.py
 
 ```
 cd <top level of zppy repo>
-./tests/integration/generated/update_campaign_expected_files_#expand machine#.sh
+./tests/integration/generated/update_campaign_expected_files_compy.sh
 ```
 
 ### test_complete_run
 
 ```
-rm -rf #expand expected_dir#expected_complete_run
+rm -rf /compyfs/www/zppy_test_resources/expected_complete_run
 # Your output will now become the new expectation.
 # Copy output so you don't have to rerun zppy to generate the output.
-cp -r #expand user_www#zppy_test_complete_run_www/v2.LR.historical_0201 #expand expected_dir#expected_complete_run
-cd #expand expected_dir#expected_complete_run
+cp -r /compyfs/www//fors729/zppy_test_complete_run_www/v2.LR.historical_0201 /compyfs/www/zppy_test_resources/expected_complete_run
+cd /compyfs/www/zppy_test_resources/expected_complete_run
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_complete_run.txt
 cd <top level of zppy repo>
@@ -81,11 +81,11 @@ python -u -m unittest tests/integration/test_complete_run.py
 ### test_defaults
 
 ```
-rm -rf #expand expected_dir#test_defaults_expected_files
-mkdir -p #expand expected_dir#test_defaults_expected_files
+rm -rf /compyfs/www/zppy_test_resources/test_defaults_expected_files
+mkdir -p /compyfs/www/zppy_test_resources/test_defaults_expected_files
 # Your output will now become the new expectation.
 # You can just move (i.e., not copy) the output since re-running this test will re-generate the output.
-mv test_defaults_output/post/scripts/*.settings #expand expected_dir#test_defaults_expected_files
+mv test_defaults_output/post/scripts/*.settings /compyfs/www/zppy_test_resources/test_defaults_expected_files
 # Rerun test
 python -u -m unittest tests/integration/test_defaults.py
 ```
