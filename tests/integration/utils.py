@@ -134,12 +134,45 @@ def get_chyrsalis_expansions(config):
         "diags_obs_climo": f"{diags_base_path}/observations/Atm/climatology/",
         "diags_obs_tc": f"{diags_base_path}/observations/Atm/tc-analysis/",
         "diags_obs_ts": f"{diags_base_path}/observations/Atm/time-series/",
+        "diags_walltime": "1:00:00",
         "environment_commands": f"source {unified_path}/load_latest_e3sm_unified_chrysalis.sh",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
         "mapping_path": "/home/ac.zender/data/maps/",
+        "partition_long": "compute",
+        "partition_short": "debug",
+        "qos_long": "regular",
+        "qos_short": "regular",
         "scratch": f"/lcrc/globalscratch/{username}/",
         "user_input": "/lcrc/group/e3sm/ac.forsyth2/",
         "user_output": f"/lcrc/group/e3sm/{username}/",
+        "user_www": f"{web_base_path}/{username}/",
+    }
+    return d
+
+
+def get_compy_expansions(config):
+    diags_base_path = config.get("diagnostics", "base_path")
+    unified_path = config.get("e3sm_unified", "base_path")
+    # Note: `os.environ.get("USER")` also works. Here we're already using mache but not os, so using mache.
+    username = config.get("web_portal", "username")
+    web_base_path = config.get("web_portal", "base_path")
+    d = {
+        # To run this test, replace conda environment with your e3sm_diags dev environment
+        "diags_environment_commands": "source /qfs/people/fors729/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220722",
+        "diags_obs_climo": f"{diags_base_path}/observations/Atm/climatology/",
+        "diags_obs_tc": f"{diags_base_path}/observations/Atm/tc-analysis/",
+        "diags_obs_ts": f"{diags_base_path}/observations/Atm/time-series/",
+        "diags_walltime": "03:00:00",
+        "environment_commands": f"source {unified_path}/load_latest_e3sm_unified_compy.sh",
+        "expected_dir": "/compyfs/www/zppy_test_resources/",
+        "mapping_path": "/compyfs/zender/maps/",
+        "partition_long": "slurm",
+        "partition_short": "short",
+        "qos_long": "regular",
+        "qos_short": "regular",
+        "scratch": f"/qfs/people/{username}/",
+        "user_input": "/compyfs/fors729/",
+        "user_output": f"/compyfs/{username}/",
         "user_www": f"{web_base_path}/{username}/",
     }
     return d
@@ -151,6 +184,8 @@ def get_expansions():
     machine = machine_info.machine
     if machine == "chrysalis":
         expansions = get_chyrsalis_expansions(config)
+    elif machine == "compy":
+        expansions = get_compy_expansions(config)
     else:
         raise ValueError(f"Unsupported machine={machine}")
     expansions["machine"] = machine

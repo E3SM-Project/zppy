@@ -31,6 +31,4 @@ Automated tests
 
 We have a :ref:`GitHub Actions <ci-cd>` Continuous Integration / Continuous Delivery (CI/CD) workflow.
 
-The unit tests are run automatically as part of this. As mentioned earlier,
-integration tests must be run on an LCRC machine.
-
+The unit tests are run automatically as part of this. Integration tests must be run on a machine specified above.
