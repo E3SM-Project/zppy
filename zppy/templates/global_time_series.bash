@@ -87,7 +87,7 @@ fi
 
 echo 'Update time series figures'
 cd ${global_ts_dir}
-python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} ${atmosphere_only}
+python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} ${atmosphere_only} "{{ plot_names }}"
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (5)' > {{ prefix }}.status
