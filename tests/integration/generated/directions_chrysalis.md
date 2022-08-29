@@ -11,7 +11,7 @@ rm -rf /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_02
 python tests/integration/utils.py
 zppy -c tests/integration/generated/test_bundles.cfg
 # bundle1 and bundle2 should run. After they finish, invoke zppy again to resolve remaining dependencies:
-zppy -c tests/integration/test_bundles.cfg
+zppy -c tests/integration/generated/test_bundles.cfg
 # bundle3 and ilamb should run
 ```
 
@@ -48,7 +48,7 @@ rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
 cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_bundles_www/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
 mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
 cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
-cd #expected_bundles
+cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_bundles.txt
 cd <top level of zppy repo>
@@ -60,7 +60,15 @@ python -u -m unittest tests/integration/test_bundles.py
 
 ```
 cd <top level of zppy repo>
+chmod u+x tests/integration/generated/update_campaign_expected_files_chrysalis.sh
 ./tests/integration/generated/update_campaign_expected_files_chrysalis.sh
+```
+This command also runs the test again.
+If the test fails on `test_campaign_high_res_v1`, try running the lines of the loop manually:
+```
+rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_high_res_v1_expected_files
+mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_high_res_v1_expected_files
+mv test_campaign_high_res_v1_output/post/scripts/*.settings /lcrc/group/e3sm/public_html/zppy_test_resources/test_campaign_high_res_v1_expected_files
 ```
 
 ### test_complete_run

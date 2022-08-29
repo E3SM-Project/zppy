@@ -60,7 +60,15 @@ python -u -m unittest tests/integration/test_bundles.py
 
 ```
 cd <top level of zppy repo>
+chmod u+x tests/integration/generated/update_campaign_expected_files_#expand machine#.sh
 ./tests/integration/generated/update_campaign_expected_files_#expand machine#.sh
+```
+This command also runs the test again.
+If the test fails on `test_campaign_high_res_v1`, try running the lines of the loop manually:
+```
+rm -rf #expand expected_dir#test_campaign_high_res_v1_expected_files
+mkdir -p #expand expected_dir#test_campaign_high_res_v1_expected_files
+mv test_campaign_high_res_v1_output/post/scripts/*.settings #expand expected_dir#test_campaign_high_res_v1_expected_files
 ```
 
 ### test_complete_run
