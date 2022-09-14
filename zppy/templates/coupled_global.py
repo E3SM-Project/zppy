@@ -5,6 +5,7 @@ import sys
 from typing import Any, List, Tuple
 
 import matplotlib as mpl
+import matplotlib.backends.backend_pdf
 import matplotlib.pyplot as plt
 import numpy as np
 from netCDF4 import Dataset
@@ -529,22 +530,34 @@ def run(parameters):
 
     xlim = [float(year1), float(year2)]
 
-    fig = plt.figure(figsize=[13.5, 16.5])
     num_plots = len(plot_list)
-    nrows = math.ceil(num_plots / 2)
+    nrows = 4
     ncols = 2
+    plots_per_page = nrows * ncols
+    num_pages = math.ceil(num_plots / plots_per_page)
 
-    for i in range(num_plots):
-        ax = plt.subplot(nrows, ncols, i + 1)
-        try:
-            PLOT_DICT[plot_list[i]](ax, xlim, exps)
-        except KeyError:
-            raise KeyError(f"Invalid plot name: {plot_list[i]}")
+    i = 0
+    # https://stackoverflow.com/questions/58738992/save-multiple-figures-with-subplots-into-a-pdf-with-multiple-pages
+    pdf = matplotlib.backends.backend_pdf.PdfPages(f"{figstr}.pdf")
+    for page in range(num_pages):
+        fig = plt.figure(1, figsize=[13.5, 16.5])
+        for j in range(plots_per_page):
+            if i < num_plots:
+                ax = plt.subplot(nrows, ncols, j + 1)
+                try:
+                    PLOT_DICT[plot_list[i]](ax, xlim, exps)
+                except KeyError:
+                    raise KeyError(f"Invalid plot name: {plot_list[i]}")
+                i += 1
 
-    fig.tight_layout()
-    fig.savefig(figstr + ".pdf")
-    fig.savefig(figstr + ".png", dpi=150)
-    plt.clf()
+        fig.tight_layout()
+        pdf.savefig(1)
+        if num_pages > 1:
+            fig.savefig(figstr + f"_{page}.png", dpi=150)
+        else:
+            fig.savefig(figstr + ".png", dpi=150)
+        plt.clf()
+    pdf.close()
 
 
 if __name__ == "__main__":
