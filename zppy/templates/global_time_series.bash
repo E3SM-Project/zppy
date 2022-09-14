@@ -100,7 +100,7 @@ results_dir={{ prefix }}_results
 results_dir_absolute_path={{ scriptDir }}/${results_dir}
 mkdir -p ${results_dir_absolute_path}
 cp ${figstr}.pdf ${results_dir_absolute_path}/${figstr}.pdf
-cp ${figstr}.png ${results_dir_absolute_path}/${figstr}.png
+cp *.png ${results_dir_absolute_path}
 
 ################################################################################
 # Copy output to web server

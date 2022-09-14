@@ -10,4 +10,5 @@ Developer Guide
    release
    testing_e3sm_unified
    new_diags_set
+   new_glb_plot
    new_task
