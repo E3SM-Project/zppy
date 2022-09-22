@@ -73,7 +73,7 @@ def main():  # noqa: C901
             raise OSError("Cannot create script directory")
         pass
 
-    if config["default"]["machine"] == "":
+    if ("machine" not in config["default"]) or (config["default"]["machine"] == ""):
         # MachineInfo below will then call `discover_machine()`,
         # which only works on log-in nodes.
         machine = None
@@ -95,11 +95,18 @@ def main():  # noqa: C901
     unified_base = machine_info.config.get("e3sm_unified", "base_path")
 
     # Determine machine to decide which header files to use
-    if config["default"]["machine"] == "":
+    if ("machine" not in config["default"]) or (config["default"]["machine"] == ""):
         config["default"]["machine"] = default_machine
     # Determine account
     if config["default"]["account"] == "":
-        config["default"]["account"] = default_account
+        if default_account:
+            config["default"]["account"] = default_account
+        elif config["default"]["machine"] in ["compy", "cori", "chrysalis"]:
+            config["default"]["account"] = "e3sm"
+        elif config["default"]["machine"] == "anvil":
+            config["default"]["account"] = "condo"
+        else:
+            raise ValueError(f"Invalid machine {config['default']['machine']}")
     # Determine partition
     if config["default"]["partition"] == "":
         if config["default"]["machine"] == "cori":

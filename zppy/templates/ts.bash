@@ -59,11 +59,21 @@ fi
 {%- endraw %}
 {%- endif %}
 
+{% if mapping_file == 'glb' -%}
+vars={{ vars }}
+# https://unix.stackexchange.com/questions/237297/the-fastest-way-to-remove-a-string-in-a-variable
+# https://stackoverflow.com/questions/26457052/remove-a-substring-from-a-bash-variable
+# Remove U, since it is a 3D variable and thus will not work with rgn_avg
+vars=${vars//,U}
+{%- else %}
+vars={{ vars }}
+{%- endif %}
+
 ls {{ case }}.{{ input_files }}.????-*.nc > input.txt
 # Generate time series files
 cat input.txt | ncclimo \
 -c {{ case }} \
--v {{ vars }} \
+-v ${vars} \
 --mem_mb=0 \
 --split \
 {%- if extra_vars != '' %}
@@ -76,7 +86,7 @@ cat input.txt | ncclimo \
 -o output \
 {%- elif mapping_file == 'glb' -%}
 -o output \
---glb_avg \
+--rgn_avg \
 --area={{ area_nm }} \
 {%- else -%}
 --map={{ mapping_file }} \
