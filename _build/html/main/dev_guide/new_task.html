@@ -1,44 +1,22 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Adding a new task &mdash; zppy  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Contributing to This Documentation" href="../contributing.html" />
@@ -47,29 +25,13 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html" class="icon icon-home"> zppy
-          
-
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -77,19 +39,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Zppy documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../schematics.html">A schematic view of zppy</a></li>
@@ -119,77 +70,35 @@
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to This Documentation</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">zppy</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="index.html">Developer Guide</a> &raquo;</li>
-        
       <li>Adding a new task</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/dev_guide/new_task.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="adding-a-new-task">
-<h1>Adding a new task<a class="headerlink" href="#adding-a-new-task" title="Permalink to this headline">¶</a></h1>
+<h1>Adding a new task<a class="headerlink" href="#adding-a-new-task" title="Permalink to this heading"></a></h1>
 <div class="section" id="the-task-s-bash-file">
-<h2>The task’s bash file<a class="headerlink" href="#the-task-s-bash-file" title="Permalink to this headline">¶</a></h2>
+<h2>The task’s bash file<a class="headerlink" href="#the-task-s-bash-file" title="Permalink to this heading"></a></h2>
 <p>Create <code class="docutils literal notranslate"><span class="pre">zppy/templates/&lt;task-name&gt;.bash</span></code>.
 This is where the bulk of the work required for a task will be.
 Most of the file is task-specific, so it is difficult to describe precise steps.
@@ -240,7 +149,7 @@ exit 0
 (in the form of <code class="docutils literal notranslate"><span class="pre">c[&quot;&lt;variable-name&gt;&quot;]</span></code> where <code class="docutils literal notranslate"><span class="pre">c</span></code> is defined in <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">c</span> <span class="pre">in</span> <span class="pre">tasks</span></code>).</p>
 </div>
 <div class="section" id="the-task-s-python-file">
-<h2>The task’s Python file<a class="headerlink" href="#the-task-s-python-file" title="Permalink to this headline">¶</a></h2>
+<h2>The task’s Python file<a class="headerlink" href="#the-task-s-python-file" title="Permalink to this heading"></a></h2>
 <p>Create <code class="docutils literal notranslate"><span class="pre">zppy/&lt;task-name&gt;.py</span></code>. The basic outline of the file should be similar to the
 below example, adapted from <code class="docutils literal notranslate"><span class="pre">zppy/e3sm_diags.py</span></code>.</p>
 <blockquote>
@@ -326,7 +235,7 @@ below example, adapted from <code class="docutils literal notranslate"><span cla
 </div></blockquote>
 </div>
 <div class="section" id="the-main-file">
-<h2>The main file<a class="headerlink" href="#the-main-file" title="Permalink to this headline">¶</a></h2>
+<h2>The main file<a class="headerlink" href="#the-main-file" title="Permalink to this heading"></a></h2>
 <p>Add the task to <code class="docutils literal notranslate"><span class="pre">zppy/__main__.py</span></code>:</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="o">&lt;</span><span class="n">task_name</span><span class="o">&gt;</span> <span class="kn">import</span> <span class="o">&lt;</span><span class="n">task_name</span><span class="o">&gt;</span>
@@ -339,7 +248,7 @@ below example, adapted from <code class="docutils literal notranslate"><span cla
 </div></blockquote>
 </div>
 <div class="section" id="update-defaults">
-<h2>Update defaults<a class="headerlink" href="#update-defaults" title="Permalink to this headline">¶</a></h2>
+<h2>Update defaults<a class="headerlink" href="#update-defaults" title="Permalink to this heading"></a></h2>
 <p>Add default values for parameters in <code class="docutils literal notranslate"><span class="pre">zppy/templates/default.ini</span></code>.</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">task</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span><span class="p">]</span>
@@ -352,7 +261,7 @@ below example, adapted from <code class="docutils literal notranslate"><span cla
 </div></blockquote>
 </div>
 <div class="section" id="update-the-tutorial">
-<h2>Update the tutorial<a class="headerlink" href="#update-the-tutorial" title="Permalink to this headline">¶</a></h2>
+<h2>Update the tutorial<a class="headerlink" href="#update-the-tutorial" title="Permalink to this heading"></a></h2>
 <p>Add example values for parameters in <code class="docutils literal notranslate"><span class="pre">docs/source/post.mysimulation.cfg</span></code>.</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="o">&lt;</span><span class="n">task</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span> <span class="p">]</span>
@@ -365,13 +274,13 @@ below example, adapted from <code class="docutils literal notranslate"><span cla
 </div></blockquote>
 </div>
 <div class="section" id="explain-new-parameters">
-<h2>Explain new parameters<a class="headerlink" href="#explain-new-parameters" title="Permalink to this headline">¶</a></h2>
+<h2>Explain new parameters<a class="headerlink" href="#explain-new-parameters" title="Permalink to this heading"></a></h2>
 <p>In <code class="docutils literal notranslate"><span class="pre">docs/source/parameters.rst</span></code></p>
 <p>Copy defaults from <code class="docutils literal notranslate"><span class="pre">zppy/templates/default.ini</span></code> and add a comment line
 above each explaining the parameter.</p>
 </div>
 <div class="section" id="update-the-tests">
-<h2>Update the tests<a class="headerlink" href="#update-the-tests" title="Permalink to this headline">¶</a></h2>
+<h2>Update the tests<a class="headerlink" href="#update-the-tests" title="Permalink to this heading"></a></h2>
 <p>In <code class="docutils literal notranslate"><span class="pre">tests/integration/test_*.cfg</span></code></p>
 <p>Copy example values from <code class="docutils literal notranslate"><span class="pre">docs/source/post.mysimulation.cfg</span></code>.
 The expected files will have to be updated as well.</p>
@@ -380,37 +289,27 @@ The expected files will have to be updated as well.</p>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../contributing.html" class="btn btn-neutral float-right" title="Contributing to This Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="new_glb_plot.html" class="btn btn-neutral float-left" title="Adding a new plot to Global Time Series" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../contributing.html" class="btn btn-neutral float-right" title="Contributing to This Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, E3SM.
-
-    </p>
+    <p>&#169; Copyright 2021, E3SM.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
   
 <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -432,18 +331,11 @@ The expected files will have to be updated as well.</p>
       <dd><a href="new_task.html">main</a></dd>
     </dl>
   </div>
-</div>
-
-  <script type="text/javascript">
+</div><script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

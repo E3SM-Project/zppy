@@ -1,44 +1,22 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Testing zppy for E3SM Unified release &mdash; zppy  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Adding a new set to the E3SM Diagnostics task" href="new_diags_set.html" />
@@ -47,29 +25,13 @@
 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html" class="icon icon-home"> zppy
-          
-
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -77,19 +39,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Zppy documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../schematics.html">A schematic view of zppy</a></li>
@@ -135,79 +86,37 @@
 <li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to This Documentation</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">zppy</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="index.html">Developer Guide</a> &raquo;</li>
-        
       <li>Testing zppy for E3SM Unified release</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/dev_guide/testing_e3sm_unified.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="testing-zppy-for-e3sm-unified-release">
-<span id="testing-e3sm-unified"></span><h1>Testing zppy for E3SM Unified release<a class="headerlink" href="#testing-zppy-for-e3sm-unified-release" title="Permalink to this headline">¶</a></h1>
+<span id="testing-e3sm-unified"></span><h1>Testing zppy for E3SM Unified release<a class="headerlink" href="#testing-zppy-for-e3sm-unified-release" title="Permalink to this heading"></a></h1>
 <p>This tutorial covers testing <code class="docutils literal notranslate"><span class="pre">zppy</span></code> for an E3SM Unified release.
 Examples are from testing for E3SM Unified v1.5.0.</p>
 <div class="section" id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h2>
+<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
 <p>Only a few parameters in the configuration file need to change for different machines.
 Be sure to change the file paths to fit your own workspaces.</p>
 <div class="admonition warning">
@@ -273,7 +182,7 @@ here:</p>
 </ul>
 </div>
 <div class="section" id="testing-zppy-on-a-small-simulation">
-<h2>Testing zppy on a small simulation<a class="headerlink" href="#testing-zppy-on-a-small-simulation" title="Permalink to this headline">¶</a></h2>
+<h2>Testing zppy on a small simulation<a class="headerlink" href="#testing-zppy-on-a-small-simulation" title="Permalink to this heading"></a></h2>
 <p>1. Find a simulation to test on. In this example, we’ll use a simulation on Chrysalis:
 <code class="docutils literal notranslate"><span class="pre">/lcrc/group/e3sm/ac.golaz/E3SM_simulations/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/</span></code>.</p>
 <p>2. The simulation might be too large to reasonably test on. We can copy over a
@@ -445,7 +354,7 @@ If that command fails, return to step 3.</p>
 file (i.e., <code class="docutils literal notranslate"><span class="pre">&lt;HTML&gt;</span></code> defined in “Parameters” above).</p>
 </div>
 <div class="section" id="archive-simulation-using-zstash">
-<h2>Archive simulation using zstash<a class="headerlink" href="#archive-simulation-using-zstash" title="Permalink to this headline">¶</a></h2>
+<h2>Archive simulation using zstash<a class="headerlink" href="#archive-simulation-using-zstash" title="Permalink to this heading"></a></h2>
 <ol class="arabic">
 <li><dl>
 <dt>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_create.bash</span></code> to run <code class="docutils literal notranslate"><span class="pre">zstash</span></code>.</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
@@ -467,13 +376,13 @@ file (i.e., <code class="docutils literal notranslate"><span class="pre">&lt;HTM
 </ol>
 </div>
 <div class="section" id="transfer-simulation-to-other-machines">
-<h2>Transfer simulation to other machines<a class="headerlink" href="#transfer-simulation-to-other-machines" title="Permalink to this headline">¶</a></h2>
+<h2>Transfer simulation to other machines<a class="headerlink" href="#transfer-simulation-to-other-machines" title="Permalink to this heading"></a></h2>
 <p>We can follow an adapted version of the steps at
 <a class="reference external" href="https://e3sm-project.github.io/zstash/_build/html/master/best_practices.html#transfer-to-nersc-hpss">https://e3sm-project.github.io/zstash/_build/html/master/best_practices.html#transfer-to-nersc-hpss</a>
 to transfer the data.</p>
 <p>Login to Globus: <a class="reference external" href="https://www.globus.org/">https://www.globus.org/</a> (using NERSC credentials)</p>
 <div class="section" id="transfer-to-cori">
-<h3>Transfer to Cori<a class="headerlink" href="#transfer-to-cori" title="Permalink to this headline">¶</a></h3>
+<h3>Transfer to Cori<a class="headerlink" href="#transfer-to-cori" title="Permalink to this heading"></a></h3>
 <ol class="arabic simple">
 <li><p>On the left sidebar, choose “ENDPOINTS”.</p></li>
 <li><p>Search for “NERSC DTN”. Click on Green power button to activate endpoint.</p></li>
@@ -502,7 +411,7 @@ in the “Path” box.</p>
 </ol>
 </div>
 <div class="section" id="transfer-to-compy">
-<h3>Transfer to Compy<a class="headerlink" href="#transfer-to-compy" title="Permalink to this headline">¶</a></h3>
+<h3>Transfer to Compy<a class="headerlink" href="#transfer-to-compy" title="Permalink to this heading"></a></h3>
 <ol class="arabic simple">
 <li><p>On the left sidebar, choose “ENDPOINTS”.</p></li>
 </ol>
@@ -534,9 +443,9 @@ This path needs to already exist.</p>
 </div>
 </div>
 <div class="section" id="check-transfers-were-successful">
-<h2>Check transfers were successful<a class="headerlink" href="#check-transfers-were-successful" title="Permalink to this headline">¶</a></h2>
+<h2>Check transfers were successful<a class="headerlink" href="#check-transfers-were-successful" title="Permalink to this heading"></a></h2>
 <div class="section" id="cori">
-<h3>Cori<a class="headerlink" href="#cori" title="Permalink to this headline">¶</a></h3>
+<h3>Cori<a class="headerlink" href="#cori" title="Permalink to this heading"></a></h3>
 <ol class="arabic">
 <li><p>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_check.bash</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
@@ -557,7 +466,7 @@ This path needs to already exist.</p>
 </ol>
 </div>
 <div class="section" id="compy">
-<h3>Compy<a class="headerlink" href="#compy" title="Permalink to this headline">¶</a></h3>
+<h3>Compy<a class="headerlink" href="#compy" title="Permalink to this heading"></a></h3>
 <ol class="arabic">
 <li><p>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_check.bash</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
@@ -577,10 +486,10 @@ This path needs to already exist.</p>
 </div>
 </div>
 <div class="section" id="extract-the-data-from-the-archives">
-<h2>Extract the data from the archives<a class="headerlink" href="#extract-the-data-from-the-archives" title="Permalink to this headline">¶</a></h2>
+<h2>Extract the data from the archives<a class="headerlink" href="#extract-the-data-from-the-archives" title="Permalink to this heading"></a></h2>
 <p>Use <code class="docutils literal notranslate"><span class="pre">zstash</span> <span class="pre">extract</span></code>.</p>
 <div class="section" id="id1">
-<h3>Cori<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<h3>Cori<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
 <ol class="arabic">
 <li><p><code class="docutils literal notranslate"><span class="pre">mkdir</span> <span class="pre">unified_test_extraction</span></code>.</p></li>
 <li><p>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_extract.bash</span></code>:</p>
@@ -603,7 +512,7 @@ This path needs to already exist.</p>
 </ol>
 </div>
 <div class="section" id="id2">
-<h3>Compy<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3>Compy<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
 <ol class="arabic">
 <li><p><code class="docutils literal notranslate"><span class="pre">mkdir</span> <span class="pre">unified_test_extraction</span></code>.</p></li>
 <li><p>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_extract.bash</span></code>:</p>
@@ -625,19 +534,19 @@ This path needs to already exist.</p>
 </div>
 </div>
 <div class="section" id="testing-zppy-on-other-machines">
-<h2>Testing zppy on other machines<a class="headerlink" href="#testing-zppy-on-other-machines" title="Permalink to this headline">¶</a></h2>
+<h2>Testing zppy on other machines<a class="headerlink" href="#testing-zppy-on-other-machines" title="Permalink to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">mv</span> <span class="pre">e3sm_unified_test_zstash/unified_test_extraction</span> <span class="pre">e3sm_unified_test_zppy/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis</span></code>.</p>
 <p>Go through steps 3-7 of “Testing zppy on a small simulation” but for
 Cori (haswell) and Compy.</p>
 <div class="section" id="sample-configuration-files-for-compy-and-cori">
-<h3>Sample configuration files for Compy and Cori<a class="headerlink" href="#sample-configuration-files-for-compy-and-cori" title="Permalink to this headline">¶</a></h3>
+<h3>Sample configuration files for Compy and Cori<a class="headerlink" href="#sample-configuration-files-for-compy-and-cori" title="Permalink to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">&lt;OUTPUT&gt;/e3sm_unified_test_simulation.cfg</span></code>:
 Use the configuration file from “Testing zppy on a small simulation” step 4, updating
 the appropriate parameters for Compy or Cori.</p>
 </div>
 </div>
 <div class="section" id="run-unit-tests-and-integration-tests">
-<h2>Run unit tests and integration tests<a class="headerlink" href="#run-unit-tests-and-integration-tests" title="Permalink to this headline">¶</a></h2>
+<h2>Run unit tests and integration tests<a class="headerlink" href="#run-unit-tests-and-integration-tests" title="Permalink to this heading"></a></h2>
 <p>Run the unit tests and integration tests on Chrysalis:</p>
 <p><code class="docutils literal notranslate"><span class="pre">cd</span></code> into your clone of the <code class="docutils literal notranslate"><span class="pre">zppy</span></code> repo. Then:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">checkout</span> <span class="n">main</span> <span class="c1"># if not already on the `main` branch</span>
@@ -653,37 +562,27 @@ the appropriate parameters for Compy or Cori.</p>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="new_diags_set.html" class="btn btn-neutral float-right" title="Adding a new set to the E3SM Diagnostics task" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="release.html" class="btn btn-neutral float-left" title="How to Prepare a Release" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="new_diags_set.html" class="btn btn-neutral float-right" title="Adding a new set to the E3SM Diagnostics task" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, E3SM.
-
-    </p>
+    <p>&#169; Copyright 2021, E3SM.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
   
 <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
@@ -705,18 +604,11 @@ the appropriate parameters for Compy or Cori.</p>
       <dd><a href="testing_e3sm_unified.html">main</a></dd>
     </dl>
   </div>
-</div>
-
-  <script type="text/javascript">
+</div><script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
