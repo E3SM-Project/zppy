@@ -30,10 +30,10 @@ jobs:
       - name: Checkout Code Repository
         uses: actions/checkout@v2
 
-      - name: Set up Python 3.7
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: 3.9
 
       # Run all pre-commit hooks on all the files.
       # Getting only staged files can be tricky in case a new PR is opened
@@ -101,7 +101,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: 3.9
 
       - name: Cache pip
         uses: actions/cache@v2
@@ -113,28 +113,33 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
+
       # Using pip for Sphinx dependencies because it takes too long to reproduce a conda environment (~10 secs vs. 3-4 mins)
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install sphinx==4.0.2 sphinx_rtd_theme==0.5.2 sphinx-multiversion==0.2.4 docutils==0.16
+          pip install sphinx==5.2.3 sphinx_rtd_theme==1.0.0 sphinx-multiversion==0.2.4 docutils==0.16
       - name: Build Sphinx Docs
         run: |
           cd docs
           sphinx-multiversion source _build/html
+
       - name: Copy Docs and Commit
         run: |
           # gh-pages branch must already exist
           git clone https://github.com/E3SM-Project/zppy.git --branch gh-pages --single-branch gh-pages
+
           # Only replace main docs with latest changes. Docs for tags should be untouched.
           cd gh-pages
           rm -r _build/html/main
           cp -r ../docs/_build/html/main _build/html/main
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+
           # The below command will fail if no changes were present, so we ignore it
           git add .
           git commit -m "Update documentation" -a || true
+
       - name: Push Changes
         uses: ad-m/github-push-action@master
         with:
