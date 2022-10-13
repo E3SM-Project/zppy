@@ -52,6 +52,7 @@
 <li class="toctree-l2"><a class="reference internal" href="project-standards.html">Project Standards</a></li>
 <li class="toctree-l2"><a class="reference internal" href="testing.html">Testing zppy</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">How to Prepare a Release</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#preparing-the-documentation">Preparing the Documentation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bumping-the-version">Bumping the Version</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#releasing-on-github">Releasing on GitHub</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#releasing-anaconda">Releasing Anaconda</a></li>
@@ -96,11 +97,25 @@
 <h1>How to Prepare a Release<a class="headerlink" href="#how-to-prepare-a-release" title="Permalink to this heading"></a></h1>
 <p>In this guide, we’ll cover:</p>
 <ul class="simple">
+<li><p>Preparing the Documentation</p></li>
 <li><p>Bumping the Version</p></li>
 <li><p>Releasing On GitHub</p></li>
 <li><p>Releasing The Software On Anaconda</p></li>
 <li><p>Creating a New Version of the Documentation</p></li>
 </ul>
+<div class="section" id="preparing-the-documentation">
+<h2>Preparing the Documentation<a class="headerlink" href="#preparing-the-documentation" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Checkout a branch</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">fetch</span> <span class="n">upstream</span> <span class="n">main</span>
+<span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="n">versioned</span><span class="o">-</span><span class="n">docs</span> <span class="n">upstream</span><span class="o">/</span><span class="n">main</span>
+</pre></div>
+</div>
+</li>
+<li><p>Edit <code class="docutils literal notranslate"><span class="pre">docs/source/parameters.rst</span></code>: in <code class="docutils literal notranslate"><span class="pre">https://github.com/E3SM-Project/zppy/blob/main/zppy/templates/default.ini</span></code>, replace <code class="docutils literal notranslate"><span class="pre">main</span></code> with the hash of the latest commit.</p></li>
+<li><p>Create a pull request to the main repo and merge it. Now, when the next version of the documentation is created (see last part of this page), it will point to the relevant defaults.</p></li>
+</ol>
+</div>
 <div class="section" id="bumping-the-version">
 <h2>Bumping the Version<a class="headerlink" href="#bumping-the-version" title="Permalink to this heading"></a></h2>
 <ol class="arabic">

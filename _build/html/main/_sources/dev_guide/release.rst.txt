@@ -3,10 +3,24 @@ How to Prepare a Release
 
 In this guide, we'll cover:
 
+* Preparing the Documentation
 * Bumping the Version
 * Releasing On GitHub
 * Releasing The Software On Anaconda
 * Creating a New Version of the Documentation
+
+Preparing the Documentation
+---------------------------
+
+1. Checkout a branch
+
+   ::
+
+      git fetch upstream main
+      git checkout -b versioned-docs upstream/main
+
+2. Edit ``docs/source/parameters.rst``: in ``https://github.com/E3SM-Project/zppy/blob/main/zppy/templates/default.ini``, replace ``main`` with the hash of the latest commit.
+3. Create a pull request to the main repo and merge it. Now, when the next version of the documentation is created (see last part of this page), it will point to the relevant defaults.
 
 Bumping the Version
 -------------------
