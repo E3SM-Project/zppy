@@ -199,8 +199,9 @@ def get_cori_expansions(config):
         "qos_long": "regular",
         "qos_short": "regular",  # debug walltime too short?
         "scratch": f"/global/cscratch1/sd/{username}/",
-        "user_input": "/global/cscratch1/sd/forsyth/",
-        "user_output": f"/global/cscratch1/sd/{username}/",
+        # Use CFS for large datasets
+        "user_input": "/global/cfs/cdirs/e3sm/forsyth/",
+        "user_output": f"/global/cfs/cdirs/e3sm/{username}/",
         "user_www": f"{web_base_path}/{username}/",
     }
     return d

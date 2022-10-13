@@ -6,7 +6,7 @@
 
 ```
 rm -rf /global/cfs/cdirs/e3sm/www/forsyth/zppy_test_bundles_www/v2.LR.historical_0201
-rm -rf /global/cscratch1/sd/forsyth/zppy_test_bundles_output/v2.LR.historical_0201/post
+rm -rf /global/cfs/cdirs/e3sm/forsyth/zppy_test_bundles_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
 zppy -c tests/integration/generated/test_bundles.cfg
@@ -19,7 +19,7 @@ zppy -c tests/integration/generated/test_bundles.cfg
 
 ```
 rm -rf /global/cfs/cdirs/e3sm/www/forsyth/zppy_test_complete_run_www/v2.LR.historical_0201
-rm -rf /global/cscratch1/sd/forsyth/zppy_test_complete_run_output/v2.LR.historical_0201/post
+rm -rf /global/cfs/cdirs/e3sm/forsyth/zppy_test_complete_run_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
 zppy -c tests/integration/generated/test_complete_run.cfg
@@ -47,7 +47,7 @@ rm -rf /global/cfs/cdirs/e3sm/www/zppy_test_resources/expected_bundles
 # Copy output so you don't have to rerun zppy to generate the output.
 cp -r /global/cfs/cdirs/e3sm/www/forsyth/zppy_test_bundles_www/v2.LR.historical_0201 /global/cfs/cdirs/e3sm/www/zppy_test_resources/expected_bundles
 mkdir -p /global/cfs/cdirs/e3sm/www/zppy_test_resources/expected_bundles/bundle_files
-cp -r /global/cscratch1/sd/forsyth/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash /global/cfs/cdirs/e3sm/www/zppy_test_resources/expected_bundles/bundle_files
+cp -r /global/cfs/cdirs/e3sm/forsyth/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash /global/cfs/cdirs/e3sm/www/zppy_test_resources/expected_bundles/bundle_files
 cd /global/cfs/cdirs/e3sm/www/zppy_test_resources/expected_bundles
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_bundles.txt
@@ -60,7 +60,15 @@ python -u -m unittest tests/integration/test_bundles.py
 
 ```
 cd <top level of zppy repo>
+chmod u+x tests/integration/generated/update_campaign_expected_files_cori-haswell.sh
 ./tests/integration/generated/update_campaign_expected_files_cori-haswell.sh
+```
+This command also runs the test again.
+If the test fails on `test_campaign_high_res_v1`, try running the lines of the loop manually:
+```
+rm -rf /global/cfs/cdirs/e3sm/www/zppy_test_resources/test_campaign_high_res_v1_expected_files
+mkdir -p /global/cfs/cdirs/e3sm/www/zppy_test_resources/test_campaign_high_res_v1_expected_files
+mv test_campaign_high_res_v1_output/post/scripts/*.settings /global/cfs/cdirs/e3sm/www/zppy_test_resources/test_campaign_high_res_v1_expected_files
 ```
 
 ### test_complete_run
