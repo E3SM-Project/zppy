@@ -5,6 +5,7 @@ import sys
 from datetime import datetime
 
 import numpy as np
+from mpas_tools.cime.constants import constants
 from netCDF4 import Dataset, chartostring, date2num
 
 # Years to process
@@ -19,14 +20,15 @@ path_out = "{}/post/ocn/glb/ts/monthly/{}yr".format(case_dir, ts_num_years)
 
 # Ocean constants
 # specific heat [J/(kg*degC)]
-cp = 3.996e3
+cp = constants["SHR_CONST_CPSW"]
 # [kg/m3]
-rho = 1026.0
+rho = constants["SHR_CONST_RHOSW"]
+# [J/(degC*m3)]
 fac = rho * cp
 
 # Time units, calendar
 tcalendar = "noleap"
-tunits = "days since 0001-01-01 00:00:00"
+tunits = f"days since {start_yr:04d}-01-01 00:00:00"
 
 # Loop over year sets
 for y in range(start_yr, end_yr, ts_num_years):
