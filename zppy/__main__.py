@@ -73,47 +73,57 @@ def main():  # noqa: C901
             raise OSError("Cannot create script directory")
         pass
 
+    if config["default"]["machine"] == "":
+        # MachineInfo below will then call `discover_machine()`,
+        # which only works on log-in nodes.
+        machine = None
+    else:
+        # If `machine` is set, then MachineInfo can bypass the
+        # `discover_machine()` function.
+        machine = config["default"]["machine"]
+    machine_info = MachineInfo(machine=machine)
+    default_machine = machine_info.machine
+    if default_machine.startswith("cori"):
+        # Ignore haswell/knl extension
+        default_machine = "cori"
+    (
+        default_account,
+        default_partition,
+        default_constraint,
+        _,
+    ) = machine_info.get_account_defaults()
+    unified_base = machine_info.config.get("e3sm_unified", "base_path")
+
     # Determine machine to decide which header files to use
-    tmp = os.getenv("HOSTNAME")
-    if tmp:
-        machine_info = MachineInfo()
-        unified_base = machine_info.config.get("e3sm_unified", "base_path")
-        if tmp.startswith("compy"):
-            machine = "compy"
-            environment_commands = (
-                f"source {unified_base}/load_latest_e3sm_unified_compy.sh"
-            )
-            account = "e3sm"
-        elif tmp.startswith("cori"):
-            machine = "cori"
-            partition = config["default"]["partition"]
-            if partition not in ["haswell", "knl"]:
-                raise ValueError(
-                    f'Expected Cori partition to be "haswell" or '
-                    f'"knl" but got: {partition}'
-                )
-            # This will be the [default] environment_commands
-            environment_commands = (
-                f"source {unified_base}/load_latest_e3sm_unified_cori-{partition}.sh"
-            )
-            account = "e3sm"
-        elif tmp.startswith("blues"):
-            machine = "anvil"
-            environment_commands = (
-                f"source {unified_base}/load_latest_e3sm_unified_anvil.sh"
-            )
-            account = "condo"
-        elif tmp.startswith("chr"):
-            machine = "chrysalis"
-            environment_commands = (
-                f"source {unified_base}/load_latest_e3sm_unified_chrysalis.sh"
-            )
-            account = "e3sm"
-    config["default"]["machine"] = machine
-    if config["default"]["environment_commands"] == "":
-        config["default"]["environment_commands"] = environment_commands
+    if config["default"]["machine"] == "":
+        config["default"]["machine"] = default_machine
+    # Determine account
     if config["default"]["account"] == "":
-        config["default"]["account"] = account
+        config["default"]["account"] = default_account
+    # Determine partition
+    if config["default"]["partition"] == "":
+        if config["default"]["machine"] == "cori":
+            config["default"]["partition"] = default_constraint
+        else:
+            config["default"]["partition"] = default_partition
+    if config["default"]["machine"] == "cori":
+        partition = config["default"]["partition"]
+        if partition not in ["haswell", "knl"]:
+            raise ValueError(
+                f'Expected Cori partition to be "haswell" or '
+                f'"knl" but got: {partition}'
+            )
+    # Determine environment_commands
+    if config["default"]["environment_commands"] == "":
+        if config["default"]["machine"] == "cori":
+            config["default"][
+                "environment_commands"
+            ] = f"source {unified_base}/load_latest_e3sm_unified_cori-{partition}.sh"
+        else:
+            machine = config["default"]["machine"]
+            config["default"][
+                "environment_commands"
+            ] = f"source {unified_base}/load_latest_e3sm_unified_{machine}.sh"
 
     if args.last_year:
         config["default"]["last_year"] = args.last_year
