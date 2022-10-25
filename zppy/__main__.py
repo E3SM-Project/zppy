@@ -83,6 +83,9 @@ def main():  # noqa: C901
         machine = config["default"]["machine"]
     machine_info = MachineInfo(machine=machine)
     default_machine = machine_info.machine
+    if default_machine.startswith("cori"):
+        # Ignore haswell/knl extension
+        default_machine = "cori"
     (
         default_account,
         default_partition,
