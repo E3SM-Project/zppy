@@ -506,6 +506,12 @@ def run(parameters):
         for var in vars:
             print(var)
             v = ts.globalAnnual(var)
+            if len(v.shape) > 1:
+                # number of years x 3 regions = v.shape
+                # 3 regions = global, northern hemisphere, southern hemisphere
+                # We get here if we used the updated `ts` task
+                # (using `rgn_avg` rather than `glb_avg`).
+                v = v[:, 0]  # Just use 1st column (global)
             exp["annual"][var] = v
             if "year" not in exp["annual"]:
                 time = v.getTime()
