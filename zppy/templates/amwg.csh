@@ -436,8 +436,7 @@ set sig_lvl = 0.05           # level of significance
 {% if machine == 'compy' %}
 #setenv DIAG_HOME /compyfs/software/amwg/amwg_diag
 setenv DIAG_HOME /compyfs/diagnostics/amwg/amwg_diag
-{% elif machine == 'cori' %}
-#setenv DIAG_HOME /global/cfs/cdirs/e3sm/golaz/amwg/amwg_diag
+{% elif machine in ['pm-cpu', 'pm-gpu'] %}
 setenv DIAG_HOME /global/cfs/cdirs/e3sm/diagnostics/amwg/amwg_diag
 {% endif %}
 
@@ -3295,8 +3294,8 @@ if ( $? != 0 ) then
   exit 1
 endif
 
-{% if machine == 'cori' %}
-# For NERSC cori, make sure it is world readable
+{% if machine in ['pm-cpu', 'pm-gpu'] %}
+# For NERSC, make sure it is world readable
 set f = `realpath ${wwwDir}`
 while ("$f" != "/")
   set owner = `stat --format '%U' $f`

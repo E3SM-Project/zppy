@@ -11,9 +11,9 @@
 #SBATCH  --qos={{ qos }}
 #SBATCH  --partition={{ partition }}
 
-{% elif machine == 'cori' %}
+{% elif machine in ['pm-cpu', 'pm-gpu'] %}
 
-# Running on cori-haswell or cori-knl depending on 'partition'
+# Running on pm-cpu or pm-gpu depending on 'constraint'
 
 #SBATCH  --job-name={{ prefix }}
 #SBATCH  --account={{ account }}
@@ -22,7 +22,7 @@
 #SBATCH  --exclusive
 #SBATCH  --time={{ walltime }}
 #SBATCH  --qos={{ qos }}
-#SBATCH  --constraint={{ partition }}
+#SBATCH  --constraint={{ constraint }}
 
 {% elif machine == 'anvil' %}
 

@@ -124,20 +124,12 @@ ncclimoThreads = {{ ncclimoThreads }}
 
 # the number of MPI tasks to use in creating mapping files (1 means tasks run in
 # serial, the default)
-{% if machine == 'cori' and partition == 'knl' %}
-# Cori-KNL does not support creating mapping files in parallel
-mapMpiTasks = 1
-{% elif machine in ['cori', 'compy', 'anvil', 'chrysalis'] %}
 mapMpiTasks = {{ mapMpiTasks }}
-{% endif %}
 
 # "None" if ESMF should perform remapping in serial without a command, or one of
 # "srun" or "mpirun" if it should be run in parallel  (or in serial but with a
 # command)
-{% if machine == 'cori' and partition == 'knl' %}
-# Cori-KNL does not support creating mapping files in parallel
-mapParallelExec = None
-{% elif machine in ['cori', 'anvil', 'chrysalis'] %}
+{% if machine in ['pm-cpu', 'pm-gpu', 'anvil', 'chrysalis'] %}
 mapParallelExec = srun
 {% elif machine in ['compy'] %}
 mapParallelExec = srun --mpi=pmi2
@@ -145,11 +137,7 @@ mapParallelExec = srun --mpi=pmi2
 
 # "None" if ncremap should perform remapping without a command, or "srun"
 # possibly with some flags if it should be run with that command
-{% if machine == 'cori' and partition == 'knl' %}
-# Cori-KNL does not support creating mapping files in parallel
-ncremapParallelExec = None
-{% elif machine in ['cori'] %}
-# Cori-Haswell compute nodes work fine without a prefix for calling ncremap
+{% if machine in ['pm-cpu', 'pm-gpu'] %}
 ncremapParallelExec = None
 {% elif machine in ['anvil', 'chrysalis'] %}
 ncremapParallelExec = srun -n 1
@@ -169,7 +157,7 @@ ncremapParallelExec = srun --mpi=pmi2 -n 1
 # mapping files and region files.
 {% if machine == 'compy' %}
 baseDirectory = /compyfs/diagnostics
-{% elif machine == 'cori' %}
+{% elif machine in ['pm-cpu', 'pm-gpu'] %}
 baseDirectory = /global/cfs/cdirs/e3sm/diagnostics
 {% elif machine in ['anvil', 'chrysalis'] %}
 baseDirectory = /lcrc/group/acme/diagnostics
@@ -341,8 +329,8 @@ if [ $? != 0 ]; then
   exit 3
 fi
 
-{% if machine == 'cori' %}
-# For NERSC cori, make sure it is world readable
+{% if machine in ['pm-cpu', 'pm-gpu'] %}
+# For NERSC, make sure it is world readable
 f=`realpath ${f}`
 while [[ $f != "/" ]]
 do
@@ -362,8 +350,8 @@ if [ $? != 0 ]; then
   exit 4
 fi
 
-{% if machine == 'cori' %}
-# For NERSC cori, change permissions of new files
+{% if machine in ['pm-cpu', 'pm-gpu'] %}
+# For NERSC, change permissions of new files
 pushd ${www}/${case}/mpas_analysis/
 chgrp -R e3sm ${identifier}
 chmod -R go+rX,go-w ${identifier}
