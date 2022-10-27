@@ -17,6 +17,8 @@ Code snippets are from the following two pull requests:
 
     Code blocks in this guide are taken from these pull requests.
     They may be outdated because of more recent changes.
+    For example, ``/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/``
+    has replaced ``/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/``.
 
 Handle dependencies
 ===================
