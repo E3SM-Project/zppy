@@ -5,7 +5,13 @@ Testing zppy for E3SM Unified release
 *************************************
 
 This tutorial covers testing ``zppy`` for an E3SM Unified release.
-Examples are from testing for E3SM Unified v1.5.0.
+
+.. warning ::
+
+    Examples are from testing for E3SM Unified v1.5.0.
+    They may be outdated because of more recent changes.
+    For	example, ``/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/``	
+    has	replaced ``/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/``.
 
 Parameters
 ==========
