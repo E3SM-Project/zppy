@@ -45,7 +45,7 @@ ncclimo \
 --output=trash \
 --regrid=output \
 {%- endif %}
-{%- if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam'%}
+{%- if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' or input_files.split(".")[0] == 'elm' or input_files.split(".")[0] == 'clm2'  %}
 --prc_typ={{ input_files.split(".")[0] }}
 {%- else -%}
 --prc_typ=sgs
