@@ -67,7 +67,7 @@ if [[ ${atmosphere_only} == "false" ]]; then
     echo 'Create xml for for ocn'
     export CDMS_NO_MPI=true
     cd ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
-    cdscan -x glb.xml *.nc
+    cdscan -x glb.xml mpaso.glb*.nc
     if [ $? != 0 ]; then
       cd {{ scriptDir }}
       echo 'ERROR (3)' > {{ prefix }}.status
