@@ -1,4 +1,4 @@
-# Testing directions for cori-haswell
+# Testing directions for pm-cpu
 
 ## Commands to run before running integration tests
 
@@ -60,8 +60,8 @@ python -u -m unittest tests/integration/test_bundles.py
 
 ```
 cd <top level of zppy repo>
-chmod u+x tests/integration/generated/update_campaign_expected_files_cori-haswell.sh
-./tests/integration/generated/update_campaign_expected_files_cori-haswell.sh
+chmod u+x tests/integration/generated/update_campaign_expected_files_pm-cpu.sh
+./tests/integration/generated/update_campaign_expected_files_pm-cpu.sh
 ```
 This command also runs the test again.
 If the test fails on `test_campaign_high_res_v1`, try running the lines of the loop manually:

@@ -90,8 +90,8 @@ if [ $? != 0 ]; then
   exit 2
 fi
 
-{% if machine == 'cori' %}
-# For NERSC cori, make sure it is world readable
+{% if machine in ['pm-cpu', 'pm-gpu'] %}
+# For NERSC, make sure it is world readable
 f=`realpath ${web_dir}`
 while [[ $f != "/" ]]
 do
@@ -113,8 +113,8 @@ if [ $? != 0 ]; then
   exit 3
 fi
 
-{% if machine == 'cori' %}
-# For NERSC cori, change permissions of new files
+{% if machine in ['pm-cpu', 'pm-gpu'] %}
+# For NERSC, change permissions of new files
 pushd ${web_dir}/
 chgrp -R e3sm .
 chmod -R go+rX,go-w .

@@ -20,12 +20,10 @@ The paths to ``e3sm_unified`` activation scripts are machine dependent:
      source /share/apps/E3SM/conda_envs/load_latest_e3sm_unified_compy.sh
 
 
-**Cori-Haswell**
+**Perlmutter-CPU**
     ::
 
-     source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_cori-haswell.sh
-
-Note that Cori-Haswell should be used rather than Cori-knl.
+     source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_pm-cpu.sh
 
 **Anvil**
     ::
@@ -71,22 +69,6 @@ If the E3SM Unified environment doesn't serve your needs, you can alternatively
 install the latest version in your own custom conda environment.
 
 First, activate conda or install it if it's not available. Details vary amongst machines.
-
-Compy
------
-    ::
-
-     module load anaconda3/2019.03
-     source /share/apps/anaconda3/2019.03/etc/profile.d/conda.sh
-
-
-NERSC
------
-    ::
-
-     module load python/3.7-anaconda-2019.10
-     source /global/common/cori_cle7/software/python/3.7-anaconda-2019.10/etc/profile.d/conda.sh
-
 
 .. _conda_environment_others:
 

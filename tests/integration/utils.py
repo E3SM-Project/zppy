@@ -129,6 +129,7 @@ def get_chyrsalis_expansions(config):
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
     d = {
+        "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220614",
         "diags_obs_climo": f"{diags_base_path}/observations/Atm/climatology/",
@@ -157,6 +158,7 @@ def get_compy_expansions(config):
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
     d = {
+        "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /qfs/people/fors729/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220722",
         "diags_obs_climo": f"{diags_base_path}/observations/Atm/climatology/",
@@ -178,24 +180,25 @@ def get_compy_expansions(config):
     return d
 
 
-def get_cori_expansions(config):
+def get_perlmutter_expansions(config):
     diags_base_path = config.get("diagnostics", "base_path")
     unified_path = config.get("e3sm_unified", "base_path")
     # Note: `os.environ.get("USER")` also works. Here we're already using mache but not os, so using mache.
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
     d = {
+        "constraint": "cpu",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /global/homes/f/forsyth/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220715",
         "diags_obs_climo": f"{diags_base_path}/observations/Atm/climatology/",
         "diags_obs_tc": f"{diags_base_path}/observations/Atm/tc-analysis/",
         "diags_obs_ts": f"{diags_base_path}/observations/Atm/time-series/",
         "diags_walltime": "3:00:00",
-        "environment_commands": f"source {unified_path}/load_latest_e3sm_unified_cori-haswell.sh",
+        "environment_commands": f"source {unified_path}/load_latest_e3sm_unified_pm-cpu.sh",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
         "mapping_path": "/global/homes/z/zender/data/maps/",
-        "partition_long": "haswell",
-        "partition_short": "haswell",
+        "partition_long": "",
+        "partition_short": "",
         "qos_long": "regular",
         "qos_short": "regular",  # debug walltime too short?
         "scratch": f"/global/cscratch1/sd/{username}/",
@@ -215,8 +218,8 @@ def get_expansions():
         expansions = get_chyrsalis_expansions(config)
     elif machine == "compy":
         expansions = get_compy_expansions(config)
-    elif machine == "cori-haswell":
-        expansions = get_cori_expansions(config)
+    elif machine == "pm-cpu":
+        expansions = get_perlmutter_expansions(config)
     else:
         raise ValueError(f"Unsupported machine={machine}")
     expansions["machine"] = machine

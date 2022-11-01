@@ -83,9 +83,6 @@ def main():  # noqa: C901
         machine = config["default"]["machine"]
     machine_info = MachineInfo(machine=machine)
     default_machine = machine_info.machine
-    if default_machine.startswith("cori"):
-        # Ignore haswell/knl extension
-        default_machine = "cori"
     (
         default_account,
         default_partition,
@@ -101,36 +98,32 @@ def main():  # noqa: C901
     if config["default"]["account"] == "":
         if default_account:
             config["default"]["account"] = default_account
-        elif config["default"]["machine"] in ["compy", "cori", "chrysalis"]:
+        elif config["default"]["machine"] in ["compy", "pm-cpu", "pm-gpu", "chrysalis"]:
             config["default"]["account"] = "e3sm"
         elif config["default"]["machine"] == "anvil":
             config["default"]["account"] = "condo"
         else:
             raise ValueError(f"Invalid machine {config['default']['machine']}")
     # Determine partition
-    if config["default"]["partition"] == "":
-        if config["default"]["machine"] == "cori":
-            config["default"]["partition"] = default_constraint
-        else:
-            config["default"]["partition"] = default_partition
-    if config["default"]["machine"] == "cori":
-        partition = config["default"]["partition"]
-        if partition not in ["haswell", "knl"]:
+    if ("partition" not in config["default"]) or (config["default"]["partition"] == ""):
+        config["default"]["partition"] = default_partition
+    if ("constraint" not in config["default"]) or (
+        config["default"]["constraint"] == ""
+    ):
+        config["default"]["constraint"] = default_constraint
+    if config["default"]["machine"] in ["pm-cpu", "pm-gpu"]:
+        constraint = config["default"]["constraint"]
+        if constraint not in ["cpu", "gpu"]:
             raise ValueError(
-                f'Expected Cori partition to be "haswell" or '
-                f'"knl" but got: {partition}'
+                f'Expected Perlmutter constraint to be "cpu" or '
+                f'"gpu" but got: {constraint}'
             )
     # Determine environment_commands
     if config["default"]["environment_commands"] == "":
-        if config["default"]["machine"] == "cori":
-            config["default"][
-                "environment_commands"
-            ] = f"source {unified_base}/load_latest_e3sm_unified_cori-{partition}.sh"
-        else:
-            machine = config["default"]["machine"]
-            config["default"][
-                "environment_commands"
-            ] = f"source {unified_base}/load_latest_e3sm_unified_{machine}.sh"
+        machine = config["default"]["machine"]
+        config["default"][
+            "environment_commands"
+        ] = f"source {unified_base}/load_latest_e3sm_unified_{machine}.sh"
 
     if args.last_year:
         config["default"]["last_year"] = args.last_year
