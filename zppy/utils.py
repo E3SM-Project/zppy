@@ -95,7 +95,9 @@ def get_active_status(task):
 
 
 def getYears(years_list):
-
+    if type(years_list) == str:
+        # This will be the case if years_list is missing a trailing comma
+        years_list = [years_list]
     year_sets = []
     for years in years_list:
 
