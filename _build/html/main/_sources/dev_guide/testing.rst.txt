@@ -15,7 +15,7 @@ Run all unit tests by doing the following:
 Integration tests
 =================
 
-Integration tests can be run on Chrysalis, Compy, or Cori.
+Integration tests can be run on Chrysalis, Compy, or Perlmutter.
 First review `machine-specific directions <https://github.com/E3SM-Project/zppy/tree/main/tests/integration/generated>`_.
 
 Run all integration tests by doing the following:

@@ -17,5 +17,7 @@ High-resolution analysis (``campaign = "high_res_v1"``) is only appropriate for 
 (e.g., those with the oRRS18to6 ocean and sea-ice mesh).
 It will only work if you:
 
-- have access to the `bigmem nodes on Cori <https://docs.nersc.gov/systems/cori-largemem/#access-to-the-large-memory-nodes>`_
+- have access to the `bigmem nodes on NERSC Cori <https://docs.nersc.gov/systems/cori-largemem/#access-to-the-large-memory-nodes>`_
 - first load the necessary module with ``module load cmem``.
+
+# TODO: supported on Perlmutter?

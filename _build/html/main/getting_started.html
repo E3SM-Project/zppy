@@ -47,8 +47,6 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#activate-e3sm-unified-environment">Activate e3sm_unified environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation-in-a-conda-environment">Installation in a Conda Environment</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#compy">Compy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#nersc">NERSC</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#others-local">Others/Local</a></li>
 </ul>
 </li>
@@ -107,13 +105,10 @@ a conda environment that pulls together Python and other E3SM tools such as
 </pre></div>
 </div>
 </dd>
-<dt><strong>Cori-Haswell</strong></dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="k">global</span><span class="o">/</span><span class="n">common</span><span class="o">/</span><span class="n">software</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">anaconda_envs</span><span class="o">/</span><span class="n">load_latest_e3sm_unified_cori</span><span class="o">-</span><span class="n">haswell</span><span class="o">.</span><span class="n">sh</span>
+<dt><strong>Perlmutter-CPU</strong></dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="k">global</span><span class="o">/</span><span class="n">common</span><span class="o">/</span><span class="n">software</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">anaconda_envs</span><span class="o">/</span><span class="n">load_latest_e3sm_unified_pm</span><span class="o">-</span><span class="n">cpu</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
 </dd>
-</dl>
-<p>Note that Cori-Haswell should be used rather than Cori-knl.</p>
-<dl>
 <dt><strong>Anvil</strong></dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">soft</span><span class="o">/</span><span class="n">climate</span><span class="o">/</span><span class="n">e3sm</span><span class="o">-</span><span class="n">unified</span><span class="o">/</span><span class="n">load_latest_e3sm_unified_anvil</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
@@ -145,24 +140,6 @@ To install the latest stable release, refer to the following:</p>
 <p>If the E3SM Unified environment doesn’t serve your needs, you can alternatively
 install the latest version in your own custom conda environment.</p>
 <p>First, activate conda or install it if it’s not available. Details vary amongst machines.</p>
-<div class="section" id="compy">
-<h3>Compy<a class="headerlink" href="#compy" title="Permalink to this heading"></a></h3>
-<blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="n">load</span> <span class="n">anaconda3</span><span class="o">/</span><span class="mf">2019.03</span>
-<span class="n">source</span> <span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">apps</span><span class="o">/</span><span class="n">anaconda3</span><span class="o">/</span><span class="mf">2019.03</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">profile</span><span class="o">.</span><span class="n">d</span><span class="o">/</span><span class="n">conda</span><span class="o">.</span><span class="n">sh</span>
-</pre></div>
-</div>
-</div></blockquote>
-</div>
-<div class="section" id="nersc">
-<h3>NERSC<a class="headerlink" href="#nersc" title="Permalink to this heading"></a></h3>
-<blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="n">load</span> <span class="n">python</span><span class="o">/</span><span class="mf">3.7</span><span class="o">-</span><span class="n">anaconda</span><span class="o">-</span><span class="mf">2019.10</span>
-<span class="n">source</span> <span class="o">/</span><span class="k">global</span><span class="o">/</span><span class="n">common</span><span class="o">/</span><span class="n">cori_cle7</span><span class="o">/</span><span class="n">software</span><span class="o">/</span><span class="n">python</span><span class="o">/</span><span class="mf">3.7</span><span class="o">-</span><span class="n">anaconda</span><span class="o">-</span><span class="mf">2019.10</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">profile</span><span class="o">.</span><span class="n">d</span><span class="o">/</span><span class="n">conda</span><span class="o">.</span><span class="n">sh</span>
-</pre></div>
-</div>
-</div></blockquote>
-</div>
 <div class="section" id="others-local">
 <span id="conda-environment-others"></span><h3>Others/Local<a class="headerlink" href="#others-local" title="Permalink to this heading"></a></h3>
 <p>If the system doesn’t come with conda pre-installed, follow these instructions:</p>
