@@ -5,7 +5,7 @@
 ### test_bundles
 
 ```
-rm -rf /compyfs/www//fors729/zppy_test_bundles_www/v2.LR.historical_0201
+rm -rf /compyfs/www/fors729/zppy_test_bundles_www/v2.LR.historical_0201
 rm -rf /compyfs/fors729/zppy_test_bundles_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
@@ -18,7 +18,7 @@ zppy -c tests/integration/generated/test_bundles.cfg
 ### test_complete_run
 
 ```
-rm -rf /compyfs/www//fors729/zppy_test_complete_run_www/v2.LR.historical_0201
+rm -rf /compyfs/www/fors729/zppy_test_complete_run_www/v2.LR.historical_0201
 rm -rf /compyfs/fors729/zppy_test_complete_run_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
@@ -45,7 +45,7 @@ python -u -m unittest tests/integration/test_bash_generation.py
 rm -rf /compyfs/www/zppy_test_resources/expected_bundles
 # Your output will now become the new expectation.
 # Copy output so you don't have to rerun zppy to generate the output.
-cp -r /compyfs/www//fors729/zppy_test_bundles_www/v2.LR.historical_0201 /compyfs/www/zppy_test_resources/expected_bundles
+cp -r /compyfs/www/fors729/zppy_test_bundles_www/v2.LR.historical_0201 /compyfs/www/zppy_test_resources/expected_bundles
 mkdir -p /compyfs/www/zppy_test_resources/expected_bundles/bundle_files
 cp -r /compyfs/fors729/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash /compyfs/www/zppy_test_resources/expected_bundles/bundle_files
 cd /compyfs/www/zppy_test_resources/expected_bundles
@@ -60,7 +60,15 @@ python -u -m unittest tests/integration/test_bundles.py
 
 ```
 cd <top level of zppy repo>
+chmod u+x tests/integration/generated/update_campaign_expected_files_compy.sh
 ./tests/integration/generated/update_campaign_expected_files_compy.sh
+```
+This command also runs the test again.
+If the test fails on `test_campaign_high_res_v1`, try running the lines of the loop manually:
+```
+rm -rf /compyfs/www/zppy_test_resources/test_campaign_high_res_v1_expected_files
+mkdir -p /compyfs/www/zppy_test_resources/test_campaign_high_res_v1_expected_files
+mv test_campaign_high_res_v1_output/post/scripts/*.settings /compyfs/www/zppy_test_resources/test_campaign_high_res_v1_expected_files
 ```
 
 ### test_complete_run
@@ -69,7 +77,7 @@ cd <top level of zppy repo>
 rm -rf /compyfs/www/zppy_test_resources/expected_complete_run
 # Your output will now become the new expectation.
 # Copy output so you don't have to rerun zppy to generate the output.
-cp -r /compyfs/www//fors729/zppy_test_complete_run_www/v2.LR.historical_0201 /compyfs/www/zppy_test_resources/expected_complete_run
+cp -r /compyfs/www/fors729/zppy_test_complete_run_www/v2.LR.historical_0201 /compyfs/www/zppy_test_resources/expected_complete_run
 cd /compyfs/www/zppy_test_resources/expected_complete_run
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_complete_run.txt
