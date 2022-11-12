@@ -14,6 +14,7 @@ class Bundle(object):
         # Values are taken from the first task in the bundle OR from the bundle section
         self.bundle_name: str = c["bundle"]
         self.account: str = c["account"]
+        self.constraint: str = c["constraint"]
         self.dry_run: bool = c["dry_run"]
         self.debug: bool = c["debug"]
         self.environment_commands: str = c["environment_commands"]
@@ -47,6 +48,7 @@ class Bundle(object):
         c = {}
         c["machine"] = config["default"]["machine"]
         c["account"] = config["default"]["account"]
+        c["constraint"] = self.constraint
         c["debug"] = self.debug
         c["environment_commands"] = self.environment_commands
         c["scriptDir"] = self.script_dir
