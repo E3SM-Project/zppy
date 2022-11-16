@@ -14,5 +14,5 @@ be overridden by parameters set in a ``[[subsection]``.
 .. warning::
     The ``amwg`` section is user-contributed and is not officially supported/documented!
 
-See `parameter defaults <https://github.com/E3SM-Project/zppy/blob/4d6bb334d24926809b20ef2206a32c702bd89fd0/zppy/templates/default.ini>`_
+See `parameter defaults <https://github.com/E3SM-Project/zppy/blob/c9a24b79f9cc18b90b743841ac57c0ef10465e91/zppy/templates/default.ini>`_
 on GitHub for a complete list of parameters and their default values.
