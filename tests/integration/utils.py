@@ -135,8 +135,9 @@ def get_chyrsalis_expansions(config):
         "diags_obs_climo": f"{diags_base_path}/observations/Atm/climatology/",
         "diags_obs_tc": f"{diags_base_path}/observations/Atm/tc-analysis/",
         "diags_obs_ts": f"{diags_base_path}/observations/Atm/time-series/",
-        "diags_walltime": "1:00:00",
+        "diags_walltime": "2:00:00",
         "environment_commands": f"source {unified_path}/load_latest_e3sm_unified_chrysalis.sh",
+        "environment_commands_test": "source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.8.0rc1_chrysalis.sh",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
         "mapping_path": "/home/ac.zender/data/maps/",
         "partition_long": "compute",
@@ -166,6 +167,7 @@ def get_compy_expansions(config):
         "diags_obs_ts": f"{diags_base_path}/observations/Atm/time-series/",
         "diags_walltime": "03:00:00",
         "environment_commands": f"source {unified_path}/load_latest_e3sm_unified_compy.sh",
+        "environment_commands_test": "source /share/apps/E3SM/conda_envs/test_e3sm_unified_1.8.0rc1_compy.sh",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
         "mapping_path": "/compyfs/zender/maps/",
         "partition_long": "slurm",
@@ -195,6 +197,7 @@ def get_perlmutter_expansions(config):
         "diags_obs_ts": f"{diags_base_path}/observations/Atm/time-series/",
         "diags_walltime": "3:00:00",
         "environment_commands": f"source {unified_path}/load_latest_e3sm_unified_pm-cpu.sh",
+        "environment_commands_test": "source /global/common/software/e3sm/anaconda_envs/test_e3sm_unified_1.8.0rc3_pm-cpu.sh",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
         "mapping_path": "/global/homes/z/zender/data/maps/",
         "partition_long": "",
@@ -242,13 +245,15 @@ def substitute_expansions(expansions, file_in, file_out):
                 file_write.write(line)
 
 
-def generate_cfgs():
+def generate_cfgs(unified_testing=False):
     git_top_level = (
         subprocess.check_output("git rev-parse --show-toplevel".split())
         .strip()
         .decode("utf-8")
     )
     expansions = get_expansions()
+    if unified_testing:
+        expansions["environment_commands"] = expansions["environment_commands_test"]
     machine = expansions["machine"]
 
     cfg_names = ["bundles", "complete_run"]
@@ -273,4 +278,4 @@ def generate_cfgs():
 
 
 if __name__ == "__main__":
-    generate_cfgs()
+    generate_cfgs(True)
