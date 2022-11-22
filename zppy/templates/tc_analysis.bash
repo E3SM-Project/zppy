@@ -39,6 +39,10 @@ Y1="{{ '%04d' % (year1) }}"
 Y2="{{ '%04d' % (year2) }}"
 result_dir={{ scratch }}/tc-analysis_${Y1}_${Y2}/
 
+# Avoid "unable to remove target: Directory not empty" errors on `mv $result_dir $result_dir_fin` below.
+rm -rf ${result_dir}
+rm -rf ${result_dir_fin}/tc-analysis_${Y1}_${Y2}
+
 atm_name={{ atm_name }}
 
 # Determine res and pg2
@@ -78,11 +82,7 @@ cd ${drc_in};eval ls ${caseid}.$atm_name.h2.*{${start}..${end}}*.nc >${result_di
 cd ${result_dir}
 # Detection threshold including:
 # The sea-level pressure (SLP) must be a local minimum; SLP must have a sufficient decrease (300 Pa) compared to surrounding nodes within 4 degree radius; The average of the 200 hPa and 500 hPa level temperature decreases by 0.6 K in all directions within a 4 degree radius from the location to fSLP minima
-{% if machine in ['pm-cpu', 'pm-gpu'] %}
-srun -n 32 DetectNodes --verbosity 0 --in_connect ${result_dir}connect_CSne${res}_v2.dat --closedcontourcmd "PSL,300.0,4.0,0;_AVG(T200,T500),-0.6,4,0.30" --mergedist 6.0 --searchbymin PSL --outputcmd "PSL,min,0;_VECMAG(UBOT,VBOT),max,2" --timestride 1 --in_data_list ${result_dir}inputfile_${file_name}.txt --out ${result_dir}out.dat
-{% else -%}
 DetectNodes --verbosity 0 --in_connect ${result_dir}connect_CSne${res}_v2.dat --closedcontourcmd "PSL,300.0,4.0,0;_AVG(T200,T500),-0.6,4,0.30" --mergedist 6.0 --searchbymin PSL --outputcmd "PSL,min,0;_VECMAG(UBOT,VBOT),max,2" --timestride 1 --in_data_list ${result_dir}inputfile_${file_name}.txt --out ${result_dir}out.dat
-{%- endif %}
 
 cat ${result_dir}out.dat0* > ${result_dir}cyclones_${file_name}.txt
 
@@ -95,17 +95,9 @@ HistogramNodes --in ${result_dir}cyclones_stitch_${file_name}.dat --iloncol 2 --
 
 # Calculate relative vorticity
 sed -i 's/.nc/_vorticity.nc/' ${result_dir}outputfile_${file_name}.txt
-{% if machine in ['pm-cpu', 'pm-gpu'] %}
-srun -n 32 VariableProcessor --in_data_list ${result_dir}inputfile_${file_name}.txt --out_data_list ${result_dir}outputfile_${file_name}.txt --var "_CURL{4,0.5}(U850,V850)" --varout "VORT" --in_connect ${result_dir}connect_CSne${res}_v2.dat
-{% else -%}
 VariableProcessor --in_data_list ${result_dir}inputfile_${file_name}.txt --out_data_list ${result_dir}outputfile_${file_name}.txt --var "_CURL{4,0.5}(U850,V850)" --varout "VORT" --in_connect ${result_dir}connect_CSne${res}_v2.dat
-{%- endif %}
 
-{% if machine in ['pm-cpu', 'pm-gpu'] %}
-srun -n 32 DetectNodes --verbosity 0 --in_connect ${result_dir}connect_CSne${res}_v2.dat --closedcontourcmd "VORT,-5.e-6,4,0" --mergedist 2.0 --searchbymax VORT --outputcmd "VORT,max,0" --in_data_list ${result_dir}outputfile_${file_name}.txt --out ${result_dir}aew_out.dat --minlat -35.0 --maxlat 35.0
-{% else -%}
 DetectNodes --verbosity 0 --in_connect ${result_dir}connect_CSne${res}_v2.dat --closedcontourcmd "VORT,-5.e-6,4,0" --mergedist 2.0 --searchbymax VORT --outputcmd "VORT,max,0" --in_data_list ${result_dir}outputfile_${file_name}.txt --out ${result_dir}aew_out.dat --minlat -35.0 --maxlat 35.0
-{%- endif %}
 cat ${result_dir}aew_out.dat0* > ${result_dir}aew_${file_name}.txt
 
 StitchNodes --in_fmt "lon,lat,VORT" --in_connect ${result_dir}connect_CSne${res}_v2.dat --range 3.0 --minlength 8 --maxgap 0 --min_endpoint_dist 10.0 --in ${result_dir}aew_${file_name}.txt --out ${result_dir}aew_stitch_5e-6_${file_name}.dat --threshold "lat,<=,25.0,8;lat,>=,0.0,8"

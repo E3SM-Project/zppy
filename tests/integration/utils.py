@@ -129,6 +129,7 @@ def get_chyrsalis_expansions(config):
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
     d = {
+        "bundles_walltime": "02:00:00",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220614",
@@ -159,6 +160,7 @@ def get_compy_expansions(config):
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
     d = {
+        "bundles_walltime": "02:00:00",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /qfs/people/fors729/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220722",
@@ -189,22 +191,23 @@ def get_perlmutter_expansions(config):
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
     d = {
+        "bundles_walltime": "6:00:00",
         "constraint": "cpu",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /global/homes/f/forsyth/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220715",
         "diags_obs_climo": f"{diags_base_path}/observations/Atm/climatology/",
         "diags_obs_tc": f"{diags_base_path}/observations/Atm/tc-analysis/",
         "diags_obs_ts": f"{diags_base_path}/observations/Atm/time-series/",
-        "diags_walltime": "3:00:00",
+        "diags_walltime": "6:00:00",
         "environment_commands": f"source {unified_path}/load_latest_e3sm_unified_pm-cpu.sh",
-        "environment_commands_test": "source /global/common/software/e3sm/anaconda_envs/test_e3sm_unified_1.8.0rc3_pm-cpu.sh",
+        "environment_commands_test": "source /global/common/software/e3sm/anaconda_envs/test_e3sm_unified_1.8.0rc5_pm-cpu.sh",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
         "mapping_path": "/global/homes/z/zender/data/maps/",
         "partition_long": "",
         "partition_short": "",
         "qos_long": "regular",
         "qos_short": "regular",  # debug walltime too short?
-        "scratch": f"/global/cscratch1/sd/{username}/",
+        "scratch": f"/pscratch/sd/{username[0]}/{username}/",
         # Use CFS for large datasets
         "user_input": "/global/cfs/cdirs/e3sm/forsyth/",
         "user_output": f"/global/cfs/cdirs/e3sm/{username}/",
