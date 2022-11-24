@@ -167,7 +167,7 @@ def get_compy_expansions(config):
         "diags_obs_ts": f"{diags_base_path}/observations/Atm/time-series/",
         "diags_walltime": "03:00:00",
         "environment_commands": f"source {unified_path}/load_latest_e3sm_unified_compy.sh",
-        "environment_commands_test": "source /share/apps/E3SM/conda_envs/test_e3sm_unified_1.8.0rc1_compy.sh",
+        "environment_commands_test": "source /share/apps/E3SM/conda_envs/test_e3sm_unified_1.8.0rc5_compy.sh",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
         "mapping_path": "/compyfs/zender/maps/",
         "partition_long": "slurm",
