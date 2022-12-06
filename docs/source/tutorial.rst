@@ -57,3 +57,19 @@ This is another example of a configuration file, this time using a RRM simulatio
 .. literalinclude:: post.rrm_simulation.cfg
    :language: cfg
    :linenos:
+
+Debugging failures
+==================
+
+    .. code::
+
+        $ cd <output directory from cfg>/post/scripts
+	$ grep -v "OK" *status # See what failed
+	# Review `.o` files corresponding to failed `.status` files.
+	# If an error is obvious, make a fix in the bash file and rerun:
+	$ sbatch <failed job>.bash
+	# If the error is not obvious, do the following:
+	$ emacs <failed job>.bash
+	# In this file, set `debug = True`. This will provide more information.
+	# Note: another option is to set `debug = True` in your `cfg` and rerun `zppy`.
+	$ sbatch <failed job>.bash
