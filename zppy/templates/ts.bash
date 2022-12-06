@@ -70,6 +70,12 @@ vars={{ vars }}
 {%- endif %}
 
 ls {{ case }}.{{ input_files }}.????-*.nc > input.txt
+if grep -q "*" input.txt; then
+  cd {{ scriptDir }}
+  echo 'Missing input files'
+  echo 'ERROR (1)' > {{ prefix }}.status
+  exit 1
+fi
 # Generate time series files
 cat input.txt | ncclimo \
 -c {{ case }} \
@@ -108,8 +114,8 @@ cat input.txt | ncclimo \
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (1)' > {{ prefix }}.status
-  exit 1
+  echo 'ERROR (2)' > {{ prefix }}.status
+  exit 2
 fi
 
 # Move output ts files to final destination
@@ -120,8 +126,8 @@ fi
 }
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (2)' > {{ prefix }}.status
-  exit 2
+  echo 'ERROR (3)' > {{ prefix }}.status
+  exit 3
 fi
 
 {%- if ts_fmt != 'ts_only' %}
@@ -162,16 +168,16 @@ EOF
 
   if [ $? != 0 ]; then
     cd {{ scriptDir }}
-    echo 'ERROR (3)' > {{ prefix }}.status
-    exit 3
+    echo 'ERROR (4)' > {{ prefix }}.status
+    exit 4
   fi
 
   # Move output ts files to final destination
   mv ${dest_cmip}/${tmp_dir}/CMIP6/CMIP/*/*/*/*/*/*/*/*/*.nc ${dest_cmip}
   if [ $? != 0 ]; then
     cd {{ scriptDir }}
-    echo 'ERROR (4)' > {{ prefix }}.status
-    exit 4
+    echo 'ERROR (5)' > {{ prefix }}.status
+    exit 5
   fi
 
       rm -r ${dest_cmip}/${tmp_dir}
@@ -179,8 +185,8 @@ EOF
 }
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (5)' > {{ prefix }}.status
-  exit 5
+  echo 'ERROR (6)' > {{ prefix }}.status
+  exit 6
 fi
 {%- endif %}
 
