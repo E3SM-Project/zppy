@@ -48,6 +48,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#example-1">Example 1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-2">Example 2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#debugging-failures">Debugging failures</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
@@ -324,6 +325,23 @@ allowing for easy configuration changes. For example, a user could set
 <span class="linenos">78</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">False</span><span class="w"></span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="debugging-failures">
+<h2>Debugging failures<a class="headerlink" href="#debugging-failures" title="Permalink to this heading"></a></h2>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ cd &lt;output directory from cfg&gt;/post/scripts
+$ grep -v &quot;OK&quot; *status # See what failed
+# Review `.o` files corresponding to failed `.status` files.
+# If an error is obvious, make a fix in the bash file and rerun:
+$ sbatch &lt;failed job&gt;.bash
+# If the error is not obvious, do the following:
+$ emacs &lt;failed job&gt;.bash
+# In this file, set `debug = True`. This will provide more information.
+# Note: another option is to set `debug = True` in your `cfg` and rerun `zppy`.
+$ sbatch &lt;failed job&gt;.bash
+</pre></div>
+</div>
+</div></blockquote>
 </div>
 </div>
 
