@@ -263,7 +263,7 @@ def generate_cfgs(unified_testing=False):
     for cfg_name in cfg_names:
         cfg_template = f"{git_top_level}/tests/integration/template_{cfg_name}.cfg"
         cfg_generated = (
-            f"{git_top_level}/tests/integration/generated/test_{cfg_name}.cfg"
+            f"{git_top_level}/tests/integration/generated/test_{cfg_name}_{machine}.cfg"
         )
         substitute_expansions(expansions, cfg_template, cfg_generated)
 
