@@ -88,6 +88,12 @@ fi
 {%- endraw %}
 
 ls {{ case }}.{{ input_files }}.????-*.nc > input.txt
+if grep -q "*" input.txt; then
+  cd {{ scriptDir }}
+  echo 'Missing input files'
+  echo 'ERROR (1)' > {{ prefix }}.status
+  exit 1
+fi
 # Now, call ncclimo
 cat input.txt | ncclimo \
 --case={{ case }}.{{ input_files }} \
@@ -115,15 +121,15 @@ cat input.txt | ncclimo \
 # --- Unsupported climatology mode ---
 cd {{ scriptDir }}
 echo 'Frequency '{{ frequency }}' is not a valid option'
-echo 'ERROR (1)' > {{ prefix }}.status
-exit 1
+echo 'ERROR (2)' > {{ prefix }}.status
+exit 2
 
 {%- endif %}
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (2)' > {{ prefix }}.status
-  exit 2
+  echo 'ERROR (3)' > {{ prefix }}.status
+  exit 3
 fi
 
 # Move regridded climo files to final destination
@@ -143,8 +149,8 @@ mv output/*.nc ${dest}
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (3)' > {{ prefix }}.status
-  exit 3
+  echo 'ERROR (4)' > {{ prefix }}.status
+  exit 4
 fi
 
 # Delete temporary workdir
