@@ -32,8 +32,8 @@ Bumping the Version
 
         # Prepend "v" to <version>
         # For release candidates, append "rc" to <version>
-        git checkout -b v<version>
-        git push --set-upstream origin v<version>
+        git fetch upstream main
+        git checkout -b v<version> upstream/main
 
 3. Bump version using tbump.
 
