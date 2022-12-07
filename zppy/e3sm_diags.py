@@ -17,7 +17,7 @@ from zppy.utils import (
 
 # -----------------------------------------------------------------------------
 # FIXME: C901 'e3sm_diags' is too complex (20)
-def e3sm_diags(config, scriptDir, existing_bundles):  # noqa: C901
+def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
@@ -214,7 +214,11 @@ def e3sm_diags(config, scriptDir, existing_bundles):  # noqa: C901
                 if c["bundle"] == "":
                     # Submit job
                     submitScript(
-                        scriptFile, statusFile, export, dependFiles=dependencies
+                        scriptFile,
+                        statusFile,
+                        export,
+                        job_ids_file,
+                        dependFiles=dependencies,
                     )
 
                     # Due to a `socket.gaierror: [Errno -2] Name or service not known` error when running e3sm_diags with tc_analysis

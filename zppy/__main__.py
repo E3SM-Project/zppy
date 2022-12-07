@@ -66,6 +66,7 @@ def main():  # noqa: C901
     username = os.environ.get("USER")
     output = output.replace("$USER", username)
     scriptDir = os.path.join(output, "post/scripts")
+    job_ids_file = os.path.join(scriptDir, "jobids.txt")
     try:
         os.makedirs(scriptDir)
     except OSError as exc:
@@ -134,28 +135,30 @@ def main():  # noqa: C901
     existing_bundles = predefined_bundles(config, scriptDir, existing_bundles)
 
     # climo tasks
-    existing_bundles = climo(config, scriptDir, existing_bundles)
+    existing_bundles = climo(config, scriptDir, existing_bundles, job_ids_file)
 
     # time series tasks
-    existing_bundles = ts(config, scriptDir, existing_bundles)
+    existing_bundles = ts(config, scriptDir, existing_bundles, job_ids_file)
 
     # tc_analysis tasks
-    existing_bundles = tc_analysis(config, scriptDir, existing_bundles)
+    existing_bundles = tc_analysis(config, scriptDir, existing_bundles, job_ids_file)
 
     # e3sm_diags tasks
-    existing_bundles = e3sm_diags(config, scriptDir, existing_bundles)
+    existing_bundles = e3sm_diags(config, scriptDir, existing_bundles, job_ids_file)
 
     # amwg tasks
-    existing_bundles = amwg(config, scriptDir, existing_bundles)
+    existing_bundles = amwg(config, scriptDir, existing_bundles, job_ids_file)
 
     # mpas_analysis tasks
-    existing_bundles = mpas_analysis(config, scriptDir, existing_bundles)
+    existing_bundles = mpas_analysis(config, scriptDir, existing_bundles, job_ids_file)
 
     # global time series tasks
-    existing_bundles = global_time_series(config, scriptDir, existing_bundles)
+    existing_bundles = global_time_series(
+        config, scriptDir, existing_bundles, job_ids_file
+    )
 
     # ilamb tasks
-    existing_bundles = ilamb(config, scriptDir, existing_bundles)
+    existing_bundles = ilamb(config, scriptDir, existing_bundles, job_ids_file)
 
     # Submit bundle jobs
     for b in existing_bundles:
@@ -169,6 +172,7 @@ def main():  # noqa: C901
                 b.bundle_file,
                 b.bundle_status,
                 b.export,
+                job_ids_file,
                 dependFiles=b.dependencies_external,
             )
 

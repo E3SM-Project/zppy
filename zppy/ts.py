@@ -17,7 +17,7 @@ from zppy.utils import (
 
 
 # -----------------------------------------------------------------------------
-def ts(config, scriptDir, existing_bundles):
+def ts(config, scriptDir, existing_bundles, job_ids_file):
 
     # --- Initialize jinja2 template engine ---
     templateLoader = jinja2.FileSystemLoader(
@@ -108,7 +108,7 @@ def ts(config, scriptDir, existing_bundles):
             if not c["dry_run"]:
                 if c["bundle"] == "":
                     # Submit job
-                    submitScript(scriptFile, statusFile, export)
+                    submitScript(scriptFile, statusFile, export, job_ids_file)
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
 

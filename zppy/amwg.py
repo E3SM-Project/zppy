@@ -8,7 +8,7 @@ from zppy.utils import checkStatus, getTasks, getYears, makeExecutable, submitSc
 
 
 # -----------------------------------------------------------------------------
-def amwg(config, scriptDir, existing_bundles):
+def amwg(config, scriptDir, existing_bundles, job_ids_file):
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
@@ -79,7 +79,11 @@ def amwg(config, scriptDir, existing_bundles):
                 if c["bundle"] == "":
                     # Submit job
                     submitScript(
-                        scriptFile, statusFile, export, dependFiles=dependencies
+                        scriptFile,
+                        statusFile,
+                        export,
+                        job_ids_file,
+                        dependFiles=dependencies,
                     )
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))

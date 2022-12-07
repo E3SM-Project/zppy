@@ -153,7 +153,7 @@ def getComponent(input_files):
 
 
 # -----------------------------------------------------------------------------
-def submitScript(scriptFile, statusFile, export, dependFiles=[]):
+def submitScript(scriptFile, statusFile, export, job_ids_file, dependFiles=[]):
 
     # id of submitted job, or -1 if not submitted
     jobid = None
@@ -209,6 +209,11 @@ def submitScript(scriptFile, statusFile, export, dependFiles=[]):
             print(stderr)
             raise RuntimeError(error_str)
         jobid = int(out.split()[-1])
+        with open(job_ids_file, "a") as j:
+            # To include the scriptFile, use this line:
+            # j.write(f"{scriptFile}: {jobid}\n")
+            # To cancel all jobs associated with this zppy run, use `xargs scancel < jobids.txt`.
+            j.write(f"{jobid}\n")
 
         # Small pause to avoid overloading queueing system
         time.sleep(0.2)

@@ -281,4 +281,4 @@ def generate_cfgs(unified_testing=False):
 
 
 if __name__ == "__main__":
-    generate_cfgs(True)
+    generate_cfgs()
