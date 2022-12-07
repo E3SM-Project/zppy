@@ -15,7 +15,7 @@ from zppy.utils import (
 
 
 # -----------------------------------------------------------------------------
-def mpas_analysis(config, scriptDir, existing_bundles):
+def mpas_analysis(config, scriptDir, existing_bundles, job_ids_file):
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
@@ -123,7 +123,11 @@ def mpas_analysis(config, scriptDir, existing_bundles):
                 if c["bundle"] == "":
                     # Submit job
                     submitScript(
-                        scriptFile, statusFile, export, dependFiles=dependencies
+                        scriptFile,
+                        statusFile,
+                        export,
+                        job_ids_file,
+                        dependFiles=dependencies,
                     )
 
                     # Note that this line should still be executed even if jobid == -1
