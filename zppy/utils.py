@@ -151,6 +151,21 @@ def getComponent(input_files):
 
 
 # -----------------------------------------------------------------------------
+
+
+def setMappingFile(c):
+    if c["mapping_file"] and (c["mapping_file"] != "glb"):
+        directory = os.path.dirname(c["mapping_file"])
+        if not directory:
+            # We use the mapping file from Mache's [diagnostics > base_path].
+            # However, new mapping files should be added to Mache's [sync > public_diags].
+            # These files will then be synced over.
+            c["mapping_file"] = os.path.join(
+                c["diagnostics_base_path"], "maps", c["mapping_file"]
+            )
+
+
+# -----------------------------------------------------------------------------
 def submitScript(scriptFile, statusFile, export, job_ids_file, dependFiles=[]):
 
     # id of submitted job, or -1 if not submitted

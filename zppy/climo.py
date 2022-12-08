@@ -11,6 +11,7 @@ from zppy.utils import (
     getTasks,
     getYears,
     makeExecutable,
+    setMappingFile,
     submitScript,
 )
 
@@ -32,6 +33,8 @@ def climo(config, scriptDir, existing_bundles, job_ids_file):
 
     # --- Generate and submit climo scripts ---
     for c in tasks:
+
+        setMappingFile(c)
 
         # Grid name (if not explicitly defined)
         #   'native' if no remapping
