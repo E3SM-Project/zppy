@@ -9,9 +9,9 @@ rm -rf #expand user_www#zppy_test_bundles_www/v2.LR.historical_0201
 rm -rf #expand user_output#zppy_test_bundles_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
-zppy -c tests/integration/generated/test_bundles.cfg
+zppy -c tests/integration/generated/test_bundles_#expand machine#.cfg
 # bundle1 and bundle2 should run. After they finish, invoke zppy again to resolve remaining dependencies:
-zppy -c tests/integration/generated/test_bundles.cfg
+zppy -c tests/integration/generated/test_bundles_#expand machine#.cfg
 # bundle3 and ilamb should run
 ```
 
@@ -22,7 +22,7 @@ rm -rf #expand user_www#zppy_test_complete_run_www/v2.LR.historical_0201
 rm -rf #expand user_output#zppy_test_complete_run_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
-zppy -c tests/integration/generated/test_complete_run.cfg
+zppy -c tests/integration/generated/test_complete_run_#expand machine#.cfg
 ```
 
 ## Commands to run to replace outdated expected files

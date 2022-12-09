@@ -9,9 +9,9 @@ rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_bund
 rm -rf /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
-zppy -c tests/integration/generated/test_bundles.cfg
+zppy -c tests/integration/generated/test_bundles_chrysalis.cfg
 # bundle1 and bundle2 should run. After they finish, invoke zppy again to resolve remaining dependencies:
-zppy -c tests/integration/generated/test_bundles.cfg
+zppy -c tests/integration/generated/test_bundles_chrysalis.cfg
 # bundle3 and ilamb should run
 ```
 
@@ -22,7 +22,7 @@ rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_comp
 rm -rf /lcrc/group/e3sm/ac.forsyth2/zppy_test_complete_run_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
-zppy -c tests/integration/generated/test_complete_run.cfg
+zppy -c tests/integration/generated/test_complete_run_chrysalis.cfg
 ```
 
 ## Commands to run to replace outdated expected files
