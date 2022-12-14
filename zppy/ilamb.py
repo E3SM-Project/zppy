@@ -50,7 +50,9 @@ def ilamb(config, scriptDir, existing_bundles, job_ids_file):
                 c["sub"] = c["grid"]
 
             if c["ilamb_obs"] == "":
-                ilamb_obs_prefix = MachineInfo().config.get("diagnostics", "base_path")
+                ilamb_obs_prefix = MachineInfo(machine=c["machine"]).config.get(
+                    "diagnostics", "base_path"
+                )
                 ilamb_obs_suffix = "ilamb_data"
                 c["ilamb_obs"] = os.path.join(ilamb_obs_prefix, ilamb_obs_suffix)
 

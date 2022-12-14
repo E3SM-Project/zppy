@@ -251,7 +251,7 @@ def makeExecutable(scriptFile):
 
 # -----------------------------------------------------------------------------
 def print_url(c, task):
-    machine_info = MachineInfo()
+    machine_info = MachineInfo(machine=c["machine"])
     base_path = machine_info.config.get("web_portal", "base_path")
     base_url = machine_info.config.get("web_portal", "base_url")
     www = c["www"]

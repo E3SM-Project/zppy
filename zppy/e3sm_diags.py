@@ -98,7 +98,7 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                         "reference_data_path_ts_rof"
                     ] = f"{reference_data_path}/rof/native/ts/monthly"
                 if c["gauges_path"] == "":
-                    machine_info = MachineInfo()
+                    machine_info = MachineInfo(machine=c["machine"])
                     gauges_path_prefix = machine_info.config.get(
                         "diagnostics", "base_path"
                     )

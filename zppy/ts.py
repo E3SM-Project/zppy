@@ -58,7 +58,7 @@ def ts(config, scriptDir, existing_bundles, job_ids_file):
         # Component
         c["component"] = getComponent(c["input_files"])
 
-        machine_info = MachineInfo()
+        machine_info = MachineInfo(machine=c["machine"])
         cmor_tables_prefix = machine_info.config.get("diagnostics", "base_path")
         c["cmor_tables_prefix"] = cmor_tables_prefix
 

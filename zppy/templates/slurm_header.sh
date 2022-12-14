@@ -14,7 +14,7 @@
 #SBATCH  --qos={{ qos }}
 #SBATCH  --partition={{ partition }}
 
-{% elif machine in ['pm-cpu', 'pm-gpu'] %}
+{% elif machine in ['cori-haswell', 'pm-cpu', 'pm-gpu'] %}
 #SBATCH  --qos={{ qos }}
 #SBATCH  --constraint={{ constraint }}
 
