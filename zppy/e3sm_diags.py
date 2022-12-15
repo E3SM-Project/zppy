@@ -2,7 +2,6 @@ import os
 import pprint
 
 import jinja2
-from mache import MachineInfo
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
@@ -98,10 +97,7 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                         "reference_data_path_ts_rof"
                     ] = f"{reference_data_path}/rof/native/ts/monthly"
                 if c["gauges_path"] == "":
-                    machine_info = MachineInfo(machine=c["machine"])
-                    gauges_path_prefix = machine_info.config.get(
-                        "diagnostics", "base_path"
-                    )
+                    gauges_path_prefix = c["diagnostics_base_path"]
                     gauges_path_suffix = "observations/Atm/time-series/GSIM/GSIM_catchment_characteristics_all_1km2.csv"
                     c["gauges_path"] = os.path.join(
                         gauges_path_prefix, gauges_path_suffix
