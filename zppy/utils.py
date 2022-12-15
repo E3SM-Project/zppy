@@ -5,8 +5,6 @@ import stat
 import time
 from subprocess import PIPE, Popen
 
-from mache import MachineInfo
-
 # -----------------------------------------------------------------------------
 # Process specified section and its sub-sections to build list of tasks
 #
@@ -251,9 +249,8 @@ def makeExecutable(scriptFile):
 
 # -----------------------------------------------------------------------------
 def print_url(c, task):
-    machine_info = MachineInfo()
-    base_path = machine_info.config.get("web_portal", "base_path")
-    base_url = machine_info.config.get("web_portal", "base_url")
+    base_path = c["web_portal_base_path"]
+    base_url = c["web_portal_base_url"]
     www = c["www"]
     if www.startswith(base_path):
         # TODO: python 3.9 introduces `removeprefix`

@@ -91,6 +91,15 @@ def main():  # noqa: C901
         _,
     ) = machine_info.get_account_defaults()
     unified_base = machine_info.config.get("e3sm_unified", "base_path")
+    config["default"]["diagnostics_base_path"] = machine_info.config.get(
+        "diagnostics", "base_path"
+    )
+    config["default"]["web_portal_base_path"] = machine_info.config.get(
+        "web_portal", "base_path"
+    )
+    config["default"]["web_portal_base_url"] = machine_info.config.get(
+        "web_portal", "base_url"
+    )
 
     # Determine machine to decide which header files to use
     if ("machine" not in config["default"]) or (config["default"]["machine"] == ""):
