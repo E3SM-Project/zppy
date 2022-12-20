@@ -132,249 +132,220 @@ def get_ylim(standard_range, extreme_values):
 # -----------------------------------------------------------------------------
 # Plotting functions
 
-# Net TOA flux (restom)
+# 1
 def plot_net_toa_flux_restom(ax, xlim, exps):
-    ax.set_xlim(xlim)
-    extreme_values = []
-    for exp in exps:
-        year = np.array(exp["annual"]["year"]) + exp["yoffset"]
-        var = np.array(exp["annual"]["RESTOM"])
-        extreme_values.append(np.amax(var))
-        extreme_values.append(np.amin(var))
-        ax.plot(year, var, lw=1.0, marker=None, c=exp["color"], label=exp["name"])
-        if exp["yr"] is not None:
-            print(exp["name"])
-            for yrs in exp["yr"]:
-                add_line(
-                    year,
-                    var,
-                    yrs[0],
-                    yrs[1],
-                    format="%4.2f",
-                    ax=ax,
-                    lw=2,
-                    color=exp["color"],
-                )
-                add_trend(
-                    year,
-                    var,
-                    yrs[0],
-                    yrs[1],
-                    format="%4.2f",
-                    ax=ax,
-                    lw=2,
-                    color=exp["color"],
-                )
-
-    ax.set_ylim(get_ylim([-1.5, 1.5], extreme_values))
-    ax.axhline(y=0, lw=1, c="0.5")
-    ax.set_title("Net TOA flux (restom)")
-    ax.set_xlabel("Year")
-    ax.set_ylabel("W m-2")
-    ax.legend(loc="best")
+    param_dict = {
+        "2nd_var": False,
+        "axhline_y": 0,
+        "check_exp_ocean": False,
+        "check_exp_vol": False,
+        "check_exp_year": True,
+        "default_ylim": [-1.5, 1.5],
+        "do_add_line": True,
+        "do_add_trend": True,
+        "format": "%4.2f",
+        "lw": 1.0,
+        "ohc": False,
+        "set_axhline": True,
+        "set_legend": True,
+        "shorten_year": False,
+        "title": "Net TOA flux (restom)",
+        "use_getmoc": False,
+        "var": lambda exp: np.array(exp["annual"]["RESTOM"]),
+        "verbose": False,
+        "vol": False,
+        "ylabel": "W m-2",
+    }
+    plot(ax, xlim, exps, param_dict)
 
 
+# 2
 def plot_global_surface_air_temperature(ax, xlim, exps):
-    ax.set_xlim(xlim)
-
-    extreme_values = []
-    for exp in exps:
-        year = np.array(exp["annual"]["year"]) + exp["yoffset"]
-        var = np.array(exp["annual"]["TREFHT"]) - 273.15
-        extreme_values.append(np.amax(var))
-        extreme_values.append(np.amin(var))
-        ax.plot(year, var, lw=1.0, marker=None, c=exp["color"], label=exp["name"])
-        if exp["yr"] is not None:
-            print(exp["name"])
-            for yrs in exp["yr"]:
-                add_line(
-                    year,
-                    var,
-                    yrs[0],
-                    yrs[1],
-                    format="%4.2f",
-                    ax=ax,
-                    lw=2,
-                    color=exp["color"],
-                )
-                add_trend(
-                    year,
-                    var,
-                    yrs[0],
-                    yrs[1],
-                    format="%4.2f",
-                    ax=ax,
-                    lw=2,
-                    color=exp["color"],
-                )
-
-    ax.set_ylim(get_ylim([13, 15.5], extreme_values))
-    ax.set_title("Global surface air temperature")
-    ax.set_xlabel("Year")
-    ax.set_ylabel("degC")
+    param_dict = {
+        "2nd_var": False,
+        "axhline_y": None,
+        "check_exp_ocean": False,
+        "check_exp_vol": False,
+        "check_exp_year": True,
+        "default_ylim": [13, 15.5],
+        "do_add_line": True,
+        "do_add_trend": True,
+        "format": "%4.2f",
+        "lw": 1.0,
+        "ohc": False,
+        "set_axhline": False,
+        "set_legend": False,
+        "shorten_year": False,
+        "title": "Global surface air temperature",
+        "use_getmoc": False,
+        "var": lambda exp: np.array(exp["annual"]["TREFHT"]) - 273.15,
+        "verbose": False,
+        "vol": False,
+        "ylabel": "degC",
+    }
+    plot(ax, xlim, exps, param_dict)
 
 
+# 3
 def plot_toa_radiation(ax, xlim, exps):
-    ax.set_xlim(xlim)
+    param_dict = {
+        "2nd_var": True,
+        "axhline_y": None,
+        "check_exp_ocean": False,
+        "check_exp_vol": False,
+        "check_exp_year": False,
+        "default_ylim": [235, 245],
+        "do_add_line": False,
+        "do_add_trend": False,
+        "format": None,
+        "lw": 1.0,
+        "ohc": False,
+        "set_axhline": False,
+        "set_legend": False,
+        "shorten_year": False,
+        "title": "TOA radiation: SW (solid), LW (dashed)",
+        "use_getmoc": False,
+        "var": lambda exp: np.array(exp["annual"]["FSNTOA"]),
+        "verbose": None,
+        "vol": None,
+        "ylabel": "W m-2",
+    }
+    plot(ax, xlim, exps, param_dict)
 
-    extreme_values = []
-    for exp in exps:
-        year = np.array(exp["annual"]["year"]) + exp["yoffset"]
-        var = np.array(exp["annual"]["FSNTOA"])
-        extreme_values.append(np.amax(var))
-        extreme_values.append(np.amin(var))
-        ax.plot(year, var, lw=1.0, marker=None, c=exp["color"], label=exp["name"])
-        var = np.array(exp["annual"]["FLUT"])
-        ax.plot(year, var, lw=1.0, marker=None, ls=":", c=exp["color"])
 
-    ax.set_ylim(get_ylim([235, 245], extreme_values))
-    ax.set_title("TOA radiation: SW (solid), LW (dashed)")
-    ax.set_xlabel("Year")
-    ax.set_ylabel("W m-2")
-
-
+# 4
 def plot_net_atm_energy_imbalance(ax, xlim, exps):
-    ax.set_xlim(xlim)
-
-    extreme_values = []
-    for exp in exps:
-        year = np.array(exp["annual"]["year"]) + exp["yoffset"]
-        var = np.array(exp["annual"]["RESTOM"]) - np.array(exp["annual"]["RESSURF"])
-        extreme_values.append(np.amax(var))
-        extreme_values.append(np.amin(var))
-        ax.plot(year, var, lw=1.0, marker=None, c=exp["color"], label=exp["name"])
-        if exp["yr"] is not None:
-            print(exp["name"])
-            for yrs in exp["yr"]:
-                add_line(
-                    year,
-                    var,
-                    yrs[0],
-                    yrs[1],
-                    format="%4.2f",
-                    ax=ax,
-                    lw=2,
-                    color=exp["color"],
-                )
-
-    ax.set_ylim(get_ylim([-0.3, 0.3], extreme_values))
-    ax.set_title("Net atm energy imbalance (restom-ressurf)")
-    ax.set_xlabel("Year")
-    ax.set_ylabel("W m-2")
+    param_dict = {
+        "2nd_var": False,
+        "axhline_y": None,
+        "check_exp_ocean": False,
+        "check_exp_vol": False,
+        "check_exp_year": True,
+        "default_ylim": [-0.3, 0.3],
+        "do_add_line": True,
+        "do_add_trend": False,
+        "format": "%4.2f",
+        "lw": 1.0,
+        "ohc": False,
+        "set_axhline": False,
+        "set_legend": False,
+        "shorten_year": False,
+        "title": "Net atm energy imbalance (restom-ressurf)",
+        "use_getmoc": False,
+        "var": lambda exp: np.array(exp["annual"]["RESTOM"])
+        - np.array(exp["annual"]["RESSURF"]),
+        "verbose": False,
+        "vol": False,
+        "ylabel": "W m-2",
+    }
+    plot(ax, xlim, exps, param_dict)
 
 
+# 5
 def plot_change_ohc(ax, xlim, exps):
-    ax.set_xlim(xlim)
-
-    extreme_values = []
-    for exp in exps:
-        if exp["ocean"] is not None:
-            year = np.array(exp["annual"]["year"]) + exp["yoffset"]
-            var = np.array(exp["annual"]["ohc"])
-            extreme_values.append(np.amax(var))
-            extreme_values.append(np.amin(var))
-            year = year[: len(var)]
-            ax.plot(year, var, lw=1.5, marker=None, c=exp["color"], label=exp["name"])
-            for yrs in exp["yr"]:
-                add_trend(
-                    year,
-                    var,
-                    yrs[0],
-                    yrs[1],
-                    format="%4.2f",
-                    ax=ax,
-                    lw=3,
-                    color=exp["color"],
-                    ohc=True,
-                )
-
-    ax.set_ylim(get_ylim([-0.3e24, 0.9e24], extreme_values))
-    ax.axhline(y=0, lw=1, c="0.5")
-    ax.set_title("Change in ocean heat content")
-    ax.set_xlabel("Year")
-    ax.set_ylabel("J")
-    ax.legend(loc="best")
+    param_dict = {
+        "2nd_var": False,
+        "axhline_y": 0,
+        "check_exp_ocean": True,
+        "check_exp_vol": False,
+        "check_exp_year": False,
+        "default_ylim": [-0.3e24, 0.9e24],
+        "do_add_line": False,
+        "do_add_trend": True,
+        "format": "%4.2f",
+        "lw": 1.5,
+        "ohc": True,
+        "set_axhline": True,
+        "set_legend": True,
+        "shorten_year": True,
+        "title": "Change in ocean heat content",
+        "use_getmoc": False,
+        "var": lambda exp: np.array(exp["annual"]["ohc"]),
+        "verbose": False,
+        "vol": False,
+        "ylabel": "J",
+    }
+    plot(ax, xlim, exps, param_dict)
 
 
+# 6
 def plot_max_moc(ax, xlim, exps):
-    ax.set_xlim(xlim)
-
-    extreme_values = []
-    for exp in exps:
-        if exp["moc"] is not None:
-            [year_moc, var] = getmoc(exp["moc"])
-            ax.plot(
-                year_moc, var, lw=1.5, marker=None, c=exp["color"], label=exp["name"]
-            )
-            extreme_values.append(np.amax(var))
-            extreme_values.append(np.amin(var))
-            for yrs in exp["yr"]:
-                add_trend(
-                    year_moc,
-                    var,
-                    yrs[0],
-                    yrs[1],
-                    format="%4.2f",
-                    ax=ax,
-                    lw=3,
-                    color=exp["color"],
-                    verbose=True,
-                )
-
-    ax.set_ylim(get_ylim([4, 22], extreme_values))
-    ax.axhline(y=10, lw=1, c="0.5")
-    ax.set_title("Max MOC Atlantic streamfunction at 26.5N")
-    ax.set_xlabel("Year")
-    ax.set_ylabel("Sv")
-    ax.legend(loc="best")
+    param_dict = {
+        "2nd_var": False,
+        "axhline_y": 10,
+        "check_exp_ocean": False,
+        "check_exp_vol": False,
+        "check_exp_year": False,
+        "default_ylim": [4, 22],
+        "do_add_line": False,
+        "do_add_trend": True,
+        "format": "%4.2f",
+        "lw": 1.5,
+        "ohc": False,
+        "set_axhline": True,
+        "set_legend": True,
+        "shorten_year": False,
+        "title": "Max MOC Atlantic streamfunction at 26.5N",
+        "use_getmoc": True,
+        "var": None,
+        "verbose": True,
+        "vol": None,
+        "ylabel": "Sv",
+    }
+    plot(ax, xlim, exps, param_dict)
 
 
+# 7
 def plot_change_sea_level(ax, xlim, exps):
-    ax.set_xlim(xlim)
-
-    extreme_values = []
-    for exp in exps:
-        if exp["vol"] is not None:
-            year_vol = np.array(exp["annual"]["year"]) + exp["yoffset"]
-            var = (
-                1e3
-                * np.array(exp["annual"]["volume"])
-                / (4.0 * math.pi * (6371229.0) ** 2 * 0.7)
-            )
-            extreme_values.append(np.amax(var))
-            extreme_values.append(np.amin(var))
-            year_vol = year_vol[: len(var)]
-            ax.plot(
-                year_vol, var, lw=1.5, marker=None, c=exp["color"], label=exp["name"]
-            )
-            for yrs in exp["yr"]:
-                add_trend(
-                    year_vol,
-                    var,
-                    yrs[0],
-                    yrs[1],
-                    format="%5.3f",
-                    ax=ax,
-                    lw=3,
-                    color=exp["color"],
-                    verbose=True,
-                    vol=True,
-                )
-
-    ax.set_ylim(get_ylim([4, 22], extreme_values))
-    ax.set_title("Change in sea level")
-    ax.set_xlabel("Year")
-    ax.set_ylabel("mm")
-    ax.legend(loc="best")
+    param_dict = {
+        "2nd_var": False,
+        "axhline_y": None,
+        "check_exp_ocean": False,
+        "check_exp_vol": True,
+        "check_exp_year": True,
+        "default_ylim": [4, 22],
+        "do_add_line": False,
+        "do_add_trend": True,
+        "format": "%5.3f",
+        "lw": 1.5,
+        "ohc": False,
+        "set_axhline": False,
+        "set_legend": True,
+        "shorten_year": True,
+        "title": "Change in sea level",
+        "use_getmoc": False,
+        "var": lambda exp: (
+            1e3
+            * np.array(exp["annual"]["volume"])
+            / (4.0 * math.pi * (6371229.0) ** 2 * 0.7)
+        ),
+        "verbose": True,
+        "vol": True,
+        "ylabel": "mm",
+    }
+    plot(ax, xlim, exps, param_dict)
 
 
+# 8
 def plot_net_atm_water_imbalance(ax, xlim, exps):
-    ax.set_xlim(xlim)
-
-    extreme_values = []
-    for exp in exps:
-        year = np.array(exp["annual"]["year"]) + exp["yoffset"]
-        var = (
+    param_dict = {
+        "2nd_var": False,
+        "axhline_y": None,
+        "check_exp_ocean": False,
+        "check_exp_vol": False,
+        "check_exp_year": False,
+        "default_ylim": [-1, 1],
+        "do_add_line": True,
+        "do_add_trend": False,
+        "format": "%5.4f",
+        "lw": 1.0,
+        "ohc": False,
+        "set_axhline": False,
+        "set_legend": False,
+        "shorten_year": False,
+        "title": "Net atm water imbalance (evap-prec)",
+        "use_getmoc": False,
+        "var": lambda exp: (
             365
             * 86400
             * (
@@ -382,28 +353,88 @@ def plot_net_atm_water_imbalance(ax, xlim, exps):
                 - 1e3
                 * (np.array(exp["annual"]["PRECC"]) + np.array(exp["annual"]["PRECL"]))
             )
-        )
+        ),
+        "verbose": False,
+        "vol": False,
+        "ylabel": "mm yr-1",
+    }
+    plot(ax, xlim, exps, param_dict)
+
+
+def plot(ax, xlim, exps, param_dict):
+    ax.set_xlim(xlim)
+    extreme_values = []
+    for exp in exps:
+        if param_dict["check_exp_ocean"] and (exp["ocean"] is None):
+            continue
+        if param_dict["check_exp_vol"] and (exp["vol"] is None):
+            continue
+        if param_dict["use_getmoc"]:
+            if exp["moc"]:
+                [year, var] = getmoc(exp["moc"])
+            else:
+                continue
+        else:
+            year = np.array(exp["annual"]["year"]) + exp["yoffset"]
+            var = param_dict["var"](exp)
         extreme_values.append(np.amax(var))
         extreme_values.append(np.amin(var))
-        ax.plot(year, var, lw=1.0, marker=None, c=exp["color"], label=exp["name"])
-        if exp["yr"] is not None:
+        if param_dict["shorten_year"]:
+            year = year[: len(var)]
+        ax.plot(
+            year,
+            var,
+            lw=param_dict["lw"],
+            marker=None,
+            c=exp["color"],
+            label=exp["name"],
+        )
+        if param_dict["2nd_var"]:
+            # Specifically for plot_toa_radiation
+            # TODO: if more plots require a 2nd variable, we can change `var` to be a list,
+            # but that will be a more significant refactoring.
+            var = np.array(exp["annual"]["FLUT"])
+            ax.plot(year, var, lw=1.0, marker=None, ls=":", c=exp["color"])
+            continue
+        if param_dict["check_exp_year"] and exp["yr"] is None:
+            continue
+        elif param_dict["do_add_line"] or param_dict["do_add_trend"]:
             print(exp["name"])
             for yrs in exp["yr"]:
-                add_line(
-                    year,
-                    var,
-                    yrs[0],
-                    yrs[1],
-                    format="%5.4f",
-                    ax=ax,
-                    lw=2,
-                    color=exp["color"],
-                )
+                if param_dict["do_add_line"]:
+                    add_line(
+                        year,
+                        var,
+                        yrs[0],
+                        yrs[1],
+                        format=param_dict["format"],
+                        ax=ax,
+                        lw=2 * param_dict["lw"],
+                        color=exp["color"],
+                    )
+                if param_dict["do_add_trend"]:
+                    add_trend(
+                        year,
+                        var,
+                        yrs[0],
+                        yrs[1],
+                        format=param_dict["format"],
+                        ax=ax,
+                        lw=2 * param_dict["lw"],
+                        color=exp["color"],
+                        ohc=param_dict["ohc"],
+                        verbose=param_dict["verbose"],
+                        vol=param_dict["vol"],
+                    )
 
-    ax.set_ylim(get_ylim([-1, 1], extreme_values))
-    ax.set_title("Net atm water imbalance (evap-prec)")
+    ax.set_ylim(get_ylim(param_dict["default_ylim"], extreme_values))
+    if param_dict["set_axhline"]:
+        ax.axhline(y=param_dict["axhline_y"], lw=1, c="0.5")
+    ax.set_title(param_dict["title"])
     ax.set_xlabel("Year")
-    ax.set_ylabel("mm yr-1")
+    ax.set_ylabel(param_dict["ylabel"])
+    if param_dict["set_legend"]:
+        ax.legend(loc="best")
 
 
 PLOT_DICT = {
