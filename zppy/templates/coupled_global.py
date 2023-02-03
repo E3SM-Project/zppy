@@ -132,8 +132,38 @@ def get_ylim(standard_range, extreme_values):
 # -----------------------------------------------------------------------------
 # Plotting functions
 
+# Generic plot function
+def plot_generic(ax, xlim, exps, var_name):
+    print("plot_generic")
+    print(exps)
+    param_dict = {
+        "2nd_var": False,
+        "axhline_y": 0,
+        "check_exp_ocean": False,
+        "check_exp_vol": False,
+        "check_exp_year": True,
+        "default_ylim": [-1, 1],
+        "do_add_line": True,
+        "do_add_trend": True,
+        "format": "%4.2f",
+        "lw": 1.0,
+        "ohc": False,
+        "set_axhline": False,
+        "set_legend": True,
+        "shorten_year": False,
+        "title": var_name,
+        "use_getmoc": False,
+        "var": lambda exp: np.array(exp["annual"][var_name][0]),
+        "verbose": False,
+        "vol": False,
+        "ylabel": lambda exp: np.array(exp["annual"][var_name][1]),
+    }
+    plot(ax, xlim, exps, param_dict)
+
+
 # 1
 def plot_net_toa_flux_restom(ax, xlim, exps, rgn):
+    print("Plot 1: plot_net_toa_flux_restom")
     param_dict = {
         "2nd_var": False,
         "axhline_y": 0,
@@ -152,7 +182,7 @@ def plot_net_toa_flux_restom(ax, xlim, exps, rgn):
         "shorten_year": False,
         "title": "Net TOA flux (restom)",
         "use_getmoc": False,
-        "var": lambda exp: np.array(exp["annual"]["RESTOM"]),
+        "var": lambda exp: np.array(exp["annual"]["RESTOM"][0]),
         "verbose": False,
         "vol": False,
         "ylabel": "W m-2",
@@ -162,6 +192,7 @@ def plot_net_toa_flux_restom(ax, xlim, exps, rgn):
 
 # 2
 def plot_global_surface_air_temperature(ax, xlim, exps, rgn):
+    print("Plot 2: plot_global_surface_air_temperature")
     if rgn == "glb":
         region_title = "Global"
     elif rgn == "n":
@@ -188,7 +219,7 @@ def plot_global_surface_air_temperature(ax, xlim, exps, rgn):
         "shorten_year": False,
         "title": f"{region_title} surface air temperature",
         "use_getmoc": False,
-        "var": lambda exp: np.array(exp["annual"]["TREFHT"]) - 273.15,
+        "var": lambda exp: np.array(exp["annual"]["TREFHT"][0]) - 273.15,
         "verbose": False,
         "vol": False,
         "ylabel": "degC",
@@ -198,6 +229,7 @@ def plot_global_surface_air_temperature(ax, xlim, exps, rgn):
 
 # 3
 def plot_toa_radiation(ax, xlim, exps, rgn):
+    print("Plot 3: plot_toa_radiation")
     param_dict = {
         "2nd_var": True,
         "axhline_y": None,
@@ -216,7 +248,7 @@ def plot_toa_radiation(ax, xlim, exps, rgn):
         "shorten_year": False,
         "title": "TOA radiation: SW (solid), LW (dashed)",
         "use_getmoc": False,
-        "var": lambda exp: np.array(exp["annual"]["FSNTOA"]),
+        "var": lambda exp: np.array(exp["annual"]["FSNTOA"][0]),
         "verbose": None,
         "vol": None,
         "ylabel": "W m-2",
@@ -226,6 +258,7 @@ def plot_toa_radiation(ax, xlim, exps, rgn):
 
 # 4
 def plot_net_atm_energy_imbalance(ax, xlim, exps, rgn):
+    print("Plot 4: plot_net_atm_energy_imbalance")
     param_dict = {
         "2nd_var": False,
         "axhline_y": None,
@@ -244,8 +277,8 @@ def plot_net_atm_energy_imbalance(ax, xlim, exps, rgn):
         "shorten_year": False,
         "title": "Net atm energy imbalance (restom-ressurf)",
         "use_getmoc": False,
-        "var": lambda exp: np.array(exp["annual"]["RESTOM"])
-        - np.array(exp["annual"]["RESSURF"]),
+        "var": lambda exp: np.array(exp["annual"]["RESTOM"][0])
+        - np.array(exp["annual"]["RESSURF"][0]),
         "verbose": False,
         "vol": False,
         "ylabel": "W m-2",
@@ -255,6 +288,7 @@ def plot_net_atm_energy_imbalance(ax, xlim, exps, rgn):
 
 # 5
 def plot_change_ohc(ax, xlim, exps, rgn):
+    print("Plot 5: plot_change_ohc")
     param_dict = {
         "2nd_var": False,
         "axhline_y": 0,
@@ -283,6 +317,7 @@ def plot_change_ohc(ax, xlim, exps, rgn):
 
 # 6
 def plot_max_moc(ax, xlim, exps, rgn):
+    print("Plot 6: plot_max_moc")
     param_dict = {
         "2nd_var": False,
         "axhline_y": 10,
@@ -311,6 +346,7 @@ def plot_max_moc(ax, xlim, exps, rgn):
 
 # 7
 def plot_change_sea_level(ax, xlim, exps, rgn):
+    print("Plot 7: plot_change_sea_level")
     param_dict = {
         "2nd_var": False,
         "axhline_y": None,
@@ -343,6 +379,7 @@ def plot_change_sea_level(ax, xlim, exps, rgn):
 
 # 8
 def plot_net_atm_water_imbalance(ax, xlim, exps, rgn):
+    print("Plot 8: plot_net_atm_water_imbalance")
     param_dict = {
         "2nd_var": False,
         "axhline_y": None,
@@ -365,9 +402,12 @@ def plot_net_atm_water_imbalance(ax, xlim, exps, rgn):
             365
             * 86400
             * (
-                np.array(exp["annual"]["QFLX"])
+                np.array(exp["annual"]["QFLX"][0])
                 - 1e3
-                * (np.array(exp["annual"]["PRECC"]) + np.array(exp["annual"]["PRECL"]))
+                * (
+                    np.array(exp["annual"]["PRECC"][0])
+                    + np.array(exp["annual"]["PRECL"][0])
+                )
             )
         ),
         "verbose": False,
@@ -383,6 +423,9 @@ def plot(ax, xlim, exps, param_dict, rgn):
     ax.set_xlim(xlim)
     extreme_values = []
     for exp in exps:
+        print("exp[annual]=")
+        print(exp["annual"].keys())
+        # dict_keys(['TREFHT', 'year', 'FSNTOA', 'FLUT', 'PRECC', 'PRECL', 'QFLX', 'TS', 'FSNT', 'FLNT', 'ohc', 'volume'])
         if param_dict["check_exp_ocean"] and (exp["ocean"] is None):
             continue
         if param_dict["check_exp_vol"] and (exp["vol"] is None):
@@ -411,13 +454,13 @@ def plot(ax, xlim, exps, param_dict, rgn):
             # Specifically for plot_toa_radiation
             # TODO: if more plots require a 2nd variable, we can change `var` to be a list,
             # but that will be a more significant refactoring.
-            var = np.array(exp["annual"]["FLUT"])
+            var = np.array(exp["annual"]["FLUT"][0])
             ax.plot(year, var, lw=1.0, marker=None, ls=":", c=exp["color"])
             continue
         if param_dict["check_exp_year"] and exp["yr"] is None:
             continue
         elif param_dict["do_add_line"] or param_dict["do_add_trend"]:
-            print(exp["name"])
+            print(f"exp['name']={exp['name']}")
             for yrs in exp["yr"]:
                 if param_dict["do_add_line"]:
                     add_line(
@@ -444,13 +487,24 @@ def plot(ax, xlim, exps, param_dict, rgn):
                         verbose=param_dict["verbose"],
                         vol=param_dict["vol"],
                     )
-
     ax.set_ylim(get_ylim(param_dict["default_ylim"], extreme_values))
     if param_dict["set_axhline"]:
         ax.axhline(y=param_dict["axhline_y"], lw=1, c="0.5")
     ax.set_title(param_dict["title"])
     ax.set_xlabel("Year")
-    ax.set_ylabel(param_dict["ylabel"])
+    units = param_dict["ylabel"]
+    print(units)
+    try:
+        c = callable(units)
+    except Exception as e:
+        print(e)
+        raise e
+    if c:
+        print(exps[1])
+        units = units(exps[1])  # How do we know which var's units to put as the ylabel?
+        print(units)
+    print("EEE")
+    ax.set_ylabel(units)
     if param_dict["set_legend"]:
         ax.legend(loc="best")
 
@@ -519,6 +573,7 @@ def run(parameters, rgn):  # noqa: C901
     else:
         atmosphere_only = True
     plot_list = parameters[9].split(",")
+    extra_plots = parameters[10].split(",")
     exps = [
         {
             "atmos": "{}/post/atm/glb/ts/monthly/{}yr/glb.xml".format(
@@ -546,16 +601,26 @@ def run(parameters, rgn):  # noqa: C901
 
     # Variables to extract
     vars = ["RESTOM", "RESSURF", "TREFHT", "FSNTOA", "FLUT", "PRECC", "PRECL", "QFLX"]
+    # Add all the variables needed for the extra plots
+    vars += extra_plots
+    counter_invalid_vars = 0
 
     # Read data
     exp: Any
     for exp in exps:
-        print(exp["atmos"])
+        print(f"exp['atmos']={exp['atmos']}")
         ts = TS(exp["atmos"])
         exp["annual"] = {}
         for var in vars:
-            print(var)
-            v = ts.globalAnnual(var)
+            try:
+                v, units = ts.globalAnnual(var)
+            except Exception as e:
+                import traceback as tb
+                s = tb.format_exception(e)
+                print(s)
+                print(f"globalAnnual failed. Invalid var = {var}")
+                counter_invalid_vars += 1
+                continue
             if len(v.shape) > 1:
                 # number of years x 3 regions = v.shape
                 # 3 regions = global, northern hemisphere, southern hemisphere
@@ -569,7 +634,7 @@ def run(parameters, rgn):  # noqa: C901
                     n = 2
                 else:
                     raise RuntimeError(f"Invalid rgn={rgn}")
-                v = v[:, n]  # Just use nth column
+                v = v[:, n]  # Just use nth column         
             elif rgn != "glb":
                 # v only has one dimension -- glb.
                 # Therefore it is not possible to get n or s plots.
@@ -577,6 +642,8 @@ def run(parameters, rgn):  # noqa: C901
                     f"var={var} only has global data. Cannot process rgn={rgn}"
                 )
             exp["annual"][var] = v
+            print(f"var={var} units={units}")
+            exp["annual"][var] = (v, units)
             if "year" not in exp["annual"]:
                 time = v.getTime()
                 exp["annual"]["year"] = [x.year for x in time.asComponentTime()]
@@ -585,13 +652,13 @@ def run(parameters, rgn):  # noqa: C901
         # Optionally read ohc
         if exp["ocean"] is not None:
             ts = TS(exp["ocean"])
-            exp["annual"]["ohc"] = ts.globalAnnual("ohc")
+            exp["annual"]["ohc"], _ = ts.globalAnnual("ohc")
             # annomalies with respect to first year
             exp["annual"]["ohc"][:] = exp["annual"]["ohc"][:] - exp["annual"]["ohc"][0]
 
         if exp["vol"] is not None:
             ts = TS(exp["vol"])
-            exp["annual"]["volume"] = ts.globalAnnual("volume")
+            exp["annual"]["volume"], _ = ts.globalAnnual("volume")
             # annomalies with respect to first year
             exp["annual"]["volume"][:] = (
                 exp["annual"]["volume"][:] - exp["annual"]["volume"][0]
@@ -602,26 +669,38 @@ def run(parameters, rgn):  # noqa: C901
 
     xlim = [float(year1), float(year2)]
 
-    num_plots = len(plot_list)
+    num_initial_plots = len(plot_list)
+    num_extra_plots = len(extra_plots)
+    num_total_plots = num_initial_plots + num_extra_plots
     nrows = 4
     ncols = 2
     plots_per_page = nrows * ncols
-    num_pages = math.ceil(num_plots / plots_per_page)
+    num_pages = math.ceil(num_total_plots / plots_per_page)
 
-    i = 0
+    counter_initial_plots = 0
+    counter_extra_plots = 0
     # https://stackoverflow.com/questions/58738992/save-multiple-figures-with-subplots-into-a-pdf-with-multiple-pages
     pdf = matplotlib.backends.backend_pdf.PdfPages(f"{figstr}_{rgn}.pdf")
     for page in range(num_pages):
         fig = plt.figure(1, figsize=[13.5, 16.5])
         fig.suptitle(f"{figstr}_{rgn}")
         for j in range(plots_per_page):
-            if i < num_plots:
+            if counter_initial_plots < num_initial_plots:
                 ax = plt.subplot(nrows, ncols, j + 1)
                 try:
-                    PLOT_DICT[plot_list[i]](ax, xlim, exps, rgn)
+                    PLOT_DICT[plot_list[counter_initial_plots]](ax, xlim, exps, rgn)
                 except KeyError:
-                    raise KeyError(f"Invalid plot name: {plot_list[i]}")
-                i += 1
+                    raise KeyError(
+                        f"Invalid plot name: {plot_list[counter_initial_plots]}"
+                    )
+                counter_initial_plots += 1
+            elif counter_extra_plots < num_extra_plots:
+                ax = plt.subplot(nrows, ncols, j + 1)
+                try:
+                    plot_generic(ax, xlim, exps, extra_plots[counter_extra_plots])
+                except Exception:
+                    print(f"plot_generic failed. Invalid var={extra_plots[counter_extra_plots]}")
+                counter_extra_plots += 1
 
         fig.tight_layout()
         pdf.savefig(1)
