@@ -34,24 +34,36 @@ www={{ www }}
 case_dir={{ output }}
 global_ts_dir={{ global_time_series_dir }}
 
-# Options
-atmosphere_only={{ atmosphere_only }}
-atmosphere_only=${atmosphere_only,,}
-
 ################################################################################
 
-echo 'Create xml files for atm'
 export CDMS_NO_MPI=true
-cd ${case_dir}/post/atm/glb/ts/monthly/${ts_num_years}yr
-cdscan -x glb.xml *.nc
-if [ $? != 0 ]; then
-  cd {{ scriptDir }}
-  echo 'ERROR (1)' > {{ prefix }}.status
-  exit 1
+
+use_atm={{ use_atm }}
+if [[ ${use_atm,,} == "true" ]]; then
+    echo 'Create xml files for atm'
+    cd ${case_dir}/post/atm/glb/ts/monthly/${ts_num_years}yr
+    cdscan -x glb.xml *.nc
+    if [ $? != 0 ]; then
+      cd {{ scriptDir }}
+      echo 'ERROR (1)' > {{ prefix }}.status
+      exit 1
+    fi
 fi
 
-if [[ ${atmosphere_only} == "false" ]]; then
+use_lnd={{ use_lnd }}
+if [[ ${use_lnd,,} == "true" ]]; then
+    echo 'Create xml files for lnd'
+    cd ${case_dir}/post/lnd/glb/ts/monthly/${ts_num_years}yr
+    cdscan -x glb.xml *.nc
+    if [ $? != 0 ]; then
+      cd {{ scriptDir }}
+      echo 'ERROR (2)' > {{ prefix }}.status
+      exit 2
+    fi
+fi
 
+use_ocn={{ use_ocn }}
+if [[ ${use_ocn,,} == "true" ]]; then
     echo 'Create ocean time series'
     cd ${global_ts_dir}
     mkdir -p ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
@@ -59,10 +71,9 @@ if [[ ${atmosphere_only} == "false" ]]; then
     python ocean_month.py ${input} ${case_dir} ${start_yr} ${end_yr} ${ts_num_years}
     if [ $? != 0 ]; then
       cd {{ scriptDir }}
-      echo 'ERROR (2)' > {{ prefix }}.status
-      exit 2
+      echo 'ERROR (3)' > {{ prefix }}.status
+      exit 3
     fi
-
 
     echo 'Create xml for for ocn'
     export CDMS_NO_MPI=true
@@ -70,8 +81,8 @@ if [[ ${atmosphere_only} == "false" ]]; then
     cdscan -x glb.xml mpaso.glb*.nc
     if [ $? != 0 ]; then
       cd {{ scriptDir }}
-      echo 'ERROR (3)' > {{ prefix }}.status
-      exit 3
+      echo 'ERROR (4)' > {{ prefix }}.status
+      exit 4
     fi
 
     echo 'Copy moc file'
@@ -79,19 +90,20 @@ if [[ ${atmosphere_only} == "false" ]]; then
     cp ${moc_file} ../../../../../ocn/glb/ts/monthly/${ts_num_years}yr/
     if [ $? != 0 ]; then
       cd {{ scriptDir }}
-      echo 'ERROR (4)' > {{ prefix }}.status
-      exit 4
+      echo 'ERROR (5)' > {{ prefix }}.status
+      exit 5
     fi
 
 fi
 
 echo 'Update time series figures'
 cd ${global_ts_dir}
-python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} ${atmosphere_only} "{{ plot_names }}" {{ regions }}
+atmosphere_only={{ atmosphere_only }}
+python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} {{ plots_original }} ${atmosphere_only,,} {{ plots_atm }} {{ plots_ice }} {{ plots_lnd }} {{ plots_ocn }} {{ regions }}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (5)' > {{ prefix }}.status
-  exit 5
+  echo 'ERROR (6)' > {{ prefix }}.status
+  exit 6
 fi
 
 
@@ -113,8 +125,8 @@ f=${www}/${case}/global_time_series
 mkdir -p ${f}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (6)' > {{ prefix }}.status
-  exit 6
+  echo 'ERROR (7)' > {{ prefix }}.status
+  exit 7
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
@@ -135,8 +147,8 @@ done
 rsync -a --delete ${results_dir_absolute_path} ${www}/${case}/global_time_series
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (7)' > {{ prefix }}.status
-  exit 7
+  echo 'ERROR (8)' > {{ prefix }}.status
+  exit 8
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
