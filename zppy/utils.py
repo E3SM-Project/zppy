@@ -16,6 +16,11 @@ def getTasks(config, section_name):
 
     tasks = []
 
+    # Sanity check
+    if not section_name in config:
+        print('WARNING: Skipping section not found = "%s"' % (section_name))
+        return tasks
+
     # List of sub-sections
     sub_section_names = config[section_name].sections
 

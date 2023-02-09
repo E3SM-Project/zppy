@@ -1,6 +1,8 @@
 import argparse
 import errno
+import importlib
 import os
+import sys
 from typing import List
 
 from configobj import ConfigObj
@@ -17,7 +19,6 @@ from zppy.mpas_analysis import mpas_analysis
 from zppy.tc_analysis import tc_analysis
 from zppy.ts import ts
 from zppy.utils import checkStatus, submitScript
-
 
 # FIXME: C901 'main' is too complex (19)
 def main():  # noqa: C901
@@ -168,6 +169,25 @@ def main():  # noqa: C901
 
     # ilamb tasks
     existing_bundles = ilamb(config, scriptDir, existing_bundles, job_ids_file)
+
+    # zppy external plugins
+    for plugin in user_config["default"]["plugins"]:
+        # Sanity check: plugin is a file and has .py extension
+        if not ( os.path.isfile(plugin) and plugin.endswith('.py') ):
+            print('WARNING: Skipping invalid external plugin = "%s"' % (plugin))
+            continue
+        # Extract path and name (without extension)
+        path, name = os.path.split(plugin)
+        name = os.path.splitext(name)[0]
+        # Import plugin module
+        spec = importlib.util.spec_from_file_location(name, plugin)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+        spec.loader.exec_module(module)
+        # Get plugin module function
+        plugin_func = getattr(module, name)
+        # Call plugin
+        existing_bundles = plugin_func(path, config, scriptDir, existing_bundles, job_ids_file)
 
     # Submit bundle jobs
     for b in existing_bundles:
