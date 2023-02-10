@@ -1,6 +1,7 @@
 import argparse
 import errno
 import importlib
+import io
 import os
 import sys
 from typing import List
@@ -41,6 +42,20 @@ def main():  # noqa: C901
     # Read configuration file and validate it
     default_config = os.path.join(templateDir, "default.ini")
     user_config = ConfigObj(args.config, configspec=default_config)
+
+    # Read a second time with defaults for plugins
+    with open(default_config) as f:
+        default = f.read()
+    for plugin in user_config["default"]["plugins"]:
+        plugin_default_file = os.path.join(
+            os.path.dirname(plugin), "templates/default.ini"
+        )
+        if os.path.isfile(plugin_default_file):
+            with open(plugin_default_file) as f:
+                default += "\n" + f.read()
+    user_config = ConfigObj(args.config, configspec=io.StringIO(default))
+
+    # Handle 'campaign' option
     if "campaign" in user_config["default"]:
         campaign = user_config["default"]["campaign"]
     else:
@@ -57,6 +72,8 @@ def main():  # noqa: C901
         config = campaign_config
     else:
         config = user_config
+
+    # Validate
     _validate_config(config)
 
     # Add templateDir to config
@@ -173,7 +190,7 @@ def main():  # noqa: C901
     # zppy external plugins
     for plugin in user_config["default"]["plugins"]:
         # Sanity check: plugin is a file and has .py extension
-        if not ( os.path.isfile(plugin) and plugin.endswith('.py') ):
+        if not (os.path.isfile(plugin) and plugin.endswith(".py")):
             print('WARNING: Skipping invalid external plugin = "%s"' % (plugin))
             continue
         # Extract path and name (without extension)
@@ -187,7 +204,9 @@ def main():  # noqa: C901
         # Get plugin module function
         plugin_func = getattr(module, name)
         # Call plugin
-        existing_bundles = plugin_func(path, config, scriptDir, existing_bundles, job_ids_file)
+        existing_bundles = plugin_func(
+            path, config, scriptDir, existing_bundles, job_ids_file
+        )
 
     # Submit bundle jobs
     for b in existing_bundles:
