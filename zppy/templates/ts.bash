@@ -145,13 +145,13 @@ EOF
   srun -N 1 e3sm_to_cmip \
   --output-path \
   ${dest_cmip}/${tmp_dir} \
-  {% if input_files == 'elm.h0' -%}
+  {% if input_files.split(".")[0] == 'clm2' or input_files.split(".")[0] == 'elm' -%}
   --var-list \
   'mrsos, mrso, mrfso, mrros, mrro, prveg, evspsblveg, evspsblsoi, tran, tsl, lai, cLitter, cProduct, cSoilFast, cSoilMedium, cSoilSlow, fFire, fHarvest, cVeg, nbp, gpp, ra, rh' \
   --realm \
   lnd \
   {% endif -%}
-  {% if input_files == 'eam.h0' -%}
+  {% if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' -%}
   --var-list \
   'pr, tas, rsds, rlds, rsus' \
   --realm \
