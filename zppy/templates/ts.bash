@@ -105,7 +105,7 @@ cat input.txt | ncclimo \
 --tpd={{ tpd }} \
 {%- endif %}
 {%- if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' or input_files.split(".")[0] == 'elm' or input_files.split(".")[0] == 'clm2'  %}
---prc_typ={{ input_files.split(".")[0] }}
+--prc_typ={{ input_files.split(".")[0][:3] }}
 {%- else %}
 --prc_typ=sgs
 {%- endif %}
