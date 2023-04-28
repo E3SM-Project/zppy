@@ -3,7 +3,6 @@ import errno
 import importlib
 import io
 import os
-import sys
 from typing import List
 
 from configobj import ConfigObj
@@ -44,13 +43,30 @@ def main():  # noqa: C901
     default_config = os.path.join(templateDir, "default.ini")
     user_config = ConfigObj(args.config, configspec=default_config)
 
-    # Read a second time with defaults for plugins
+    # Load all external plugins. Build a list.
+    plugins = []
+    for plugin_name in user_config["default"]["plugins"]:
+        # Load plugin module
+        try:
+            plugin_module = importlib.import_module(plugin_name)
+        except BaseException:
+            raise ValueError(
+                "Could not load external zppy plugin module {}".format(plugin_name)
+            )
+        # Path
+        plugin_path = plugin_module.__path__[0]
+        # Add to list
+        plugins.append(
+            {"name": plugin_name, "module": plugin_module, "path": plugin_path}
+        )
+
+    # Read configuration files again, this time including all plugins
     with open(default_config) as f:
         default = f.read()
-    for plugin in user_config["default"]["plugins"]:
-        plugin_default_file = os.path.join(
-            os.path.dirname(plugin), "templates/default.ini"
-        )
+    for plugin in plugins:
+        # Read plugin 'default.ini' if it exists
+        plugin_default_file = os.path.join(plugin["path"], "templates/default.ini")
+        print(plugin_default_file)
         if os.path.isfile(plugin_default_file):
             with open(plugin_default_file) as f:
                 default += "\n" + f.read()
@@ -189,24 +205,12 @@ def main():  # noqa: C901
     existing_bundles = ilamb(config, scriptDir, existing_bundles, job_ids_file)
 
     # zppy external plugins
-    for plugin in user_config["default"]["plugins"]:
-        # Sanity check: plugin is a file and has .py extension
-        if not (os.path.isfile(plugin) and plugin.endswith(".py")):
-            print('WARNING: Skipping invalid external plugin = "%s"' % (plugin))
-            continue
-        # Extract path and name (without extension)
-        path, name = os.path.split(plugin)
-        name = os.path.splitext(name)[0]
-        # Import plugin module
-        spec = importlib.util.spec_from_file_location(name, plugin)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[name] = module
-        spec.loader.exec_module(module)
+    for plugin in plugins:
         # Get plugin module function
-        plugin_func = getattr(module, name)
+        plugin_func = getattr(plugin["module"], plugin["name"])
         # Call plugin
         existing_bundles = plugin_func(
-            path, config, scriptDir, existing_bundles, job_ids_file
+            plugin["path"], config, scriptDir, existing_bundles, job_ids_file
         )
 
     # Submit bundle jobs
