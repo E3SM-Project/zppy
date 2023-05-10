@@ -24,8 +24,13 @@ cd ${workdir}
 
 {% if frequency == 'monthly' %}
 # --- Monthly climatologies ---
-ncclimo \
+/global/homes/z/zender/bin_perlmutter/ncclimo --npo \
+{% if prc_typ == 'eamxx' -%}
+--case={{ case }}.{{ input_files }}.0001-01-01-00000.nc \
+--fml_nm={{ case }} \
+{%- else -%}
 --case={{ case }} \
+{%- endif %}
 --jobs=${SLURM_NNODES} \
 --thr=1 \
 {%- if exclude %}
@@ -47,11 +52,7 @@ ncclimo \
 --output=trash \
 --regrid=output \
 {%- endif %}
-{%- if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' or input_files.split(".")[0] == 'elm' or input_files.split(".")[0] == 'clm2'  %}
---prc_typ={{ input_files.split(".")[0] }}
-{%- else -%}
---prc_typ=sgs
-{%- endif %}
+--prc_typ={{ prc_typ }}
 
 {% elif frequency.startswith('diurnal') %}
 
@@ -97,7 +98,7 @@ if grep -q "*" input.txt; then
   exit 1
 fi
 # Now, call ncclimo
-cat input.txt | ncclimo \
+cat input.txt | /global/homes/z/zender/bin_perlmutter/ncclimo --npo \
 --case={{ case }}.{{ input_files }} \
 --jobs=${SLURM_NNODES} \
 --thr=1 \

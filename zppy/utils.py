@@ -136,26 +136,36 @@ def getYears(years_list):
 
 
 # -----------------------------------------------------------------------------
-# Return component name from input files (e.g. 'cam.h0', 'clm2.h0', ...)
+# Return output component name and procedure type based on either 
+# input_component or input_files
 
+def getComponent(input_component, input_files):
 
-def getComponent(input_files):
+    if input_component != '':
+        tmp = input_component
+    else:
+        tmp = input_files.split(".")[0]
 
-    tmp = input_files.split(".")[0]
-    if tmp in ("cam", "eam"):
+    # Default ncclim procedure type is "sgs"
+    prc_typ = "sgs"
+
+    # Output component (for directory structure) and ncclimo procedure type
+    if tmp in ("cam", "eam", "eamxx"):
         component = "atm"
+        prc_typ = tmp
     elif tmp in ("cpl",):
         component = "cpl"
     elif tmp in ("clm2", "elm"):
         component = "lnd"
+        prc_typ = tmp
     elif tmp in ("mosart",):
         component = "rof"
     else:
         raise ValueError(
-            "Cannot extract component name from input_files %s" % (input_files)
+            "Cannot extract output component name from input_component or input_files %s" % (input_component,input_files)
         )
 
-    return component
+    return component, prc_typ
 
 
 # -----------------------------------------------------------------------------
