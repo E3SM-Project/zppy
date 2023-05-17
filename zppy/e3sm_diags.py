@@ -57,6 +57,19 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                 c["sub"] = c["subsection"]
             else:
                 c["sub"] = c["grid"]
+            # Make a guess for observation paths, if need be
+            if c["reference_data_path"] == "":
+                c[
+                    "reference_data_path"
+                ] = f"{c['diagnostics_base_path']}/observations/Atm/climatology/"
+            if ("tc_analysis" in c["sets"]) and (c["tc_obs"] == ""):
+                c[
+                    "tc_obs"
+                ] = f"{c['diagnostics_base_path']}/observations/Atm/tc-analysis/"
+            if ("ts_num_years" in c.keys()) and (c["obs_ts"] == ""):
+                c[
+                    "obs_ts"
+                ] = f"{c['diagnostics_base_path']}/observations/Atm/time-series/"
             if c["run_type"] == "model_vs_obs":
                 prefix = "e3sm_diags_%s_%s_%04d-%04d" % (
                     c["sub"],
