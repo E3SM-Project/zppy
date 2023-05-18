@@ -123,8 +123,6 @@ def check_mismatched_images(
 
 
 def get_chyrsalis_expansions(config):
-    diags_base_path = config.get("diagnostics", "base_path")
-    unified_path = config.get("e3sm_unified", "base_path")
     # Note: `os.environ.get("USER")` also works. Here we're already using mache but not os, so using mache.
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
@@ -133,14 +131,9 @@ def get_chyrsalis_expansions(config):
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220614",
-        "diags_obs_climo": f"{diags_base_path}/observations/Atm/climatology/",
-        "diags_obs_tc": f"{diags_base_path}/observations/Atm/tc-analysis/",
-        "diags_obs_ts": f"{diags_base_path}/observations/Atm/time-series/",
         "diags_walltime": "2:00:00",
-        "environment_commands": f"source {unified_path}/load_latest_e3sm_unified_chrysalis.sh",
         "environment_commands_test": "source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.8.0rc6_chrysalis.sh",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
-        "mapping_path": "/home/ac.zender/data/maps/",
         "partition_long": "compute",
         "partition_short": "debug",
         "qos_long": "regular",
@@ -154,8 +147,6 @@ def get_chyrsalis_expansions(config):
 
 
 def get_compy_expansions(config):
-    diags_base_path = config.get("diagnostics", "base_path")
-    unified_path = config.get("e3sm_unified", "base_path")
     # Note: `os.environ.get("USER")` also works. Here we're already using mache but not os, so using mache.
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
@@ -164,14 +155,9 @@ def get_compy_expansions(config):
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /qfs/people/fors729/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220722",
-        "diags_obs_climo": f"{diags_base_path}/observations/Atm/climatology/",
-        "diags_obs_tc": f"{diags_base_path}/observations/Atm/tc-analysis/",
-        "diags_obs_ts": f"{diags_base_path}/observations/Atm/time-series/",
         "diags_walltime": "03:00:00",
-        "environment_commands": f"source {unified_path}/load_latest_e3sm_unified_compy.sh",
         "environment_commands_test": "source /share/apps/E3SM/conda_envs/test_e3sm_unified_1.8.0rc6_compy.sh",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
-        "mapping_path": "/compyfs/zender/maps/",
         "partition_long": "slurm",
         "partition_short": "short",
         "qos_long": "regular",
@@ -185,8 +171,6 @@ def get_compy_expansions(config):
 
 
 def get_perlmutter_expansions(config):
-    diags_base_path = config.get("diagnostics", "base_path")
-    unified_path = config.get("e3sm_unified", "base_path")
     # Note: `os.environ.get("USER")` also works. Here we're already using mache but not os, so using mache.
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
@@ -195,14 +179,9 @@ def get_perlmutter_expansions(config):
         "constraint": "cpu",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /global/homes/f/forsyth/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220715",
-        "diags_obs_climo": f"{diags_base_path}/observations/Atm/climatology/",
-        "diags_obs_tc": f"{diags_base_path}/observations/Atm/tc-analysis/",
-        "diags_obs_ts": f"{diags_base_path}/observations/Atm/time-series/",
         "diags_walltime": "6:00:00",
-        "environment_commands": f"source {unified_path}/load_latest_e3sm_unified_pm-cpu.sh",
         "environment_commands_test": "source /global/common/software/e3sm/anaconda_envs/test_e3sm_unified_1.8.0rc6_pm-cpu.sh",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
-        "mapping_path": "/global/homes/z/zender/data/maps/",
         "partition_long": "",
         "partition_short": "",
         "qos_long": "regular",
@@ -257,6 +236,10 @@ def generate_cfgs(unified_testing=False):
     expansions = get_expansions()
     if unified_testing:
         expansions["environment_commands"] = expansions["environment_commands_test"]
+    else:
+        # The cfg doesn't need this line,
+        # but it would be difficult to only write environment_commands in the unified_testing case.
+        expansions["environment_commands"] = ""
     machine = expansions["machine"]
 
     cfg_names = ["bundles", "complete_run"]
