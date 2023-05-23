@@ -127,6 +127,9 @@ create a **(b) Development Environment**.
 Installation using mamba
 ------------------------
 
+If you see error messages when running the following, see the
+**Troubleshooting** section below.
+
 First, make sure that you're using ``bash``. ::
 
    bash
