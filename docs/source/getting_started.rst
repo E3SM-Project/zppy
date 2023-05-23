@@ -127,9 +127,6 @@ create a **(b) Development Environment**.
 Installation using mamba
 ------------------------
 
-If you see error messages when running the following, see the
-**Troubleshooting** section below.
-
 First, make sure that you're using ``bash``. ::
 
    bash
@@ -137,6 +134,13 @@ First, make sure that you're using ``bash``. ::
 You must have a conda base enviornment installed as well.
 See :ref:`"Installation in a Conda Environment" <conda_environment>` section above for
 installing conda.
+
+These steps should not be necessary if you installed Mambaforge as suggested
+above but may be needed if you have previously installed Miniconda3 instead: ::
+
+   conda install -y -n base mamba
+   conda config --add channels conda-forge
+   conda config --set channel_priority strict
 
 Create a new conda environment with ``zppy`` installed and activate it: ::
 
@@ -155,23 +159,6 @@ If you **installed into your own conda environment** (e.g., not through the
 unified environment), you can update ``zppy`` by doing the following:  ::
 
     mamba update zppy
-
-Troubleshooting
----------------
-
-If you do not seem to have the ``mamba`` command, install ``mamba`` into your
-conda ``base`` environment: ::
-
-   conda install -y -n base mamba
-
-If you get errors that the ``zppy`` package cannot be found, it could be
-that you have not added the conda-forge channel to your conda environment: ::
-
-   conda config --add channels conda-forge
-   conda config --set channel_priority strict
-
-If you installed Mambaforge as recommended above, neither of these issues
-should arise.
 
 .. _dev-env:
 
