@@ -4,6 +4,7 @@ import shlex
 import stat
 import time
 from subprocess import PIPE, Popen
+from typing import Any, Dict, List
 
 # -----------------------------------------------------------------------------
 # Process specified section and its sub-sections to build list of tasks
@@ -14,10 +15,12 @@ from subprocess import PIPE, Popen
 
 def getTasks(config, section_name):
 
-    tasks = []
+    # mypy: resolves error: Need type annotation for "tasks" (hint: "tasks: List[<type>] = ...")
+    tasks: List[Dict[str, Any]] = []
 
     # Sanity check
-    if not section_name in config:
+    # flake8: resolves E713 test for membership should be 'not in'
+    if section_name not in config:
         print('WARNING: Skipping section not found = "%s"' % (section_name))
         return tasks
 

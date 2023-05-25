@@ -45,20 +45,21 @@ def main():  # noqa: C901
 
     # Load all external plugins. Build a list.
     plugins = []
-    for plugin_name in user_config["default"]["plugins"]:
-        # Load plugin module
-        try:
-            plugin_module = importlib.import_module(plugin_name)
-        except BaseException:
-            raise ValueError(
-                "Could not load external zppy plugin module {}".format(plugin_name)
+    if "plugins" in user_config["default"].keys():
+        for plugin_name in user_config["default"]["plugins"]:
+            # Load plugin module
+            try:
+                plugin_module = importlib.import_module(plugin_name)
+            except BaseException:
+                raise ValueError(
+                    "Could not load external zppy plugin module {}".format(plugin_name)
+                )
+            # Path
+            plugin_path = plugin_module.__path__[0]
+            # Add to list
+            plugins.append(
+                {"name": plugin_name, "module": plugin_module, "path": plugin_path}
             )
-        # Path
-        plugin_path = plugin_module.__path__[0]
-        # Add to list
-        plugins.append(
-            {"name": plugin_name, "module": plugin_module, "path": plugin_path}
-        )
 
     # Read configuration files again, this time including all plugins
     with open(default_config) as f:
