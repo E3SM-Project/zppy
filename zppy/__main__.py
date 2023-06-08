@@ -1,5 +1,7 @@
 import argparse
 import errno
+import importlib
+import io
 import os
 from typing import List
 
@@ -40,6 +42,38 @@ def main():  # noqa: C901
     # Read configuration file and validate it
     default_config = os.path.join(templateDir, "default.ini")
     user_config = ConfigObj(args.config, configspec=default_config)
+
+    # Load all external plugins. Build a list.
+    plugins = []
+    if "plugins" in user_config["default"].keys():
+        for plugin_name in user_config["default"]["plugins"]:
+            # Load plugin module
+            try:
+                plugin_module = importlib.import_module(plugin_name)
+            except BaseException:
+                raise ValueError(
+                    "Could not load external zppy plugin module {}".format(plugin_name)
+                )
+            # Path
+            plugin_path = plugin_module.__path__[0]
+            # Add to list
+            plugins.append(
+                {"name": plugin_name, "module": plugin_module, "path": plugin_path}
+            )
+
+    # Read configuration files again, this time including all plugins
+    with open(default_config) as f:
+        default = f.read()
+    for plugin in plugins:
+        # Read plugin 'default.ini' if it exists
+        plugin_default_file = os.path.join(plugin["path"], "templates/default.ini")
+        print(plugin_default_file)
+        if os.path.isfile(plugin_default_file):
+            with open(plugin_default_file) as f:
+                default += "\n" + f.read()
+    user_config = ConfigObj(args.config, configspec=io.StringIO(default))
+
+    # Handle 'campaign' option
     if "campaign" in user_config["default"]:
         campaign = user_config["default"]["campaign"]
     else:
@@ -56,6 +90,8 @@ def main():  # noqa: C901
         config = campaign_config
     else:
         config = user_config
+
+    # Validate
     _validate_config(config)
 
     # Add templateDir to config
@@ -168,6 +204,15 @@ def main():  # noqa: C901
 
     # ilamb tasks
     existing_bundles = ilamb(config, scriptDir, existing_bundles, job_ids_file)
+
+    # zppy external plugins
+    for plugin in plugins:
+        # Get plugin module function
+        plugin_func = getattr(plugin["module"], plugin["name"])
+        # Call plugin
+        existing_bundles = plugin_func(
+            plugin["path"], config, scriptDir, existing_bundles, job_ids_file
+        )
 
     # Submit bundle jobs
     for b in existing_bundles:
