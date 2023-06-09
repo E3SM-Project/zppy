@@ -9,7 +9,6 @@ from configobj import ConfigObj
 from mache import MachineInfo
 from validate import Validator
 
-from zppy.amwg import amwg
 from zppy.bundle import Bundle, predefined_bundles
 from zppy.climo import climo
 from zppy.e3sm_diags import e3sm_diags
@@ -190,9 +189,6 @@ def main():  # noqa: C901
 
     # e3sm_diags tasks
     existing_bundles = e3sm_diags(config, scriptDir, existing_bundles, job_ids_file)
-
-    # amwg tasks
-    existing_bundles = amwg(config, scriptDir, existing_bundles, job_ids_file)
 
     # mpas_analysis tasks
     existing_bundles = mpas_analysis(config, scriptDir, existing_bundles, job_ids_file)
