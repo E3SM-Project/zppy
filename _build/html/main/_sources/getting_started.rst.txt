@@ -1,5 +1,5 @@
 .. _getting-started:
-  
+
 ***************
 Getting started
 ***************
@@ -77,32 +77,38 @@ Others/Local
 
 If the system doesn't come with conda pre-installed, follow these instructions:
 
-1. Download Conda
+1. Download Mambaforge
 
     Linux
         ::
 
-            wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+            wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
 
-    MacOS (note that ``zppy`` is not supported on MacOS, but it may be useful to contribute to the documentation on MacOS)
+    MacOS x86_64 (note that ``zppy`` is not supported on MacOS, but it may be useful to contribute to the documentation on MacOS)
         ::
 
-            wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+            wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-x86_64.sh
 
-2. Install Conda
+2. Install Mambaforge
 
     Linux
         ::
 
-            bash ./Miniconda3-latest-Linux-x86_64.sh
+            bash ./Mambaforge-Linux-x86_64.sh
 
 
-    MacOS
+    MacOS x86_64
         ::
 
-            bash ./Miniconda3-latest-MacOSX-x86_64.sh
+            bash ./Mambaforge-MacOSX-x86_64.sh
 
-    - ``Do you wish the installer to initialize Miniconda3 by running conda init? [yes|no] yes``
+    When you see: ::
+
+        by running conda init? [yes|no]
+        [no] >>> yes
+
+    respond with ``yes`` so ``conda`` and ``mamba`` commands are available on
+    initializing a new bash terminal.
 
 3. If you are working on a machine/network that intercepts SSL communications (such as
 acme1), you will get an SSL error unless you disable the SSL verification:
@@ -112,45 +118,47 @@ acme1), you will get an SSL error unless you disable the SSL verification:
         conda config --set ssl_verify false
         binstar config --set ssl_verify False
 
-4. Set the following:
-
-    ::
-
-        conda config --add channels conda-forge
-        conda config --set channel_priority strict
-
-5. Once conda is properly working, you can install the **(a) Latest Stable Release** or
+4. Once conda and mamba are properly working, you can install the **(a) Latest Stable Release** or
 create a **(b) Development Environment**.
 
 (a) Latest Stable Release
 =========================
 
-Installation using conda
+Installation using mamba
 ------------------------
 
 First, make sure that you're using ``bash``. ::
 
-   $ bash
+   bash
 
-You must have Anaconda installed as well.
+You must have a conda base enviornment installed as well.
 See :ref:`"Installation in a Conda Environment" <conda_environment>` section above for
 installing conda.
-Create a new Anaconda environment with ``zppy`` installed and activate it: ::
 
-   $ conda create -n zppy_env -c e3sm -c conda-forge zppy
-   $ source activate zppy_env
+These steps should not be necessary if you installed Mambaforge as suggested
+above but may be needed if you have previously installed Miniconda3 instead: ::
 
-Or you can install ``zppy`` in an existing environment. ::
+   conda install -y -n base mamba
+   conda config --add channels conda-forge
+   conda config --set channel_priority strict
 
-   $ conda install zppy -c e3sm -c conda-forge
+Create a new conda environment with ``zppy`` installed and activate it: ::
+
+   mamba create -n zppy_env zppy
+   conda activate zppy_env
+
+Or (less recommended because of potential conflicts) you can install ``zppy``
+in an existing environment. ::
+
+   mamba install zppy
 
 Updating
 --------
 
-If you **installed via Anaconda** (e.g., not through the unified environment),
-you can update ``zppy`` by doing the following:  ::
+If you **installed into your own conda environment** (e.g., not through the
+unified environment), you can update ``zppy`` by doing the following:  ::
 
-    conda update zppy -c e3sm -c conda-forge
+    mamba update zppy
 
 .. _dev-env:
 
@@ -217,7 +225,7 @@ Furthermore, the dev environment includes quality assurance (QA) tools such as c
 
     ::
 
-        conda clean --all
+        mamba clean --all
 
 4. Enter the fork's clone.
 
@@ -232,7 +240,7 @@ Furthermore, the dev environment includes quality assurance (QA) tools such as c
 
     ::
 
-        conda env create -f conda/dev.yml
+        mamba env create -f conda/dev.yml
         conda activate zppy_dev
 
 6. Install ``pre-commit``.
