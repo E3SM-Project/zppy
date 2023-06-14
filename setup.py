@@ -28,7 +28,6 @@ setup(
     author_email="forsyth2@llnl.gov, golaz1@llnl.gov",
     description="Post-processing software for E3SM",
     python_requires=">=3.6",
-    intall_requires=["configobj>=5.0.0,<6.0.0", "jinja2>=2.0.0"],
     packages=find_packages(include=["zppy", "zppy.*"]),
     package_data={"": data_files},
     entry_points={"console_scripts": ["zppy=zppy.__main__:main"]},
