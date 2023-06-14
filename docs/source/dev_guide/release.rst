@@ -68,6 +68,14 @@ Releasing on GitHub: release candidates
 
 1. Create a tag for the release candidate at https://github.com/E3SM-Project/zppy/tags.
 
+     ::
+
+	$ git checkout main
+	$ git fetch upstream
+	$ git rebase upstream/main
+	$ git tag -a v1.1.0rc1 -m "v1.1.0rc1"
+	$ git push upstream v1.1.0rc1
+
 Releasing on GitHub: production releases
 ----------------------------------------
 
@@ -88,9 +96,9 @@ Releasing on conda-forge: release candidates
 
    * Start from the current dev branch and update the version number and the sha256 sum manually.
    * Set the build number back to 0 if needed.
-   * Make the dev branch the target of the PR. Then, the package build on conda-forge will end up with the ``e3sm_dev`` label.
+   * Make the dev branch the target of the PR. Then, the package build on conda-forge will end up with the ``zppy_dev`` label.
 
-2. Check the https://anaconda.org/conda-forge/zppy page to view the newly updated package. Release candidates are assigned the ``e3sm_dev`` label.
+2. Check the https://anaconda.org/conda-forge/zppy page to view the newly updated package. Release candidates are assigned the ``zppy_dev`` label.
 
 Releasing on conda-forge: production releases
 ---------------------------------------------
