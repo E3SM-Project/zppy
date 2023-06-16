@@ -314,28 +314,25 @@ environment we’re using, we probably want to rerun everything using the new en
 <span class="linenos">72</span><span class="w">  </span><span class="na">climo_diurnal_subsection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;atm_monthly_diurnal_8xdaily_180x360_aave&quot;</span>
 <span class="linenos">73</span><span class="w">  </span><span class="na">climo_monthly_frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;diurnal_8xdaily&quot;</span>
 <span class="linenos">74</span>
-<span class="linenos">75</span><span class="k">[amwg]</span>
-<span class="linenos">76</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">False</span>
-<span class="linenos">77</span>
-<span class="linenos">78</span><span class="k">[mpas_analysis]</span>
-<span class="linenos">79</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">80</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;24:00:00&quot;</span>
-<span class="linenos">81</span><span class="na">parallelTaskCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">6</span>
-<span class="linenos">82</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;,</span>
-<span class="linenos">83</span><span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;,</span>
-<span class="linenos">84</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="s">&quot;51-70&quot;,</span>
-<span class="linenos">85</span><span class="na">mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;EC30to60E2r2&quot;</span>
-<span class="linenos">86</span><span class="na">anomalyRefYear</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">51</span>
-<span class="linenos">87</span>
-<span class="linenos">88</span><span class="k">[global_time_series]</span>
-<span class="linenos">89</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">90</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;,</span>
-<span class="linenos">91</span><span class="na">ts_num_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">10</span>
-<span class="linenos">92</span><span class="na">figstr</span><span class="o">=</span><span class="s">coupled_v2rc3e</span>
-<span class="linenos">93</span><span class="na">moc_file</span><span class="o">=</span><span class="s">mocTimeSeries_0051-0070.nc</span>
-<span class="linenos">94</span><span class="na">experiment_name</span><span class="o">=</span><span class="s">20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis</span>
-<span class="linenos">95</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;,</span>
-<span class="linenos">96</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">75</span><span class="k">[mpas_analysis]</span>
+<span class="linenos">76</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="linenos">77</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;24:00:00&quot;</span>
+<span class="linenos">78</span><span class="na">parallelTaskCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">6</span>
+<span class="linenos">79</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">80</span><span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">81</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">82</span><span class="na">mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;EC30to60E2r2&quot;</span>
+<span class="linenos">83</span><span class="na">anomalyRefYear</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">51</span>
+<span class="linenos">84</span>
+<span class="linenos">85</span><span class="k">[global_time_series]</span>
+<span class="linenos">86</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="linenos">87</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">88</span><span class="na">ts_num_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">10</span>
+<span class="linenos">89</span><span class="na">figstr</span><span class="o">=</span><span class="s">coupled_v2rc3e</span>
+<span class="linenos">90</span><span class="na">moc_file</span><span class="o">=</span><span class="s">mocTimeSeries_0051-0070.nc</span>
+<span class="linenos">91</span><span class="na">experiment_name</span><span class="o">=</span><span class="s">20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis</span>
+<span class="linenos">92</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">93</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="s">&quot;51-70&quot;,</span>
 </pre></div>
 </div>
 <p>5. We can now test out <code class="docutils literal notranslate"><span class="pre">zppy</span></code> by running <code class="docutils literal notranslate"><span class="pre">zppy</span> <span class="pre">-c</span> <span class="pre">e3sm_unified_test_simulation.cfg</span></code>.
