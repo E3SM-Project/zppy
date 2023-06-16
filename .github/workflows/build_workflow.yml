@@ -64,7 +64,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: zppy_dev
-	  miniforge-variant: Mambaforge
+          miniforge-variant: Mambaforge
           miniforge-version: latest
           use-mamba: true
           mamba-version: "*"
