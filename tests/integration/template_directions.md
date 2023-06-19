@@ -9,10 +9,23 @@ rm -rf #expand user_www#zppy_test_bundles_www/v2.LR.historical_0201
 rm -rf #expand user_output#zppy_test_bundles_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
+
+# Run first set of jobs:
 zppy -c tests/integration/generated/test_bundles_#expand machine#.cfg
-# bundle1 and bundle2 should run. After they finish, invoke zppy again to resolve remaining dependencies:
+# bundle1 and bundle2 should run. After they finish, check the results:
+cd #expand user_output#zppy_test_bundles_output/v2.LR.historical_0201/post/scripts
+grep -v "OK" *status
+# Nothing should print
+
+# Now, invoke zppy again to run jobs that needed to wait for dependencies:
 zppy -c tests/integration/generated/test_bundles_#expand machine#.cfg
-# bundle3 and ilamb should run
+# bundle3 and ilamb should run. After they finish, check the results:
+cd #expand user_output#zppy_test_bundles_output/v2.LR.historical_0201/post/scripts
+grep -v "OK" *status
+# Nothing should print
+
+# If a final release has just been made, run:
+cp #expand expected_dir#expected_bundles expected_bundles_v<version>
 ```
 
 ### test_complete_run
@@ -22,7 +35,16 @@ rm -rf #expand user_www#zppy_test_complete_run_www/v2.LR.historical_0201
 rm -rf #expand user_output#zppy_test_complete_run_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
+
+# Run jobs:
 zppy -c tests/integration/generated/test_complete_run_#expand machine#.cfg
+# After they finish, check the results:
+cd #expand user_output#zppy_test_complete_run_output/v2.LR.historical_0201/post/scripts
+grep -v "OK" *status
+# Nothing should print
+
+# If a final release has just been made, run:
+cp #expand expected_dir#expected_complete_run expected_complete_run_v<version>
 ```
 
 ## Commands to run to replace outdated expected files
@@ -39,7 +61,7 @@ mv test_bash_generation_output/post/scripts #expand expected_dir#expected_bash_f
 python -u -m unittest tests/integration/test_bash_generation.py
 ```
 
-#### test_bundles
+### test_bundles
 
 ```
 rm -rf #expand expected_dir#expected_bundles
@@ -49,6 +71,8 @@ cp -r #expand user_www#zppy_test_bundles_www/v2.LR.historical_0201 #expand expec
 mkdir -p #expand expected_dir#expected_bundles/bundle_files
 cp -r #expand user_output#zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash #expand expected_dir#expected_bundles/bundle_files
 cd #expand expected_dir#expected_bundles
+# Remove the image check failures, so they don't end up in the expected files.
+rm -rf #expand user_www#forsyth/zppy_test_bundles_www/v2.LR.historical_0201/image_check_failures
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_bundles.txt
 cd <top level of zppy repo>
@@ -79,6 +103,8 @@ rm -rf #expand expected_dir#expected_complete_run
 # Copy output so you don't have to rerun zppy to generate the output.
 cp -r #expand user_www#zppy_test_complete_run_www/v2.LR.historical_0201 #expand expected_dir#expected_complete_run
 cd #expand expected_dir#expected_complete_run
+# Remove the image check failures, so they don't end up in the expected files.
+rm -rf #expand user_www#forsyth/zppy_test_complete_run_www/v2.LR.historical_0201/image_check_failures
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_complete_run.txt
 cd <top level of zppy repo>
@@ -96,4 +122,20 @@ mkdir -p #expand expected_dir#test_defaults_expected_files
 mv test_defaults_output/post/scripts/*.settings #expand expected_dir#test_defaults_expected_files
 # Rerun test
 python -u -m unittest tests/integration/test_defaults.py
+```
+
+## Commands to generate official expected results for a release
+
+### test_bundles
+
+```
+cp -r #expand user_www#zppy_test_bundles_www/v2.LR.historical_0201 #expand expected_dir#expected_bundles_unified_<#>
+mkdir -p #expand expected_dir#expected_bundles_unified_<#>/bundle_files
+cp -r #expand user_output#zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash #expand expected_dir#expected_bundles_unified_<#>/bundle_files
+```
+
+### test_complete_run
+
+```
+cp -r #expand user_www#zppy_test_complete_run_www/v2.LR.historical_0201 #expand expected_dir#expected_complete_run_unified_<#>
 ```
