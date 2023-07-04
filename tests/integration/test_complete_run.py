@@ -10,7 +10,7 @@ class TestCompleteRun(unittest.TestCase):
         expected_dir = expansions["expected_dir"]
         user_www = expansions["user_www"]
         actual_images_dir = (
-            f"{user_www}zppy_test_complete_run_www/v2.LR.historical_0201"
+            f"{user_www}zppy_test_complete_run_www/v2.LR.historical_0201/"
         )
 
         # The expected_images_file lists all images we expect to compare.
@@ -18,7 +18,7 @@ class TestCompleteRun(unittest.TestCase):
         expected_images_dir = f"{expected_dir}expected_complete_run"
 
         # The directory to place differences in.
-        diff_dir = "tests/integration/image_check_failures_complete_run"
+        diff_dir = f"{actual_images_dir}image_check_failures_complete_run"
 
         check_mismatched_images(
             self, actual_images_dir, expected_images_file, expected_images_dir, diff_dir

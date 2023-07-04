@@ -53,7 +53,7 @@ cd #expand expected_dir#expected_bundles
 find . -type f -name '*.png' > ../image_list_expected_bundles.txt
 cd <top level of zppy repo>
 # Rerun test
-python -u -m unittest tests/integration/test_bundles_#expand machine#.py
+python -u -m unittest tests/integration/test_bundles.py
 ```
 
 ### test_campaign
@@ -83,7 +83,7 @@ cd #expand expected_dir#expected_complete_run
 find . -type f -name '*.png' > ../image_list_expected_complete_run.txt
 cd <top level of zppy repo>
 # Rerun test
-python -u -m unittest tests/integration/test_complete_run_#expand machine#.py
+python -u -m unittest tests/integration/test_complete_run.py
 ```
 
 ### test_defaults
