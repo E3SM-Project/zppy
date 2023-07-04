@@ -9,9 +9,9 @@ rm -rf /compyfs/www/fors729/zppy_test_bundles_www/v2.LR.historical_0201
 rm -rf /compyfs/fors729/zppy_test_bundles_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
-zppy -c tests/integration/generated/test_bundles.cfg
+zppy -c tests/integration/generated/test_bundles_compy.cfg
 # bundle1 and bundle2 should run. After they finish, invoke zppy again to resolve remaining dependencies:
-zppy -c tests/integration/generated/test_bundles.cfg
+zppy -c tests/integration/generated/test_bundles_compy.cfg
 # bundle3 and ilamb should run
 ```
 
@@ -22,7 +22,7 @@ rm -rf /compyfs/www/fors729/zppy_test_complete_run_www/v2.LR.historical_0201
 rm -rf /compyfs/fors729/zppy_test_complete_run_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
-zppy -c tests/integration/generated/test_complete_run.cfg
+zppy -c tests/integration/generated/test_complete_run_compy.cfg
 ```
 
 ## Commands to run to replace outdated expected files
@@ -53,7 +53,7 @@ cd /compyfs/www/zppy_test_resources/expected_bundles
 find . -type f -name '*.png' > ../image_list_expected_bundles.txt
 cd <top level of zppy repo>
 # Rerun test
-python -u -m unittest tests/integration/test_bundles.py
+python -u -m unittest tests/integration/test_bundles_compy.py
 ```
 
 ### test_campaign
@@ -83,7 +83,7 @@ cd /compyfs/www/zppy_test_resources/expected_complete_run
 find . -type f -name '*.png' > ../image_list_expected_complete_run.txt
 cd <top level of zppy repo>
 # Rerun test
-python -u -m unittest tests/integration/test_complete_run.py
+python -u -m unittest tests/integration/test_complete_run_compy.py
 ```
 
 ### test_defaults
