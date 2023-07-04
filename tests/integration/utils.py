@@ -47,16 +47,17 @@ def compare_images(
             .getdata()
         )
         num_nonzero_pixels = sum(nonzero_pixels)
-        print("\npath_to_actual_png={}".format(path_to_actual_png))
-        print("path_to_expected_png={}".format(path_to_expected_png))
-        print("diff has {} nonzero pixels.".format(num_nonzero_pixels))
         width, height = expected_png.size
         num_pixels = width * height
-        print("total number of pixels={}".format(num_pixels))
         fraction = num_nonzero_pixels / num_pixels
-        print("num_nonzero_pixels/num_pixels fraction={}".format(fraction))
         # Fraction of mismatched pixels should be less than 0.02%
         if fraction >= 0.0002:
+            print("\npath_to_actual_png={}".format(path_to_actual_png))
+            print("path_to_expected_png={}".format(path_to_expected_png))
+            print("diff has {} nonzero pixels.".format(num_nonzero_pixels))
+            print("total number of pixels={}".format(num_pixels))
+            print("num_nonzero_pixels/num_pixels fraction={}".format(fraction))
+
             mismatched_images.append(image_name)
 
             simple_image_name = image_name.split("/")[-1].split(".")[0]
@@ -112,6 +113,9 @@ def check_mismatched_images(
         print("Mismatched images:")
         for i in mismatched_images:
             print(i)
+
+    # Make diff_dir readable
+    os.system(f"chmod -R 755 {diff_dir}")
 
     test.assertEqual(missing_images, [])
     test.assertEqual(mismatched_images, [])

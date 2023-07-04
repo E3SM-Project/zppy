@@ -84,14 +84,14 @@ class TestBundles(unittest.TestCase):
         expansions = get_expansions()
         expected_dir = expansions["expected_dir"]
         user_www = expansions["user_www"]
-        actual_images_dir = f"{user_www}zppy_test_bundles_www/v2.LR.historical_0201"
+        actual_images_dir = f"{user_www}zppy_test_bundles_www/v2.LR.historical_0201/"
 
         # The expected_images_file lists all images we expect to compare.
         expected_images_file = f"{expected_dir}image_list_expected_bundles.txt"
         expected_images_dir = f"{expected_dir}expected_bundles"
 
         # The directory to place differences in.
-        diff_dir = "tests/integration/image_check_failures_bundles"
+        diff_dir = f"{actual_images_dir}image_check_failures_bundles"
 
         check_mismatched_images(
             self, actual_images_dir, expected_images_file, expected_images_dir, diff_dir
