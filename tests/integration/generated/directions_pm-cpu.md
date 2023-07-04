@@ -9,9 +9,9 @@ rm -rf /global/cfs/cdirs/e3sm/www/forsyth/zppy_test_bundles_www/v2.LR.historical
 rm -rf /global/cfs/cdirs/e3sm/forsyth/zppy_test_bundles_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
-zppy -c tests/integration/generated/test_bundles.cfg
+zppy -c tests/integration/generated/test_bundles_pm-cpu.cfg
 # bundle1 and bundle2 should run. After they finish, invoke zppy again to resolve remaining dependencies:
-zppy -c tests/integration/generated/test_bundles.cfg
+zppy -c tests/integration/generated/test_bundles_pm-cpu.cfg
 # bundle3 and ilamb should run
 ```
 
@@ -22,7 +22,7 @@ rm -rf /global/cfs/cdirs/e3sm/www/forsyth/zppy_test_complete_run_www/v2.LR.histo
 rm -rf /global/cfs/cdirs/e3sm/forsyth/zppy_test_complete_run_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
-zppy -c tests/integration/generated/test_complete_run.cfg
+zppy -c tests/integration/generated/test_complete_run_pm-cpu.cfg
 ```
 
 ## Commands to run to replace outdated expected files
@@ -53,7 +53,7 @@ cd /global/cfs/cdirs/e3sm/www/zppy_test_resources/expected_bundles
 find . -type f -name '*.png' > ../image_list_expected_bundles.txt
 cd <top level of zppy repo>
 # Rerun test
-python -u -m unittest tests/integration/test_bundles.py
+python -u -m unittest tests/integration/test_bundles_pm-cpu.py
 ```
 
 ### test_campaign
@@ -83,7 +83,7 @@ cd /global/cfs/cdirs/e3sm/www/zppy_test_resources/expected_complete_run
 find . -type f -name '*.png' > ../image_list_expected_complete_run.txt
 cd <top level of zppy repo>
 # Rerun test
-python -u -m unittest tests/integration/test_complete_run.py
+python -u -m unittest tests/integration/test_complete_run_pm-cpu.py
 ```
 
 ### test_defaults
