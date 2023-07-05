@@ -35,6 +35,10 @@ def main():  # noqa: C901
     )
     args = parser.parse_args()
 
+    print(
+        "For help, please see https://e3sm-project.github.io/zppy. Ask questions at https://github.com/E3SM-Project/zppy/discussions/categories/q-a."
+    )
+
     # Subdirectory where templates are located
     templateDir = os.path.join(os.path.dirname(__file__), "templates")
 
