@@ -7,7 +7,7 @@
 #SBATCH  --output={{ scriptDir }}/{{ prefix }}.o%j
 #SBATCH  --exclusive
 #SBATCH  --time={{ walltime }}
-{% if machine in ['anvil', 'chrysalis'] %}
+{% if machine in ['andes', 'anvil', 'chrysalis'] %}
 #SBATCH  --partition={{ partition }}
 
 {% elif machine == 'compy' %}
