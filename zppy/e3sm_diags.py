@@ -117,8 +117,19 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                     )
             else:
                 raise ValueError("Invalid run_type={}".format(c["run_type"]))
-            if ("diurnal_cycle" in c["sets"]) and (c["dc_obs_climo"] == ""):
-                c["dc_obs_climo"] = c["reference_data_path"]
+            if "diurnal_cycle" in c["sets"]:
+                if c["dc_obs_climo"] == "":
+                    c["dc_obs_climo"] = c["reference_data_path"]
+                diurnal_cycle_subtask_name = c["climo_diurnal_subsection"]
+                if diurnal_cycle_subtask_name in config["climo"].keys():
+                    if (
+                        "input_files"
+                        in config["climo"][diurnal_cycle_subtask_name].keys()
+                    ):
+                        diurnal_cycle_input_files = config["climo"][
+                            diurnal_cycle_subtask_name
+                        ]["input_files"]
+                        c["climo_diurnal_input_files"] = diurnal_cycle_input_files
             if ("streamflow" in c["sets"]) and (c["streamflow_obs_ts"] == ""):
                 c["streamflow_obs_ts"] = c["obs_ts"]
             print(prefix)
