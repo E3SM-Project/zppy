@@ -87,7 +87,7 @@ fi
 
 echo 'Update time series figures'
 cd ${global_ts_dir}
-python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} ${atmosphere_only} "{{ plot_names }}"
+python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} ${atmosphere_only} "{{ plot_names }}" {{ regions }}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (5)' > {{ prefix }}.status
@@ -99,7 +99,7 @@ echo 'Copy images to directory'
 results_dir={{ prefix }}_results
 results_dir_absolute_path={{ scriptDir }}/${results_dir}
 mkdir -p ${results_dir_absolute_path}
-cp ${figstr}.pdf ${results_dir_absolute_path}/${figstr}.pdf
+cp *.pdf ${results_dir_absolute_path}
 cp *.png ${results_dir_absolute_path}
 
 ################################################################################

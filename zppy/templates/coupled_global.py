@@ -450,7 +450,8 @@ PLOT_DICT = {
 
 
 # -----------------------------------------------------------------------------
-def run(parameters):
+# FIXME: C901 'run' is too complex (19)
+def run(parameters, rgn):  # noqa: C901
     # These are the "Tableau 20" colors as RGB.
     t20: List[Tuple[float, float, float]] = [
         (31, 119, 180),
@@ -542,7 +543,15 @@ def run(parameters):
                 # 3 regions = global, northern hemisphere, southern hemisphere
                 # We get here if we used the updated `ts` task
                 # (using `rgn_avg` rather than `glb_avg`).
-                v = v[:, 0]  # Just use 1st column (global)
+                if rgn == "glb":
+                    n = 0
+                elif rgn == "n":
+                    n = 1
+                elif rgn == "s":
+                    n = 2
+                else:
+                    raise RuntimeError(f"Invalid rgn={rgn}")
+                v = v[:, n]  # Just use nth column
             exp["annual"][var] = v
             if "year" not in exp["annual"]:
                 time = v.getTime()
@@ -577,7 +586,7 @@ def run(parameters):
 
     i = 0
     # https://stackoverflow.com/questions/58738992/save-multiple-figures-with-subplots-into-a-pdf-with-multiple-pages
-    pdf = matplotlib.backends.backend_pdf.PdfPages(f"{figstr}.pdf")
+    pdf = matplotlib.backends.backend_pdf.PdfPages(f"{figstr}_{rgn}.pdf")
     for page in range(num_pages):
         fig = plt.figure(1, figsize=[13.5, 16.5])
         for j in range(plots_per_page):
@@ -592,12 +601,26 @@ def run(parameters):
         fig.tight_layout()
         pdf.savefig(1)
         if num_pages > 1:
-            fig.savefig(figstr + f"_{page}.png", dpi=150)
+            fig.savefig(f"{figstr}_{rgn}_{page}.png", dpi=150)
         else:
-            fig.savefig(figstr + ".png", dpi=150)
+            fig.savefig(f"{figstr}_{rgn}.png", dpi=150)
         plt.clf()
     pdf.close()
 
 
+def run_by_region(parameters):
+    regions = parameters[10].split(",")
+    for rgn in regions:
+        if rgn.lower() in ["glb", "global"]:
+            rgn = "glb"
+        elif rgn.lower() in ["n", "north", "northern"]:
+            rgn = "n"
+        elif rgn.lower() in ["s", "south", "southern"]:
+            rgn = "s"
+        else:
+            raise RuntimeError(f"Invalid rgn={rgn}")
+        run(parameters, rgn)
+
+
 if __name__ == "__main__":
-    run(sys.argv)
+    run_by_region(sys.argv)
