@@ -34,7 +34,7 @@ ncclimo \
 {%- if vars != '' %}
 --vars={{ vars }} \
 {%- endif %}
---parallel=mpi \
+--parallel={{ parallel }} \
 --yr_srt={{ yr_start }} \
 --yr_end={{ yr_end }} \
 --input={{ input }}/{{ input_subdir }} \
@@ -105,7 +105,7 @@ cat input.txt | ncclimo \
 {%- if vars != '' %}
 --vars={{ vars }} \
 {%- endif %}
---parallel=mpi \
+--parallel={{ parallel }} \
 --yr_srt={{ yr_start }} \
 --yr_end={{ yr_end }} \
 {% if mapping_file == '' -%}
