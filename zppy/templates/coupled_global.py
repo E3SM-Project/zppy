@@ -133,7 +133,7 @@ def get_ylim(standard_range, extreme_values):
 # Plotting functions
 
 # 1
-def plot_net_toa_flux_restom(ax, xlim, exps):
+def plot_net_toa_flux_restom(ax, xlim, exps, rgn):
     param_dict = {
         "2nd_var": False,
         "axhline_y": 0,
@@ -144,6 +144,7 @@ def plot_net_toa_flux_restom(ax, xlim, exps):
         "do_add_line": True,
         "do_add_trend": True,
         "format": "%4.2f",
+        "glb_only": False,
         "lw": 1.0,
         "ohc": False,
         "set_axhline": True,
@@ -156,11 +157,19 @@ def plot_net_toa_flux_restom(ax, xlim, exps):
         "vol": False,
         "ylabel": "W m-2",
     }
-    plot(ax, xlim, exps, param_dict)
+    plot(ax, xlim, exps, param_dict, rgn)
 
 
 # 2
-def plot_global_surface_air_temperature(ax, xlim, exps):
+def plot_global_surface_air_temperature(ax, xlim, exps, rgn):
+    if rgn == "glb":
+        region_title = "Global"
+    elif rgn == "n":
+        region_title = "Northern Hemisphere"
+    elif rgn == "s":
+        region_title = "Southern Hemisphere"
+    else:
+        raise RuntimeError(f"Invalid rgn={rgn}")
     param_dict = {
         "2nd_var": False,
         "axhline_y": None,
@@ -171,23 +180,24 @@ def plot_global_surface_air_temperature(ax, xlim, exps):
         "do_add_line": True,
         "do_add_trend": True,
         "format": "%4.2f",
+        "glb_only": False,
         "lw": 1.0,
         "ohc": False,
         "set_axhline": False,
         "set_legend": False,
         "shorten_year": False,
-        "title": "Global surface air temperature",
+        "title": f"{region_title} surface air temperature",
         "use_getmoc": False,
         "var": lambda exp: np.array(exp["annual"]["TREFHT"]) - 273.15,
         "verbose": False,
         "vol": False,
         "ylabel": "degC",
     }
-    plot(ax, xlim, exps, param_dict)
+    plot(ax, xlim, exps, param_dict, rgn)
 
 
 # 3
-def plot_toa_radiation(ax, xlim, exps):
+def plot_toa_radiation(ax, xlim, exps, rgn):
     param_dict = {
         "2nd_var": True,
         "axhline_y": None,
@@ -198,6 +208,7 @@ def plot_toa_radiation(ax, xlim, exps):
         "do_add_line": False,
         "do_add_trend": False,
         "format": None,
+        "glb_only": False,
         "lw": 1.0,
         "ohc": False,
         "set_axhline": False,
@@ -210,11 +221,11 @@ def plot_toa_radiation(ax, xlim, exps):
         "vol": None,
         "ylabel": "W m-2",
     }
-    plot(ax, xlim, exps, param_dict)
+    plot(ax, xlim, exps, param_dict, rgn)
 
 
 # 4
-def plot_net_atm_energy_imbalance(ax, xlim, exps):
+def plot_net_atm_energy_imbalance(ax, xlim, exps, rgn):
     param_dict = {
         "2nd_var": False,
         "axhline_y": None,
@@ -225,6 +236,7 @@ def plot_net_atm_energy_imbalance(ax, xlim, exps):
         "do_add_line": True,
         "do_add_trend": False,
         "format": "%4.2f",
+        "glb_only": False,
         "lw": 1.0,
         "ohc": False,
         "set_axhline": False,
@@ -238,11 +250,11 @@ def plot_net_atm_energy_imbalance(ax, xlim, exps):
         "vol": False,
         "ylabel": "W m-2",
     }
-    plot(ax, xlim, exps, param_dict)
+    plot(ax, xlim, exps, param_dict, rgn)
 
 
 # 5
-def plot_change_ohc(ax, xlim, exps):
+def plot_change_ohc(ax, xlim, exps, rgn):
     param_dict = {
         "2nd_var": False,
         "axhline_y": 0,
@@ -253,6 +265,7 @@ def plot_change_ohc(ax, xlim, exps):
         "do_add_line": False,
         "do_add_trend": True,
         "format": "%4.2f",
+        "glb_only": True,
         "lw": 1.5,
         "ohc": True,
         "set_axhline": True,
@@ -265,11 +278,11 @@ def plot_change_ohc(ax, xlim, exps):
         "vol": False,
         "ylabel": "J",
     }
-    plot(ax, xlim, exps, param_dict)
+    plot(ax, xlim, exps, param_dict, rgn)
 
 
 # 6
-def plot_max_moc(ax, xlim, exps):
+def plot_max_moc(ax, xlim, exps, rgn):
     param_dict = {
         "2nd_var": False,
         "axhline_y": 10,
@@ -280,6 +293,7 @@ def plot_max_moc(ax, xlim, exps):
         "do_add_line": False,
         "do_add_trend": True,
         "format": "%4.2f",
+        "glb_only": True,
         "lw": 1.5,
         "ohc": False,
         "set_axhline": True,
@@ -292,11 +306,11 @@ def plot_max_moc(ax, xlim, exps):
         "vol": None,
         "ylabel": "Sv",
     }
-    plot(ax, xlim, exps, param_dict)
+    plot(ax, xlim, exps, param_dict, rgn)
 
 
 # 7
-def plot_change_sea_level(ax, xlim, exps):
+def plot_change_sea_level(ax, xlim, exps, rgn):
     param_dict = {
         "2nd_var": False,
         "axhline_y": None,
@@ -307,6 +321,7 @@ def plot_change_sea_level(ax, xlim, exps):
         "do_add_line": False,
         "do_add_trend": True,
         "format": "%5.3f",
+        "glb_only": True,
         "lw": 1.5,
         "ohc": False,
         "set_axhline": False,
@@ -323,11 +338,11 @@ def plot_change_sea_level(ax, xlim, exps):
         "vol": True,
         "ylabel": "mm",
     }
-    plot(ax, xlim, exps, param_dict)
+    plot(ax, xlim, exps, param_dict, rgn)
 
 
 # 8
-def plot_net_atm_water_imbalance(ax, xlim, exps):
+def plot_net_atm_water_imbalance(ax, xlim, exps, rgn):
     param_dict = {
         "2nd_var": False,
         "axhline_y": None,
@@ -338,6 +353,7 @@ def plot_net_atm_water_imbalance(ax, xlim, exps):
         "do_add_line": True,
         "do_add_trend": False,
         "format": "%5.4f",
+        "glb_only": False,
         "lw": 1.0,
         "ohc": False,
         "set_axhline": False,
@@ -358,10 +374,12 @@ def plot_net_atm_water_imbalance(ax, xlim, exps):
         "vol": False,
         "ylabel": "mm yr-1",
     }
-    plot(ax, xlim, exps, param_dict)
+    plot(ax, xlim, exps, param_dict, rgn)
 
 
-def plot(ax, xlim, exps, param_dict):
+def plot(ax, xlim, exps, param_dict, rgn):
+    if param_dict["glb_only"] and (rgn != "glb"):
+        return
     ax.set_xlim(xlim)
     extreme_values = []
     for exp in exps:
@@ -442,9 +460,9 @@ PLOT_DICT = {
     "global_surface_air_temperature": plot_global_surface_air_temperature,
     "toa_radiation": plot_toa_radiation,
     "net_atm_energy_imbalance": plot_net_atm_energy_imbalance,
-    "change_ohc": plot_change_ohc,
-    "max_moc": plot_max_moc,
-    "change_sea_level": plot_change_sea_level,
+    "change_ohc": plot_change_ohc,  # only glb
+    "max_moc": plot_max_moc,  # only glb
+    "change_sea_level": plot_change_sea_level,  # only glb
     "net_atm_water_imbalance": plot_net_atm_water_imbalance,
 }
 
@@ -552,6 +570,12 @@ def run(parameters, rgn):  # noqa: C901
                 else:
                     raise RuntimeError(f"Invalid rgn={rgn}")
                 v = v[:, n]  # Just use nth column
+            elif rgn != "glb":
+                # v only has one dimension -- glb.
+                # Therefore it is not possible to get n or s plots.
+                raise RuntimeError(
+                    f"var={var} only has global data. Cannot process rgn={rgn}"
+                )
             exp["annual"][var] = v
             if "year" not in exp["annual"]:
                 time = v.getTime()
@@ -593,7 +617,7 @@ def run(parameters, rgn):  # noqa: C901
             if i < num_plots:
                 ax = plt.subplot(nrows, ncols, j + 1)
                 try:
-                    PLOT_DICT[plot_list[i]](ax, xlim, exps)
+                    PLOT_DICT[plot_list[i]](ax, xlim, exps, rgn)
                 except KeyError:
                     raise KeyError(f"Invalid plot name: {plot_list[i]}")
                 i += 1
