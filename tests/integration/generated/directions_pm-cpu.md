@@ -53,7 +53,7 @@ cd /global/cfs/cdirs/e3sm/www/zppy_test_resources/expected_bundles
 find . -type f -name '*.png' > ../image_list_expected_bundles.txt
 cd <top level of zppy repo>
 # Rerun test
-python -u -m unittest tests/integration/test_bundles_pm-cpu.py
+python -u -m unittest tests/integration/test_bundles.py
 ```
 
 ### test_campaign
@@ -83,7 +83,7 @@ cd /global/cfs/cdirs/e3sm/www/zppy_test_resources/expected_complete_run
 find . -type f -name '*.png' > ../image_list_expected_complete_run.txt
 cd <top level of zppy repo>
 # Rerun test
-python -u -m unittest tests/integration/test_complete_run_pm-cpu.py
+python -u -m unittest tests/integration/test_complete_run.py
 ```
 
 ### test_defaults
