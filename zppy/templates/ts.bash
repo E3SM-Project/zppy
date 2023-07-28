@@ -148,6 +148,7 @@ EOF
   input_dir={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
   dest_cmip={{ output }}/post/{{ component }}/{{ grid }}/cmip_ts/{{ frequency }}
   mkdir -p ${dest_cmip}
+  {{ e3sm_to_cmip_environment_commands }}
   srun -N 1 e3sm_to_cmip \
   --output-path \
   ${dest_cmip}/${tmp_dir} \
@@ -178,6 +179,7 @@ EOF
     exit 4
   fi
 
+  {{ environment_commands }}
   # Move output ts files to final destination
   mv ${dest_cmip}/${tmp_dir}/CMIP6/CMIP/*/*/*/*/*/*/*/*/*.nc ${dest_cmip}
   if [ $? != 0 ]; then
