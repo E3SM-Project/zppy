@@ -236,7 +236,7 @@ from e3sm_diags.parameter.tc_analysis_parameter import TCAnalysisParameter
 from e3sm_diags.run import runner
 
 short_name = '${short}'
-test_ts = '${ts_dir_destination}'
+test_ts = '${ts_dir_primary}'
 start_yr = int('${Y1}')
 end_yr = int('${Y2}')
 num_years = end_yr - start_yr + 1
