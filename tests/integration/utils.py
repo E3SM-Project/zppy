@@ -134,9 +134,9 @@ def get_chyrsalis_expansions(config):
         "bundles_walltime": "02:00:00",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
-        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220614",
+        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20230731",
         "diags_walltime": "2:00:00",
-        "environment_commands_test": "source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.8.0rc6_chrysalis.sh",
+        "environment_commands_test": "source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.9.0rc9_chrysalis.sh",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
         "partition_long": "compute",
         "partition_short": "debug",
@@ -182,9 +182,9 @@ def get_perlmutter_expansions(config):
         "bundles_walltime": "6:00:00",
         "constraint": "cpu",
         # To run this test, replace conda environment with your e3sm_diags dev environment
-        "diags_environment_commands": "source /global/homes/f/forsyth/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220715",
+        "diags_environment_commands": "source /global/homes/f/forsyth/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20230728",
         "diags_walltime": "6:00:00",
-        "environment_commands_test": "source /global/common/software/e3sm/anaconda_envs/test_e3sm_unified_1.8.0rc6_pm-cpu.sh",
+        "environment_commands_test": "source /global/common/software/e3sm/anaconda_envs/test_e3sm_unified_1.9.0rc9_pm-cpu.sh",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
         "partition_long": "",
         "partition_short": "",
@@ -231,7 +231,7 @@ def substitute_expansions(expansions, file_in, file_out):
                 file_write.write(line)
 
 
-def generate_cfgs(unified_testing=False):
+def generate_cfgs(unified_testing=False, dry_run=False):
     git_top_level = (
         subprocess.check_output("git rev-parse --show-toplevel".split())
         .strip()
@@ -245,6 +245,11 @@ def generate_cfgs(unified_testing=False):
         # but it would be difficult to only write environment_commands in the unified_testing case.
         expansions["environment_commands"] = ""
     machine = expansions["machine"]
+
+    if dry_run:
+        expansions["dry_run"] = "True"
+    else:
+        expansions["dry_run"] = "False"
 
     cfg_names = ["bundles", "complete_run"]
     for cfg_name in cfg_names:
@@ -268,4 +273,4 @@ def generate_cfgs(unified_testing=False):
 
 
 if __name__ == "__main__":
-    generate_cfgs()
+    generate_cfgs(unified_testing=True)

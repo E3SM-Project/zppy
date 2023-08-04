@@ -26,7 +26,7 @@ def getmoc(dir_in):
         fin = Dataset(files[i], "r")
         time0 = fin["year"][:]
         var0 = fin["mocAtlantic26"][:]
-        for iyear in range(np.int(time0[0]), np.int(time0[-1]) + 1):
+        for iyear in range(int(time0[0]), int(time0[-1]) + 1):
             if i > 0 and iyear <= time[-1]:
                 print(
                     "the amoc value for year",
@@ -613,6 +613,7 @@ def run(parameters, rgn):  # noqa: C901
     pdf = matplotlib.backends.backend_pdf.PdfPages(f"{figstr}_{rgn}.pdf")
     for page in range(num_pages):
         fig = plt.figure(1, figsize=[13.5, 16.5])
+        fig.suptitle(f"{figstr}_{rgn}")
         for j in range(plots_per_page):
             if i < num_plots:
                 ax = plt.subplot(nrows, ncols, j + 1)
