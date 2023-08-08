@@ -134,7 +134,7 @@ def get_chyrsalis_expansions(config):
         "bundles_walltime": "02:00:00",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
-        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20230731",
+        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20230807",
         "diags_walltime": "2:00:00",
         "environment_commands_test": "source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.9.0rc9_chrysalis.sh",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
