@@ -158,9 +158,9 @@ def get_compy_expansions(config):
         "bundles_walltime": "02:00:00",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
-        "diags_environment_commands": "source /qfs/people/fors729/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220722",
+        "diags_environment_commands": "source /qfs/people/fors729/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20230807",
         "diags_walltime": "03:00:00",
-        "environment_commands_test": "source /share/apps/E3SM/conda_envs/test_e3sm_unified_1.8.0rc6_compy.sh",
+        "environment_commands_test": "source /share/apps/E3SM/conda_envs/test_e3sm_unified_1.9.0rc9_compy.sh",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
         "partition_long": "slurm",
         "partition_short": "short",
