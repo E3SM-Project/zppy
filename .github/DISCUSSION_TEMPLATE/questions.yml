@@ -1,0 +1,93 @@
+labels: [question]
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Thanks for your interest in zppy! Please follow the template below to ensure the development team and community can help you effectively.
+
+    - type: checkboxes
+      id: checks
+      attributes:
+          label: Question criteria
+          description: Please confirm and check all the following options.
+          options:
+              - label: I added a descriptive title here.
+                required: true
+              - label: I searched the [zppy GitHub Discussions](https://github.com/E3SM-Project/zppy/discussions) to find a similar question and didn't find it.
+                required: true
+              - label: I searched the [zppy documentation](https://e3sm-project.github.io/zppy).
+                required: true
+
+    - type: textarea
+      id: your-question
+      attributes:
+          label: Describe your question
+          description: |
+              Please help the community help you. The more specific you can be, the easier it will be to help.
+      validations:
+          required: true
+
+    - type: textarea
+      id: possible-answers
+      attributes:
+          label: Are there are any possible answers you came across?
+          description: |
+              This will help others determine if you're on the right track. Include links to pages you've researched (e.g., software docs, Stack Overflow posts).
+
+    - type: textarea
+      id: machine
+      attributes:
+          label: What machine were you running on?
+	  description: |
+	      List the machine(s) you encounter the issue on (e.g., Chrysalis, Compy, Perlmutter).
+      validations:
+          required: true
+
+    - type: textarea
+      id: zppy-version
+      attributes:
+          label: Environment
+          description: |
+              Paste your zppy version here (e.g., `zppy v2.3.0`).
+      validations:
+          required: true
+
+    - type: textarea
+      id: zppy-command
+      attributes:
+          label: What command did you run?
+	  description: |
+	      Copy the command causing the issue (e.g., `zppy -c tests/integration/generated/test_complete_run_chrysalis.cfg`). This will be automatically formatted into code, so no need for markdown backticks.
+	  render: bash
+      validations:
+          required: true
+
+    - type: textarea
+      id: cfg-file
+      attributes:
+          label: Copy your cfg file
+	  description: |
+	      Copy the contents of your cfg file into the space below. This will be automatically formatted into code, so no need for markdown backticks.
+	  render: bash
+      validations:
+          required: true
+
+    - type: textarea
+      id: status-output
+      attributes:
+          label: What jobs are failing?
+	  description: |
+	      Go to the `output` line of your cfg. `cd` into `post/scripts`. Copy the output of `grep -v "OK" *status`. This will be automatically formatted into code, so no need for markdown backticks.
+	  render: bash
+      validations:
+          required: false
+
+    - type: textarea
+      id: stack-trace
+      attributes:
+          label: What stack trace are you encountering?
+	  description: |
+	      Copy a stack trace from one of your failing jobs. This will be automatically formatted into code, so no need for markdown backticks.
+	  render: bash
+      validations:
+          required: false

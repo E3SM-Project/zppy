@@ -1,0 +1,10 @@
+blank_issues_enabled: true
+contact_links:
+    - name: Questions (zppy)
+      url: https://github.com/E3SM-Project/zppy/discussions
+      about: |
+          Ask questions and discuss with other zppy community members here. Please
+          browse the zppy Discussions Forum or zppy documentation first before asking a
+          question to make sure it is not already answered. If you can't find an
+          answer, please include a self-contained reproducible example with your
+          question if possible. Thanks!
