@@ -31,13 +31,13 @@ def e3sm_to_cmip(config, scriptDir, existing_bundles, job_ids_file):
     print(config["e3sm_to_cmip"])
     if len(tasks) == 0:
         return existing_bundles
-    print("AAA")
 
-    # --- Generate and submit ts scripts ---
+    # --- Generate and submit e3sm_to_cmip scripts ---
+    dependencies = []
+
     for c in tasks:
 
         setMappingFile(c)
-        print("BBB")
 
         # Grid name (if not explicitly defined)
         #   'native' if no remapping
@@ -79,13 +79,29 @@ def e3sm_to_cmip(config, scriptDir, existing_bundles, job_ids_file):
                 sub = c["subsection"]
             else:
                 sub = c["grid"]
+
+            # List of dependencies
+            dependencies.append(
+                os.path.join(
+                    scriptDir,
+                    "ts_%s_%04d-%04d-%04d.status"
+                    % (
+                        c[
+                            "subsection"
+                        ],  # Depends on the ts subtask with the same name.
+                        c["yr_start"],
+                        c["yr_end"],
+                        c["ypf"],
+                    ),
+                ),
+            )
+
             prefix = "e3sm_to_cmip_%s_%04d-%04d-%04d" % (
                 sub,
                 c["yr_start"],
                 c["yr_end"],
                 c["ypf"],
             )
-            print(prefix)
             c["prefix"] = prefix
             scriptFile = os.path.join(scriptDir, "%s.bash" % (prefix))
             statusFile = os.path.join(scriptDir, "%s.status" % (prefix))
@@ -106,12 +122,22 @@ def e3sm_to_cmip(config, scriptDir, existing_bundles, job_ids_file):
 
             export = "ALL"
             existing_bundles = handle_bundles(
-                c, scriptFile, export, existing_bundles=existing_bundles
+                c,
+                scriptFile,
+                export,
+                dependFiles=dependencies,
+                existing_bundles=existing_bundles,
             )
             if not c["dry_run"]:
                 if c["bundle"] == "":
                     # Submit job
-                    submitScript(scriptFile, statusFile, export, job_ids_file)
+                    submitScript(
+                        scriptFile,
+                        statusFile,
+                        export,
+                        job_ids_file,
+                        dependFiles=dependencies,
+                    )
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
 
