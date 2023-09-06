@@ -2,7 +2,7 @@
 {% include 'slurm_header.sh' %}
 {{ environment_commands }}
 
-# TODO: figrue out dependencies on ts
+# TODO: figrue out if any parameters can be taken from the corresponding ts subtask. Then, users won't have to re-enter parameters.
 # TODO: figure out dependencies for E3SM Diags. It doesn't look like E3SM Diags depends on e3sm_to_cmip.
 
 # Turn on debug output if needed
