@@ -222,7 +222,7 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                 p.pprint(c)
                 p.pprint(s)
 
-            export = "NONE"
+            export = "ALL"
             existing_bundles = handle_bundles(
                 c,
                 scriptFile,
