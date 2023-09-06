@@ -2,6 +2,9 @@
 {% include 'slurm_header.sh' %}
 {{ environment_commands }}
 
+# TODO: figrue out dependencies on ts
+# TODO: figure out dependencies for E3SM Diags. It doesn't look like E3SM Diags depends on e3sm_to_cmip.
+
 # Turn on debug output if needed
 debug={{ debug }}
 if [[ "${debug,,}" == "true" ]]; then
@@ -32,10 +35,6 @@ do
     ln -s ${file} .
   done
 done
-
-
-
-
 
 tmp_dir=tmp_{{ prefix }}
 
@@ -95,6 +94,11 @@ if [ $? != 0 ]; then
   exit 3
 fi
 
+# Delete temporary workdir
+cd ..
+if [[ "${debug,,}" != "true" ]]; then
+  rm -rf ${workdir}
+fi
 
 # Update status file and exit
 {% raw %}
