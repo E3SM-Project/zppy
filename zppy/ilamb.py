@@ -64,6 +64,18 @@ def ilamb(config, scriptDir, existing_bundles, job_ids_file):
                         c["year2"],
                         c["ts_num_years"],
                     ),
+                )
+            )
+            dependencies.append(
+                os.path.join(
+                    scriptDir,
+                    "e3sm_to_cmip_%s_%04d-%04d-%04d.status"
+                    % (
+                        "land_monthly",
+                        c["year1"],
+                        c["year2"],
+                        c["ts_num_years"],
+                    ),
                 ),
             )
             if not c["land_only"]:

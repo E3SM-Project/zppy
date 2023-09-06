@@ -27,14 +27,17 @@ def e3sm_to_cmip(config, scriptDir, existing_bundles, job_ids_file):
     template = templateEnv.get_template("e3sm_to_cmip.bash")
 
     # --- List of tasks ---
-    tasks = getTasks(config, "ts")
+    tasks = getTasks(config, "e3sm_to_cmip")
+    print(config["e3sm_to_cmip"])
     if len(tasks) == 0:
         return existing_bundles
+    print("AAA")
 
     # --- Generate and submit ts scripts ---
     for c in tasks:
 
         setMappingFile(c)
+        print("BBB")
 
         # Grid name (if not explicitly defined)
         #   'native' if no remapping
@@ -76,7 +79,7 @@ def e3sm_to_cmip(config, scriptDir, existing_bundles, job_ids_file):
                 sub = c["subsection"]
             else:
                 sub = c["grid"]
-            prefix = "ts_%s_%04d-%04d-%04d" % (
+            prefix = "e3sm_to_cmip_%s_%04d-%04d-%04d" % (
                 sub,
                 c["yr_start"],
                 c["yr_end"],

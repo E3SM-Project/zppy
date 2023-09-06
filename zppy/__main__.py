@@ -186,11 +186,11 @@ def main():  # noqa: C901
     # climo tasks
     existing_bundles = climo(config, scriptDir, existing_bundles, job_ids_file)
 
-    # e3sm_to_cmip tasks
-    existing_bundles = e3sm_to_cmip(config, scriptDir, existing_bundles, job_ids_file)
-
     # time series tasks
     existing_bundles = ts(config, scriptDir, existing_bundles, job_ids_file)
+
+    # e3sm_to_cmip tasks
+    existing_bundles = e3sm_to_cmip(config, scriptDir, existing_bundles, job_ids_file)
 
     # tc_analysis tasks
     existing_bundles = tc_analysis(config, scriptDir, existing_bundles, job_ids_file)
