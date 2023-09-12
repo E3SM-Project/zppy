@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting started &mdash; zppy  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial" href="tutorial.html" />
+    <link rel="prev" title="A schematic view of zppy" href="schematics.html" />
+    <link href="_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Zppy documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#activate-e3sm-unified-environment">Activate e3sm_unified environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-in-a-conda-environment">Installation in a Conda Environment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#others-local">Others/Local</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#a-latest-stable-release">(a) Latest Stable Release</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#installation-using-mamba">Installation using mamba</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#updating">Updating</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#b-development-environment">(b) Development Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-file">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running">Running</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="campaigns.html">Campaigns</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev_guide/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to This Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Getting started</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/getting_started.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="getting-started">
+<span id="id1"></span><h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h1>
+<div class="section" id="activate-e3sm-unified-environment">
+<h2>Activate e3sm_unified environment<a class="headerlink" href="#activate-e3sm-unified-environment" title="Permalink to this heading"></a></h2>
+<p>If you have an account on one of the E3SM supported machines (NERSC, Compy, Acme1,
+LCRC, Cooley, Rhea), you can access <code class="docutils literal notranslate"><span class="pre">zppy</span></code> by activating <code class="docutils literal notranslate"><span class="pre">e3sm_unified</span></code>, which is
+a conda environment that pulls together Python and other E3SM tools such as
+<code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> and <code class="docutils literal notranslate"><span class="pre">zstash</span></code>.</p>
+<p>The paths to <code class="docutils literal notranslate"><span class="pre">e3sm_unified</span></code> activation scripts are machine dependent:</p>
+<dl>
+<dt><strong>Compy</strong></dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">apps</span><span class="o">/</span><span class="n">E3SM</span><span class="o">/</span><span class="n">conda_envs</span><span class="o">/</span><span class="n">load_latest_e3sm_unified_compy</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>Perlmutter-CPU</strong></dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="k">global</span><span class="o">/</span><span class="n">common</span><span class="o">/</span><span class="n">software</span><span class="o">/</span><span class="n">e3sm</span><span class="o">/</span><span class="n">anaconda_envs</span><span class="o">/</span><span class="n">load_latest_e3sm_unified_pm</span><span class="o">-</span><span class="n">cpu</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>Anvil</strong></dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">soft</span><span class="o">/</span><span class="n">climate</span><span class="o">/</span><span class="n">e3sm</span><span class="o">-</span><span class="n">unified</span><span class="o">/</span><span class="n">load_latest_e3sm_unified_anvil</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>Chrysalis</strong></dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">lcrc</span><span class="o">/</span><span class="n">soft</span><span class="o">/</span><span class="n">climate</span><span class="o">/</span><span class="n">e3sm</span><span class="o">-</span><span class="n">unified</span><span class="o">/</span><span class="n">load_latest_e3sm_unified_chrysalis</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>Cooley</strong></dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">lus</span><span class="o">/</span><span class="n">theta</span><span class="o">-</span><span class="n">fs0</span><span class="o">/</span><span class="n">projects</span><span class="o">/</span><span class="n">ccsm</span><span class="o">/</span><span class="n">acme</span><span class="o">/</span><span class="n">tools</span><span class="o">/</span><span class="n">e3sm</span><span class="o">-</span><span class="n">unified</span><span class="o">/</span><span class="n">load_latest_e3sm_unified_cooley</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>acme1</strong></dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">p</span><span class="o">/</span><span class="n">user_pub</span><span class="o">/</span><span class="n">e3sm_unified</span><span class="o">/</span><span class="n">envs</span><span class="o">/</span><span class="n">load_latest_e3sm_unified_acme1</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</dd>
+<dt><strong>Andes</strong></dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">gpfs</span><span class="o">/</span><span class="n">alpine</span><span class="o">/</span><span class="n">proj</span><span class="o">-</span><span class="n">shared</span><span class="o">/</span><span class="n">cli115</span><span class="o">/</span><span class="n">e3sm</span><span class="o">-</span><span class="n">unified</span><span class="o">/</span><span class="n">load_latest_e3sm_unified_andes</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>Change <code class="docutils literal notranslate"><span class="pre">.sh</span></code> to <code class="docutils literal notranslate"><span class="pre">.csh</span></code> for <code class="docutils literal notranslate"><span class="pre">csh</span></code> shells.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">e3sm_unified</span></code>’s development cycle is not in phase with <code class="docutils literal notranslate"><span class="pre">zppy</span></code>.
+Therefore the version of <code class="docutils literal notranslate"><span class="pre">zppy</span></code> included may not be the latest.
+To install the latest stable release, refer to the following:</p>
+</div>
+<div class="section" id="installation-in-a-conda-environment">
+<span id="conda-environment"></span><h2>Installation in a Conda Environment<a class="headerlink" href="#installation-in-a-conda-environment" title="Permalink to this heading"></a></h2>
+<p>If the E3SM Unified environment doesn’t serve your needs, you can alternatively
+install the latest version in your own custom conda environment.</p>
+<p>First, activate conda or install it if it’s not available. Details vary amongst machines.</p>
+<div class="section" id="others-local">
+<span id="conda-environment-others"></span><h3>Others/Local<a class="headerlink" href="#others-local" title="Permalink to this heading"></a></h3>
+<p>If the system doesn’t come with conda pre-installed, follow these instructions:</p>
+<ol class="arabic">
+<li><p>Download Mambaforge</p>
+<blockquote>
+<div><dl>
+<dt>Linux</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="o">/</span><span class="n">miniforge</span><span class="o">/</span><span class="n">releases</span><span class="o">/</span><span class="n">latest</span><span class="o">/</span><span class="n">download</span><span class="o">/</span><span class="n">Mambaforge</span><span class="o">-</span><span class="n">Linux</span><span class="o">-</span><span class="n">x86_64</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</dd>
+<dt>MacOS x86_64 (note that <code class="docutils literal notranslate"><span class="pre">zppy</span></code> is not supported on MacOS, but it may be useful to contribute to the documentation on MacOS)</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="o">/</span><span class="n">miniforge</span><span class="o">/</span><span class="n">releases</span><span class="o">/</span><span class="n">latest</span><span class="o">/</span><span class="n">download</span><span class="o">/</span><span class="n">Mambaforge</span><span class="o">-</span><span class="n">MacOSX</span><span class="o">-</span><span class="n">x86_64</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div></blockquote>
+</li>
+<li><p>Install Mambaforge</p>
+<blockquote>
+<div><dl>
+<dt>Linux</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bash</span> <span class="o">./</span><span class="n">Mambaforge</span><span class="o">-</span><span class="n">Linux</span><span class="o">-</span><span class="n">x86_64</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</dd>
+<dt>MacOS x86_64</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bash</span> <span class="o">./</span><span class="n">Mambaforge</span><span class="o">-</span><span class="n">MacOSX</span><span class="o">-</span><span class="n">x86_64</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>When you see:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>by running conda init? [yes|no]
+[no] &gt;&gt;&gt; yes
+</pre></div>
+</div>
+<p>respond with <code class="docutils literal notranslate"><span class="pre">yes</span></code> so <code class="docutils literal notranslate"><span class="pre">conda</span></code> and <code class="docutils literal notranslate"><span class="pre">mamba</span></code> commands are available on
+initializing a new bash terminal.</p>
+</div></blockquote>
+</li>
+</ol>
+<p>3. If you are working on a machine/network that intercepts SSL communications (such as
+acme1), you will get an SSL error unless you disable the SSL verification:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">config</span> <span class="o">--</span><span class="nb">set</span> <span class="n">ssl_verify</span> <span class="n">false</span>
+<span class="n">binstar</span> <span class="n">config</span> <span class="o">--</span><span class="nb">set</span> <span class="n">ssl_verify</span> <span class="kc">False</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>4. Once conda and mamba are properly working, you can install the <strong>(a) Latest Stable Release</strong> or
+create a <strong>(b) Development Environment</strong>.</p>
+</div>
+</div>
+<div class="section" id="a-latest-stable-release">
+<h2>(a) Latest Stable Release<a class="headerlink" href="#a-latest-stable-release" title="Permalink to this heading"></a></h2>
+<div class="section" id="installation-using-mamba">
+<h3>Installation using mamba<a class="headerlink" href="#installation-using-mamba" title="Permalink to this heading"></a></h3>
+<p>First, make sure that you’re using <code class="docutils literal notranslate"><span class="pre">bash</span></code>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">bash</span>
+</pre></div>
+</div>
+<p>You must have a conda base enviornment installed as well.
+See <a class="reference internal" href="#conda-environment"><span class="std std-ref">“Installation in a Conda Environment”</span></a> section above for
+installing conda.</p>
+<p>These steps should not be necessary if you installed Mambaforge as suggested
+above but may be needed if you have previously installed Miniconda3 instead:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="o">-</span><span class="n">n</span> <span class="n">base</span> <span class="n">mamba</span>
+<span class="n">conda</span> <span class="n">config</span> <span class="o">--</span><span class="n">add</span> <span class="n">channels</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span>
+<span class="n">conda</span> <span class="n">config</span> <span class="o">--</span><span class="nb">set</span> <span class="n">channel_priority</span> <span class="n">strict</span>
+</pre></div>
+</div>
+<p>Create a new conda environment with <code class="docutils literal notranslate"><span class="pre">zppy</span></code> installed and activate it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mamba</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">zppy_env</span> <span class="n">zppy</span>
+<span class="n">conda</span> <span class="n">activate</span> <span class="n">zppy_env</span>
+</pre></div>
+</div>
+<p>Or (less recommended because of potential conflicts) you can install <code class="docutils literal notranslate"><span class="pre">zppy</span></code>
+in an existing environment.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mamba</span> <span class="n">install</span> <span class="n">zppy</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="updating">
+<h3>Updating<a class="headerlink" href="#updating" title="Permalink to this heading"></a></h3>
+<p>If you <strong>installed into your own conda environment</strong> (e.g., not through the
+unified environment), you can update <code class="docutils literal notranslate"><span class="pre">zppy</span></code> by doing the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mamba</span> <span class="n">update</span> <span class="n">zppy</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="b-development-environment">
+<span id="dev-env"></span><h2>(b) Development Environment<a class="headerlink" href="#b-development-environment" title="Permalink to this heading"></a></h2>
+<p>Unlike the latest stable release (i.e., the user environment), the development
+environment does not include <code class="docutils literal notranslate"><span class="pre">zppy</span></code>.
+Instead, the developer will <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">.</span></code> to build <code class="docutils literal notranslate"><span class="pre">zppy</span></code> with changes
+(see step 7 below).</p>
+<p>Furthermore, the dev environment includes quality assurance (QA) tools such as code formatters, linters, and <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code>.
+<strong>NOTE</strong>: These QA tools are enforced using <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> checks in the continuous integration/continuous delivery (CI/CD) build, so you must use the dev environment for all contributions.</p>
+<ol class="arabic">
+<li><p>Follow <a class="reference internal" href="#conda-environment-others"><span class="std std-ref">“Others/Local”</span></a> section for installing conda.</p></li>
+<li><p>Clone your fork and keep it in sync with the main repo’s <code class="docutils literal notranslate"><span class="pre">main</span></code></p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Go to https://github.com/E3SM-Project/zppy</span>
+<span class="c1"># Click &quot;Fork&quot; in the upper right hand corner. This will fork the main repo.</span>
+<span class="c1"># Click the green &quot;Code&quot; button</span>
+<span class="c1"># Choose the HTTPS or SSH option.</span>
+<span class="c1"># (To use the SSH option, you need to have a SSH connection to GitHub set up).</span>
+<span class="c1"># Click the clipboard icon to copy the path.</span>
+<span class="c1"># On your command line:</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="o">&lt;</span><span class="n">path</span><span class="o">&gt;</span>
+<span class="n">git</span> <span class="n">remote</span> <span class="o">-</span><span class="n">v</span>
+<span class="c1"># You should see your fork listed as `origin`</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>or if you already have a clone of your fork, rebase your fork on the main repo’s <code class="docutils literal notranslate"><span class="pre">main</span></code> to keep it in sync:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add the main repo as a remote.</span>
+<span class="c1"># You can call it anything but &quot;upstream&quot; is recommended.</span>
+<span class="c1"># We&#39;ll use `&lt;upstream-origin&gt;` here.</span>
+<span class="n">git</span> <span class="n">remote</span> <span class="n">add</span> <span class="o">&lt;</span><span class="n">upstream</span><span class="o">-</span><span class="n">origin</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">path</span> <span class="kn">from</span> <span class="nn">the</span> <span class="n">green</span> <span class="s2">&quot;Code&quot;</span> <span class="n">button</span> <span class="n">mentioned</span> <span class="n">above</span><span class="o">&gt;</span>
+
+<span class="c1"># Fetch all the branches of that remote into remote-tracking branches</span>
+<span class="n">git</span> <span class="n">fetch</span> <span class="o">&lt;</span><span class="n">upstream</span><span class="o">-</span><span class="n">origin</span><span class="o">&gt;</span>
+
+<span class="c1"># Make sure that you&#39;re on your ``main`` branch:</span>
+<span class="n">git</span> <span class="n">checkout</span> <span class="n">main</span>
+
+<span class="c1"># Rewrite your `main` branch so that any of your commits that</span>
+<span class="c1"># aren&#39;t already in &lt;upstream-origin&gt;/main are replayed on top of that branch:</span>
+<span class="n">git</span> <span class="n">rebase</span> <span class="o">&lt;</span><span class="n">upstream</span><span class="o">-</span><span class="n">origin</span><span class="o">&gt;/</span><span class="n">main</span>
+
+<span class="c1"># Push your main branch to your GitHub fork:</span>
+<span class="c1"># Note that &lt;fork-origin&gt; should be `origin` if you cloned your fork as above.</span>
+<span class="n">git</span> <span class="n">push</span> <span class="o">-</span><span class="n">f</span> <span class="o">&lt;</span><span class="n">fork</span><span class="o">-</span><span class="n">origin</span><span class="o">&gt;</span> <span class="n">main</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Checkout a new branch from <code class="docutils literal notranslate"><span class="pre">main</span></code>:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="o">&lt;</span><span class="n">branch</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">remote</span><span class="o">-</span><span class="n">origin</span><span class="o">&gt;/</span><span class="n">main</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Remove any cached conda packages. This will ensure that you always get the latest packages.</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mamba</span> <span class="n">clean</span> <span class="o">--</span><span class="nb">all</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Enter the fork’s clone.</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">zppy</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+<p>5. Use conda to create a new dev environment.
+(<code class="docutils literal notranslate"><span class="pre">zppy</span></code> <strong>is not included in this environment</strong>).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Tip: Add the flag <code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">&lt;name_of_env&gt;</span></code> to customize the name of the environment</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mamba</span> <span class="n">env</span> <span class="n">create</span> <span class="o">-</span><span class="n">f</span> <span class="n">conda</span><span class="o">/</span><span class="n">dev</span><span class="o">.</span><span class="n">yml</span>
+<span class="n">conda</span> <span class="n">activate</span> <span class="n">zppy_dev</span>
+</pre></div>
+</div>
+</div></blockquote>
+<ol class="arabic" start="6">
+<li><p>Install <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code>.</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pre</span><span class="o">-</span><span class="n">commit</span> <span class="n">install</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Make the desired changes to <code class="docutils literal notranslate"><span class="pre">zppy</span></code>, then rebuild and install with:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Commit changes and make sure <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> checks pass</p></li>
+<li><p>Commit changes</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">commit</span> <span class="o">-</span><span class="n">m</span> <span class="s2">&quot;commit-message&quot;</span>
+</pre></div>
+</div>
+<div class="figure align-default" id="id2">
+<img alt="pre-commit Output" src="_images/pre-commit-passing.png" />
+<p class="caption"><span class="caption-text"><code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> Output</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="configuration-file">
+<h2>Configuration file<a class="headerlink" href="#configuration-file" title="Permalink to this heading"></a></h2>
+<p>The configuration files consists of sections (<code class="docutils literal notranslate"><span class="pre">[...]</span></code>) and subsections (<code class="docutils literal notranslate"><span class="pre">[[...]]</span></code>). There is
+a default section at the top (<code class="docutils literal notranslate"><span class="pre">[default]</span></code>) to define some common settings, followed
+by a separate section for each available task. Within each task section, you can optionally
+include an arbitrary number of subsections for multiple renditions of a given
+task. The name of the subsections are arbitrary. They are used to name the batch
+jobs and resolve dependencies.</p>
+<p>Please note that the configuration file follows an inheritance model: <code class="docutils literal notranslate"><span class="pre">[[</span> <span class="pre">subsections</span> <span class="pre">]]</span></code> inherit settings
+from their parent <code class="docutils literal notranslate"><span class="pre">[section]</span></code>, which itself inherits settings from the <code class="docutils literal notranslate"><span class="pre">[default]</span></code> section.
+Settings can be defined at arbitrary levels, with the lower level definition taking precedence:
+<code class="docutils literal notranslate"><span class="pre">[[</span> <span class="pre">subsection</span> <span class="pre">]]</span></code> settings can overwrite <code class="docutils literal notranslate"><span class="pre">[section]</span></code> settings which can overwrite <code class="docutils literal notranslate"><span class="pre">[default]</span></code> settings.
+Many settings also take on sensible default values if they are not set.</p>
+</div>
+<div class="section" id="running">
+<h2>Running<a class="headerlink" href="#running" title="Permalink to this heading"></a></h2>
+<p>To start the post-processing:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">zppy</span> <span class="o">-</span><span class="n">c</span> <span class="o">&lt;</span><span class="n">configuration</span> <span class="n">file</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">zppy</span></code> will parse the configuration file and then generate and submit all batch jobs.
+<code class="docutils literal notranslate"><span class="pre">zppy</span></code> can be invoked safely multiple times – it will simply check the status of previously
+submitted tasks, only submitting new or previously failed tasks.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="schematics.html" class="btn btn-neutral float-left" title="A schematic view of zppy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tutorial.html" class="btn btn-neutral float-right" title="Tutorial" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v2.3.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../v1.0.0/getting_started.html">v1.0.0</a></dd>
+      <dd><a href="../v1.1.0/getting_started.html">v1.1.0</a></dd>
+      <dd><a href="../v2.0.0/getting_started.html">v2.0.0</a></dd>
+      <dd><a href="../v2.1.0/getting_started.html">v2.1.0</a></dd>
+      <dd><a href="../v2.2.0/getting_started.html">v2.2.0</a></dd>
+      <dd><a href="getting_started.html">v2.3.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../main/getting_started.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

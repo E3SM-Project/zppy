@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adding a new task &mdash; zppy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Contributing to This Documentation" href="../contributing.html" />
+    <link rel="prev" title="Adding a new plot to Global Time Series" href="new_glb_plot.html" />
+    <link href="../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Zppy documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../campaigns.html">Campaigns</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="project-standards.html">Project Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html">How to Prepare a Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing_e3sm_unified.html">Testing zppy for E3SM Unified release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_diags_set.html">Adding a new set to the E3SM Diagnostics task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_glb_plot.html">Adding a new plot to Global Time Series</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Adding a new task</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-task-s-bash-file">The task’s bash file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-task-s-python-file">The task’s Python file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-main-file">The main file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#update-defaults">Update defaults</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#update-the-tutorial">Update the tutorial</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#explain-new-parameters">Explain new parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#update-the-tests">Update the tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to This Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Developer Guide</a> &raquo;</li>
+      <li>Adding a new task</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/dev_guide/new_task.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="adding-a-new-task">
+<h1>Adding a new task<a class="headerlink" href="#adding-a-new-task" title="Permalink to this heading"></a></h1>
+<div class="section" id="the-task-s-bash-file">
+<h2>The task’s bash file<a class="headerlink" href="#the-task-s-bash-file" title="Permalink to this heading"></a></h2>
+<p>Create <code class="docutils literal notranslate"><span class="pre">zppy/templates/&lt;task-name&gt;.bash</span></code>.
+This is where the bulk of the work required for a task will be.
+Most of the file is task-specific, so it is difficult to describe precise steps.
+Some key parts, however, are displayed below:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>#!/bin/bash
+{% include &#39;slurm_header.sh&#39; %}
+
+{{ environment_commands }}
+
+# Turn on debug output if needed
+debug={{ debug }}
+if [[ &quot;${debug,,}&quot; == &quot;true&quot; ]]; then
+  set -x
+fi
+
+# Script dir
+cd {{ scriptDir }}
+
+# Get jobid
+id=${SLURM_JOBID}
+
+# Update status file
+STARTTIME=$(date +%s)
+echo &quot;RUNNING ${id}&quot; &gt; {{ prefix }}.status
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Update status file and exit
+{% raw %}
+ENDTIME=$(date +%s)
+ELAPSEDTIME=$(($ENDTIME - $STARTTIME))
+{% endraw %}
+echo ==============================================
+echo &quot;Elapsed time: $ELAPSEDTIME seconds&quot;
+echo ==============================================
+echo &#39;OK&#39; &gt; {{ prefix }}.status
+exit 0
+</pre></div>
+</div>
+</div></blockquote>
+<p>Variables of the form <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">&lt;variable-name&gt;</span> <span class="pre">}}</span></code> can come from a number of sources:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">zppy/templates/default.ini</span></code> (in the form of <code class="docutils literal notranslate"><span class="pre">&lt;variable-name&gt;</span> <span class="pre">=</span> <span class="pre">&lt;variable-type&gt;(default=&lt;default-value&gt;)</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zppy/templates/&lt;campaign&gt;.cfg</span></code> (in the form of <code class="docutils literal notranslate"><span class="pre">&lt;variable-name&gt;</span> <span class="pre">=</span> <span class="pre">&lt;value&gt;</span></code>); overrides values from #1</p></li>
+<li><p>The user’s configuration file (in the form of <code class="docutils literal notranslate"><span class="pre">&lt;variable-name&gt;</span> <span class="pre">=</span> <span class="pre">&lt;value&gt;</span></code>); overrides values from #1, #2</p></li>
+</ol>
+<p>Another possible source is <code class="docutils literal notranslate"><span class="pre">zppy/&lt;task-name&gt;.py</span></code>
+(in the form of <code class="docutils literal notranslate"><span class="pre">c[&quot;&lt;variable-name&gt;&quot;]</span></code> where <code class="docutils literal notranslate"><span class="pre">c</span></code> is defined in <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">c</span> <span class="pre">in</span> <span class="pre">tasks</span></code>).</p>
+</div>
+<div class="section" id="the-task-s-python-file">
+<h2>The task’s Python file<a class="headerlink" href="#the-task-s-python-file" title="Permalink to this heading"></a></h2>
+<p>Create <code class="docutils literal notranslate"><span class="pre">zppy/&lt;task-name&gt;.py</span></code>. The basic outline of the file should be similar to the
+below example, adapted from <code class="docutils literal notranslate"><span class="pre">zppy/e3sm_diags.py</span></code>.</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+
+<span class="kn">import</span> <span class="nn">jinja2</span>
+
+<span class="kn">from</span> <span class="nn">zppy.utils</span> <span class="kn">import</span> <span class="n">checkStatus</span><span class="p">,</span> <span class="n">getTasks</span><span class="p">,</span> <span class="n">getYears</span><span class="p">,</span> <span class="n">submitScript</span>
+
+
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="o">&lt;</span><span class="n">task</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">scriptDir</span><span class="p">):</span>
+
+    <span class="c1"># Initialize jinja2 template engine</span>
+    <span class="n">templateLoader</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">FileSystemLoader</span><span class="p">(</span>
+        <span class="n">searchpath</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">][</span><span class="s2">&quot;templateDir&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">templateEnv</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">templateLoader</span><span class="p">)</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">templateEnv</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s2">&quot;&lt;task-name&gt;.bash&quot;</span><span class="p">)</span>
+
+    <span class="c1"># --- List of &lt;task-name&gt; tasks ---</span>
+    <span class="n">tasks</span> <span class="o">=</span> <span class="n">getTasks</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;&lt;task-name&gt;&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="c1"># --- Generate and submit &lt;task-name&gt; scripts ---</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+
+        <span class="c1"># Loop over year sets</span>
+        <span class="n">year_sets</span> <span class="o">=</span> <span class="n">getYears</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;years&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">year_sets</span><span class="p">:</span>
+            <span class="n">c</span><span class="p">[</span><span class="s2">&quot;year1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">c</span><span class="p">[</span><span class="s2">&quot;year2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">c</span><span class="p">[</span><span class="s2">&quot;scriptDir&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scriptDir</span>
+            <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;subsection&quot;</span><span class="p">]:</span>
+                <span class="n">sub</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;subsection&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sub</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;grid&quot;</span><span class="p">]</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&lt;task-name&gt;_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%04d</span><span class="s2">-</span><span class="si">%04d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">sub</span><span class="p">,</span>
+                <span class="n">c</span><span class="p">[</span><span class="s2">&quot;tag&quot;</span><span class="p">],</span>
+                <span class="n">c</span><span class="p">[</span><span class="s2">&quot;year1&quot;</span><span class="p">],</span>
+                <span class="n">c</span><span class="p">[</span><span class="s2">&quot;year2&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+            <span class="n">c</span><span class="p">[</span><span class="s2">&quot;prefix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefix</span>
+            <span class="n">scriptFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.bash&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">))</span>
+            <span class="n">statusFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.status&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">))</span>
+            <span class="n">settingsFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.settings&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">))</span>
+            <span class="n">skip</span> <span class="o">=</span> <span class="n">checkStatus</span><span class="p">(</span><span class="n">statusFile</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">skip</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Create script</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">scriptFile</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">c</span><span class="p">))</span>
+
+            <span class="c1"># List of dependencies</span>
+            <span class="n">dependencies</span> <span class="o">=</span> <span class="p">[]</span>
+
+           <span class="c1"># Add dependencies</span>
+           <span class="c1"># Example:</span>
+           <span class="n">dependencies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_</span><span class="si">%04d</span><span class="s2">-</span><span class="si">%04d</span><span class="s2">.status&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="o">&lt;</span><span class="n">name</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">dependency</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;year1&quot;</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;year2&quot;</span><span class="p">]),))</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">settingsFile</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">sf</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">pprint</span><span class="o">.</span><span class="n">PrettyPrinter</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">sf</span><span class="p">)</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;dry_run&quot;</span><span class="p">]:</span>
+                <span class="c1"># Submit job</span>
+                <span class="n">jobid</span> <span class="o">=</span> <span class="n">submitScript</span><span class="p">(</span>
+                    <span class="n">scriptFile</span><span class="p">,</span> <span class="n">dependFiles</span><span class="o">=</span><span class="n">dependencies</span><span class="p">,</span> <span class="n">export</span><span class="o">=</span><span class="s2">&quot;NONE&quot;</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">jobid</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="c1"># Update status file</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">statusFile</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;WAITING </span><span class="si">%d</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">jobid</span><span class="p">))</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="the-main-file">
+<h2>The main file<a class="headerlink" href="#the-main-file" title="Permalink to this heading"></a></h2>
+<p>Add the task to <code class="docutils literal notranslate"><span class="pre">zppy/__main__.py</span></code>:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="o">&lt;</span><span class="n">task_name</span><span class="o">&gt;</span> <span class="kn">import</span> <span class="o">&lt;</span><span class="n">task_name</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># &lt;task-name&gt; tasks</span>
+<span class="o">&lt;</span><span class="n">task</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">scriptDir</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="update-defaults">
+<h2>Update defaults<a class="headerlink" href="#update-defaults" title="Permalink to this heading"></a></h2>
+<p>Add default values for parameters in <code class="docutils literal notranslate"><span class="pre">zppy/templates/default.ini</span></code>.</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">task</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span><span class="p">]</span>
+<span class="o">...</span>
+
+    <span class="p">[[</span><span class="n">__many__</span><span class="p">]]</span> <span class="c1"># Only if the task supports sub-tasks</span>
+    <span class="o">...</span> <span class="c1"># List the same parameters but with `default=None`</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="update-the-tutorial">
+<h2>Update the tutorial<a class="headerlink" href="#update-the-tutorial" title="Permalink to this heading"></a></h2>
+<p>Add example values for parameters in <code class="docutils literal notranslate"><span class="pre">docs/source/post.mysimulation.cfg</span></code>.</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="o">&lt;</span><span class="n">task</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span> <span class="p">]</span>
+<span class="o">...</span> <span class="c1"># Specify parameters that would likely apply to all sub-tasks</span>
+
+    <span class="p">[[</span> <span class="o">&lt;</span><span class="n">subtask</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span> <span class="p">]]</span> <span class="c1"># Only if the task supports sub-tasks</span>
+    <span class="o">...</span> <span class="c1"># Specify parameters that make more sense defined in the sub-tasks</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="explain-new-parameters">
+<h2>Explain new parameters<a class="headerlink" href="#explain-new-parameters" title="Permalink to this heading"></a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">docs/source/parameters.rst</span></code></p>
+<p>Copy defaults from <code class="docutils literal notranslate"><span class="pre">zppy/templates/default.ini</span></code> and add a comment line
+above each explaining the parameter.</p>
+</div>
+<div class="section" id="update-the-tests">
+<h2>Update the tests<a class="headerlink" href="#update-the-tests" title="Permalink to this heading"></a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">tests/integration/test_*.cfg</span></code></p>
+<p>Copy example values from <code class="docutils literal notranslate"><span class="pre">docs/source/post.mysimulation.cfg</span></code>.
+The expected files will have to be updated as well.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="new_glb_plot.html" class="btn btn-neutral float-left" title="Adding a new plot to Global Time Series" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../contributing.html" class="btn btn-neutral float-right" title="Contributing to This Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v2.3.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../../v2.0.0/dev_guide/new_task.html">v2.0.0</a></dd>
+      <dd><a href="../../v2.1.0/dev_guide/new_task.html">v2.1.0</a></dd>
+      <dd><a href="../../v2.2.0/dev_guide/new_task.html">v2.2.0</a></dd>
+      <dd><a href="new_task.html">v2.3.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../main/dev_guide/new_task.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
