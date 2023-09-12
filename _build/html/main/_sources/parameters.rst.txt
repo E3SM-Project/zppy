@@ -11,5 +11,5 @@ be overridden by parameters set in a ``[[subsection]``.
 .. warning::
    Note that some parameters will be overriden by defaults if you define them too high up in the inheritance hierarchy.
 
-See `parameter defaults <https://github.com/E3SM-Project/zppy/blob/26c6416ba4d3e184ddc42fa7d6569f5440a6bf53/zppy/templates/default.ini>`_
+See `parameter defaults <https://github.com/E3SM-Project/zppy/blob/ec4216a6d84d1c66c2222df91ae7f1f0abe8f624/zppy/templates/default.ini>`_
 on GitHub for a complete list of parameters and their default values.
