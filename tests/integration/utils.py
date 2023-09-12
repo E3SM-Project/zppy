@@ -184,9 +184,9 @@ def get_perlmutter_expansions(config):
         "bundles_walltime": "6:00:00",
         "constraint": "cpu",
         # To run this test, replace conda environment with your e3sm_diags dev environment
-        "diags_environment_commands": "source /global/homes/f/forsyth/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20230830_with_edits; source /global/common/software/e3sm/anaconda_envs/spack/e3sm_unified_1_9_0rc14_pm-cpu_gnu_mpich/share/spack/setup-env.sh; spack env activate e3sm_unified_1_9_0rc14_pm-cpu_gnu_mpich",
+        "diags_environment_commands": "source /global/homes/f/forsyth/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20230908",
         "diags_walltime": "6:00:00",
-        "environment_commands_test": "source /global/common/software/e3sm/anaconda_envs/test_e3sm_unified_1.9.0rc14_pm-cpu.sh",
+        "environment_commands_test": "source /global/common/software/e3sm/anaconda_envs/test_e3sm_unified_1.9.0rc16_pm-cpu.sh",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
         "mpas_analysis_walltime": "01:00:00",
         "partition_long": "",
