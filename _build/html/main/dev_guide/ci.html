@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Adding a new plot to Global Time Series &mdash; zppy  documentation</title>
+  <title>Understanding CI &mdash; zppy  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -19,8 +19,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Adding a new task" href="new_task.html" />
-    <link rel="prev" title="Adding a new set to the E3SM Diagnostics task" href="new_diags_set.html" />
+    <link rel="next" title="Testing zppy" href="testing.html" />
+    <link rel="prev" title="Project Standards" href="project-standards.html" />
     <link href="../_static/style.css" rel="stylesheet" type="text/css">
 
 </head>
@@ -50,13 +50,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../campaigns.html">Campaigns</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="project-standards.html">Project Standards</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ci.html">Understanding CI</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Understanding CI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#build-workflow">Build Workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#release-workflow">Release Workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#github-actions">GitHub Actions</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="testing.html">Testing zppy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="release_testing.html">Testing directions for making a release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="release.html">How to Prepare a Release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial_testing_e3sm_unified.html">Testing zppy for E3SM Unified release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="new_diags_set.html">Adding a new set to the E3SM Diagnostics task</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Adding a new plot to Global Time Series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_glb_plot.html">Adding a new plot to Global Time Series</a></li>
 <li class="toctree-l2"><a class="reference internal" href="new_task.html">Adding a new task</a></li>
 </ul>
 </li>
@@ -78,9 +83,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="index.html">Developer Guide</a> &raquo;</li>
-      <li>Adding a new plot to Global Time Series</li>
+      <li>Understanding CI</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/dev_guide/new_glb_plot.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/dev_guide/ci.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -88,25 +93,35 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="adding-a-new-plot-to-global-time-series">
-<h1>Adding a new plot to Global Time Series<a class="headerlink" href="#adding-a-new-plot-to-global-time-series" title="Permalink to this heading"></a></h1>
-<p>This guide gives a general list of things to consider when adding a new
-Global Time Series plot. The exact code changes required will differ amongst plots.</p>
-<p>Note that unlike E3SM Diags and MPAS-Analysis which are packages called by <code class="docutils literal notranslate"><span class="pre">zppy</span></code>, Global Time Series is built into <code class="docutils literal notranslate"><span class="pre">zppy</span></code>.</p>
+  <div class="section" id="understanding-ci">
+<h1>Understanding CI<a class="headerlink" href="#understanding-ci" title="Permalink to this heading"></a></h1>
+<p>In this guide, we’ll cover:</p>
 <ul class="simple">
-<li><p>In <a class="reference external" href="https://github.com/E3SM-Project/zppy/blob/main/zppy/templates/coupled_global.py">coupled_global.py</a>: Add variables under “# Variables to extract”. Add the code for your new plot under “Plotting functions”; the name of your function should start with <code class="docutils literal notranslate"><span class="pre">plot_</span></code>. In <code class="docutils literal notranslate"><span class="pre">PLOT_DICT</span></code>, add <code class="docutils literal notranslate"><span class="pre">&quot;function</span> <span class="pre">name</span> <span class="pre">without</span> <span class="pre">plot_&quot;</span> <span class="pre">:</span> <span class="pre">function</span> <span class="pre">name</span></code>.</p></li>
-<li><p>If this plot should be added to the defaults, then complete this step: for <code class="docutils literal notranslate"><span class="pre">plot_names</span></code> under <code class="docutils literal notranslate"><span class="pre">[global_time_series]</span></code> in <a class="reference external" href="https://github.com/E3SM-Project/zppy/blob/main/zppy/templates/default.ini">default.ini</a>, add the function name without plot to the string.</p></li>
-<li><p>Optionally, after making your edits, you can run <code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">run</span> <span class="pre">--all-files</span></code> to clean up your code and check for any obvious errors.</p></li>
-<li><p>Run the <a class="reference external" href="https://e3sm-project.github.io/zppy/_build/html/main/dev_guide/testing.html#integration-tests">integration tests</a> and examine the differences from the expected files. If they match what you expect, update the expected files following “Commands to run to replace outdated expected files” on the machine-specific directions. (The commands to run all the integration tests are <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">.</span></code> followed by <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-u</span> <span class="pre">-m</span> <span class="pre">unittest</span> <span class="pre">tests/integration/test_*.py</span></code>).</p></li>
+<li><p>Build Workflow</p></li>
+<li><p>Release Workflow</p></li>
+<li><p>GitHub Actions</p></li>
 </ul>
+<div class="section" id="build-workflow">
+<h2>Build Workflow<a class="headerlink" href="#build-workflow" title="Permalink to this heading"></a></h2>
+<p>The build workflow is at <a class="reference external" href="https://github.com/E3SM-Project/zppy/blob/main/.github/workflows/build_workflow.yml">https://github.com/E3SM-Project/zppy/blob/main/.github/workflows/build_workflow.yml</a>. See comments in the file for in-depth explanations of each step.</p>
+</div>
+<div class="section" id="release-workflow">
+<h2>Release Workflow<a class="headerlink" href="#release-workflow" title="Permalink to this heading"></a></h2>
+<p>The release workflow is at <a class="reference external" href="https://github.com/E3SM-Project/zppy/blob/main/.github/workflows/release_workflow.yml">https://github.com/E3SM-Project/zppy/blob/main/.github/workflows/release_workflow.yml</a>. See comments in the file for in-depth explanations of each step.</p>
+</div>
+<div class="section" id="github-actions">
+<h2>GitHub Actions<a class="headerlink" href="#github-actions" title="Permalink to this heading"></a></h2>
+<p>Both of these workflows are run by GitHub Actions. See <a class="reference external" href="https://github.com/E3SM-Project/zppy/actions">https://github.com/E3SM-Project/zppy/actions</a>.</p>
+<p>When a pull request is made, the build workflow is run automatically on the pushed branch. When the pull request is merged, the build workflow is once again run, but this time on the <code class="docutils literal notranslate"><span class="pre">main</span></code> branch.</p>
+</div>
 </div>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="new_diags_set.html" class="btn btn-neutral float-left" title="Adding a new set to the E3SM Diagnostics task" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="new_task.html" class="btn btn-neutral float-right" title="Adding a new task" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="project-standards.html" class="btn btn-neutral float-left" title="Project Standards" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="testing.html" class="btn btn-neutral float-right" title="Testing zppy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
@@ -139,12 +154,12 @@ Global Time Series plot. The exact code changes required will differ amongst plo
       <dd><a href="../../v1.1.0/index.html">v1.1.0</a></dd>
       <dd><a href="../../v2.0.0/index.html">v2.0.0</a></dd>
       <dd><a href="../../v2.1.0/index.html">v2.1.0</a></dd>
-      <dd><a href="../../v2.2.0/dev_guide/new_glb_plot.html">v2.2.0</a></dd>
-      <dd><a href="../../v2.3.0/dev_guide/new_glb_plot.html">v2.3.0</a></dd>
+      <dd><a href="../../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../../v2.3.0/index.html">v2.3.0</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>
-      <dd><a href="new_glb_plot.html">main</a></dd>
+      <dd><a href="ci.html">main</a></dd>
     </dl>
   </div>
 </div><script>
