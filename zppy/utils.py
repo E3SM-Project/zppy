@@ -275,10 +275,11 @@ def print_url(c, task):
     base_path = c["web_portal_base_path"]
     base_url = c["web_portal_base_url"]
     www = c["www"]
+    case = c["case"]
     if www.startswith(base_path):
         # TODO: python 3.9 introduces `removeprefix`
         # This will begin with a "/"
         www_suffix = www[len(base_path) :]
-        print(f"URL: {base_url}{www_suffix}/{task}")
+        print(f"URL: {base_url}{www_suffix}/{case}/{task}")
     else:
         print(f"Could not determine URL from www={www}")
