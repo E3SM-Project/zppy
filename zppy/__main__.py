@@ -114,9 +114,13 @@ def main():  # noqa: C901
         pass
 
     if ("machine" not in config["default"]) or (config["default"]["machine"] == ""):
-        # MachineInfo below will then call `discover_machine()`,
-        # which only works on log-in nodes.
-        machine = None
+        if "E3SMU_MACHINE" in os.environ:
+            # Use the machine identified by E3SM-Unified
+            machine = os.environ["E3SMU_MACHINE"]
+        else:
+            # MachineInfo below will then call `discover_machine()`,
+            # which only works on log-in nodes.
+            machine = None
     else:
         # If `machine` is set, then MachineInfo can bypass the
         # `discover_machine()` function.
