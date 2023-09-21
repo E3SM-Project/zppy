@@ -107,11 +107,11 @@ using Sphinx, you can refer to</p>
 </ul>
 <ol class="arabic">
 <li><p>Make sure that you have conda in your path. On NERSC machines, you can load it with:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ module load python/3.7-anaconda-2019.10
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ module load python/3.9-anaconda-2021.11
 </pre></div>
 </div>
 </li>
-<li><p>Clone the repository and checkout a branch from <cite>main</cite>:</p>
+<li><p>Clone the repository and checkout a branch from <code class="docutils literal notranslate"><span class="pre">main</span></code>:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cd &lt;myDir&gt;
 $ git clone https://github.com/&lt;your-github-username&gt;/zppy.git
 $ cd zppy
@@ -150,7 +150,7 @@ $ git push &lt;fork-origin&gt; &lt;branch-name&gt;
 </pre></div>
 </div>
 </li>
-<li><p>&lt;<cite>OPTIONAL</cite>&gt; If you want to generate and view versioned docs:</p>
+<li><p>&lt;<code class="docutils literal notranslate"><span class="pre">OPTIONAL</span></code>&gt; If you want to generate and view versioned docs:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ # After commiting to your branch
 $ cd &lt;myDir&gt;/zppy/docs
 $ sphinx-multiversion source _build/html
@@ -206,7 +206,7 @@ $ git clean -fdx
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Separate source and build directories (y/N) [n]: y
 </pre></div>
 </div>
-<p>Edit Makefile and change BUILDIR</p>
+<p>Edit Makefile and change <code class="docutils literal notranslate"><span class="pre">BUILDIR</span></code></p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>BUILDDIR = docs
 </pre></div>
 </div>

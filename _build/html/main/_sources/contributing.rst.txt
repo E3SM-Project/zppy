@@ -5,7 +5,7 @@ Contributing to This Documentation
 .. highlight:: none
 
 Getting Started
-==========================
+===============
 
 This documentation is created using
 `Sphinx <http://www.sphinx-doc.org/en/stable>`_. Sphinx is an open-source tool
@@ -19,7 +19,7 @@ After merging a PR, GitHub Actions automates the documentation building process.
 It pushes the HTML build to the ``gh-pages`` branch, which is hosted on GitHub Pages.
 
 Edit Documentation
-===============================
+==================
 
 Sphinx uses `reStructuredText <http://docutils.sourceforge.net/rst.html>`_
 as its markup language. For more information on how to write documentation
@@ -30,9 +30,9 @@ using Sphinx, you can refer to
 
 1. Make sure that you have conda in your path. On NERSC machines, you can load it with: ::
 
-   $ module load python/3.7-anaconda-2019.10
+   $ module load python/3.9-anaconda-2021.11
 
-2. Clone the repository and checkout a branch from `main`: ::
+2. Clone the repository and checkout a branch from ``main``: ::
 
    $ cd <myDir>
    $ git clone https://github.com/<your-github-username>/zppy.git
@@ -64,7 +64,7 @@ using Sphinx, you can refer to
     $ git commit
     $ git push <fork-origin> <branch-name>
 
-8. <`OPTIONAL`> If you want to generate and view versioned docs: ::
+8. <``OPTIONAL``> If you want to generate and view versioned docs: ::
 
     $ # After commiting to your branch
     $ cd <myDir>/zppy/docs
@@ -92,7 +92,7 @@ Branches or tags that don’t contain both the sphinx ``source`` directory and t
     - Run ``sphinx-multiversion source _build/html --dump-metadata`` to see which tags/branches matched.
 
 Initial setup (obsolete/for reference only)
-============================================
+===========================================
 
 The instructions below only apply for the initial configuration of the
 Sphinx documentation on the Github repository. They are documented here
@@ -121,7 +121,7 @@ accept suggested default options, except ::
 
   Separate source and build directories (y/N) [n]: y
 
-Edit Makefile and change BUILDIR ::
+Edit Makefile and change ``BUILDIR`` ::
 
   BUILDDIR = docs
 

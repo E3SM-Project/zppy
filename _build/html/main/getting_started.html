@@ -234,7 +234,7 @@ unified environment), you can update <code class="docutils literal notranslate">
 <span id="dev-env"></span><h2>(b) Development Environment<a class="headerlink" href="#b-development-environment" title="Permalink to this heading"></a></h2>
 <p>Unlike the latest stable release (i.e., the user environment), the development
 environment does not include <code class="docutils literal notranslate"><span class="pre">zppy</span></code>.
-Instead, the developer will <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">.</span></code> to build <code class="docutils literal notranslate"><span class="pre">zppy</span></code> with changes
+Instead, the developer will <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code> to build <code class="docutils literal notranslate"><span class="pre">zppy</span></code> with changes
 (see step 7 below).</p>
 <p>Furthermore, the dev environment includes quality assurance (QA) tools such as code formatters, linters, and <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code>.
 <strong>NOTE</strong>: These QA tools are enforced using <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> checks in the continuous integration/continuous delivery (CI/CD) build, so you must use the dev environment for all contributions.</p>
@@ -319,15 +319,16 @@ Instead, the developer will <code class="docutils literal notranslate"><span cla
 </div>
 </div></blockquote>
 </li>
-<li><p>Make the desired changes to <code class="docutils literal notranslate"><span class="pre">zppy</span></code>, then rebuild and install with:</p>
+<li><p>install <code class="docutils literal notranslate"><span class="pre">zppy</span></code> into the conda environment in edit mode (so code changes
+are reflected in the environment as you make them) with:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span>
 </pre></div>
 </div>
 </div></blockquote>
 </li>
-<li><p>Commit changes and make sure <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> checks pass</p></li>
-<li><p>Commit changes</p>
+<li><p>Make the desired changes to <code class="docutils literal notranslate"><span class="pre">zppy</span></code>.</p></li>
+<li><p>Commit changes and make sure <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> checks pass:</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">commit</span> <span class="o">-</span><span class="n">m</span> <span class="s2">&quot;commit-message&quot;</span>
 </pre></div>

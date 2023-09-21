@@ -167,7 +167,7 @@ unified environment), you can update ``zppy`` by doing the following:  ::
 
 Unlike the latest stable release (i.e., the user environment), the development
 environment does not include ``zppy``.
-Instead, the developer will ``python -m pip install .`` to build ``zppy`` with changes
+Instead, the developer will ``python -m pip install -e .`` to build ``zppy`` with changes
 (see step 7 below).
 
 Furthermore, the dev environment includes quality assurance (QA) tools such as code formatters, linters, and ``pre-commit``.
@@ -249,15 +249,16 @@ Furthermore, the dev environment includes quality assurance (QA) tools such as c
 
         pre-commit install
 
-7. Make the desired changes to ``zppy``, then rebuild and install with:
+7. install ``zppy`` into the conda environment in edit mode (so code changes
+   are reflected in the environment as you make them) with:
 
     ::
 
-        pip install .
+        python -m pip install -e .
 
-8. Commit changes and make sure ``pre-commit`` checks pass
+8. Make the desired changes to ``zppy``.
 
-9. Commit changes
+9. Commit changes and make sure ``pre-commit`` checks pass:
 
     ::
 
