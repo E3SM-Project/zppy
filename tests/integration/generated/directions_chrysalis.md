@@ -9,10 +9,23 @@ rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_bund
 rm -rf /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
+
+# Run first set of jobs:
 zppy -c tests/integration/generated/test_bundles_chrysalis.cfg
-# bundle1 and bundle2 should run. After they finish, invoke zppy again to resolve remaining dependencies:
+# bundle1 and bundle2 should run. After they finish, check the results:
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts
+grep -v "OK" *status
+# Nothing should print
+
+# Now, invoke zppy again to run jobs that needed to wait for dependencies:
 zppy -c tests/integration/generated/test_bundles_chrysalis.cfg
-# bundle3 and ilamb should run
+# bundle3 and ilamb should run. After they finish, check the results:
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts
+grep -v "OK" *status
+# Nothing should print
+
+# If a final release has just been made, run:
+cp /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles expected_bundles_v<version>
 ```
 
 ### test_complete_run
@@ -22,7 +35,16 @@ rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_comp
 rm -rf /lcrc/group/e3sm/ac.forsyth2/zppy_test_complete_run_output/v2.LR.historical_0201/post
 # Generate cfg
 python tests/integration/utils.py
+
+# Run jobs:
 zppy -c tests/integration/generated/test_complete_run_chrysalis.cfg
+# After they finish, check the results:
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_test_complete_run_output/v2.LR.historical_0201/post/scripts
+grep -v "OK" *status
+# Nothing should print
+
+# If a final release has just been made, run:
+cp /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run expected_complete_run_v<version>
 ```
 
 ## Commands to run to replace outdated expected files
@@ -39,7 +61,7 @@ mv test_bash_generation_output/post/scripts /lcrc/group/e3sm/public_html/zppy_te
 python -u -m unittest tests/integration/test_bash_generation.py
 ```
 
-#### test_bundles
+### test_bundles
 
 ```
 rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
@@ -49,6 +71,8 @@ cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_bundl
 mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
 cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
 cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
+# Remove the image check failures, so they don't end up in the expected files.
+rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/forsyth/zppy_test_bundles_www/v2.LR.historical_0201/image_check_failures
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_bundles.txt
 cd <top level of zppy repo>
@@ -79,6 +103,8 @@ rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
 # Copy output so you don't have to rerun zppy to generate the output.
 cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_complete_run_www/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
 cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
+# Remove the image check failures, so they don't end up in the expected files.
+rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/forsyth/zppy_test_complete_run_www/v2.LR.historical_0201/image_check_failures
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_complete_run.txt
 cd <top level of zppy repo>
@@ -96,4 +122,20 @@ mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/test_defaults_expected
 mv test_defaults_output/post/scripts/*.settings /lcrc/group/e3sm/public_html/zppy_test_resources/test_defaults_expected_files
 # Rerun test
 python -u -m unittest tests/integration/test_defaults.py
+```
+
+## Commands to generate official expected results for a release
+
+### test_bundles
+
+```
+cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_bundles_www/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles_unified_<#>
+mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles_unified_<#>/bundle_files
+cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/v2.LR.historical_0201/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles_unified_<#>/bundle_files
+```
+
+### test_complete_run
+
+```
+cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_complete_run_www/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run_unified_<#>
 ```
