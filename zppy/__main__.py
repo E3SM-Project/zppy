@@ -3,8 +3,10 @@ import errno
 import importlib
 import io
 import os
+import sys
 from typing import List
 
+import pandas
 from configobj import ConfigObj
 from mache import MachineInfo
 from validate import Validator
@@ -246,3 +248,17 @@ def _validate_config(config):
         )
     else:
         print("Configuration file validation passed.")
+
+
+def zppy_cdscan_replacement():
+    output_file = sys.argv[1]
+    input_files = sys.argv[2:]
+    if len(input_files) == 1:
+        files = []
+        # Convert text file of files to a list of files.
+        with open(input_files[0]) as f:
+            for line in f:
+                files.append(line.strip())
+        input_files = files
+    dataframe = pandas.read_table(input_files)
+    dataframe.to_xml(output_file)

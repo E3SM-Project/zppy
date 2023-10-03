@@ -42,7 +42,7 @@ use_atm={{ use_atm }}
 if [[ ${use_atm,,} == "true" ]]; then
     echo 'Create xml files for atm'
     cd ${case_dir}/post/atm/glb/ts/monthly/${ts_num_years}yr
-    cdscan -x glb.xml *.nc
+    zppy_cdscan_replacement glb.xml *.nc
     if [ $? != 0 ]; then
       cd {{ scriptDir }}
       echo 'ERROR (1)' > {{ prefix }}.status
@@ -54,7 +54,7 @@ use_lnd={{ use_lnd }}
 if [[ ${use_lnd,,} == "true" ]]; then
     echo 'Create xml files for lnd'
     cd ${case_dir}/post/lnd/glb/ts/monthly/${ts_num_years}yr
-    cdscan -x glb.xml *.nc
+    zppy_cdscan_replacement -x glb.xml *.nc
     if [ $? != 0 ]; then
       cd {{ scriptDir }}
       echo 'ERROR (2)' > {{ prefix }}.status
@@ -78,7 +78,7 @@ if [[ ${use_ocn,,} == "true" ]]; then
     echo 'Create xml for for ocn'
     export CDMS_NO_MPI=true
     cd ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
-    cdscan -x glb.xml mpaso.glb*.nc
+    zppy_cdscan_replacement glb.xml mpaso.glb*.nc
     if [ $? != 0 ]; then
       cd {{ scriptDir }}
       echo 'ERROR (4)' > {{ prefix }}.status
