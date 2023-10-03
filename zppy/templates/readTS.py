@@ -1,5 +1,4 @@
-import cdms2
-import cdutil
+import xcdat
 
 
 class TS(object):
@@ -7,7 +6,7 @@ class TS(object):
 
         self.filename = filename
 
-        self.f = cdms2.open(filename)
+        self.f = xcdat.open_dataset(filename)
 
     def __del__(self):
 
@@ -62,6 +61,6 @@ class TS(object):
             v = self.f(var)
 
             # Annual average
-            v = cdutil.YEAR(v)
+            v = self.f.temporal.group_average(v, "year")
 
         return v

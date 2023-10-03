@@ -43,7 +43,7 @@ atmosphere_only=${atmosphere_only,,}
 echo 'Create xml files for atm'
 export CDMS_NO_MPI=true
 cd ${case_dir}/post/atm/glb/ts/monthly/${ts_num_years}yr
-cdscan -x glb.xml *.nc
+python cdscan_replacement.py glb.xml *.nc
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (1)' > {{ prefix }}.status
@@ -67,7 +67,7 @@ if [[ ${atmosphere_only} == "false" ]]; then
     echo 'Create xml for for ocn'
     export CDMS_NO_MPI=true
     cd ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
-    cdscan -x glb.xml mpaso.glb*.nc
+    python cdscan_replacement.py glb.xml mpaso.glb*.nc
     if [ $? != 0 ]; then
       cd {{ scriptDir }}
       echo 'ERROR (3)' > {{ prefix }}.status
