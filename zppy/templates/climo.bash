@@ -24,7 +24,7 @@ cd ${workdir}
 
 {% if frequency == 'monthly' %}
 # --- Monthly climatologies ---
-/global/homes/z/zender/bin_perlmutter/ncclimo --npo \
+ncclimo \
 {% if prc_typ == 'eamxx' -%}
 --case={{ case }}.{{ input_files }}.0001-01-01-00000.nc \
 --fml_nm={{ case }} \
@@ -98,7 +98,7 @@ if grep -q "*" input.txt; then
   exit 1
 fi
 # Now, call ncclimo
-cat input.txt | /global/homes/z/zender/bin_perlmutter/ncclimo --npo \
+cat input.txt | ncclimo \
 --case={{ case }}.{{ input_files }} \
 --jobs=${SLURM_NNODES} \
 --thr=1 \
