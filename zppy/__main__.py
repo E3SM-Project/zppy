@@ -3,6 +3,7 @@ import errno
 import importlib
 import io
 import os
+import pprint
 from typing import List
 
 from configobj import ConfigObj
@@ -239,8 +240,12 @@ def _validate_config(config):
     validator = Validator()
 
     result = config.validate(validator)
+    print(type(result))
     if result is not True:
-        print("Validation results={}".format(result))
+        printer = pprint.PrettyPrinter(depth=3)
+        print("Validation results:")
+        printer.pprint(result)
+        # print("Validation results={}".format(result))
         raise ValueError(
             "Configuration file validation failed. Parameters listed as false in the validation results have invalid values."
         )
