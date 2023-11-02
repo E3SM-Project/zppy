@@ -12,7 +12,7 @@ body:
               - label: I searched the [zppy documentation](https://e3sm-project.github.io/zppy).
                 required: true
               - label: This issue does not match the other templates (i.e., it is not a bug report, documentation request, feature request, or a question.)
-	        required: true
+                required: true
 
     - type: textarea
       id: issue-description
