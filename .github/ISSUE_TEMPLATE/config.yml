@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
     - name: Questions (zppy)
-      url: https://github.com/E3SM-Project/zppy/discussions
+      url: https://github.com/E3SM-Project/zppy/discussions/categories/questions
       about: |
           Ask questions and discuss with other zppy community members here. Please
           browse the zppy Discussions Forum or zppy documentation first before asking a
