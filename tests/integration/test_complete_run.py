@@ -9,8 +9,9 @@ class TestCompleteRun(unittest.TestCase):
         expansions = get_expansions()
         expected_dir = expansions["expected_dir"]
         user_www = expansions["user_www"]
+        unique_id = expansions["unique_id"]
         actual_images_dir = (
-            f"{user_www}zppy_test_complete_run_www/v2.LR.historical_0201/"
+            f"{user_www}zppy_test_complete_run_www/{unique_id}/v2.LR.historical_0201/"
         )
 
         # The expected_images_file lists all images we expect to compare.
