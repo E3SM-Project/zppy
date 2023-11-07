@@ -203,6 +203,16 @@ create_links_ts_rof ${ts_rof_dir_source} ${ts_rof_dir_ref} ${ref_Y1} ${ref_Y2} 8
 {%- endif %}
 {%- endif %}
 
+{% if run_type == "model_vs_obs" %}
+ref_name={{ ref_name }}
+{%- endif %}
+{% if (run_type == "model_vs_model") and keep_mvm_case_name_in_fig %}
+ref_name={{ ref_name }}
+{%- endif %}
+{% if (run_type == "model_vs_model") and not keep_mvm_case_name_in_fig %}
+ref_name=""
+{%- endif %}
+
 # Run E3SM Diags
 echo
 echo ===== RUN E3SM DIAGS =====
@@ -260,7 +270,7 @@ param.reference_data_path = '{{ reference_data_path }}'
 {% elif run_type == "model_vs_model" %}
 # Reference
 param.reference_data_path = '${climo_dir_ref}'
-param.ref_name = '{{ ref_name }}'
+param.ref_name = '${ref_name}'
 param.short_ref_name = '{{ short_ref_name }}'
 # Optionally, swap test and reference model
 if {{ swap_test_ref }}:
@@ -297,7 +307,7 @@ enso_param.ref_end_yr = ref_start_yr + 10
 {% elif run_type == "model_vs_model" %}
 # Reference
 enso_param.reference_data_path = '${ts_dir_ref}'
-enso_param.ref_name = '{{ ref_name }}'
+enso_param.ref_name = '${ref_name}'
 enso_param.short_ref_name = '{{ short_ref_name }}'
 enso_param.ref_start_yr = '{{ ref_start_yr }}'
 enso_param.ref_end_yr = '{{ ref_final_yr }}'
@@ -329,7 +339,7 @@ qbo_param.reference_data_path = '{{ obs_ts }}'
 {% elif run_type == "model_vs_model" %}
 # Reference
 qbo_param.reference_data_path = '${ts_dir_ref}'
-qbo_param.ref_name = '{{ ref_name }}'
+qbo_param.ref_name = '${ref_name}'
 qbo_param.short_ref_name = '{{ short_ref_name }}'
 # Optionally, swap test and reference model
 if {{ swap_test_ref }}:
@@ -353,7 +363,7 @@ ts_param.reference_data_path = '{{ obs_ts }}'
 {% elif run_type == "model_vs_model" %}
 # Reference
 ts_param.reference_data_path = '${ts_dir_ref}'
-ts_param.ref_name = '{{ ref_name }}'
+ts_param.ref_name = '${ref_name}'
 ts_param.short_ref_name = '{{ short_ref_name }}'
 # Optionally, swap test and reference model
 if {{ swap_test_ref }}:
@@ -376,7 +386,7 @@ dc_param.reference_data_path = '{{ dc_obs_climo }}'
 {% elif run_type == "model_vs_model" %}
 # Reference
 dc_param.reference_data_path = '${climo_diurnal_dir_ref}'
-dc_param.ref_name = '{{ ref_name }}'
+dc_param.ref_name = '${ref_name}'
 dc_param.short_ref_name = '{{ short_ref_name }}'
 # Optionally, swap test and reference model
 if {{ swap_test_ref }}:
@@ -402,7 +412,7 @@ streamflow_param.ref_end_yr = "1995"
 {% elif run_type == "model_vs_model" %}
 # Reference
 streamflow_param.reference_data_path = '${ts_rof_dir_ref}'
-streamflow_param.ref_name = '{{ ref_name }}'
+streamflow_param.ref_name = '${ref_name}'
 streamflow_param.short_ref_name = '{{ short_ref_name }}'
 streamflow_param.ref_start_yr = '{{ ref_start_yr }}'
 streamflow_param.ref_end_yr = '{{ ref_final_yr }}'
@@ -432,7 +442,7 @@ tc_param.ref_end_yr = "2018"
 {% elif run_type == "model_vs_model" %}
 # Reference
 tc_param.reference_data_path = '{{ reference_data_path_tc }}'
-tc_param.ref_name = '{{ ref_name }}'
+tc_param.ref_name = '${ref_name}'
 tc_param.short_ref_name = '{{ short_ref_name }}'
 tc_param.ref_start_yr = '{{ ref_start_yr }}'
 tc_param.ref_end_yr = '{{ ref_final_yr }}'
