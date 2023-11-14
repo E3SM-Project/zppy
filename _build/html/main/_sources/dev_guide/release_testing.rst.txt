@@ -125,7 +125,10 @@ Testing directions for making a release
     * If there are only expected failures, then update the expected files. Use the "Commands to run to replace outdated expected files" from the links on step 8. Then repeat step 9.
     * If there are no failures at all, proceed to the next step.
 
-11. Make a pull request and merge any changes. This keeps the repo updated with the latest testing configurations. Mark yourself as the assignee, and mark "Testing" as the label. If you made bug fixes, add the "semver: bug" label.
+11. Run ``git diff``. All of your changes should be from editing ``tests/integration/utils.py`` in step 5, and running it in step 8.
+
+    * If this is the case, you can delete this testing branch.
+    * If not, you have probably made code changes to get the tests to pass. Make a pull request to merge the changes. Add the "semver: bug" label.
 
 12. Wrap up release testing:
 

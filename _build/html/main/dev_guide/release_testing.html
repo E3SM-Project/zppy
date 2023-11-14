@@ -275,7 +275,12 @@ $ `cd` back to zppy directory
 </li>
 </ol>
 <ol class="arabic" start="11">
-<li><p>Make a pull request and merge any changes. This keeps the repo updated with the latest testing configurations. Mark yourself as the assignee, and mark “Testing” as the label. If you made bug fixes, add the “semver: bug” label.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">diff</span></code>. All of your changes should be from editing <code class="docutils literal notranslate"><span class="pre">tests/integration/utils.py</span></code> in step 5, and running it in step 8.</p>
+<ul class="simple">
+<li><p>If this is the case, you can delete this testing branch.</p></li>
+<li><p>If not, you have probably made code changes to get the tests to pass. Make a pull request to merge the changes. Add the “semver: bug” label.</p></li>
+</ul>
+</li>
 <li><p>Wrap up release testing:</p>
 <ol class="loweralpha">
 <li><p>test dev (run before making a new zppy RC): Create the next zppy RC by following the “release candidates” directions at <a class="reference external" href="https://e3sm-project.github.io/zppy/_build/html/main/dev_guide/release.html">https://e3sm-project.github.io/zppy/_build/html/main/dev_guide/release.html</a>.</p></li>
