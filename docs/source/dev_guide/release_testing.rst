@@ -60,6 +60,7 @@ Testing directions for making a release
     For a, b, and c, always:
 
     * Update ``diags_environment_commands`` for the machine you're currently working on to use the environment created in the above step. If this is not done, the ``atm_monthly_180x360_aave_environment_commands`` subtask will use an older dev environment for E3SM Diags than we want.
+    * Update ``UNIQUE_ID`` to be a short description of what you're testing.
 
 6. Set up your environment.
 

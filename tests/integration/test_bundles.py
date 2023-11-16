@@ -7,10 +7,10 @@ from tests.integration.utils import check_mismatched_images, get_expansions
 class TestBundles(unittest.TestCase):
     def test_bundles_bash_file_list(self):
         # Check that the correct bash files are generated
-        user_output = get_expansions()["user_output"]
-        directory = (
-            f"{user_output}zppy_test_bundles_output/v2.LR.historical_0201/post/scripts"
-        )
+        expansions = get_expansions()
+        user_output = expansions["user_output"]
+        unique_id = expansions["unique_id"]
+        directory = f"{user_output}zppy_test_bundles_output/{unique_id}/v2.LR.historical_0201/post/scripts"
         bash_file_list = f"{directory}/bash_file_list.txt"
         cmd = f"cd {directory} && find . -type f -name '*.bash' > {bash_file_list}"
         os.system(cmd)
@@ -54,9 +54,8 @@ class TestBundles(unittest.TestCase):
         expansions = get_expansions()
         user_output = expansions["user_output"]
         expected_dir = expansions["expected_dir"]
-        actual_directory = (
-            f"{user_output}zppy_test_bundles_output/v2.LR.historical_0201/post/scripts"
-        )
+        unique_id = expansions["unique_id"]
+        actual_directory = f"{user_output}zppy_test_bundles_output/{unique_id}/v2.LR.historical_0201/post/scripts"
         expected_directory = f"{expected_dir}expected_bundles/bundle_files"
         # Check that bundle files are correct
         self.assertEqual(
@@ -84,7 +83,10 @@ class TestBundles(unittest.TestCase):
         expansions = get_expansions()
         expected_dir = expansions["expected_dir"]
         user_www = expansions["user_www"]
-        actual_images_dir = f"{user_www}zppy_test_bundles_www/v2.LR.historical_0201/"
+        unique_id = expansions["unique_id"]
+        actual_images_dir = (
+            f"{user_www}zppy_test_bundles_www/{unique_id}/v2.LR.historical_0201/"
+        )
 
         # The expected_images_file lists all images we expect to compare.
         expected_images_file = f"{expected_dir}image_list_expected_bundles.txt"

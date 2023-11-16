@@ -7,6 +7,8 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
+UNIQUE_ID = "unique_id"
+
 # Image checking ##########################################################
 
 
@@ -215,6 +217,7 @@ def get_expansions():
     else:
         raise ValueError(f"Unsupported machine={machine}")
     expansions["machine"] = machine
+    expansions["unique_id"] = UNIQUE_ID
     return expansions
 
 
