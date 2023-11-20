@@ -12,6 +12,7 @@ from validate import Validator
 from zppy.bundle import Bundle, predefined_bundles
 from zppy.climo import climo
 from zppy.e3sm_diags import e3sm_diags
+from zppy.e3sm_to_cmip import e3sm_to_cmip
 from zppy.global_time_series import global_time_series
 from zppy.ilamb import ilamb
 from zppy.mpas_analysis import mpas_analysis
@@ -191,6 +192,9 @@ def main():  # noqa: C901
 
     # time series tasks
     existing_bundles = ts(config, scriptDir, existing_bundles, job_ids_file)
+
+    # e3sm_to_cmip tasks
+    existing_bundles = e3sm_to_cmip(config, scriptDir, existing_bundles, job_ids_file)
 
     # tc_analysis tasks
     existing_bundles = tc_analysis(config, scriptDir, existing_bundles, job_ids_file)

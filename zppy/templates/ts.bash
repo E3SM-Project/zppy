@@ -33,9 +33,6 @@ do
   done
 done
 
-ts_fmt={{ ts_fmt }}
-echo $ts_fmt
-
 {%- if frequency != 'monthly' %}
 # For non-monthly input files, need to add the last file of the previous year
 year={{ yr_start - 1 }}
@@ -135,66 +132,6 @@ if [ $? != 0 ]; then
   echo 'ERROR (3)' > {{ prefix }}.status
   exit 3
 fi
-
-{%- if ts_fmt != 'ts_only' %}
-tmp_dir=tmp_{{ prefix }}
-
-# Generate CMIP ts
-cat > default_metadata.json << EOF
-{% include cmip_metadata %}
-EOF
-{
-  export cmortables_dir={{ cmor_tables_prefix }}/cmip6-cmor-tables/Tables
-  input_dir={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
-  dest_cmip={{ output }}/post/{{ component }}/{{ grid }}/cmip_ts/{{ frequency }}
-  mkdir -p ${dest_cmip}
-  srun -N 1 e3sm_to_cmip \
-  --output-path \
-  ${dest_cmip}/${tmp_dir} \
-  {% if input_files.split(".")[0] == 'clm2' or input_files.split(".")[0] == 'elm' -%}
-  --var-list \
-  'mrsos, mrso, mrfso, mrros, mrro, prveg, evspsblveg, evspsblsoi, tran, tsl, lai, cLitter, cProduct, cSoilFast, cSoilMedium, cSoilSlow, fFire, fHarvest, cVeg, nbp, gpp, ra, rh' \
-  --realm \
-  lnd \
-  {% endif -%}
-  {% if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' -%}
-  --var-list \
-  'pr, tas, rsds, rlds, rsus' \
-  --realm \
-  atm \
-  {% endif -%}
-  --input-path \
-  ${input_dir}\
-  --user-metadata \
-  {{ scriptDir }}/${workdir}/default_metadata.json \
-  --num-proc \
-  12 \
-  --tables-path \
-  ${cmortables_dir}
-
-  if [ $? != 0 ]; then
-    cd {{ scriptDir }}
-    echo 'ERROR (4)' > {{ prefix }}.status
-    exit 4
-  fi
-
-  # Move output ts files to final destination
-  mv ${dest_cmip}/${tmp_dir}/CMIP6/CMIP/*/*/*/*/*/*/*/*/*.nc ${dest_cmip}
-  if [ $? != 0 ]; then
-    cd {{ scriptDir }}
-    echo 'ERROR (5)' > {{ prefix }}.status
-    exit 5
-  fi
-
-      rm -r ${dest_cmip}/${tmp_dir}
-
-}
-if [ $? != 0 ]; then
-  cd {{ scriptDir }}
-  echo 'ERROR (6)' > {{ prefix }}.status
-  exit 6
-fi
-{%- endif %}
 
 # Delete temporary workdir
 cd ..
