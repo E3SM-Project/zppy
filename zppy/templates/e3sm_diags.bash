@@ -138,7 +138,7 @@ create_links_ts_rof()
   cd ..
 }
 
-{%- if ("lat_lon" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
+{%- if ("lat_lon" in sets) or ("lat_lon_land" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
 {% if run_type == "model_vs_obs" %}
 climo_dir_primary=climo
 {% elif run_type == "model_vs_model" %}
@@ -257,13 +257,13 @@ ref_start_yr = {{ ref_start_yr }}
 param = CoreParameter()
 
 # Model
-{%- if ("lat_lon" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
+{%- if ("lat_lon" in sets) or ("lat_lon_land" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
 param.test_data_path = '${climo_dir_primary}'
 {%- endif %}
 param.test_name = '${case}'
 param.short_test_name = short_name
 
-{%- if ("lat_lon" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
+{%- if ("lat_lon" in sets) or ("lat_lon_land" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
 {% if run_type == "model_vs_obs" %}
 # Obs
 param.reference_data_path = '{{ reference_data_path }}'
@@ -290,8 +290,12 @@ param.output_format = {{ output_format }}
 param.output_format_subplot = {{ output_format_subplot }}
 param.multiprocessing = {{ multiprocessing }}
 param.num_workers = {{ num_workers }}
-#param.fail_on_incomplete = True
+param.fail_on_incomplete = True
 params = [param]
+
+{%- if "lat_lon_land" in sets %}
+param.variables = ["FLDS", "FSDS"]
+{%- endif %}
 
 {%- if "enso_diags" in sets %}
 enso_param = EnsoDiagsParameter()
