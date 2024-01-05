@@ -127,6 +127,34 @@ def check_mismatched_images(
 
 # Inspired by https://github.com/E3SM-Project/e3sm_diags/blob/master/docs/source/quickguides/generate_quick_guides.py
 
+def get_andes_expansions(config):
+    # Note: `os.environ.get("USER")` also works. Here we're already using mache but not os, so using mache.
+    username = config.get("web_portal", "username")
+    web_base_path = config.get("web_portal", "base_path")
+    d = {
+        "bundles_walltime": "02:00:00",
+        "constraint": "",
+        # To run this test, replace conda environment with your e3sm_diags dev environment
+        # TODO: Get conda working on Andes
+        "diags_environment_commands": "source /ccs/home/forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_dev_20220614",
+        "diags_walltime": "2:00:00",
+        "environment_commands_test": "source /gpfs/alpine/proj-shared/cli115/e3sm-unified/load_e3sm_unified_1.8.1_andes.sh",
+        # TODO: Determine expected dir. Globus transfer necessary files over to Andes.
+        "expected_dir": "/lcrc/group/e3sm/ipublic_html/zppy_test_resources/",
+        "partition_long": "batch",
+        "partition_short": "batch",
+        # TODO: Determine correct qos
+        "qos_long": "regular",
+        "qos_short": "regular",
+        "scratch": f"/ccs/home/{username}/",
+        # TODO: Determine user_input. Globus transfer necessary files over to Andes. 
+        "user_input": "/lcrc/group/e3sm/ac.forsyth2/",
+        # TODO: Determine user_output.
+        "user_output": f"/lcrc/group/e3sm/{username}/",
+        # TODO: Modify zppy to handle machines without a web server.
+        "user_www": f"",
+    }
+    return d
 
 def get_chyrsalis_expansions(config):
     # Note: `os.environ.get("USER")` also works. Here we're already using mache but not os, so using mache.

@@ -155,6 +155,8 @@ def main():  # noqa: C901
             config["default"]["account"] = "e3sm"
         elif config["default"]["machine"] == "anvil":
             config["default"]["account"] = "condo"
+        elif config["default"]["machine"] == "andes":
+            config["default"]["account"] = "cli115"
         else:
             raise ValueError(f"Invalid machine {config['default']['machine']}")
     # Determine partition
