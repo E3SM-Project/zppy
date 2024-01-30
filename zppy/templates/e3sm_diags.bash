@@ -290,7 +290,7 @@ param.output_format = {{ output_format }}
 param.output_format_subplot = {{ output_format_subplot }}
 param.multiprocessing = {{ multiprocessing }}
 param.num_workers = {{ num_workers }}
-param.fail_on_incomplete = True
+#param.fail_on_incomplete = True
 params = [param]
 
 {%- if "lat_lon_land" in sets %}
