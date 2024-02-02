@@ -7,7 +7,7 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "issue_531"
+UNIQUE_ID = "issue_531_20240202"
 
 # Image checking ##########################################################
 
