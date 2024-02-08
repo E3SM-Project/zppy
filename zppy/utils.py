@@ -136,12 +136,13 @@ def getYears(years_list):
 
 
 # -----------------------------------------------------------------------------
-# Return output component name and procedure type based on either 
+# Return output component name and procedure type based on either
 # input_component or input_files
+
 
 def getComponent(input_component, input_files):
 
-    if input_component != '':
+    if input_component != "":
         tmp = input_component
     else:
         tmp = input_files.split(".")[0]
@@ -162,7 +163,7 @@ def getComponent(input_component, input_files):
         component = "rof"
     else:
         raise ValueError(
-            "Cannot extract output component name from input_component or input_files %s" % (input_component,input_files)
+            f"Cannot extract output component name from {input_component} or {input_files}."
         )
 
     return component, prc_typ

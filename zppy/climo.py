@@ -56,7 +56,9 @@ def climo(config, scriptDir, existing_bundles, job_ids_file):
                     )
 
         # Output component (for directory structure) and procedure type for ncclimo
-        c["component"], c["prc_typ"] = getComponent(c["input_component"], c["input_files"])
+        c["component"], c["prc_typ"] = getComponent(
+            c["input_component"], c["input_files"]
+        )
 
         # Loop over year sets
         year_sets = getYears(c["years"])
