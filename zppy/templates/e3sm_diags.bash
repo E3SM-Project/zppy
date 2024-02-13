@@ -281,6 +281,8 @@ param = CoreParameter()
 {%- if ("lat_lon" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
 param.test_data_path = '${climo_dir_primary}'
 {%- endif %}
+param.test_name = '${case}'
+param.short_test_name = short_name
 
 # Ref
 {%- if ("lat_lon" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
@@ -300,39 +302,6 @@ if {{ swap_test_ref }}:
 {%- endif %}
 {%- endif %}
 
-{%- if ("lat_lon" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
-{% if run_type == "model_vs_obs" %}
-# Obs
-param.reference_data_path = '{{ reference_data_path }}'
-{% elif run_type == "model_vs_model" %}
-# Reference
-param.reference_data_path = '${climo_dir_ref}'
-param.ref_name = '${ref_name}'
-param.short_ref_name = '{{ short_ref_name }}'
-# Optionally, swap test and reference model
-if {{ swap_test_ref }}:
-   param.test_data_path, param.reference_data_path = param.reference_data_path, param.test_data_path
-   param.test_name, param.ref_name = param.ref_name, param.test_name
-   param.short_test_name, param.short_ref_name = param.short_ref_name, param.short_test_name
-{%- endif %}
-{%- endif %}
-
-{%- if ("lat_lon" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
-{% if run_type == "model_vs_obs" %}
-# Obs
-param.reference_data_path = '{{ reference_data_path }}'
-{% elif run_type == "model_vs_model" %}
-# Reference
-param.reference_data_path = '${climo_dir_ref}'
-param.ref_name = '${ref_name}'
-param.short_ref_name = '{{ short_ref_name }}'
-# Optionally, swap test and reference model
-if {{ swap_test_ref }}:
-   param.test_data_path, param.reference_data_path = param.reference_data_path, param.test_data_path
-   param.test_name, param.ref_name = param.ref_name, param.test_name
-   param.short_test_name, param.short_ref_name = param.short_ref_name, param.short_test_name
-{%- endif %}
-{%- endif %}
 # Output dir
 param.results_dir = '${results_dir}'
 
