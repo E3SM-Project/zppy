@@ -192,7 +192,6 @@ def submitScript(scriptFile, statusFile, export, job_ids_file, dependFiles=[]):
 
     # Handle dependencies
     dependIds = []
-
     for dependFile in dependFiles:
         if os.path.isfile(dependFile):
             with open(dependFile, "r") as f:
