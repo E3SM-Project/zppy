@@ -7,7 +7,7 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "unique_id"
+UNIQUE_ID = "testing-updates"
 
 # Image checking ##########################################################
 
@@ -257,7 +257,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     else:
         expansions["dry_run"] = "False"
 
-    cfg_names = ["bundles", "complete_run"]
+    cfg_names = ["bundles", "complete_run", "debug"]
     for cfg_name in cfg_names:
         cfg_template = f"{git_top_level}/tests/integration/template_{cfg_name}.cfg"
         cfg_generated = (

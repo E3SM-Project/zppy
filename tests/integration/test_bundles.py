@@ -60,19 +60,19 @@ class TestBundles(unittest.TestCase):
         # Check that bundle files are correct
         self.assertEqual(
             os.system(
-                f"diff -bu {actual_directory}/bundle1.bash {expected_directory}/bundle1.bash"
+                f"diff -bu -I 'zppy_test_bundles_output/' {actual_directory}/bundle1.bash {expected_directory}/bundle1.bash"
             ),
             0,
         )
         self.assertEqual(
             os.system(
-                f"diff -bu {actual_directory}/bundle2.bash {expected_directory}/bundle2.bash"
+                f"diff -bu -I 'zppy_test_bundles_output/' {actual_directory}/bundle2.bash {expected_directory}/bundle2.bash"
             ),
             0,
         )
         self.assertEqual(
             os.system(
-                f"diff -bu {actual_directory}/bundle3.bash {expected_directory}/bundle3.bash"
+                f"diff -bu -I 'zppy_test_bundles_output/' {actual_directory}/bundle3.bash {expected_directory}/bundle3.bash"
             ),
             0,
         )

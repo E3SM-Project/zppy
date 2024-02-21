@@ -12,6 +12,25 @@ NOTE: Actually running the tests (e.g., `python -u -m unittest tests/integration
 can not be done from two different branches simultaneously
 (since files in the `zppy` directory rather than an external directory get changed).
 
+## Debug your code with test_debug
+
+Follow the directions in the cfg to modify it for your testing needs.
+
+```
+rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_debug_www/<UNIQUE ID>/v2.LR.historical_0201
+rm -rf /lcrc/group/e3sm/ac.forsyth2/zppy_test_debug_output/<UNIQUE ID>/v2.LR.historical_0201/post
+# Generate cfg
+python tests/integration/utils.py
+
+# Run jobs:
+zppy -c tests/integration/generated/test_debug_chrysalis.cfg
+# After they finish, check the results:
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_test_debug_output/<UNIQUE ID>/v2.LR.historical_0201/post/scripts
+grep -v "OK" *status
+# Nothing should print
+cd -
+```
+
 ### test_bundles
 
 ```
@@ -87,7 +106,7 @@ mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundl
 cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/<UNIQUE ID>/v2.LR.historical_0201/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
 cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
 # Remove the image check failures, so they don't end up in the expected files.
-rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/forsyth/zppy_test_bundles_www/<UNIQUE ID>/v2.LR.historical_0201/image_check_failures
+rm -rf image_check_failures
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_bundles.txt
 cd <top level of zppy repo>
@@ -119,7 +138,7 @@ rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
 cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_complete_run_www/<UNIQUE ID>/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
 cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
 # Remove the image check failures, so they don't end up in the expected files.
-rm -rf /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/forsyth/zppy_test_complete_run_www/<UNIQUE ID>/v2.LR.historical_0201/image_check_failures
+rm -rf image_check_failures
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_complete_run.txt
 cd <top level of zppy repo>
