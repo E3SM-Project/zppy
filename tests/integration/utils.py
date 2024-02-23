@@ -138,6 +138,7 @@ def get_chyrsalis_expansions(config):
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20240214",
         "diags_walltime": "5:00:00",
+        "e3sm_to_cmip_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_to_cmip_20240223",
         "environment_commands_test": "source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.9.0rc16_chrysalis.sh",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
         "mpas_analysis_walltime": "00:30:00",
@@ -163,6 +164,7 @@ def get_compy_expansions(config):
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /qfs/people/fors729/mambaforge/etc/profile.d/conda.sh; conda activate e3sm_diags_20230914",
         "diags_walltime": "03:00:00",
+        "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "source /share/apps/E3SM/conda_envs/test_e3sm_unified_1.9.0rc16_compy.sh",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
         "mpas_analysis_walltime": "00:30:00",
@@ -188,6 +190,7 @@ def get_perlmutter_expansions(config):
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /global/homes/f/forsyth/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20230914",
         "diags_walltime": "6:00:00",
+        "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "source /global/common/software/e3sm/anaconda_envs/test_e3sm_unified_1.9.0rc16_pm-cpu.sh",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
         "mpas_analysis_walltime": "01:00:00",
