@@ -12,7 +12,7 @@ NOTE: Actually running the tests (e.g., `python -u -m unittest tests/integration
 can not be done from two different branches simultaneously
 (since files in the `zppy` directory rather than an external directory get changed).
 
-## Debug your code with test_debug
+### Debug your code with test_debug
 
 Follow the directions in the cfg to modify it for your testing needs.
 

@@ -138,6 +138,23 @@ create_links_ts_rof()
   cd ..
 }
 
+{%- if ("lat_lon_land" in sets) %}
+{% if run_type == "model_vs_obs" %}
+climo_dir_primary_land=climo_land
+{% elif run_type == "model_vs_model" %}
+climo_dir_primary_land=climo_test_land
+{%- endif %}
+# Create local links to input climo files
+climo_dir_source={{ output }}/post/lnd/{{ grid }}/clim/{{ '%dyr' % (year2-year1+1) }}
+create_links_climo ${climo_dir_source} ${climo_dir_primary_land} ${case} ${Y1} ${Y2} 1
+{% if run_type == "model_vs_model" %}
+# Create local links to input climo files (ref model)
+climo_dir_source={{ reference_data_path }}/{{ '%dyr' % (ref_year2-ref_year1+1) }}
+climo_dir_ref_land=climo_ref_land
+create_links_climo ${climo_dir_source} ${climo_dir_ref_land} {{ ref_name }} ${ref_Y1} ${ref_Y2} 2
+{%- endif %}
+{%- endif %}
+
 {%- if ("lat_lon" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
 {% if run_type == "model_vs_obs" %}
 climo_dir_primary=climo
@@ -154,6 +171,7 @@ climo_dir_ref=climo_ref
 create_links_climo ${climo_dir_source} ${climo_dir_ref} {{ ref_name }} ${ref_Y1} ${ref_Y2} 2
 {%- endif %}
 {%- endif %}
+
 
 {%- if "diurnal_cycle" in sets %}
 {% if run_type == "model_vs_obs" %}
@@ -241,6 +259,9 @@ from e3sm_diags.parameter.streamflow_parameter import StreamflowParameter
 {%- if "tc_analysis" in sets %}
 from e3sm_diags.parameter.tc_analysis_parameter import TCAnalysisParameter
 {%- endif %}
+{%- if "lat_lon_land" in sets %}
+from e3sm_diags.parameter.lat_lon_land_parameter import LatLonLandParameter
+{%- endif %}
 
 
 from e3sm_diags.run import runner
@@ -263,6 +284,7 @@ param.test_data_path = '${climo_dir_primary}'
 param.test_name = '${case}'
 param.short_test_name = short_name
 
+# Ref
 {%- if ("lat_lon" in sets) or ("zonal_mean_xy" in sets) or ("zonal_mean_2d" in sets) or ("polar" in sets) or ("cosp_histogram" in sets) or ("meridional_mean_2d" in sets) or ("annual_cycle_zonal_mean" in sets) or ("zonal_mean_2d_stratosphere" in sets) %}
 {% if run_type == "model_vs_obs" %}
 # Obs
@@ -292,6 +314,27 @@ param.multiprocessing = {{ multiprocessing }}
 param.num_workers = {{ num_workers }}
 #param.fail_on_incomplete = True
 params = [param]
+
+# Model land
+{%- if ("lat_lon_land" in sets) %}
+land_param = LatLonLandParameter()
+land_param.test_data_path = '${climo_dir_primary_land}'
+{% if run_type == "model_vs_obs" %}
+# Obs
+land_param.reference_data_path = '{{ reference_data_path_land }}'
+{% elif run_type == "model_vs_model" %}
+# Reference
+land_param.reference_data_path = '${climo_dir_ref_land}'
+land_param.ref_name = '${ref_name}'
+land_param.short_ref_name = '{{ short_ref_name }}'
+# Optionally, swap test and reference model
+if {{ swap_test_ref }}:
+   land_param.test_data_path, param.reference_data_path = param.reference_data_path, param.test_data_path
+   land_param.test_name, param.ref_name = param.ref_name, param.test_name
+   land_param.short_test_name, param.short_ref_name = param.short_ref_name, param.short_test_name
+{%- endif %}
+params.append(land_param)
+{%- endif %}
 
 {%- if "enso_diags" in sets %}
 enso_param = EnsoDiagsParameter()
