@@ -141,7 +141,11 @@ cat > default_metadata.json << EOF
 EOF
 {
   export cmortables_dir={{ cmor_tables_prefix }}/cmip6-cmor-tables/Tables
-  input_dir={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
+  #input_dir={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
+  input_dir=${dest}/{{ yr_start }}_{{ yr_end }}
+  mkdir -p $input_dir
+
+  cp -s $dest/*_{{ yr_start }}??_{{ yr_end }}??.nc $input_dir
   dest_cmip={{ output }}/post/{{ component }}/{{ grid }}/cmip_ts/{{ frequency }}
   mkdir -p ${dest_cmip}
   {{ e3sm_to_cmip_environment_commands }}
@@ -161,7 +165,7 @@ EOF
   atm \
   {% endif -%}
   --input-path \
-  ${input_dir}\
+  ${input_dir} \
   --user-metadata \
   {{ scriptDir }}/${workdir}/default_metadata.json \
   --num-proc \
