@@ -2,6 +2,7 @@
 import glob
 import math
 import sys
+import traceback
 from typing import Any, List, Tuple
 
 import matplotlib as mpl
@@ -133,7 +134,7 @@ def get_ylim(standard_range, extreme_values):
 # Plotting functions
 
 # Generic plot function
-def plot_generic(ax, xlim, exps, var_name):
+def plot_generic(ax, xlim, exps, var_name, rgn):
     print("plot_generic")
     print(exps)
     param_dict = {
@@ -146,6 +147,7 @@ def plot_generic(ax, xlim, exps, var_name):
         "do_add_line": True,
         "do_add_trend": True,
         "format": "%4.2f",
+        "glb_only": False,
         "lw": 1.0,
         "ohc": False,
         "set_axhline": False,
@@ -158,7 +160,7 @@ def plot_generic(ax, xlim, exps, var_name):
         "vol": False,
         "ylabel": lambda exp: np.array(exp["annual"][var_name][1]),
     }
-    plot(ax, xlim, exps, param_dict)
+    plot(ax, xlim, exps, param_dict, rgn)
 
 
 # 1
@@ -417,7 +419,8 @@ def plot_net_atm_water_imbalance(ax, xlim, exps, rgn):
     plot(ax, xlim, exps, param_dict, rgn)
 
 
-def plot(ax, xlim, exps, param_dict, rgn):
+# FIXME: C901 'plot' is too complex (19)
+def plot(ax, xlim, exps, param_dict, rgn):  # noqa: C901
     if param_dict["glb_only"] and (rgn != "glb"):
         return
     ax.set_xlim(xlim)
@@ -569,26 +572,39 @@ def run(parameters, rgn):  # noqa: C901
     color = parameters[6]
     ts_num_years = parameters[7]
     if parameters[8].lower() == "false":
-        atmosphere_only = False
+        exclude_atmosphere = False
     else:
-        atmosphere_only = True
-    plot_list = parameters[9].split(",")
-    extra_plots = parameters[10].split(",")
+        exclude_atmosphere = True
+    # if parameters[9].lower() == "false":
+    #    exclude_land = False
+    # else:
+    #    exclude_land = True
+    if parameters[10].lower() == "false":
+        exclude_ocean = False
+    else:
+        exclude_ocean = True
+    if parameters[11] == "None":
+        plot_list = []
+    else:
+        plot_list = parameters[11].split(",")
+    extra_plots = parameters[12].split(",")
     exps = [
         {
-            "atmos": "{}/post/atm/glb/ts/monthly/{}yr/glb.xml".format(
+            "atmos": None
+            if exclude_atmosphere
+            else "{}/post/atm/glb/ts/monthly/{}yr/glb.xml".format(
                 case_dir, ts_num_years
             ),
             "ocean": None
-            if atmosphere_only
+            if exclude_ocean
             else "{}/post/ocn/glb/ts/monthly/{}yr/glb.xml".format(
                 case_dir, ts_num_years
             ),
             "moc": None
-            if atmosphere_only
+            if exclude_ocean
             else "{}/post/ocn/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
             "vol": None
-            if atmosphere_only
+            if exclude_ocean
             else "{}/post/ocn/glb/ts/monthly/{}yr/glb.xml".format(
                 case_dir, ts_num_years
             ),
@@ -603,51 +619,62 @@ def run(parameters, rgn):  # noqa: C901
     vars = ["RESTOM", "RESSURF", "TREFHT", "FSNTOA", "FLUT", "PRECC", "PRECL", "QFLX"]
     # Add all the variables needed for the extra plots
     vars += extra_plots
-    counter_invalid_vars = 0
+    valid_vars = []
+    invalid_vars = []
 
     # Read data
     exp: Any
     for exp in exps:
-        print(f"exp['atmos']={exp['atmos']}")
-        ts = TS(exp["atmos"])
         exp["annual"] = {}
-        for var in vars:
-            try:
-                v, units = ts.globalAnnual(var)
-            except Exception as e:
-                import traceback as tb
-                s = tb.format_exception(e)
-                print(s)
-                print(f"globalAnnual failed. Invalid var = {var}")
-                counter_invalid_vars += 1
-                continue
-            if len(v.shape) > 1:
-                # number of years x 3 regions = v.shape
-                # 3 regions = global, northern hemisphere, southern hemisphere
-                # We get here if we used the updated `ts` task
-                # (using `rgn_avg` rather than `glb_avg`).
-                if rgn == "glb":
-                    n = 0
-                elif rgn == "n":
-                    n = 1
-                elif rgn == "s":
-                    n = 2
-                else:
-                    raise RuntimeError(f"Invalid rgn={rgn}")
-                v = v[:, n]  # Just use nth column         
-            elif rgn != "glb":
-                # v only has one dimension -- glb.
-                # Therefore it is not possible to get n or s plots.
-                raise RuntimeError(
-                    f"var={var} only has global data. Cannot process rgn={rgn}"
+        if exp["atmos"] is not None:
+            print(f"exp['atmos']={exp['atmos']}")
+            ts = TS(exp["atmos"])
+            for var in vars:
+                try:
+                    v, units = ts.globalAnnual(var)
+                    valid_vars.append(var)
+                except Exception as e:
+                    # import traceback as tb
+                    # s = tb.format_exception(e)
+                    # print(s)
+                    print(e)
+                    print(f"globalAnnual failed. Invalid var = {var}")
+                    invalid_vars.append(var)
+                    continue
+                if len(v.shape) > 1:
+                    # number of years x 3 regions = v.shape
+                    # 3 regions = global, northern hemisphere, southern hemisphere
+                    # We get here if we used the updated `ts` task
+                    # (using `rgn_avg` rather than `glb_avg`).
+                    if rgn == "glb":
+                        n = 0
+                    elif rgn == "n":
+                        n = 1
+                    elif rgn == "s":
+                        n = 2
+                    else:
+                        raise RuntimeError(f"Invalid rgn={rgn}")
+                    v = v[:, n]  # Just use nth column
+                elif rgn != "glb":
+                    # v only has one dimension -- glb.
+                    # Therefore it is not possible to get n or s plots.
+                    raise RuntimeError(
+                        f"var={var} only has global data. Cannot process rgn={rgn}"
+                    )
+                exp["annual"][var] = v
+                print(f"var={var} units={units}")
+                exp["annual"][var] = (v, units)
+                if "year" not in exp["annual"]:
+                    time = v.getTime()
+                    exp["annual"]["year"] = [x.year for x in time.asComponentTime()]
+            del ts
+            print(
+                f"globalAnnual was computed successfully for these variables: {valid_vars}"
+            )
+            if invalid_vars:
+                raise Exception(
+                    f"globalAnnual could not be computed for these variables: {invalid_vars}"
                 )
-            exp["annual"][var] = v
-            print(f"var={var} units={units}")
-            exp["annual"][var] = (v, units)
-            if "year" not in exp["annual"]:
-                time = v.getTime()
-                exp["annual"]["year"] = [x.year for x in time.asComponentTime()]
-        del ts
 
         # Optionally read ohc
         if exp["ocean"] is not None:
@@ -679,6 +706,8 @@ def run(parameters, rgn):  # noqa: C901
 
     counter_initial_plots = 0
     counter_extra_plots = 0
+    valid_plots = []
+    invalid_plots = []
     # https://stackoverflow.com/questions/58738992/save-multiple-figures-with-subplots-into-a-pdf-with-multiple-pages
     pdf = matplotlib.backends.backend_pdf.PdfPages(f"{figstr}_{rgn}.pdf")
     for page in range(num_pages):
@@ -697,9 +726,14 @@ def run(parameters, rgn):  # noqa: C901
             elif counter_extra_plots < num_extra_plots:
                 ax = plt.subplot(nrows, ncols, j + 1)
                 try:
-                    plot_generic(ax, xlim, exps, extra_plots[counter_extra_plots])
+                    plot = extra_plots[counter_extra_plots]
+                    plot_generic(ax, xlim, exps, plot, rgn)
+                    valid_plots.append(plot)
                 except Exception:
-                    print(f"plot_generic failed. Invalid var={extra_plots[counter_extra_plots]}")
+                    traceback.print_exc()
+                    invalid_plot = extra_plots[counter_extra_plots]
+                    print(f"plot_generic failed. Invalid plot={invalid_plot}")
+                    invalid_plots.append(invalid_plot)
                 counter_extra_plots += 1
 
         fig.tight_layout()
@@ -710,10 +744,14 @@ def run(parameters, rgn):  # noqa: C901
             fig.savefig(f"{figstr}_{rgn}.png", dpi=150)
         plt.clf()
     pdf.close()
+    print(f"These plots generated successfully: {valid_plots}")
+    if invalid_plots:
+        raise Exception(f"These plots could not be generated: {invalid_plots}")
 
 
 def run_by_region(parameters):
-    regions = parameters[10].split(",")
+    print(parameters)
+    regions = parameters[13].split(",")
     for rgn in regions:
         if rgn.lower() in ["glb", "global"]:
             rgn = "glb"
