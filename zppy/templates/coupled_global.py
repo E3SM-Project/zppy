@@ -524,6 +524,55 @@ PLOT_DICT = {
 }
 
 
+def param_get_list(param_value):
+    if param_value == "None":
+        return []
+    else:
+        return param_value.split(",")
+
+
+def set_var(exp, exp_key, var_list, valid_vars, invalid_vars, rgn):
+    if exp[exp_key] is not None:
+        print(f"exp['{exp_key}']={exp[exp_key]}")
+        ts = TS(exp[exp_key])
+        for var in var_list:
+            try:
+                v, units = ts.globalAnnual(var)
+                valid_vars.append(str(var))
+            except Exception as e:
+                print(e)
+                print(f"globalAnnual failed. Invalid var = {var}")
+                invalid_vars.append(str(var))
+                continue
+            if len(v.shape) > 1:
+                # number of years x 3 regions = v.shape
+                # 3 regions = global, northern hemisphere, southern hemisphere
+                # We get here if we used the updated `ts` task
+                # (using `rgn_avg` rather than `glb_avg`).
+                if rgn == "glb":
+                    n = 0
+                elif rgn == "n":
+                    n = 1
+                elif rgn == "s":
+                    n = 2
+                else:
+                    raise RuntimeError(f"Invalid rgn={rgn}")
+                v = v[:, n]  # Just use nth column
+            elif rgn != "glb":
+                # v only has one dimension -- glb.
+                # Therefore it is not possible to get n or s plots.
+                raise RuntimeError(
+                    f"var={var} only has global data. Cannot process rgn={rgn}"
+                )
+            exp["annual"][var] = v
+            print(f"var={var} units={units}")
+            exp["annual"][var] = (v, units)
+            if "year" not in exp["annual"]:
+                time = v.getTime()
+                exp["annual"]["year"] = [x.year for x in time.asComponentTime()]
+        del ts
+
+
 # -----------------------------------------------------------------------------
 # FIXME: C901 'run' is too complex (19)
 def run(parameters, rgn):  # noqa: C901
@@ -571,40 +620,32 @@ def run(parameters, rgn):  # noqa: C901
     year2 = int(parameters[5])
     color = parameters[6]
     ts_num_years = parameters[7]
-    if parameters[8].lower() == "false":
-        exclude_atmosphere = False
-    else:
-        exclude_atmosphere = True
-    # if parameters[9].lower() == "false":
-    #    exclude_land = False
-    # else:
-    #    exclude_land = True
-    if parameters[10].lower() == "false":
-        exclude_ocean = False
-    else:
-        exclude_ocean = True
-    if parameters[11] == "None":
-        plot_list = []
-    else:
-        plot_list = parameters[11].split(",")
-    extra_plots = parameters[12].split(",")
+    plot_list = param_get_list(parameters[8])
+    plots_atm = param_get_list(parameters[9])
+    plots_lnd = param_get_list(parameters[10])
+    plots_ocn = param_get_list(parameters[11])
     exps = [
         {
             "atmos": None
-            if exclude_atmosphere
+            if not plots_atm
             else "{}/post/atm/glb/ts/monthly/{}yr/glb.xml".format(
                 case_dir, ts_num_years
             ),
+            "land": None
+            if not plots_lnd
+            else "{}/post/lnd/glb/ts/monthly/{}yr/glb.xml".format(
+                case_dir, ts_num_years
+            ),
             "ocean": None
-            if exclude_ocean
+            if not plots_ocn
             else "{}/post/ocn/glb/ts/monthly/{}yr/glb.xml".format(
                 case_dir, ts_num_years
             ),
             "moc": None
-            if exclude_ocean
+            if not plots_ocn
             else "{}/post/ocn/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
             "vol": None
-            if exclude_ocean
+            if not plots_ocn
             else "{}/post/ocn/glb/ts/monthly/{}yr/glb.xml".format(
                 case_dir, ts_num_years
             ),
@@ -615,66 +656,28 @@ def run(parameters, rgn):  # noqa: C901
         }
     ]
 
-    # Variables to extract
-    vars = ["RESTOM", "RESSURF", "TREFHT", "FSNTOA", "FLUT", "PRECC", "PRECL", "QFLX"]
-    # Add all the variables needed for the extra plots
-    vars += extra_plots
-    valid_vars = []
-    invalid_vars = []
+    atm_vars = [
+        "RESTOM",
+        "RESSURF",
+        "TREFHT",
+        "FSNTOA",
+        "FLUT",
+        "PRECC",
+        "PRECL",
+        "QFLX",
+    ] + plots_atm
+    lnd_vars = plots_lnd
+    ocn_vars = plots_ocn
+    valid_vars: List[str] = []
+    invalid_vars: List[str] = []
 
     # Read data
     exp: Any
     for exp in exps:
         exp["annual"] = {}
-        if exp["atmos"] is not None:
-            print(f"exp['atmos']={exp['atmos']}")
-            ts = TS(exp["atmos"])
-            for var in vars:
-                try:
-                    v, units = ts.globalAnnual(var)
-                    valid_vars.append(var)
-                except Exception as e:
-                    # import traceback as tb
-                    # s = tb.format_exception(e)
-                    # print(s)
-                    print(e)
-                    print(f"globalAnnual failed. Invalid var = {var}")
-                    invalid_vars.append(var)
-                    continue
-                if len(v.shape) > 1:
-                    # number of years x 3 regions = v.shape
-                    # 3 regions = global, northern hemisphere, southern hemisphere
-                    # We get here if we used the updated `ts` task
-                    # (using `rgn_avg` rather than `glb_avg`).
-                    if rgn == "glb":
-                        n = 0
-                    elif rgn == "n":
-                        n = 1
-                    elif rgn == "s":
-                        n = 2
-                    else:
-                        raise RuntimeError(f"Invalid rgn={rgn}")
-                    v = v[:, n]  # Just use nth column
-                elif rgn != "glb":
-                    # v only has one dimension -- glb.
-                    # Therefore it is not possible to get n or s plots.
-                    raise RuntimeError(
-                        f"var={var} only has global data. Cannot process rgn={rgn}"
-                    )
-                exp["annual"][var] = v
-                print(f"var={var} units={units}")
-                exp["annual"][var] = (v, units)
-                if "year" not in exp["annual"]:
-                    time = v.getTime()
-                    exp["annual"]["year"] = [x.year for x in time.asComponentTime()]
-            del ts
-            print(
-                f"globalAnnual was computed successfully for these variables: {valid_vars}"
-            )
-            if invalid_vars:
-                raise Exception(
-                    f"globalAnnual could not be computed for these variables: {invalid_vars}"
-                )
+        set_var(exp, "atmos", atm_vars, valid_vars, invalid_vars, rgn)
+        set_var(exp, "land", lnd_vars, valid_vars, invalid_vars, rgn)
+        set_var(exp, "ocean", ocn_vars, valid_vars, invalid_vars, rgn)
 
         # Optionally read ohc
         if exp["ocean"] is not None:
@@ -691,10 +694,18 @@ def run(parameters, rgn):  # noqa: C901
                 exp["annual"]["volume"][:] - exp["annual"]["volume"][0]
             )
 
+    print(f"globalAnnual was computed successfully for these variables: {valid_vars}")
+    if invalid_vars:
+        raise Exception(
+            f"globalAnnual could not be computed for these variables: {invalid_vars}"
+        )
+
     # -----------------------------------------------------------------------------
     # --- Generate plots ---
 
     xlim = [float(year1), float(year2)]
+
+    extra_plots = plots_atm + plots_lnd + plots_ocn
 
     num_initial_plots = len(plot_list)
     num_extra_plots = len(extra_plots)
@@ -751,7 +762,7 @@ def run(parameters, rgn):  # noqa: C901
 
 def run_by_region(parameters):
     print(parameters)
-    regions = parameters[13].split(",")
+    regions = parameters[12].split(",")
     for rgn in regions:
         if rgn.lower() in ["glb", "global"]:
             rgn = "glb"
