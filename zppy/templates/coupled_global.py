@@ -1,7 +1,6 @@
 # Script to plot some global atmosphere and ocean time series
 import glob
 import math
-import sys
 import traceback
 from typing import Any, List, Tuple
 
@@ -775,5 +774,27 @@ def run_by_region(parameters):
         run(parameters, rgn)
 
 
+def test():
+    run_by_region(
+        [
+            "/lcrc/group/e3sm/ac.forsyth2/zppy_test_debug_output/pr-400v27/20221127.v2.LR.BGC-LNDATM.CONTRL.ne30pg2_r05_EC30to60E2r2.chrysalis",
+            "v2.LR.BGC-LNDATM.CONTRL",
+            "v2.LR.BGC-LNDATM.CONTRL",
+            "1870",
+            "1880",
+            "Blue",
+            "5",
+            "None",
+            "None",
+            "TS,FSNT,FLNT,TOTSOMC,TOTECOSYSC,NEE,TOTVEGC",
+            "None",
+            "glb,n,s",
+        ]
+    )
+
+
 if __name__ == "__main__":
+    import sys
+
     run_by_region(sys.argv)
+    # test()
