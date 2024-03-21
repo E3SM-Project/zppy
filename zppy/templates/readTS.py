@@ -13,6 +13,17 @@ class TS(object):
 
         self.f.close()
 
+    """
+            "RESTOM",
+            "RESSURF",
+            "TREFHT", <-
+            "FSNTOA",
+            "FLUT",
+            "PRECC",
+            "PRECL",
+            "QFLX", <-
+    """
+
     def globalAnnual(self, var):
 
         units = None
@@ -59,12 +70,16 @@ class TS(object):
             v = 1.0e3 * (PRECC + PRECL)
 
         else:
+            # Non-derived variables
 
             # Read variable
             v = self.f(var)
             units = v.units
 
             # Annual average
+            print(f"Calling cdutil for {v.long_name}")
+            print(f"{v.size} {v.shape}")
             v = cdutil.YEAR(v)
+            print("Out of cdutil")
 
         return v, units

@@ -1,6 +1,7 @@
 # Script to plot some global atmosphere and ocean time series
 import glob
 import math
+import sys
 import traceback
 from typing import Any, List, Tuple
 
@@ -135,7 +136,7 @@ def get_ylim(standard_range, extreme_values):
 # Generic plot function
 def plot_generic(ax, xlim, exps, var_name, rgn):
     print("plot_generic")
-    print(exps)
+    # print(exps)
     param_dict = {
         "2nd_var": False,
         "axhline_y": 0,
@@ -623,6 +624,17 @@ def run(parameters, rgn):  # noqa: C901
     plots_atm = param_get_list(parameters[9])
     plots_lnd = param_get_list(parameters[10])
     plots_ocn = param_get_list(parameters[11])
+    if plot_list:
+        plots_atm = [
+            "RESTOM",
+            "RESSURF",
+            "TREFHT",
+            "FSNTOA",
+            "FLUT",
+            "PRECC",
+            "PRECL",
+            "QFLX",
+        ]  # + plots_atm
     exps = [
         {
             "atmos": None
@@ -655,18 +667,6 @@ def run(parameters, rgn):  # noqa: C901
         }
     ]
 
-    atm_vars = [
-        "RESTOM",
-        "RESSURF",
-        "TREFHT",
-        "FSNTOA",
-        "FLUT",
-        "PRECC",
-        "PRECL",
-        "QFLX",
-    ] + plots_atm
-    lnd_vars = plots_lnd
-    ocn_vars = plots_ocn
     valid_vars: List[str] = []
     invalid_vars: List[str] = []
 
@@ -674,9 +674,9 @@ def run(parameters, rgn):  # noqa: C901
     exp: Any
     for exp in exps:
         exp["annual"] = {}
-        set_var(exp, "atmos", atm_vars, valid_vars, invalid_vars, rgn)
-        set_var(exp, "land", lnd_vars, valid_vars, invalid_vars, rgn)
-        set_var(exp, "ocean", ocn_vars, valid_vars, invalid_vars, rgn)
+        set_var(exp, "atmos", plots_atm, valid_vars, invalid_vars, rgn)
+        set_var(exp, "land", plots_lnd, valid_vars, invalid_vars, rgn)
+        set_var(exp, "ocean", plots_ocn, valid_vars, invalid_vars, rgn)
 
         # Optionally read ohc
         if exp["ocean"] is not None:
@@ -694,6 +694,7 @@ def run(parameters, rgn):  # noqa: C901
             )
 
     print(f"globalAnnual was computed successfully for these variables: {valid_vars}")
+    # print(f"globalAnnual could not be computed for these variables: {invalid_vars}")
     if invalid_vars:
         raise Exception(
             f"globalAnnual could not be computed for these variables: {invalid_vars}"
@@ -777,6 +778,7 @@ def run_by_region(parameters):
 def test():
     run_by_region(
         [
+            "coupled_global.py",
             "/lcrc/group/e3sm/ac.forsyth2/zppy_test_debug_output/pr-400v27/20221127.v2.LR.BGC-LNDATM.CONTRL.ne30pg2_r05_EC30to60E2r2.chrysalis",
             "v2.LR.BGC-LNDATM.CONTRL",
             "v2.LR.BGC-LNDATM.CONTRL",
@@ -786,7 +788,9 @@ def test():
             "5",
             "None",
             "None",
-            "TS,FSNT,FLNT,TOTSOMC,TOTECOSYSC,NEE,TOTVEGC",
+            # "TS,FSNT,FLNT,TOTSOMC,TOTECOSYSC,NEE,TOTVEGC",
+            # "FLNT,TOTSOMC",
+            "TOTSOMC",
             "None",
             "glb,n,s",
         ]
@@ -794,7 +798,5 @@ def test():
 
 
 if __name__ == "__main__":
-    import sys
-
     run_by_region(sys.argv)
     # test()
