@@ -79,6 +79,7 @@ class TS(object):
             # Annual average
             print(f"Calling cdutil for {v.long_name}")
             print(f"{v.size} {v.shape}")
+            cdutil.setTimeBoundsMonthly(v)
             v = cdutil.YEAR(v)
             print("Out of cdutil")
 

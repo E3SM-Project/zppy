@@ -113,20 +113,41 @@ def add_trend(
 # -----------------------------------------------------------------------------
 # Function to get ylim
 def get_ylim(standard_range, extreme_values):
-    standard_min = standard_range[0]
-    standard_max = standard_range[1]
-    if extreme_values == []:
-        return [standard_min, standard_max]
-    extreme_min = np.amin(extreme_values)
-    extreme_max = np.amax(extreme_values)
-    if standard_min <= extreme_min:
-        ylim_min = standard_min
+    if len(extreme_values) > 0:
+        has_extreme_values = True
+        extreme_min = np.amin(extreme_values)
+        extreme_max = np.amax(extreme_values)
     else:
+        has_extreme_values = False
+        extreme_min = None
+        extreme_max = None
+    if len(standard_range) == 2:
+        has_standard_range = True
+        standard_min = standard_range[0]
+        standard_max = standard_range[1]
+    else:
+        has_standard_range = False
+        standard_min = None
+        standard_max = None
+    if has_extreme_values and has_standard_range:
+        # Use at least the standard range,
+        # perhaps a wider window to include extremes
+        if standard_min <= extreme_min:
+            ylim_min = standard_min
+        else:
+            ylim_min = extreme_min
+        if standard_max >= extreme_max:
+            ylim_max = standard_max
+        else:
+            ylim_max = extreme_max
+    elif has_extreme_values and not has_standard_range:
         ylim_min = extreme_min
-    if standard_max >= extreme_max:
+        ylim_max = extreme_max
+    elif has_standard_range and not has_extreme_values:
+        ylim_min = standard_min
         ylim_max = standard_max
     else:
-        ylim_max = extreme_max
+        raise ValueError("Not enough range information suppliede")
     return [ylim_min, ylim_max]
 
 
@@ -143,7 +164,7 @@ def plot_generic(ax, xlim, exps, var_name, rgn):
         "check_exp_ocean": False,
         "check_exp_vol": False,
         "check_exp_year": True,
-        "default_ylim": [-1, 1],
+        "default_ylim": [],
         "do_add_line": True,
         "do_add_trend": True,
         "format": "%4.2f",
@@ -465,6 +486,7 @@ def plot(ax, xlim, exps, param_dict, rgn):  # noqa: C901
         elif param_dict["do_add_line"] or param_dict["do_add_trend"]:
             print(f"exp['name']={exp['name']}")
             for yrs in exp["yr"]:
+                print(f"exp['yr']={exp['yr']}")
                 if param_dict["do_add_line"]:
                     add_line(
                         year,
@@ -490,7 +512,9 @@ def plot(ax, xlim, exps, param_dict, rgn):  # noqa: C901
                         verbose=param_dict["verbose"],
                         vol=param_dict["vol"],
                     )
-    ax.set_ylim(get_ylim(param_dict["default_ylim"], extreme_values))
+    ylim = get_ylim(param_dict["default_ylim"], extreme_values)
+    print(f"ylim={ylim}")
+    ax.set_ylim(ylim)
     if param_dict["set_axhline"]:
         ax.axhline(y=param_dict["axhline_y"], lw=1, c="0.5")
     ax.set_title(param_dict["title"])
@@ -503,10 +527,8 @@ def plot(ax, xlim, exps, param_dict, rgn):  # noqa: C901
         print(e)
         raise e
     if c:
-        print(exps[1])
-        units = units(exps[1])  # How do we know which var's units to put as the ylabel?
+        units = units(exps[0])  # How do we know which var's units to put as the ylabel?
         print(units)
-    print("EEE")
     ax.set_ylabel(units)
     if param_dict["set_legend"]:
         ax.legend(loc="best")
@@ -635,6 +657,7 @@ def run(parameters, rgn):  # noqa: C901
             "PRECL",
             "QFLX",
         ]  # + plots_atm
+    print(f"AAA: {plot_list} {plots_atm} {plots_lnd} {plots_ocn}")
     exps = [
         {
             "atmos": None
