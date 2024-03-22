@@ -7,7 +7,7 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "pr-400v33"
+UNIQUE_ID = "pr-400v34"
 
 # Image checking ##########################################################
 
@@ -260,7 +260,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     else:
         expansions["dry_run"] = "False"
 
-    cfg_names = ["bundles", "complete_run", "debug"]
+    cfg_names = ["bundles", "complete_run", "debug", "debug2"]
     for cfg_name in cfg_names:
         cfg_template = f"{git_top_level}/tests/integration/template_{cfg_name}.cfg"
         cfg_generated = (
