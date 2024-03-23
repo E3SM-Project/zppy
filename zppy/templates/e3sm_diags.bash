@@ -138,6 +138,7 @@ create_links_ts_rof()
   cd ..
 }
 
+
 {%- if ("lat_lon_land" in sets) %}
 {% if run_type == "model_vs_obs" %}
 climo_dir_primary_land=climo_land
@@ -206,6 +207,11 @@ create_links_ts ${ts_dir_source} ${ts_dir_ref} ${ref_Y1} ${ref_Y2} 6
 {%- endif %}
 {%- endif %}
 
+ts_daily_dir={{ output }}/post/atm/{{ grid }}/ts/daily/{{ '%dyr' % (ts_num_years) }}
+{% if run_type == "model_vs_model" %}
+ts_daily_dir_ref={{ reference_data_path_ts_daily }}/{{ ts_num_years_ref }}yr
+{%- endif %}
+
 {%- if "streamflow" in sets %}
 {% if run_type == "model_vs_obs" %}
 ts_rof_dir_primary=rof
@@ -261,6 +267,9 @@ from e3sm_diags.parameter.tc_analysis_parameter import TCAnalysisParameter
 {%- endif %}
 {%- if "lat_lon_land" in sets %}
 from e3sm_diags.parameter.lat_lon_land_parameter import LatLonLandParameter
+{%- endif %}
+{%- if "tropical_subseasonal" in sets %}
+from e3sm_diags.parameter.tropical_subseasonal_parameter import TropicalSubseasonalParameter
 {%- endif %}
 
 
@@ -361,6 +370,32 @@ if {{ swap_test_ref }}:
    enso_param.short_test_name, enso_param.short_ref_name = enso_param.short_ref_name, enso_param.short_test_name
 {%- endif %}
 params.append(enso_param)
+{%- endif %}
+
+{%- if "tropical_subseasonal" in sets %}
+trop_param = TropicalSubseasonalParameter()
+trop_param.test_data_path = '${ts_daily_dir}'
+trop_param.test_name = short_name
+trop_param.test_start_yr = start_yr
+trop_param.test_end_yr = end_yr
+{% if run_type == "model_vs_obs" %}
+# Obs
+trop_param.reference_data_path = '{{ obs_ts }}'
+trop_param.ref_start_yr = 2001
+trop_param.ref_end_yr = 2010
+{% elif run_type == "model_vs_model" %}
+trop_param.reference_data_path = '${ts_daily_dir_ref}'
+trop_param.ref_name = '${ref_name}'
+trop_param.short_ref_name = '{{ short_ref_name }}'
+trop_param.ref_start_yr = '{{ ref_start_yr }}'
+trop_param.ref_end_yr = '{{ ref_final_yr }}'
+# Optionally, swap test and reference model
+if {{ swap_test_ref }}:
+   trop_param.test_data_path, trop_param.reference_data_path = trop_param.reference_data_path, trop_param.test_data_path
+   trop_param.test_name, trop_param.ref_name = trop_param.ref_name, trop_param.test_name
+   trop_param.short_test_name, trop_param.short_ref_name = trop_param.short_ref_name, trop_param.short_test_name
+{%- endif %}
+params.append(trop_param)
 {%- endif %}
 
 
