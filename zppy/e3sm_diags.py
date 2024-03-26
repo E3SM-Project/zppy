@@ -201,6 +201,7 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                         ("enso_diags" in c["sets"])
                         or ("qbo" in c["sets"])
                         or ("area_mean_time_series" in c["sets"])
+                        or ("mp_partition" in c["sets"])
                     ):
                         dependencies.append(
                             os.path.join(
