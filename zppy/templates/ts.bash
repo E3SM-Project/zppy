@@ -65,6 +65,11 @@ vars={{ vars }}
 # https://stackoverflow.com/questions/26457052/remove-a-substring-from-a-bash-variable
 # Remove U, since it is a 3D variable and thus will not work with rgn_avg
 vars=${vars//,U}
+# Remove more 3D variables:
+vars=${vars//,T}
+vars=${vars//,CLDICE}
+vars=${vars//,CLDLIQ}
+
 {%- else %}
 vars={{ vars }}
 {%- endif %}

@@ -190,7 +190,7 @@ create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_ref} 
 {%- endif %}
 {%- endif %}
 
-{%- if ("enso_diags" in sets) or ("qbo" in sets) or ("area_mean_time_series" in sets) %}
+{%- if ("enso_diags" in sets) or ("qbo" in sets) or ("mp_partition" in sets) or ("area_mean_time_series" in sets) %}
 {% if run_type == "model_vs_obs" %}
 ts_dir_primary=ts
 {% elif run_type == "model_vs_model" %}
@@ -205,6 +205,7 @@ ts_dir_ref=ts_ref
 create_links_ts ${ts_dir_source} ${ts_dir_ref} ${ref_Y1} ${ref_Y2} 6
 {%- endif %}
 {%- endif %}
+
 
 {%- if "streamflow" in sets %}
 {% if run_type == "model_vs_obs" %}
@@ -261,6 +262,9 @@ from e3sm_diags.parameter.tc_analysis_parameter import TCAnalysisParameter
 {%- endif %}
 {%- if "lat_lon_land" in sets %}
 from e3sm_diags.parameter.lat_lon_land_parameter import LatLonLandParameter
+{%- endif %}
+{%- if "mp_partition" in sets %}
+from e3sm_diags.parameter.mp_partition_parameter import MPpartitionParameter
 {%- endif %}
 
 
@@ -415,6 +419,26 @@ if {{ swap_test_ref }}:
    ts_param.short_test_name, ts_param.short_ref_name = ts_param.short_ref_name, ts_param.short_test_name
 {%- endif %}
 params.append(ts_param)
+{%- endif %}
+
+{%- if "mp_partition" in sets %}
+mp_param = MPpartitionParameter()
+mp_param.test_data_path = '${ts_dir_source}'
+mp_param.test_name = short_name
+mp_param.test_start_yr = start_yr
+mp_param.test_end_yr = end_yr
+{% if run_type == "model_vs_model" %}
+# Reference
+mp_param.reference_data_path = '${ts_dir_ref}'
+mp_param.ref_name = '${ref_name}'
+mp_param.short_ref_name = '{{ short_ref_name }}'
+# Optionally, swap test and reference model
+if {{ swap_test_ref }}:
+   mp_param.test_data_path, mp_param.reference_data_path = mp_param.reference_data_path, mp_param.test_data_path
+   mp_param.test_name, mp_param.ref_name = mp_param.ref_name, mp_param.test_name
+   mp_param.short_test_name, mp_param.short_ref_name = mp_param.short_ref_name, mp_param.short_test_name
+{%- endif %}
+params.append(mp_param)
 {%- endif %}
 
 {%- if "diurnal_cycle" in sets %}
