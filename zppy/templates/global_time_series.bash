@@ -35,17 +35,24 @@ case_dir={{ output }}
 global_ts_dir={{ global_time_series_dir }}
 
 # Options
+has_atm="false"
+has_lnd="false"
+has_ocn="false"
+if [ -z "{{ plot_names }}" ]; then
+  plot_names="None"
+else
+  plot_names={{ plot_names }}
+  has_atm="true"
+  has_ocn="true"
+fi
 if [ -z "{{ plots_atm }}" ]; then
     plots_atm="None"
-    has_atm="false"
 else
     plots_atm={{ plots_atm }}
     has_atm="true"
 fi
-
 if [ -z "{{ plots_lnd }}" ]; then
     plots_lnd="None"
-    has_lnd="false"
 else
     plots_lnd={{ plots_lnd }}
     has_lnd="true"
@@ -53,7 +60,6 @@ fi
 
 if [ -z "{{ plots_ocn }}" ]; then
     plots_ocn="None"
-    has_ocn="false"
 else
     plots_ocn={{ plots_ocn }}
     has_ocn="true"
@@ -68,9 +74,9 @@ if [[ ${has_atm} == "true" ]]; then
     cd ${case_dir}/post/atm/glb/ts/monthly/${ts_num_years}yr
     cdscan -x glb.xml *.nc
     if [ $? != 0 ]; then
-	cd {{ scriptDir }}
-	echo 'ERROR (1)' > {{ prefix }}.status
-	exit 1
+      cd {{ scriptDir }}
+      echo 'ERROR (1)' > {{ prefix }}.status
+      exit 1
     fi
 fi
 
@@ -79,9 +85,9 @@ if [[ ${has_lnd} == "true" ]]; then
     cd ${case_dir}/post/lnd/glb/ts/monthly/${ts_num_years}yr
     cdscan -x glb.xml *.nc
     if [ $? != 0 ]; then
-	cd {{ scriptDir }}
-	echo 'ERROR (1)' > {{ prefix }}.status
-	exit 1
+      cd {{ scriptDir }}
+      echo 'ERROR (1)' > {{ prefix }}.status
+      exit 1
     fi
 fi
 
@@ -122,11 +128,6 @@ fi
 
 echo 'Update time series figures'
 cd ${global_ts_dir}
-if [ -z "$plot_names" ]; then
-  plot_names="None"
-else
-  plot_names={{ plot_names }}
-fi
 python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} ${plot_names} ${plots_atm} ${plots_lnd} ${plots_ocn} {{ regions }}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}

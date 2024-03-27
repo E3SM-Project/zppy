@@ -56,7 +56,7 @@ def add_line(year, var, year1, year2, ax, format="%4.2f", lw=1, color="b"):
     i2 = (np.abs(year - year2)).argmin()
 
     tmp = np.average(var[i1 : i2 + 1])
-    ax.plot((year[i1], year[i2]), (tmp, tmp), lw=lw, color=color)
+    ax.plot((year[i1], year[i2]), (tmp, tmp), lw=lw, color=color, label="average")
     ax.text(ax.get_xlim()[1] + 1, tmp, format % tmp, va="center", color=color)
 
     return
@@ -87,7 +87,7 @@ def add_trend(
     if verbose:
         print(fit)
     fit_fn = np.poly1d(fit)
-    ax.plot(x, fit_fn(x), lw=lw, ls="--", c=color)
+    ax.plot(x, fit_fn(x), lw=lw, ls="--", c=color, label="trend")
     if ohc:
         # Earth radius 6371229. from MPAS-O output files
         heat_uptake = fit[0] / (4.0 * math.pi * (6371229.0) ** 2 * 365.0 * 86400.0)
@@ -656,8 +656,7 @@ def run(parameters, rgn):  # noqa: C901
             "PRECC",
             "PRECL",
             "QFLX",
-        ]  # + plots_atm
-    print(f"AAA: {plot_list} {plots_atm} {plots_lnd} {plots_ocn}")
+        ] + plots_atm
     exps = [
         {
             "atmos": None
