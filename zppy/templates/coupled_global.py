@@ -115,8 +115,8 @@ def add_trend(
 def get_ylim(standard_range, extreme_values):
     if len(extreme_values) > 0:
         has_extreme_values = True
-        extreme_min = np.amin(extreme_values)
-        extreme_max = np.amax(extreme_values)
+        extreme_min = np.amin(extreme_values) - 1
+        extreme_max = np.amax(extreme_values) + 1
     else:
         has_extreme_values = False
         extreme_min = None
