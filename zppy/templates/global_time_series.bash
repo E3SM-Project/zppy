@@ -35,22 +35,63 @@ case_dir={{ output }}
 global_ts_dir={{ global_time_series_dir }}
 
 # Options
-atmosphere_only={{ atmosphere_only }}
-atmosphere_only=${atmosphere_only,,}
+has_atm="false"
+has_lnd="false"
+has_ocn="false"
+if [ -z "{{ plot_names }}" ]; then
+  plot_names="None"
+else
+  plot_names={{ plot_names }}
+  has_atm="true"
+  has_ocn="true"
+fi
+if [ -z "{{ plots_atm }}" ]; then
+    plots_atm="None"
+else
+    plots_atm={{ plots_atm }}
+    has_atm="true"
+fi
+if [ -z "{{ plots_lnd }}" ]; then
+    plots_lnd="None"
+else
+    plots_lnd={{ plots_lnd }}
+    has_lnd="true"
+fi
+
+if [ -z "{{ plots_ocn }}" ]; then
+    plots_ocn="None"
+else
+    plots_ocn={{ plots_ocn }}
+    has_ocn="true"
+fi
+
 
 ################################################################################
 
-echo 'Create xml files for atm'
 export CDMS_NO_MPI=true
-cd ${case_dir}/post/atm/glb/ts/monthly/${ts_num_years}yr
-cdscan -x glb.xml *.nc
-if [ $? != 0 ]; then
-  cd {{ scriptDir }}
-  echo 'ERROR (1)' > {{ prefix }}.status
-  exit 1
+if [[ ${has_atm} == "true" ]]; then
+    echo 'Create xml files for atm'
+    cd ${case_dir}/post/atm/glb/ts/monthly/${ts_num_years}yr
+    cdscan -x glb.xml *.nc
+    if [ $? != 0 ]; then
+      cd {{ scriptDir }}
+      echo 'ERROR (1)' > {{ prefix }}.status
+      exit 1
+    fi
 fi
 
-if [[ ${atmosphere_only} == "false" ]]; then
+if [[ ${has_lnd} == "true" ]]; then
+    echo 'Create xml files for lnd'
+    cd ${case_dir}/post/lnd/glb/ts/monthly/${ts_num_years}yr
+    cdscan -x glb.xml *.nc
+    if [ $? != 0 ]; then
+      cd {{ scriptDir }}
+      echo 'ERROR (1)' > {{ prefix }}.status
+      exit 1
+    fi
+fi
+
+if [[ ${has_ocn} == "true" ]]; then
 
     echo 'Create ocean time series'
     cd ${global_ts_dir}
@@ -87,7 +128,7 @@ fi
 
 echo 'Update time series figures'
 cd ${global_ts_dir}
-python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} ${atmosphere_only} "{{ plot_names }}" {{ regions }}
+python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} ${plot_names} ${plots_atm} ${plots_lnd} ${plots_ocn} {{ regions }}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (5)' > {{ prefix }}.status

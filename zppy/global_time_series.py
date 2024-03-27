@@ -74,18 +74,33 @@ def global_time_series(config, scriptDir, existing_bundles, job_ids_file):
             # List of dependencies
             dependencies = []
             # Add Time Series dependencies
-            # Iterate from year1 to year2 incrementing by the number of years per time series file.
-            for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
-                start_yr = yr
-                end_yr = yr + c["ts_num_years"] - 1
-                dependencies.append(
-                    os.path.join(
-                        scriptDir,
-                        "ts_%s_%04d-%04d-%04d.status"
-                        % ("atm_monthly_glb", start_yr, end_yr, c["ts_num_years"]),
+            if c["atmosphere_only"]:
+                c["plots_lnd"] = ""
+                c["plots_ocn"] = ""
+            if c["plots_atm"]:
+                # Iterate from year1 to year2 incrementing by the number of years per time series file.
+                for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
+                    start_yr = yr
+                    end_yr = yr + c["ts_num_years"] - 1
+                    dependencies.append(
+                        os.path.join(
+                            scriptDir,
+                            "ts_%s_%04d-%04d-%04d.status"
+                            % ("atm_monthly_glb", start_yr, end_yr, c["ts_num_years"]),
+                        )
                     )
-                )
-            if not c["atmosphere_only"]:
+            if c["plots_lnd"]:
+                for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
+                    start_yr = yr
+                    end_yr = yr + c["ts_num_years"] - 1
+                    dependencies.append(
+                        os.path.join(
+                            scriptDir,
+                            "ts_%s_%04d-%04d-%04d.status"
+                            % ("lnd_monthly_glb", start_yr, end_yr, c["ts_num_years"]),
+                        )
+                    )
+            if c["plots_ocn"]:
                 # Add MPAS Analysis dependencies
                 ts_year_sets = getYears(c["ts_years"])
                 climo_year_sets = getYears(c["climo_years"])
