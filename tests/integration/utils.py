@@ -162,10 +162,10 @@ def get_compy_expansions(config):
         "bundles_walltime": "02:00:00",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
-        "diags_environment_commands": "source /qfs/people/fors729/mambaforge/etc/profile.d/conda.sh; conda activate e3sm_diags_20230914",
+        "diags_environment_commands": "source /qfs/people/fors729/mambaforge/etc/profile.d/conda.sh; conda activate e3sm_diags_20240328",
         "diags_walltime": "03:00:00",
         "e3sm_to_cmip_environment_commands": "",
-        "environment_commands_test": "source /share/apps/E3SM/conda_envs/test_e3sm_unified_1.9.0rc16_compy.sh",
+        "environment_commands_test": "",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "slurm",
