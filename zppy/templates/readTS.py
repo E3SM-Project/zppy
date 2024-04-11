@@ -15,6 +15,8 @@ class TS(object):
 
     def globalAnnual(self, var):
 
+        units = None
+
         # Constants, from AMWG diagnostics
         Lv = 2.501e6
         Lf = 3.337e5
@@ -22,46 +24,48 @@ class TS(object):
         # Is this a derived variable?
         if var == "RESTOM":
 
-            FSNT = self.globalAnnual("FSNT")
-            FLNT = self.globalAnnual("FLNT")
+            FSNT, _ = self.globalAnnual("FSNT")
+            FLNT, _ = self.globalAnnual("FLNT")
             v = FSNT - FLNT
 
         elif var == "RESTOA":
 
             print("NOT READY")
-            FSNTOA = self.globalAnnual("FSNTOA")
-            FLUT = self.globalAnnual("FLUT")
+            FSNTOA, _ = self.globalAnnual("FSNTOA")
+            FLUT, _ = self.globalAnnual("FLUT")
             v = FSNTOA - FLUT
 
         elif var == "LHFLX":
 
-            QFLX = self.globalAnnual("QFLX")
-            PRECC = self.globalAnnual("PRECC")
-            PRECL = self.globalAnnual("PRECL")
-            PRECSC = self.globalAnnual("PRECSC")
-            PRECSL = self.globalAnnual("PRECSL")
+            QFLX, _ = self.globalAnnual("QFLX")
+            PRECC, _ = self.globalAnnual("PRECC")
+            PRECL, _ = self.globalAnnual("PRECL")
+            PRECSC, _ = self.globalAnnual("PRECSC")
+            PRECSL, _ = self.globalAnnual("PRECSL")
             v = (Lv + Lf) * QFLX - Lf * 1.0e3 * (PRECC + PRECL - PRECSC - PRECSL)
 
         elif var == "RESSURF":
 
-            FSNS = self.globalAnnual("FSNS")
-            FLNS = self.globalAnnual("FLNS")
-            SHFLX = self.globalAnnual("SHFLX")
-            LHFLX = self.globalAnnual("LHFLX")
+            FSNS, _ = self.globalAnnual("FSNS")
+            FLNS, _ = self.globalAnnual("FLNS")
+            SHFLX, _ = self.globalAnnual("SHFLX")
+            LHFLX, _ = self.globalAnnual("LHFLX")
             v = FSNS - FLNS - SHFLX - LHFLX
 
         elif var == "PREC":
 
-            PRECC = self.globalAnnual("PRECC")
-            PRECL = self.globalAnnual("PRECL")
+            PRECC, _ = self.globalAnnual("PRECC")
+            PRECL, _ = self.globalAnnual("PRECL")
             v = 1.0e3 * (PRECC + PRECL)
 
         else:
+            # Non-derived variables
 
             # Read variable
             v = self.f(var)
+            units = v.units
 
             # Annual average
             v = cdutil.YEAR(v)
 
-        return v
+        return v, units

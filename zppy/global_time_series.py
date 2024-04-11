@@ -15,7 +15,8 @@ from zppy.utils import (
 
 
 # -----------------------------------------------------------------------------
-def global_time_series(config, scriptDir, existing_bundles, job_ids_file):
+# FIXME: C901 'run' is too complex (19)
+def global_time_series(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
@@ -52,6 +53,59 @@ def global_time_series(config, scriptDir, existing_bundles, job_ids_file):
             if skip:
                 continue
 
+            # Handle legacy parameter
+            if c["plot_names"]:
+                print("warning: plot_names for global_time_series is deprecated.")
+                print(
+                    "Setting plot_names will override the new parameter, plots_original."
+                )
+                c["plots_original"] = c["plot_names"]
+
+            # Determine which components are needed
+            c["use_atm"] = False
+            c["use_ice"] = False
+            c["use_lnd"] = False
+            c["use_ocn"] = False
+            if c["plots_original"]:
+                c["use_atm"] = True
+                if c["atmosphere_only"]:
+                    print(
+                        "warning: atmosphere_only for global_time_series is deprecated."
+                    )
+                    print(
+                        "preferred method: remove the 3 ocean plots (change_ohc,max_moc,change_sea_level) from plots_original."
+                    )
+                has_original_ocn_plots = (
+                    ("change_ohc" in c["plots_original"])
+                    or ("max_moc" in c["plots_original"])
+                    or ("change_sea_level" in c["plots_original"])
+                )
+                if (not c["atmosphere_only"]) and has_original_ocn_plots:
+                    c["use_ocn"] = True
+            else:
+                # For better string processing in global_time_series.bash
+                c["plots_original"] = "None"
+            if c["plots_atm"]:
+                c["use_atm"] = True
+            else:
+                # For better string processing in global_time_series.bash
+                c["plots_atm"] = "None"
+            if c["plots_ice"]:
+                c["use_ice"] = True
+            else:
+                # For better string processing in global_time_series.bash
+                c["plots_ice"] = "None"
+            if c["plots_lnd"]:
+                c["use_lnd"] = True
+            else:
+                # For better string processing in global_time_series.bash
+                c["plots_lnd"] = "None"
+            if c["plots_ocn"]:
+                c["use_ocn"] = True
+            else:
+                # For better string processing in global_time_series.bash
+                c["plots_ocn"] = "None"
+
             # Load useful scripts
             c["global_time_series_dir"] = os.path.join(
                 scriptDir, "{}_dir".format(prefix)
@@ -74,21 +128,37 @@ def global_time_series(config, scriptDir, existing_bundles, job_ids_file):
             # List of dependencies
             dependencies = []
             # Add Time Series dependencies
-            # Iterate from year1 to year2 incrementing by the number of years per time series file.
-            for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
-                start_yr = yr
-                end_yr = yr + c["ts_num_years"] - 1
-                dependencies.append(
-                    os.path.join(
-                        scriptDir,
-                        "ts_%s_%04d-%04d-%04d.status"
-                        % ("atm_monthly_glb", start_yr, end_yr, c["ts_num_years"]),
+            if c["use_atm"]:
+                # Iterate from year1 to year2 incrementing by the number of years per time series file.
+                for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
+                    start_yr = yr
+                    end_yr = yr + c["ts_num_years"] - 1
+                    dependencies.append(
+                        os.path.join(
+                            scriptDir,
+                            "ts_%s_%04d-%04d-%04d.status"
+                            % ("atm_monthly_glb", start_yr, end_yr, c["ts_num_years"]),
+                        )
                     )
-                )
-            if not c["atmosphere_only"]:
+            if c["use_lnd"]:
+                for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
+                    start_yr = yr
+                    end_yr = yr + c["ts_num_years"] - 1
+                    dependencies.append(
+                        os.path.join(
+                            scriptDir,
+                            "ts_%s_%04d-%04d-%04d.status"
+                            % ("lnd_monthly_glb", start_yr, end_yr, c["ts_num_years"]),
+                        )
+                    )
+            if c["use_ocn"]:
                 # Add MPAS Analysis dependencies
                 ts_year_sets = getYears(c["ts_years"])
                 climo_year_sets = getYears(c["climo_years"])
+                if (not ts_year_sets) or (not climo_year_sets):
+                    raise Exception(
+                        "ts_years and climo_years must both be set for ocn plots."
+                    )
                 for ts_year_set, climo_year_set in zip(ts_year_sets, climo_year_sets):
                     c["ts_year1"] = ts_year_set[0]
                     c["ts_year2"] = ts_year_set[1]
