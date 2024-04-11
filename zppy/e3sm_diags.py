@@ -115,6 +115,12 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                     c["gauges_path"] = os.path.join(
                         gauges_path_prefix, gauges_path_suffix
                     )
+                if ("tropical_subseasonal" in c["sets"]) and (
+                    c["reference_data_path_ts_daily"] == ""
+                ):
+                    c[
+                        "reference_data_path_ts_daily"
+                    ] = f"{reference_data_path}/atm/{c['grid']}/ts/daily"
             else:
                 raise ValueError("Invalid run_type={}".format(c["run_type"]))
             if "diurnal_cycle" in c["sets"]:
@@ -197,6 +203,14 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                         ts_sub = c["ts_subsection"]
                     else:
                         ts_sub = c["sub"]
+
+                    if (
+                        "ts_daily_subsection" in c.keys()
+                        and c["ts_daily_subsection"] != ""
+                    ):
+                        ts_sub = c["ts_daily_subsection"]
+                    else:
+                        ts_sub = c["sub"]
                     if (
                         ("enso_diags" in c["sets"])
                         or ("qbo" in c["sets"])
@@ -215,6 +229,14 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                                 scriptDir,
                                 "ts_rof_monthly_%04d-%04d-%04d.status"
                                 % (start_yr, end_yr, c["ts_num_years"]),
+                            )
+                        )
+                    if "tropical_subseasonal" in c["sets"]:
+                        dependencies.append(
+                            os.path.join(
+                                scriptDir,
+                                "ts_%s_%04d-%04d-%04d.status"
+                                % (ts_sub, start_yr, end_yr, c["ts_num_years"]),
                             )
                         )
             with open(settingsFile, "w") as sf:
