@@ -46,8 +46,8 @@ cd ${model_root}/${case}
 
 # Create output directory
 # Create local links to input cmip time-series files
-lnd_ts_for_ilamb={{ output }}/post/lnd/180x360_aave/cmip_ts/monthly/
-atm_ts_for_ilamb={{ output }}/post/atm/180x360_aave/cmip_ts/monthly/
+lnd_ts_for_ilamb={{ output }}/post/lnd/{{ ts_land_grid }}/cmip_ts/monthly/
+atm_ts_for_ilamb={{ output }}/post/atm/{{ ts_atm_grid }}/cmip_ts/monthly/
 cp -s ${lnd_ts_for_ilamb}/*_*_*_*_*_*_${Y1}??-${Y2}??.nc .
 cp -s ${atm_ts_for_ilamb}/*_*_*_*_*_*_${Y1}??-${Y2}??.nc .
 cd ../..
