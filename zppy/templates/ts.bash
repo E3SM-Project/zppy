@@ -141,10 +141,10 @@ EOF
 {
   export cmortables_dir={{ cmor_tables_prefix }}/cmip6-cmor-tables/Tables
   #input_dir={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
-  input_dir=${dest}/{{ yr_start }}_{{ yr_end }}
+  input_dir=${dest}/{{ '%04d' % (yr_start) }}_{{ '%04d' % (yr_end) }}
   mkdir -p $input_dir
 
-  cp -s $dest/*_{{ yr_start }}??_{{ yr_end }}??.nc $input_dir
+  cp -s $dest/*_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc $input_dir
   dest_cmip={{ output }}/post/{{ component }}/{{ grid }}/cmip_ts/{{ frequency }}
   mkdir -p ${dest_cmip}
   {{ e3sm_to_cmip_environment_commands }}
