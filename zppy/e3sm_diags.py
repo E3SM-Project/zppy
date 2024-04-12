@@ -208,9 +208,9 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                         "ts_daily_subsection" in c.keys()
                         and c["ts_daily_subsection"] != ""
                     ):
-                        ts_sub = c["ts_daily_subsection"]
+                        ts_daily_sub = c["ts_daily_subsection"]
                     else:
-                        ts_sub = c["sub"]
+                        ts_daily_sub = c["sub"]
                     if (
                         ("enso_diags" in c["sets"])
                         or ("qbo" in c["sets"])
@@ -236,7 +236,7 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                             os.path.join(
                                 scriptDir,
                                 "ts_%s_%04d-%04d-%04d.status"
-                                % (ts_sub, start_yr, end_yr, c["ts_num_years"]),
+                                % (ts_daily_sub, start_yr, end_yr, c["ts_num_years"]),
                             )
                         )
             with open(settingsFile, "w") as sf:
@@ -273,6 +273,7 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
 
-                print_url(c, "e3sm_diags")
+            print(f"environment_commands={c['environment_commands']}")
+            print_url(c, "e3sm_diags")
 
     return existing_bundles

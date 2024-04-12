@@ -1,6 +1,6 @@
 # Run this script to update expected files for test_campaign.py
 # Run from the top level of the zppy repo
-# Run as `./tests/integration/update_campaign_expected_files.sh`
+# Run as `./tests/integration/generated/update_campaign_expected_files.sh`
 
 for campaign in "cryosphere" "cryosphere_override" "high_res_v1" "none" "water_cycle" "water_cycle_override"
 do

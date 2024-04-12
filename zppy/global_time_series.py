@@ -203,6 +203,7 @@ def global_time_series(config, scriptDir, existing_bundles, job_ids_file):  # no
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
 
-                print_url(c, "global_time_series")
+            print(f"environment_commands={c['environment_commands']}")
+            print_url(c, "global_time_series")
 
     return existing_bundles

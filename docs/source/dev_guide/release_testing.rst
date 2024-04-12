@@ -11,19 +11,19 @@ Testing directions for making a release
     a. test dev (run before making a new zppy RC) ::
 
         git fetch upstream main
-        git checkout -b test_pre_zppy_rc<#>_<machine_name> upstream/main
+        git checkout -b test_zppy_pre_#.#.#rc#_<machine_name> upstream/main
         git log # check the commits match https://github.com/E3SM-Project/zppy/commits/main
    
     b. test new Unified RC ::
 
         git fetch upstream main
-        git checkout -b test_unified_rc<#>_<machine_name> upstream/main
+        git checkout -b test_unified_#.#.#rc#_<machine_name> upstream/main
         git log # check the commits match https://github.com/E3SM-Project/zppy/commits/main
 
     c. test final Unified ::
 
         git fetch upstream main
-        git checkout -b test_unified_<#>_<machine_name> upstream/main
+        git checkout -b test_unified_#.#.#rc#_<machine_name> upstream/main
         git log # check the commits match https://github.com/E3SM-Project/zppy/commits/main
 
 4. Set up a dev environment for E3SM Diags. This is used for the ``diags_environment_commands`` parameter. Normally, this is only used for checking ``environment_commands`` works properly. However, by modifying the test templates, it's possible to run other E3SM Diags subtasks in a different environment. This can be useful if a bug fix in E3SM Diags hasn't been incorporated into the latest Unified RC yet. ::
@@ -64,18 +64,18 @@ Testing directions for making a release
 
 6. Set up your environment.
 
-    a. test dev (run before making a new zppy RC): Set up a new development environment. This ensures that testing will use the latest conda changes. Note that you will need to run ``conda remove -n zppy_dev_pre_zppy_rc<#> --all`` first if you have previously done this step. ::
+    a. test dev (run before making a new zppy RC): Set up a new development environment. This ensures that testing will use the latest conda changes. Note that you will need to run ``conda remove -n zppy_dev_pre_zppy_#.#.#rc# --all`` first if you have previously done this step. ::
 
         mamba clean --all
-        mamba env create -f conda/dev.yml -n zppy_dev_pre_zppy_rc<#>
-        conda activate zppy_dev_pre_rc<#>
+        mamba env create -f conda/dev.yml -n zppy_dev_pre_#.#.#rc#
+        conda activate zppy_dev_pre_#.#.#rc#
         pip install .
 
     b. test new Unified RC: Launch the E3SM Unified environment for the machine you're on. Change out the version numbers below.
 
-        * Chrysalis: ``source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.9.0rc16_chrysalis.sh``
-        * Compy: ``source /share/apps/E3SM/conda_envs/test_e3sm_unified_1.9.0rc16_compy.sh``
-        * Perlmutter: ``source /global/common/software/e3sm/anaconda_envs/test_e3sm_unified_1.9.0rc16_pm-cpu.sh``
+        * Chrysalis: ``source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_#.#.#rc#_chrysalis.sh``
+        * Compy: ``source /share/apps/E3SM/conda_envs/test_e3sm_unified_#.#.#rc#_compy.sh``
+        * Perlmutter: ``source /global/common/software/e3sm/anaconda_envs/test_e3sm_unified_#.#.#rc#_pm-cpu.sh``
 
     c. test final Unified: Launch the latest E3SM Unified environment for the machine you're on.
 
@@ -126,12 +126,12 @@ Testing directions for making a release
     * If there are only expected failures, then update the expected files. Use the "Commands to run to replace outdated expected files" from the links on step 8. Then repeat step 9.
     * If there are no failures at all, proceed to the next step.
 
-11. Run ``git diff``. All of your changes should be from editing ``tests/integration/utils.py`` in step 5, and running it in step 8.
+10. Run ``git diff``. All of your changes should be from editing ``tests/integration/utils.py`` in step 5, and running it in step 8.
 
     * If this is the case, you can delete this testing branch.
     * If not, you have probably made code changes to get the tests to pass. Make a pull request to merge the changes. Add the "semver: bug" label.
 
-12. Wrap up release testing:
+11. Wrap up release testing:
 
     a. test dev (run before making a new zppy RC): Create the next zppy RC by following the "release candidates" directions at https://e3sm-project.github.io/zppy/_build/html/main/dev_guide/release.html.
 

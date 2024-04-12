@@ -114,4 +114,9 @@ def ts(config, scriptDir, existing_bundles, job_ids_file):
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
 
+            print(f"environment_commands={c['environment_commands']}")
+            print(
+                f"e3sm_to_cmip_environment_commands={c['e3sm_to_cmip_environment_commands']}"
+            )
+
     return existing_bundles
