@@ -137,6 +137,7 @@ def mpas_analysis(config, scriptDir, existing_bundles, job_ids_file):
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
 
-                print_url(c, "mpas_analysis")
+            print(f"environment_commands={c['environment_commands']}")
+            print_url(c, "mpas_analysis")
 
     return existing_bundles

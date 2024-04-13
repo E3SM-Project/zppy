@@ -136,7 +136,7 @@ def get_chyrsalis_expansions(config):
         "bundles_walltime": "07:00:00",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
-        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20240328",
+        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20240412",
         "diags_walltime": "5:00:00",
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
@@ -274,11 +274,28 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     )
     substitute_expansions(expansions, directions_template, directions_generated)
 
-    script_template = (
-        f"{git_top_level}/tests/integration/template_update_campaign_expected_files.sh"
+    script_names = [
+        "bash_generation",
+        "bundles",
+        "campaign",
+        "complete_run",
+        "defaults",
+    ]
+    for script_name in script_names:
+        script_template = f"{git_top_level}/tests/integration/template_update_{script_name}_expected_files.sh"
+        script_generated = f"{git_top_level}/tests/integration/generated/update_{script_name}_expected_files_{machine}.sh"
+        substitute_expansions(expansions, script_template, script_generated)
+    print("CFG FILES HAVE BEEN GENERATED FROM TEMPLATES WITH THESE SETTINGS:")
+    print(f"UNIQUE_ID={UNIQUE_ID}")
+    print(f"unified_testing={unified_testing}")
+    print(f"diags_environment_commands={expansions['diags_environment_commands']}")
+    print(
+        f"e3sm_to_cmip_environment_commands={expansions['e3sm_to_cmip_environment_commands']}"
     )
-    script_generated = f"{git_top_level}/tests/integration/generated/update_campaign_expected_files_{machine}.sh"
-    substitute_expansions(expansions, script_template, script_generated)
+    print(f"environment_commands={expansions['environment_commands']}")
+    print(
+        "Reminder: `environment_commands=''` => the latest E3SM Unified environment will be used"
+    )
 
 
 if __name__ == "__main__":
