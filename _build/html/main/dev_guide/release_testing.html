@@ -98,21 +98,21 @@
 <div><ol class="loweralpha">
 <li><p>test dev (run before making a new zppy RC)</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">fetch</span> <span class="n">upstream</span> <span class="n">main</span>
-<span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="n">test_pre_zppy_rc</span><span class="o">&lt;</span><span class="c1">#&gt;_&lt;machine_name&gt; upstream/main</span>
+<span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="n">test_zppy_pre_</span><span class="c1">#.#.#rc#_&lt;machine_name&gt; upstream/main</span>
 <span class="n">git</span> <span class="n">log</span> <span class="c1"># check the commits match https://github.com/E3SM-Project/zppy/commits/main</span>
 </pre></div>
 </div>
 </li>
 <li><p>test new Unified RC</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">fetch</span> <span class="n">upstream</span> <span class="n">main</span>
-<span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="n">test_unified_rc</span><span class="o">&lt;</span><span class="c1">#&gt;_&lt;machine_name&gt; upstream/main</span>
+<span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="n">test_unified_</span><span class="c1">#.#.#rc#_&lt;machine_name&gt; upstream/main</span>
 <span class="n">git</span> <span class="n">log</span> <span class="c1"># check the commits match https://github.com/E3SM-Project/zppy/commits/main</span>
 </pre></div>
 </div>
 </li>
 <li><p>test final Unified</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">fetch</span> <span class="n">upstream</span> <span class="n">main</span>
-<span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="n">test_unified_</span><span class="o">&lt;</span><span class="c1">#&gt;_&lt;machine_name&gt; upstream/main</span>
+<span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="n">test_unified_</span><span class="c1">#.#.#rc#_&lt;machine_name&gt; upstream/main</span>
 <span class="n">git</span> <span class="n">log</span> <span class="c1"># check the commits match https://github.com/E3SM-Project/zppy/commits/main</span>
 </pre></div>
 </div>
@@ -171,10 +171,10 @@ $ `cd` back to zppy directory
 <li><p>Set up your environment.</p>
 <blockquote>
 <div><ol class="loweralpha">
-<li><p>test dev (run before making a new zppy RC): Set up a new development environment. This ensures that testing will use the latest conda changes. Note that you will need to run <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">remove</span> <span class="pre">-n</span> <span class="pre">zppy_dev_pre_zppy_rc&lt;#&gt;</span> <span class="pre">--all</span></code> first if you have previously done this step.</p>
+<li><p>test dev (run before making a new zppy RC): Set up a new development environment. This ensures that testing will use the latest conda changes. Note that you will need to run <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">remove</span> <span class="pre">-n</span> <span class="pre">zppy_dev_pre_zppy_#.#.#rc#</span> <span class="pre">--all</span></code> first if you have previously done this step.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mamba</span> <span class="n">clean</span> <span class="o">--</span><span class="nb">all</span>
-<span class="n">mamba</span> <span class="n">env</span> <span class="n">create</span> <span class="o">-</span><span class="n">f</span> <span class="n">conda</span><span class="o">/</span><span class="n">dev</span><span class="o">.</span><span class="n">yml</span> <span class="o">-</span><span class="n">n</span> <span class="n">zppy_dev_pre_zppy_rc</span><span class="o">&lt;</span><span class="c1">#&gt;</span>
-<span class="n">conda</span> <span class="n">activate</span> <span class="n">zppy_dev_pre_rc</span><span class="o">&lt;</span><span class="c1">#&gt;</span>
+<span class="n">mamba</span> <span class="n">env</span> <span class="n">create</span> <span class="o">-</span><span class="n">f</span> <span class="n">conda</span><span class="o">/</span><span class="n">dev</span><span class="o">.</span><span class="n">yml</span> <span class="o">-</span><span class="n">n</span> <span class="n">zppy_dev_pre_</span><span class="c1">#.#.#rc#</span>
+<span class="n">conda</span> <span class="n">activate</span> <span class="n">zppy_dev_pre_</span><span class="c1">#.#.#rc#</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
 </pre></div>
 </div>
@@ -182,9 +182,9 @@ $ `cd` back to zppy directory
 <li><p>test new Unified RC: Launch the E3SM Unified environment for the machine you’re on. Change out the version numbers below.</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Chrysalis: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.9.0rc16_chrysalis.sh</span></code></p></li>
-<li><p>Compy: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/share/apps/E3SM/conda_envs/test_e3sm_unified_1.9.0rc16_compy.sh</span></code></p></li>
-<li><p>Perlmutter: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/global/common/software/e3sm/anaconda_envs/test_e3sm_unified_1.9.0rc16_pm-cpu.sh</span></code></p></li>
+<li><p>Chrysalis: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/lcrc/soft/climate/e3sm-unified/test_e3sm_unified_#.#.#rc#_chrysalis.sh</span></code></p></li>
+<li><p>Compy: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/share/apps/E3SM/conda_envs/test_e3sm_unified_#.#.#rc#_compy.sh</span></code></p></li>
+<li><p>Perlmutter: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/global/common/software/e3sm/anaconda_envs/test_e3sm_unified_#.#.#rc#_pm-cpu.sh</span></code></p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -274,8 +274,6 @@ $ `cd` back to zppy directory
 </ul>
 </div></blockquote>
 </li>
-</ol>
-<ol class="arabic" start="11">
 <li><p>Run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">diff</span></code>. All of your changes should be from editing <code class="docutils literal notranslate"><span class="pre">tests/integration/utils.py</span></code> in step 5, and running it in step 8.</p>
 <ul class="simple">
 <li><p>If this is the case, you can delete this testing branch.</p></li>
