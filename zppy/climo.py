@@ -104,6 +104,6 @@ def climo(config, scriptDir, existing_bundles, job_ids_file):
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
 
-            print(f"environment_commands={c['environment_commands']}")
+            print(f"   environment_commands={c['environment_commands']}")
 
     return existing_bundles

@@ -273,7 +273,7 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
 
-            print(f"environment_commands={c['environment_commands']}")
+            print(f"   environment_commands={c['environment_commands']}")
             print_url(c, "e3sm_diags")
 
     return existing_bundles

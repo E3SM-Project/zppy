@@ -294,6 +294,9 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     )
     print(f"environment_commands={expansions['environment_commands']}")
     print(
+        "Reminder: `e3sm_to_cmip_environment_commands=''` => the environment of the `ts` task will be used"
+    )
+    print(
         "Reminder: `environment_commands=''` => the latest E3SM Unified environment will be used"
     )
 
