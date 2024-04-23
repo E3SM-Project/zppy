@@ -1,0 +1,8 @@
+[default]
+nodes = 2
+
+[climo]
+years = "2000:2002:2",
+
+  [[ atm_monthly_180x360_aave ]]
+  vars="PRECT"

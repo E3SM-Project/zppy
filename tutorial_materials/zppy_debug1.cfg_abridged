@@ -1,0 +1,14 @@
+[ts]
+years = "2000:2010:5",
+
+  [[ atm_monthly_180x360_aave ]]
+  ts_fmt = "cmip"
+
+  [[ atm_monthly_glb ]]
+  years = "2000:2010:10",
+
+[global_time_series]
+plots_original=""
+plots_atm="TS"
+ts_num_years = 5
+years = "2000-2010",

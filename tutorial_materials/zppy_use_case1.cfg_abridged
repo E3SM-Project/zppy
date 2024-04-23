@@ -1,0 +1,26 @@
+[climo]
+years = "2000:2005:5", "2009:2014:5",
+
+  [[ atm_monthly_diurnal_8xdaily_180x360_aave ]]
+  frequency = "diurnal_8xdaily"
+  input_files = "eam.h3"
+  vars = "PRECT"
+
+[e3sm_diags]
+grid = '180x360_aave'
+sets = "diurnal_cycle",
+short_name = "v3.LR.historical_0101"
+
+  [[ atm_monthly_180x360_aave_mvm ]]
+  climo_diurnal_frequency = "diurnal_8xdaily"
+  climo_diurnal_subsection = "atm_monthly_diurnal_8xdaily_180x360_aave"
+  # `dc_obs_climo` is not strictly necessary. zppy can guess it based on `reference_data_path`.
+  diff_title = "Difference"
+  ref_name = "extendedOutput.v3.LR.historical_0101"
+  ref_years = "2009-2014",
+  reference_data_path = "/global/cfs/cdirs/e3sm/www/Tutorials/2024/simulations/extendedOutput.v3.LR.historical_0101/post/atm/180x360_aave/clim"
+  # `reference_data_path_climo_diurnal` is not strictly necessary. zppy can guess it based on `reference_data_path`.
+  run_type = "model_vs_model"
+  short_ref_name = "v3.LR.historical_0101"
+  tag = "model_vs_model"
+  years = "2000:2005:5",
