@@ -21,6 +21,7 @@ class Bundle(object):
         self.script_dir: str = c["scriptDir"]
         self.nodes: int = c["nodes"]
         self.partition: str = c["partition"]
+        self.reservation: str = c["reservation"]
         self.qos: str = c["qos"]
         self.walltime: str = c["walltime"]
 
@@ -55,6 +56,7 @@ class Bundle(object):
         c["prefix"] = self.bundle_name
         c["nodes"] = self.nodes
         c["partition"] = self.partition
+        c["reservation"] = self.reservation
         c["qos"] = self.qos
         c["walltime"] = self.walltime
         c["tasks"] = [os.path.split(t)[-1] for t in self.tasks]

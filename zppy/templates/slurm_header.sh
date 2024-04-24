@@ -7,6 +7,9 @@
 #SBATCH  --output={{ scriptDir }}/{{ prefix }}.o%j
 #SBATCH  --exclusive
 #SBATCH  --time={{ walltime }}
+{% if reservation  %}
+#SBATCH  --reservation={{ reservation }}
+{% endif %}
 {% if machine in ['anvil', 'chrysalis'] %}
 #SBATCH  --partition={{ partition }}
 
