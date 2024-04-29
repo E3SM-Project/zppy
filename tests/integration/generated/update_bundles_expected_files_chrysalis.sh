@@ -12,7 +12,7 @@ cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/unique_id/v2.LR.hist
 zppy_top_level=$(pwd)
 cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
 # Remove the image check failures, so they don't end up in the expected files.
-rm -rf image_check_failures
+rm -rf image_check_failures_bundles
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_bundles.txt
 cd ${zppy_top_level}
