@@ -12,7 +12,7 @@ cp -r /compyfs/fors729/zppy_test_bundles_output/unique_id/v2.LR.historical_0201/
 zppy_top_level=$(pwd)
 cd /compyfs/www/zppy_test_resources/expected_bundles
 # Remove the image check failures, so they don't end up in the expected files.
-rm -rf image_check_failures
+rm -rf image_check_failures_bundles
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_bundles.txt
 cd ${zppy_top_level}
