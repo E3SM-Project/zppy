@@ -188,7 +188,7 @@ def get_perlmutter_expansions(config):
         "bundles_walltime": "6:00:00",
         "constraint": "cpu",
         # To run this test, replace conda environment with your e3sm_diags dev environment
-        "diags_environment_commands": "source /global/homes/f/forsyth/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20240328",
+        "diags_environment_commands": "source /global/homes/f/forsyth/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20240429",
         "diags_walltime": "6:00:00",
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",

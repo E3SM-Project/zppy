@@ -10,7 +10,7 @@ cp -r /global/cfs/cdirs/e3sm/www/forsyth/zppy_test_complete_run_www/unique_id/v2
 zppy_top_level=$(pwd)
 cd /global/cfs/cdirs/e3sm/www/zppy_test_resources/expected_complete_run
 # Remove the image check failures, so they don't end up in the expected files.
-rm -rf image_check_failures
+rm -rf image_check_failures_complete_run
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_complete_run.txt
 cd ${zppy_top_level}
