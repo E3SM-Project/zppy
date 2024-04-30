@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zppy documentation &mdash; zppy  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="A schematic view of zppy" href="schematics.html" />
+    <link href="_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#" class="icon icon-home"> zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Zppy documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="campaigns.html">Campaigns</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev_guide/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to This Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+      <li>Zppy documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="zppy-documentation">
+<span id="index-label"></span><h1>Zppy documentation<a class="headerlink" href="#zppy-documentation" title="Permalink to this heading"></a></h1>
+<div class="section" id="what-is-zppy">
+<h2>What is zppy?<a class="headerlink" href="#what-is-zppy" title="Permalink to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">zppy</span></code> (pronounced “zippee”) is a post-processing toolchain for E3SM written in
+Python. The goal of <code class="docutils literal notranslate"><span class="pre">zppy</span></code> is to speed-up the post-processing of E3SM simulations
+by automating commonly performed tasks.</p>
+<p><code class="docutils literal notranslate"><span class="pre">zppy</span></code> is built around a set of tasks that perform specific actions,
+such as generating (regridded) <strong>time series</strong> or <strong>climatology</strong> files
+using NCO’s <code class="docutils literal notranslate"><span class="pre">ncclimo</span></code>, or generating analysis figures with <strong>E3SM Diags</strong>
+or <strong>MPAS-Analysis</strong>. <code class="docutils literal notranslate"><span class="pre">zppy</span></code> provides a framework to simplify the use of these
+tools, especially for long simulations.</p>
+<p><code class="docutils literal notranslate"><span class="pre">zppy</span></code> is controlled entirely from a single user provided configuration file
+(e.g., “mysimulation.cfg”). This configuration file specifies input and output
+directories, as well as the list of tasks to run. Each task operates
+for a specific model component and over
+a specified number of years, for example generating atmosphere climatology
+files every 20 and 50 years.</p>
+<p><code class="docutils literal notranslate"><span class="pre">zppy</span></code> parses the configuration file and generates batch
+jobs that are submitted for execution by SLURM. Dependencies between tasks
+are handled and passed to SLURM. Internally, each batch job is created by
+instantiating <a class="reference external" href="https://jinja.palletsprojects.com">Jinja</a> template scripts
+(usually written in bash, but other languages are supported as well).</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Zppy documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#activate-e3sm-unified-environment">Activate e3sm_unified environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation-in-a-conda-environment">Installation in a Conda Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#a-latest-stable-release">(a) Latest Stable Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#b-development-environment">(b) Development Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#configuration-file">Configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#running">Running</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#example-1">Example 1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#example-2">Example 2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html#debugging-failures">Debugging failures</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="campaigns.html">Campaigns</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev_guide/index.html">Developer Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/project-standards.html">Project Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/ci.html">Understanding CI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/testing.html">Testing zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/release_testing.html">Testing directions for making a release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/release.html">How to Prepare a Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/tutorial_testing_e3sm_unified.html">Testing zppy for E3SM Unified release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/new_diags_set.html">Adding a new set to the E3SM Diagnostics task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/new_glb_plot.html">Adding a new plot to Global Time Series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/new_task.html">Adding a new task</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to This Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#getting-started">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#edit-documentation">Edit Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#initial-setup-obsolete-for-reference-only">Initial setup (obsolete/for reference only)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="schematics.html" class="btn btn-neutral float-right" title="A schematic view of zppy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v2.5.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../v2.0.0/index.html">v2.0.0</a></dd>
+      <dd><a href="../v2.1.0/index.html">v2.1.0</a></dd>
+      <dd><a href="../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../v2.3.0/index.html">v2.3.0</a></dd>
+      <dd><a href="../v2.3.1/index.html">v2.3.1</a></dd>
+      <dd><a href="../v2.4.0/index.html">v2.4.0</a></dd>
+      <dd><a href="index.html">v2.5.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../main/index.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
