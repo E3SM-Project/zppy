@@ -10,7 +10,7 @@ cp -r #expand user_www#zppy_test_complete_run_www/#expand unique_id#/v2.LR.histo
 zppy_top_level=$(pwd)
 cd #expand expected_dir#expected_complete_run
 # Remove the image check failures, so they don't end up in the expected files.
-rm -rf image_check_failures
+rm -rf image_check_failures_complete_run
 # This file will list all the expected images.
 find . -type f -name '*.png' > ../image_list_expected_complete_run.txt
 cd ${zppy_top_level}
