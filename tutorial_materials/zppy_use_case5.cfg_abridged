@@ -1,0 +1,14 @@
+[ts]
+
+  [[ land_monthly_glb ]]
+  input_files = "elm.h0"
+  input_subdir = "archive/lnd/hist"
+  mapping_file = "glb"
+  # We'll need the time-series for these variables!
+  vars = "LAISHA,LAISUN"
+
+[global_time_series]
+# Setting this parameter to "" will turn off the 8 "standard" global_time_series plots
+plots_original=""
+# Tell zppy which variables we actually do want to plot.
+plots_lnd="LAISHA,LAISUN"

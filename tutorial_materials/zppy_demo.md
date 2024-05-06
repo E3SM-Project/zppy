@@ -177,7 +177,7 @@ To check on your batch jobs specifically:
 alias sq='sqa -u $USER'
 ```
 The output of sq uses several abbreviations: ST = Status (with R = running, PD = pending, CG = completing).
-There are also reasons why a job is depending: Dependency -- job is waiting for another job to finish first,
+There are also reasons why a job isn't running yet: Dependency -- job is waiting for another job to finish first,
 Resources or Priority -- job will run relatively soon.
 
 It can take a while for jobs to run. Notably `e3sm_diags` and `mpas_analysis` can take an hour or more.

@@ -5,7 +5,10 @@ Try to solve the problem by looking through the
 [documentation](https://docs.e3sm.org/zppy) and/or [discussion pages](https://github.com/E3SM-Project/zppy/discussions).
 
 The problems are divided into use cases (try to write the abridged `cfg` to solve the problem) and
-debugging (try to determine what's wrong with the given abrdiged `cfg`).
+debugging (try to determine what's wrong with the given abridged `cfg`).
+
+If you have more time, try going beyond the abridged `cfg` files --
+can you write and run the `cfg` files to produce the desired results?
 
 ## Use cases
 
@@ -14,6 +17,7 @@ Compare the simulation's diurnal precipitation from its first 5 years and its la
 
 <details>
 <summary>Hints</summary>
+
 What set do we need to run from E3SM Diags to do this? What variable do we need to process?
 
 Figuring out how to do this problem will help if you want to compare output from two different models one day.
@@ -104,6 +108,28 @@ We can run `zstash extract` -- see the [zstash demo](https://github.com/E3SM-Pro
 ```
 input = <path to extracted simulation output>
 ```
+</details>
+
+### Problem 5
+A Land scientist really just wants to see global time series for a few land variables,
+say `LAISHA` and `LAISUN`.
+How could they generate those plots -- and _only_ those plots?
+
+<details>
+<summary>Hints</summary>
+
+What [parameters](https://docs.e3sm.org/zppy/_build/html/main/parameters.html) might be useful here?
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+We can use the `plots_lnd` parameter to set the land variables
+and the `plots_original` parameter to turn off the standard plots.
+
+See `zppy_use_case5.cfg_abridged`.
+
 </details>
 
 ## Debugging
