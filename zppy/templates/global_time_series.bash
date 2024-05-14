@@ -39,28 +39,7 @@ global_ts_dir={{ global_time_series_dir }}
 export CDMS_NO_MPI=true
 
 use_atm={{ use_atm }}
-if [[ ${use_atm,,} == "true" ]]; then
-    echo 'Create xml files for atm'
-    cd ${case_dir}/post/atm/glb/ts/monthly/${ts_num_years}yr
-    zppy_cdscan_replacement glb.xml *.nc
-    if [ $? != 0 ]; then
-      cd {{ scriptDir }}
-      echo 'ERROR (1)' > {{ prefix }}.status
-      exit 1
-    fi
-fi
-
 use_lnd={{ use_lnd }}
-if [[ ${use_lnd,,} == "true" ]]; then
-    echo 'Create xml files for lnd'
-    cd ${case_dir}/post/lnd/glb/ts/monthly/${ts_num_years}yr
-    zppy_cdscan_replacement -x glb.xml *.nc
-    if [ $? != 0 ]; then
-      cd {{ scriptDir }}
-      echo 'ERROR (2)' > {{ prefix }}.status
-      exit 2
-    fi
-fi
 
 use_ocn={{ use_ocn }}
 if [[ ${use_ocn,,} == "true" ]]; then
@@ -73,16 +52,6 @@ if [[ ${use_ocn,,} == "true" ]]; then
       cd {{ scriptDir }}
       echo 'ERROR (3)' > {{ prefix }}.status
       exit 3
-    fi
-
-    echo 'Create xml for for ocn'
-    export CDMS_NO_MPI=true
-    cd ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
-    zppy_cdscan_replacement glb.xml mpaso.glb*.nc
-    if [ $? != 0 ]; then
-      cd {{ scriptDir }}
-      echo 'ERROR (4)' > {{ prefix }}.status
-      exit 4
     fi
 
     echo 'Copy moc file'

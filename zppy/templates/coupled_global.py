@@ -740,32 +740,22 @@ def run(parameters, rgn):  # noqa: C901
         {
             "atmos": None
             if not use_atmos
-            else "{}/post/atm/glb/ts/monthly/{}yr/glb.xml".format(
-                case_dir, ts_num_years
-            ),
+            else "{}/post/atm/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
             "ice": None
             if not plots_ice
-            else "{}/post/ice/glb/ts/monthly/{}yr/glb.xml".format(
-                case_dir, ts_num_years
-            ),
+            else "{}/post/ice/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
             "land": None
             if not plots_lnd
-            else "{}/post/lnd/glb/ts/monthly/{}yr/glb.xml".format(
-                case_dir, ts_num_years
-            ),
+            else "{}/post/lnd/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
             "ocean": None
             if not use_ocn
-            else "{}/post/ocn/glb/ts/monthly/{}yr/glb.xml".format(
-                case_dir, ts_num_years
-            ),
+            else "{}/post/ocn/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
             "moc": None
             if not use_ocn
             else "{}/post/ocn/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
             "vol": None
             if not use_ocn
-            else "{}/post/ocn/glb/ts/monthly/{}yr/glb.xml".format(
-                case_dir, ts_num_years
-            ),
+            else "{}/post/ocn/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
             "name": experiment_name,
             "yoffset": 0.0,
             "yr": ([year1, year2],),

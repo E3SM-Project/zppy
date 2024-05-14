@@ -30,10 +30,5 @@ setup(
     python_requires=">=3.6",
     packages=find_packages(include=["zppy", "zppy.*"]),
     package_data={"": data_files},
-    entry_points={
-        "console_scripts": [
-            "zppy=zppy.__main__:main",
-            "zppy_cdscan_replacement=zppy.__main__:zppy_cdscan_replacement",
-        ]
-    },
+    entry_points={"console_scripts": ["zppy=zppy.__main__:main"]},
 )
