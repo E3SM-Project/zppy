@@ -1,6 +1,7 @@
 from typing import Optional, Tuple
 
 import xarray
+import xcdat  # noqa: F401
 
 
 class TS(object):
@@ -8,9 +9,9 @@ class TS(object):
 
         self.directory: str = directory
 
-        # directory will be of the form `{case_dir}/post/<componen>/glb/ts/monthly/{ts_num_years}yr`
-        self.f: xarray.core.dataset.Dataset = xarray.open_mfdataset(f"{directory}/*.nc")
+        # `directory` will be of the form `{case_dir}/post/<componen>/glb/ts/monthly/{ts_num_years}yr`
         # Refactor note: `self.f = cdms2.open(filename)` gave `cdms2.dataset.Dataset`
+        self.f: xarray.core.dataset.Dataset = xarray.open_mfdataset(f"{directory}/*.nc")
 
     def __del__(self):
 
@@ -20,13 +21,12 @@ class TS(object):
         self, var: str
     ) -> Tuple[xarray.core.dataarray.DataArray, Optional[str]]:
 
+        v: xarray.core.dataarray.DataArray
         units: Optional[str] = None
 
         # Constants, from AMWG diagnostics
         Lv = 2.501e6
         Lf = 3.337e5
-
-        v: xarray.core.dataarray.DataArray
 
         # Is this a derived variable?
         if var == "RESTOM":
@@ -68,16 +68,10 @@ class TS(object):
         else:
             # Non-derived variables
 
-            # Read variable
-            v = self.f.data_vars[var]
-            # Refactor note: `v = self.f(var)` gave `cdms2.tvariable.TransientVariable`
+            annual_average_dataset_for_var: xarray.core.dataset.Dataset = (
+                self.f.temporal.group_average(var, "year")
+            )
+            v = annual_average_dataset_for_var.data_vars[var]
             units = v.units
-
-            # Annual average
-
-            # Refactor note: `AttributeError: 'Dataset' object has no attribute 'temporal'` seems to always occur
-            # Regardless if using CDAT or not, if using as object or class method.
-            # v = self.f.temporal.group_average(v, "year")
-            v = xarray.Dataset.temporal.group_average(v, "year")
 
         return v, units

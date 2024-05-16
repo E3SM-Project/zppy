@@ -3,12 +3,15 @@ import glob
 import math
 import sys
 import traceback
-from typing import Any, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
+import cftime
 import matplotlib as mpl
 import matplotlib.backends.backend_pdf
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray
+import xcdat  # noqa: F401
 from netCDF4 import Dataset
 from readTS import TS
 
@@ -549,11 +552,20 @@ def param_get_list(param_value):
         return param_value.split(",")
 
 
-def set_var(exp, exp_key, var_list, valid_vars, invalid_vars, rgn):
+def set_var(
+    exp: Dict[str, Any],
+    exp_key: str,
+    var_list: List[str],
+    valid_vars: List[str],
+    invalid_vars: List[str],
+    rgn: str,
+) -> None:
     if exp[exp_key] is not None:
         ts = TS(exp[exp_key])
         for var in var_list:
             try:
+                v: xarray.core.dataarray.DataArray
+                units: Optional[str]
                 v, units = ts.globalAnnual(var)
                 valid_vars.append(str(var))
             except Exception as e:
@@ -561,7 +573,7 @@ def set_var(exp, exp_key, var_list, valid_vars, invalid_vars, rgn):
                 print(f"globalAnnual failed. Invalid var = {var}")
                 invalid_vars.append(str(var))
                 continue
-            if len(v.shape) > 1:
+            if v.sizes["rgn"] > 1:
                 # number of years x 3 regions = v.shape
                 # 3 regions = global, northern hemisphere, southern hemisphere
                 # We get here if we used the updated `ts` task
@@ -574,18 +586,17 @@ def set_var(exp, exp_key, var_list, valid_vars, invalid_vars, rgn):
                     n = 2
                 else:
                     raise RuntimeError(f"Invalid rgn={rgn}")
-                v = v[:, n]  # Just use nth column
+                v = v.isel(rgn=n)  # Just use nth column
             elif rgn != "glb":
                 # v only has one dimension -- glb.
                 # Therefore it is not possible to get n or s plots.
                 raise RuntimeError(
                     f"var={var} only has global data. Cannot process rgn={rgn}"
                 )
-            exp["annual"][var] = v
             exp["annual"][var] = (v, units)
             if "year" not in exp["annual"]:
-                time = v.getTime()
-                exp["annual"]["year"] = [x.year for x in time.asComponentTime()]
+                years: np.ndarray[cftime.DatetimeNoLeap] = v.coords["time"].values
+                exp["annual"]["year"] = [x.year for x in years]
         del ts
 
 
@@ -736,7 +747,7 @@ def run(parameters, rgn):  # noqa: C901
         or ("change_sea_level" in plots_original)
     )
     use_ocn = plots_ocn or (not atmosphere_only and has_original_ocn_plots)
-    exps = [
+    exps: List[Dict[str, Any]] = [
         {
             "atmos": None
             if not use_atmos
@@ -767,7 +778,7 @@ def run(parameters, rgn):  # noqa: C901
     invalid_vars: List[str] = []
 
     # Read data
-    exp: Any
+    exp: Dict[str, Any]
     for exp in exps:
         exp["annual"] = {}
 
@@ -845,5 +856,27 @@ def run_by_region(parameters):
         run(parameters, rgn)
 
 
+def debug():
+    args = [
+        "coupled_global.py",
+        "/lcrc/group/e3sm/ac.forsyth2/zppy_test_debug_output/test-346/v2.LR.historical_0201",
+        "v2.LR.historical_0201",
+        "v2_historical_0201",
+        "1850",
+        "1860",
+        "Blue",
+        "5",
+        "net_toa_flux_restom,global_surface_air_temperature,toa_radiation,net_atm_energy_imbalance,change_ohc,max_moc,change_sea_level,net_atm_water_imbalance",
+        "False",
+        "None",
+        "None",
+        "LAISHA,LAISUN",
+        "None",
+        "glb,n,s",
+    ]
+    run_by_region(args)
+
+
 if __name__ == "__main__":
     run_by_region(sys.argv)
+    # debug()
