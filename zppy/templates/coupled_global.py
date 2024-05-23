@@ -11,7 +11,6 @@ import matplotlib.backends.backend_pdf
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray
-import xcdat  # noqa: F401
 from netCDF4 import Dataset
 from readTS import TS
 
@@ -586,7 +585,7 @@ def set_var(
                     n = 2
                 else:
                     raise RuntimeError(f"Invalid rgn={rgn}")
-                v = v.isel(rgn=n)  # Just use nth column
+                v = v.isel(rgn=n)  # Just use nth region
             elif rgn != "glb":
                 # v only has one dimension -- glb.
                 # Therefore it is not possible to get n or s plots.
@@ -749,24 +748,24 @@ def run(parameters, rgn):  # noqa: C901
     use_ocn = plots_ocn or (not atmosphere_only and has_original_ocn_plots)
     exps: List[Dict[str, Any]] = [
         {
-            "atmos": None
-            if not use_atmos
-            else "{}/post/atm/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
-            "ice": None
-            if not plots_ice
-            else "{}/post/ice/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
-            "land": None
-            if not plots_lnd
-            else "{}/post/lnd/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
-            "ocean": None
-            if not use_ocn
-            else "{}/post/ocn/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
-            "moc": None
-            if not use_ocn
-            else "{}/post/ocn/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
-            "vol": None
-            if not use_ocn
-            else "{}/post/ocn/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
+            "atmos": f"{case_dir}/post/atm/glb/ts/monthly/{ts_num_years}yr/"
+            if use_atmos
+            else None,
+            "ice": f"{case_dir}/post/ice/glb/ts/monthly/{ts_num_years}yr/"
+            if plots_ice
+            else None,
+            "land": f"{case_dir}/post/lnd/glb/ts/monthly/{ts_num_years}yr/"
+            if plots_lnd
+            else None,
+            "ocean": f"{case_dir}/post/ocn/glb/ts/monthly/{ts_num_years}yr/"
+            if use_ocn
+            else None,
+            "moc": f"{case_dir}/post/ocn/glb/ts/monthly/{ts_num_years}yr/"
+            if use_ocn
+            else None,
+            "vol": f"{case_dir}/post/ocn/glb/ts/monthly/{ts_num_years}yr/"
+            if use_ocn
+            else None,
             "name": experiment_name,
             "yoffset": 0.0,
             "yr": ([year1, year2],),
@@ -856,27 +855,5 @@ def run_by_region(parameters):
         run(parameters, rgn)
 
 
-def debug():
-    args = [
-        "coupled_global.py",
-        "/lcrc/group/e3sm/ac.forsyth2/zppy_test_debug_output/test-346/v2.LR.historical_0201",
-        "v2.LR.historical_0201",
-        "v2_historical_0201",
-        "1850",
-        "1860",
-        "Blue",
-        "5",
-        "net_toa_flux_restom,global_surface_air_temperature,toa_radiation,net_atm_energy_imbalance,change_ohc,max_moc,change_sea_level,net_atm_water_imbalance",
-        "False",
-        "None",
-        "None",
-        "LAISHA,LAISUN",
-        "None",
-        "glb,n,s",
-    ]
-    run_by_region(args)
-
-
 if __name__ == "__main__":
     run_by_region(sys.argv)
-    # debug()

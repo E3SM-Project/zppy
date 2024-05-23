@@ -6,7 +6,7 @@
 rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
 # Your output will now become the new expectation.
 # Copy output so you don't have to rerun zppy to generate the output.
-cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_complete_run_www/test-346/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
+cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_complete_run_www/unique_id/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
 zppy_top_level=$(pwd)
 cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_complete_run
 # Remove the image check failures, so they don't end up in the expected files.

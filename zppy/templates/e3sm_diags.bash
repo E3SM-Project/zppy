@@ -108,7 +108,7 @@ create_links_ts()
     # xml file will cover the whole period from year1 to year2
     xml_name=${v}_${begin_year}01_${end_year}12.xml
     export CDMS_NO_MPI=true
-    cdscan ${xml_name} ${v}_files.txt
+    cdscan -x ${xml_name} -f ${v}_files.txt
     if [ $? != 0 ]; then
       cd {{ scriptDir }}
       echo "ERROR (${error_num})" > {{ prefix }}.status
@@ -129,7 +129,7 @@ create_links_ts_rof()
   cd ${ts_rof_dir_destination}
   v="RIVER_DISCHARGE_OVER_LAND_LIQ"
   xml_name=${v}_${begin_year}01_${end_year}12.xml
-  cdscan ${xml_name} ${ts_rof_dir_source}/${v}_*.nc
+  cdscan -x ${xml_name} ${ts_rof_dir_source}/${v}_*.nc
   if [ $? != 0 ]; then
     cd {{ scriptDir }}
     echo "ERROR (${error_num})" > {{ prefix }}.status

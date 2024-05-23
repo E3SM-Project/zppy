@@ -9,9 +9,8 @@ class TS(object):
 
         self.directory: str = directory
 
-        # `directory` will be of the form `{case_dir}/post/<componen>/glb/ts/monthly/{ts_num_years}yr`
-        # Refactor note: `self.f = cdms2.open(filename)` gave `cdms2.dataset.Dataset`
-        self.f: xarray.core.dataset.Dataset = xarray.open_mfdataset(f"{directory}/*.nc")
+        # `directory` will be of the form `{case_dir}/post/<componen>/glb/ts/monthly/{ts_num_years}yr/`
+        self.f: xarray.core.dataset.Dataset = xarray.open_mfdataset(f"{directory}*.nc")
 
     def __del__(self):
 

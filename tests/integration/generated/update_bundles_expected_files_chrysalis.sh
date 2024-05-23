@@ -6,9 +6,9 @@
 rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
 # Your output will now become the new expectation.
 # Copy output so you don't have to rerun zppy to generate the output.
-cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_bundles_www/test-346/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
+cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_test_bundles_www/unique_id/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
 mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
-cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/test-346/v2.LR.historical_0201/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
+cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_test_bundles_output/unique_id/v2.LR.historical_0201/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
 zppy_top_level=$(pwd)
 cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles
 # Remove the image check failures, so they don't end up in the expected files.
