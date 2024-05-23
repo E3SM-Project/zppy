@@ -3,12 +3,14 @@ import glob
 import math
 import sys
 import traceback
-from typing import Any, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
+import cftime
 import matplotlib as mpl
 import matplotlib.backends.backend_pdf
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray
 from netCDF4 import Dataset
 from readTS import TS
 
@@ -549,11 +551,20 @@ def param_get_list(param_value):
         return param_value.split(",")
 
 
-def set_var(exp, exp_key, var_list, valid_vars, invalid_vars, rgn):
+def set_var(
+    exp: Dict[str, Any],
+    exp_key: str,
+    var_list: List[str],
+    valid_vars: List[str],
+    invalid_vars: List[str],
+    rgn: str,
+) -> None:
     if exp[exp_key] is not None:
         ts = TS(exp[exp_key])
         for var in var_list:
             try:
+                v: xarray.core.dataarray.DataArray
+                units: Optional[str]
                 v, units = ts.globalAnnual(var)
                 valid_vars.append(str(var))
             except Exception as e:
@@ -561,7 +572,7 @@ def set_var(exp, exp_key, var_list, valid_vars, invalid_vars, rgn):
                 print(f"globalAnnual failed. Invalid var = {var}")
                 invalid_vars.append(str(var))
                 continue
-            if len(v.shape) > 1:
+            if v.sizes["rgn"] > 1:
                 # number of years x 3 regions = v.shape
                 # 3 regions = global, northern hemisphere, southern hemisphere
                 # We get here if we used the updated `ts` task
@@ -574,18 +585,17 @@ def set_var(exp, exp_key, var_list, valid_vars, invalid_vars, rgn):
                     n = 2
                 else:
                     raise RuntimeError(f"Invalid rgn={rgn}")
-                v = v[:, n]  # Just use nth column
+                v = v.isel(rgn=n)  # Just use nth region
             elif rgn != "glb":
                 # v only has one dimension -- glb.
                 # Therefore it is not possible to get n or s plots.
                 raise RuntimeError(
                     f"var={var} only has global data. Cannot process rgn={rgn}"
                 )
-            exp["annual"][var] = v
             exp["annual"][var] = (v, units)
             if "year" not in exp["annual"]:
-                time = v.getTime()
-                exp["annual"]["year"] = [x.year for x in time.asComponentTime()]
+                years: np.ndarray[cftime.DatetimeNoLeap] = v.coords["time"].values
+                exp["annual"]["year"] = [x.year for x in years]
         del ts
 
 
@@ -736,36 +746,26 @@ def run(parameters, rgn):  # noqa: C901
         or ("change_sea_level" in plots_original)
     )
     use_ocn = plots_ocn or (not atmosphere_only and has_original_ocn_plots)
-    exps = [
+    exps: List[Dict[str, Any]] = [
         {
-            "atmos": None
-            if not use_atmos
-            else "{}/post/atm/glb/ts/monthly/{}yr/glb.xml".format(
-                case_dir, ts_num_years
-            ),
-            "ice": None
-            if not plots_ice
-            else "{}/post/ice/glb/ts/monthly/{}yr/glb.xml".format(
-                case_dir, ts_num_years
-            ),
-            "land": None
-            if not plots_lnd
-            else "{}/post/lnd/glb/ts/monthly/{}yr/glb.xml".format(
-                case_dir, ts_num_years
-            ),
-            "ocean": None
-            if not use_ocn
-            else "{}/post/ocn/glb/ts/monthly/{}yr/glb.xml".format(
-                case_dir, ts_num_years
-            ),
-            "moc": None
-            if not use_ocn
-            else "{}/post/ocn/glb/ts/monthly/{}yr/".format(case_dir, ts_num_years),
-            "vol": None
-            if not use_ocn
-            else "{}/post/ocn/glb/ts/monthly/{}yr/glb.xml".format(
-                case_dir, ts_num_years
-            ),
+            "atmos": f"{case_dir}/post/atm/glb/ts/monthly/{ts_num_years}yr/"
+            if use_atmos
+            else None,
+            "ice": f"{case_dir}/post/ice/glb/ts/monthly/{ts_num_years}yr/"
+            if plots_ice
+            else None,
+            "land": f"{case_dir}/post/lnd/glb/ts/monthly/{ts_num_years}yr/"
+            if plots_lnd
+            else None,
+            "ocean": f"{case_dir}/post/ocn/glb/ts/monthly/{ts_num_years}yr/"
+            if use_ocn
+            else None,
+            "moc": f"{case_dir}/post/ocn/glb/ts/monthly/{ts_num_years}yr/"
+            if use_ocn
+            else None,
+            "vol": f"{case_dir}/post/ocn/glb/ts/monthly/{ts_num_years}yr/"
+            if use_ocn
+            else None,
             "name": experiment_name,
             "yoffset": 0.0,
             "yr": ([year1, year2],),
@@ -777,7 +777,7 @@ def run(parameters, rgn):  # noqa: C901
     invalid_vars: List[str] = []
 
     # Read data
-    exp: Any
+    exp: Dict[str, Any]
     for exp in exps:
         exp["annual"] = {}
 

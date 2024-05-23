@@ -1,21 +1,27 @@
-import cdms2
-import cdutil
+from typing import Optional, Tuple
+
+import xarray
+import xcdat  # noqa: F401
 
 
 class TS(object):
-    def __init__(self, filename):
+    def __init__(self, directory):
 
-        self.filename = filename
+        self.directory: str = directory
 
-        self.f = cdms2.open(filename)
+        # `directory` will be of the form `{case_dir}/post/<componen>/glb/ts/monthly/{ts_num_years}yr/`
+        self.f: xarray.core.dataset.Dataset = xarray.open_mfdataset(f"{directory}*.nc")
 
     def __del__(self):
 
         self.f.close()
 
-    def globalAnnual(self, var):
+    def globalAnnual(
+        self, var: str
+    ) -> Tuple[xarray.core.dataarray.DataArray, Optional[str]]:
 
-        units = None
+        v: xarray.core.dataarray.DataArray
+        units: Optional[str] = None
 
         # Constants, from AMWG diagnostics
         Lv = 2.501e6
@@ -61,11 +67,10 @@ class TS(object):
         else:
             # Non-derived variables
 
-            # Read variable
-            v = self.f(var)
+            annual_average_dataset_for_var: xarray.core.dataset.Dataset = (
+                self.f.temporal.group_average(var, "year")
+            )
+            v = annual_average_dataset_for_var.data_vars[var]
             units = v.units
-
-            # Annual average
-            v = cdutil.YEAR(v)
 
         return v, units
