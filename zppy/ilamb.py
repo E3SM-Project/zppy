@@ -1,10 +1,12 @@
 import os
 import pprint
+from typing import List
 
 import jinja2
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
+    add_dependencies,
     checkStatus,
     getTasks,
     getYears,
@@ -30,7 +32,7 @@ def ilamb(config, scriptDir, existing_bundles, job_ids_file):
         return existing_bundles
 
     # --- Generate and submit ilamb scripts ---
-    dependencies = []
+    dependencies: List[str] = []
 
     for c in tasks:
 
@@ -54,30 +56,24 @@ def ilamb(config, scriptDir, existing_bundles, job_ids_file):
                 c["ilamb_obs"] = os.path.join(ilamb_obs_prefix, ilamb_obs_suffix)
 
             # List of dependencies
-            dependencies.append(
-                os.path.join(
-                    scriptDir,
-                    "ts_%s_%04d-%04d-%04d.status"
-                    % (
-                        c["ts_land_subsection"],
-                        c["year1"],
-                        c["year2"],
-                        c["ts_num_years"],
-                    ),
-                ),
+            add_dependencies(
+                dependencies,
+                scriptDir,
+                "ts",
+                c["ts_land_subsection"],
+                c["year1"],
+                c["year2"],
+                c["ts_num_years"],
             )
             if not c["land_only"]:
-                dependencies.append(
-                    os.path.join(
-                        scriptDir,
-                        "ts_%s_%04d-%04d-%04d.status"
-                        % (
-                            c["ts_atm_subsection"],
-                            c["year1"],
-                            c["year2"],
-                            c["ts_num_years"],
-                        ),
-                    ),
+                add_dependencies(
+                    dependencies,
+                    scriptDir,
+                    "ts",
+                    c["ts_atm_subsection"],
+                    c["year1"],
+                    c["year2"],
+                    c["ts_num_years"],
                 )
 
             prefix = "ilamb_%04d-%04d" % (
