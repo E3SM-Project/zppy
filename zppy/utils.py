@@ -297,3 +297,26 @@ def print_url(c, task):
         print(f"URL: {base_url}{www_suffix}/{case}/{task}")
     else:
         print(f"Could not determine URL from www={www}")
+
+
+# -----------------------------------------------------------------------------
+def add_dependencies(
+    dependencies: List[str],
+    scriptDir: str,
+    prefix: str,
+    sub: str,
+    start_yr: int,
+    end_yr: int,
+    num_years: int,
+):
+    y1: int = start_yr
+    y2: int = start_yr + num_years - 1
+    while y2 <= end_yr:
+        dependencies.append(
+            os.path.join(
+                scriptDir,
+                "%s_%s_%04d-%04d-%04d.status" % (prefix, sub, y1, y2, num_years),
+            )
+        )
+        y1 += num_years
+        y2 += num_years

@@ -1,10 +1,12 @@
 import os
 import pprint
+from typing import List
 
 import jinja2
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
+    add_dependencies,
     checkStatus,
     getTasks,
     getYears,
@@ -126,30 +128,34 @@ def global_time_series(config, scriptDir, existing_bundles, job_ids_file):  # no
             makeExecutable(scriptFile)
 
             # List of dependencies
-            dependencies = []
+            dependencies: List[str] = []
             # Add Time Series dependencies
             if c["use_atm"]:
                 # Iterate from year1 to year2 incrementing by the number of years per time series file.
                 for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
                     start_yr = yr
                     end_yr = yr + c["ts_num_years"] - 1
-                    dependencies.append(
-                        os.path.join(
-                            scriptDir,
-                            "ts_%s_%04d-%04d-%04d.status"
-                            % ("atm_monthly_glb", start_yr, end_yr, c["ts_num_years"]),
-                        )
+                    add_dependencies(
+                        dependencies,
+                        scriptDir,
+                        "ts",
+                        "atm_monthly_glb",
+                        start_yr,
+                        end_yr,
+                        c["ts_num_years"],
                     )
             if c["use_lnd"]:
                 for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
                     start_yr = yr
                     end_yr = yr + c["ts_num_years"] - 1
-                    dependencies.append(
-                        os.path.join(
-                            scriptDir,
-                            "ts_%s_%04d-%04d-%04d.status"
-                            % ("lnd_monthly_glb", start_yr, end_yr, c["ts_num_years"]),
-                        )
+                    add_dependencies(
+                        dependencies,
+                        scriptDir,
+                        "ts",
+                        "lnd_monthly_glb",
+                        start_yr,
+                        end_yr,
+                        c["ts_num_years"],
                     )
             if c["use_ocn"]:
                 # Add MPAS Analysis dependencies
