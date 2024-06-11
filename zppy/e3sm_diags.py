@@ -231,8 +231,8 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                         add_dependencies(
                             dependencies,
                             scriptDir,
-                            "ts_rof_monthly",
-                            ts_sub,
+                            "ts",
+                            "rof_monthly",
                             start_yr,
                             end_yr,
                             c["ts_num_years"],

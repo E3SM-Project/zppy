@@ -307,7 +307,7 @@ def add_dependencies(
     num_years: int,
 ):
     y1: int = start_yr
-    y2: int = start_yr + num_years
+    y2: int = start_yr + num_years - 1
     while y2 <= end_yr:
         dependencies.append(
             os.path.join(
