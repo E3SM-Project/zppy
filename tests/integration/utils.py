@@ -260,7 +260,13 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     else:
         expansions["dry_run"] = "False"
 
-    cfg_names = ["bundles", "complete_run", "debug"]
+    cfg_names = [
+        "bundles",
+        "complete_run",
+        "debug",
+        "min_case_diags_mvm_climo_diurnal_1",
+        "min_case_diags_mvm_climo_diurnal_2",
+    ]
     for cfg_name in cfg_names:
         cfg_template = f"{git_top_level}/tests/integration/template_{cfg_name}.cfg"
         cfg_generated = (

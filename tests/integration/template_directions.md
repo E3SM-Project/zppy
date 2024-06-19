@@ -145,3 +145,17 @@ cp -r #expand user_output#zppy_test_bundles_output/<UNIQUE ID>/v2.LR.historical_
 ```
 cp -r #expand user_www#zppy_test_complete_run_www/<UNIQUE ID>/v2.LR.historical_0201 #expand expected_dir#expected_complete_run_unified_<#>
 ```
+
+## Minimal Cases
+
+Some tests specifically check minimal zppy cfgs:
+i.e., cfgs with as few parameters as possible to test a specific case.
+If your code changes could interact with these minimal cases,
+then you should run the relevant ones to make sure they still work.
+
+Run:
+```
+$ python tests/integration/utils.py
+$ zppy -c tests/integration/generated/test_<min_case listed below>_#expand machine#.cfg
+
+ - `min_case_diags_mvm_climo_diurnal`. This has a `_1` and `_2`. The latter compares model-vs-model the climo it produced and the climo that the former produced. Run `_1` first. Then run `_2`.
