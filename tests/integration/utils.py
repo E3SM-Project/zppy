@@ -134,6 +134,7 @@ def get_chyrsalis_expansions(config):
     web_base_path = config.get("web_portal", "base_path")
     d = {
         "bundles_walltime": "07:00:00",
+        "case_name": "v3.LR.historical_0051",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20240610",
@@ -160,6 +161,7 @@ def get_compy_expansions(config):
     web_base_path = config.get("web_portal", "base_path")
     d = {
         "bundles_walltime": "02:00:00",
+        "case_name": "v3.LR.historical_0051",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /qfs/people/fors729/mambaforge/etc/profile.d/conda.sh; conda activate e3sm_diags_20240328",
@@ -186,6 +188,7 @@ def get_perlmutter_expansions(config):
     web_base_path = config.get("web_portal", "base_path")
     d = {
         "bundles_walltime": "6:00:00",
+        "case_name": "v3.LR.historical_0051",
         "constraint": "cpu",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /global/homes/f/forsyth/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20240429",
@@ -260,7 +263,38 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     else:
         expansions["dry_run"] = "False"
 
-    cfg_names = ["bundles", "complete_run", "debug"]
+    cfg_names = [
+        "bundles",
+        "complete_run",
+        "debug",
+        "min_case_e3sm_diags_depend_on_climo_mvm_1",
+        "min_case_e3sm_diags_depend_on_climo_mvm_2",
+        "min_case_e3sm_diags_depend_on_climo",
+        "min_case_e3sm_diags_depend_on_ts_mvm_1",
+        "min_case_e3sm_diags_depend_on_ts_mvm_2",
+        "min_case_e3sm_diags_depend_on_ts",
+        "min_case_e3sm_diags_diurnal_cycle_mvm_1",
+        "min_case_e3sm_diags_diurnal_cycle_mvm_2",
+        "min_case_e3sm_diags_diurnal_cycle",
+        "min_case_e3sm_diags_lat_lon_land_mvm_1",
+        "min_case_e3sm_diags_lat_lon_land_mvm_2",
+        # "min_case_e3sm_diags_lat_lon_land",
+        "min_case_e3sm_diags_streamflow_mvm_1",
+        "min_case_e3sm_diags_streamflow_mvm_2",
+        "min_case_e3sm_diags_streamflow",
+        "min_case_e3sm_diags_tc_analysis_mvm_1",
+        "min_case_e3sm_diags_tc_analysis_mvm_2",
+        "min_case_e3sm_diags_tc_analysis",
+        "min_case_e3sm_diags_tropical_subseasonal_mvm_1",
+        "min_case_e3sm_diags_tropical_subseasonal_mvm_2",
+        "min_case_e3sm_diags_tropical_subseasonal",
+        "min_case_global_time_series_custom",
+        "min_case_global_time_series_original_8_no_ocn",
+        "min_case_global_time_series_original_8",
+        "min_case_ilamb_land_only",
+        "min_case_ilamb",
+        "min_case_mpas_analysis",
+    ]
     for cfg_name in cfg_names:
         cfg_template = f"{git_top_level}/tests/integration/template_{cfg_name}.cfg"
         cfg_generated = (
