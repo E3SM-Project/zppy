@@ -156,7 +156,10 @@ def getComponent(input_component, input_files):
         prc_typ = tmp
     elif tmp in ("cpl",):
         component = "cpl"
-    elif tmp in ("clm2", "elm"):
+    elif tmp in ("clm2",):
+        component = "lnd"
+        prc_typ = "clm"
+    elif tmp in ("elm",):
         component = "lnd"
         prc_typ = tmp
     elif tmp in ("mosart",):
