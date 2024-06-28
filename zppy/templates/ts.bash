@@ -159,7 +159,7 @@ EOF
   {% endif -%}
   {% if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' -%}
   --var-list \
-  'pr, tas, rsds, rlds, rsus' \
+  'pfull, phalf, tas, ts' \
   --realm \
   atm \
   {% endif -%}
