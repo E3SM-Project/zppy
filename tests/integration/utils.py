@@ -136,7 +136,7 @@ def get_chyrsalis_expansions(config):
         "bundles_walltime": "07:00:00",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
-        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20240412",
+        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20240610",
         "diags_walltime": "5:00:00",
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",

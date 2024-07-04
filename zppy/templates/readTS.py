@@ -10,7 +10,9 @@ class TS(object):
         self.directory: str = directory
 
         # `directory` will be of the form `{case_dir}/post/<componen>/glb/ts/monthly/{ts_num_years}yr/`
-        self.f: xarray.core.dataset.Dataset = xarray.open_mfdataset(f"{directory}*.nc")
+        self.f: xarray.core.dataset.Dataset = xcdat.open_mfdataset(
+            f"{directory}*.nc", center_times=True
+        )
 
     def __del__(self):
 
