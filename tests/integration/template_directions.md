@@ -145,3 +145,12 @@ cp -r #expand user_output#zppy_test_bundles_output/<UNIQUE ID>/v2.LR.historical_
 ```
 cp -r #expand user_www#zppy_test_complete_run_www/<UNIQUE ID>/v2.LR.historical_0201 #expand expected_dir#expected_complete_run_unified_<#>
 ```
+
+## Minimal Cases
+
+Some tests specifically check minimal zppy cfgs:
+i.e., cfgs with as few parameters as possible to test a specific case.
+If your code changes could interact with these minimal cases,
+then you should run the relevant ones to make sure they still work.
+
+Read and run `tests/integration/run_min_cases.sh`.
