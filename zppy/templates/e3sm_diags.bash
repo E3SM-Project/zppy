@@ -72,7 +72,7 @@ create_links_climo_diurnal()
   error_num=$6
   mkdir -p ${climo_diurnal_dir_destination}
   cd ${climo_diurnal_dir_destination}
-  cp -s ${climo_diurnal_dir_source}/${nc_prefix}.{{ climo_diurnal_input_files }}_*_${begin_year}??_${end_year}??_climo.nc .
+  cp -s ${climo_diurnal_dir_source}/${nc_prefix}.*_*_${begin_year}??_${end_year}??_climo.nc .
   if [ $? != 0 ]; then
     cd {{ scriptDir }}
     echo "ERROR (${error_num})" > {{ prefix }}.status
