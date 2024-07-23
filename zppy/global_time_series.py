@@ -1,4 +1,5 @@
 import os
+import shutil
 from typing import Any, Dict, List
 
 from zppy.bundle import handle_bundles
@@ -56,6 +57,11 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
                 with open(script_file, "w") as f:
                     f.write(script_template.render(**c))
                 make_executable(script_file)
+            resources = ["zppy_land_fields.csv"]
+            for resource in resources:
+                resource_file = os.path.join(c["global_time_series_dir"], resource)
+                shutil.copy(f"zppy/templates/{resource}", resource_file)
+
             # Create script
             with open(bash_file, "w") as f:
                 f.write(template.render(**c))
