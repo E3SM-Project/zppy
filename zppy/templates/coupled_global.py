@@ -599,14 +599,22 @@ def set_var(
         del ts
 
 
-def make_plot_pdfs(
-    figstr, rgn, component, xlim, exps, plot_list, valid_plots, invalid_plots
+# FIXME: C901 'main' is too complex (19)
+def make_plot_pdfs(  # noqa: C901
+    figstr,
+    rgn,
+    component,
+    xlim,
+    exps,
+    plot_list,
+    valid_plots,
+    invalid_plots,
+    nrows,
+    ncols,
 ):
     num_plots = len(plot_list)
     if num_plots == 0:
         return
-    nrows = 4
-    ncols = 2
     plots_per_page = nrows * ncols
     num_pages = math.ceil(num_plots / plots_per_page)
 
@@ -614,7 +622,10 @@ def make_plot_pdfs(
     # https://stackoverflow.com/questions/58738992/save-multiple-figures-with-subplots-into-a-pdf-with-multiple-pages
     pdf = matplotlib.backends.backend_pdf.PdfPages(f"{figstr}_{rgn}_{component}.pdf")
     for page in range(num_pages):
-        fig = plt.figure(1, figsize=[13.5, 16.5])
+        if plots_per_page == 1:
+            fig = plt.figure(1, figsize=[13.5 / 2, 16.5 / 4])
+        else:
+            fig = plt.figure(1, figsize=[13.5, 16.5])
         fig.suptitle(f"{figstr}_{rgn}_{component}")
         for j in range(plots_per_page):
             # The final page doesn't need to be filled out with plots.
@@ -661,7 +672,9 @@ def make_plot_pdfs(
 
         fig.tight_layout()
         pdf.savefig(1)
-        if num_pages > 1:
+        if plots_per_page == 1:
+            fig.savefig(f"{figstr}_{rgn}_{component}_{plot_name}.png", dpi=150)
+        elif num_pages > 1:
             fig.savefig(f"{figstr}_{rgn}_{component}_{page}.png", dpi=150)
         else:
             fig.savefig(f"{figstr}_{rgn}_{component}.png", dpi=150)
@@ -725,6 +738,8 @@ def run(parameters, rgn):  # noqa: C901
     plots_ice = param_get_list(parameters[11])
     plots_lnd = param_get_list(parameters[12])
     plots_ocn = param_get_list(parameters[13])
+    nrows = int(parameters[14])
+    ncols = int(parameters[15])
     vars_original = []
     if "net_toa_flux_restom" or "net_atm_energy_imbalance" in plots_original:
         vars_original.append("RESTOM")
@@ -820,19 +835,64 @@ def run(parameters, rgn):  # noqa: C901
     invalid_plots: List[str] = []
 
     make_plot_pdfs(
-        figstr, rgn, "original", xlim, exps, plots_original, valid_plots, invalid_plots
+        figstr,
+        rgn,
+        "original",
+        xlim,
+        exps,
+        plots_original,
+        valid_plots,
+        invalid_plots,
+        nrows,
+        ncols,
     )
     make_plot_pdfs(
-        figstr, rgn, "atm", xlim, exps, plots_atm, valid_plots, invalid_plots
+        figstr,
+        rgn,
+        "atm",
+        xlim,
+        exps,
+        plots_atm,
+        valid_plots,
+        invalid_plots,
+        nrows,
+        ncols,
     )
     make_plot_pdfs(
-        figstr, rgn, "ice", xlim, exps, plots_ice, valid_plots, invalid_plots
+        figstr,
+        rgn,
+        "ice",
+        xlim,
+        exps,
+        plots_ice,
+        valid_plots,
+        invalid_plots,
+        nrows,
+        ncols,
     )
     make_plot_pdfs(
-        figstr, rgn, "lnd", xlim, exps, plots_lnd, valid_plots, invalid_plots
+        figstr,
+        rgn,
+        "lnd",
+        xlim,
+        exps,
+        plots_lnd,
+        valid_plots,
+        invalid_plots,
+        nrows,
+        ncols,
     )
     make_plot_pdfs(
-        figstr, rgn, "ocn", xlim, exps, plots_ocn, valid_plots, invalid_plots
+        figstr,
+        rgn,
+        "ocn",
+        xlim,
+        exps,
+        plots_ocn,
+        valid_plots,
+        invalid_plots,
+        nrows,
+        ncols,
     )
 
     print(f"These {rgn} region plots generated successfully: {valid_plots}")
@@ -842,7 +902,7 @@ def run(parameters, rgn):  # noqa: C901
 
 
 def run_by_region(parameters):
-    regions = parameters[14].split(",")
+    regions = parameters[16].split(",")
     for rgn in regions:
         if rgn.lower() in ["glb", "global"]:
             rgn = "glb"
