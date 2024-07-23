@@ -1,10 +1,12 @@
 import os
 import pprint
+from typing import List
 
 import jinja2
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
+    add_dependencies,
     checkStatus,
     getTasks,
     getYears,
@@ -31,7 +33,7 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
         return existing_bundles
 
     # --- Generate and submit e3sm_diags scripts ---
-    dependencies = []
+    dependencies: List[str] = []
 
     for c in tasks:
 
@@ -206,28 +208,34 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                         or ("qbo" in c["sets"])
                         or ("area_mean_time_series" in c["sets"])
                     ):
-                        dependencies.append(
-                            os.path.join(
-                                scriptDir,
-                                "ts_%s_%04d-%04d-%04d.status"
-                                % (ts_sub, start_yr, end_yr, c["ts_num_years"]),
-                            )
+                        add_dependencies(
+                            dependencies,
+                            scriptDir,
+                            "ts",
+                            ts_sub,
+                            start_yr,
+                            end_yr,
+                            c["ts_num_years"],
                         )
                     if "streamflow" in c["sets"]:
-                        dependencies.append(
-                            os.path.join(
-                                scriptDir,
-                                "ts_rof_monthly_%04d-%04d-%04d.status"
-                                % (start_yr, end_yr, c["ts_num_years"]),
-                            )
+                        add_dependencies(
+                            dependencies,
+                            scriptDir,
+                            "ts",
+                            "rof_monthly",
+                            start_yr,
+                            end_yr,
+                            c["ts_num_years"],
                         )
                     if "tropical_subseasonal" in c["sets"]:
-                        dependencies.append(
-                            os.path.join(
-                                scriptDir,
-                                "ts_%s_%04d-%04d-%04d.status"
-                                % (ts_daily_sub, start_yr, end_yr, c["ts_num_years"]),
-                            )
+                        add_dependencies(
+                            dependencies,
+                            scriptDir,
+                            "ts",
+                            ts_daily_sub,
+                            start_yr,
+                            end_yr,
+                            c["ts_num_years"],
                         )
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)

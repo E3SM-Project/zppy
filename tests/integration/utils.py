@@ -267,6 +267,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "bundles",
         "complete_run",
         "debug",
+        "min_case_add_dependencies",
         "min_case_e3sm_diags_depend_on_climo_mvm_1",
         "min_case_e3sm_diags_depend_on_climo_mvm_2",
         "min_case_e3sm_diags_depend_on_climo",
