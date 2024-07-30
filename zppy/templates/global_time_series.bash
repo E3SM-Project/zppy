@@ -82,6 +82,8 @@ results_dir_absolute_path={{ scriptDir }}/${results_dir}
 mkdir -p ${results_dir_absolute_path}
 cp *.pdf ${results_dir_absolute_path}
 cp *.png ${results_dir_absolute_path}
+cp -r viewer ${results_dir_absolute_path}
+cp -r table ${results_dir_absolute_path}
 
 ################################################################################
 # Copy output to web server
