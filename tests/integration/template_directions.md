@@ -6,6 +6,26 @@
 # Change UNIQUE_ID in tests/integration/utils.py
 #
 $ pip install . && python tests/integration/utils.py
+```
+
+Now, if you're running the e3sm_diags task,
+it's a good idea to test on the latest diags code.
+(If you're not, then skip to the next code block).
+```
+# `cd` to e3sm_diags directory
+$ git checkout main
+$ git fetch upstream
+$ git reset --hard upstream/main
+$ git log # Should match https://github.com/E3SM-Project/e3sm_diags/commits/main
+$ mamba clean --all
+$ mamba env create -f conda-env/dev.yml -n e3sm_diags_<date>
+$ conda activate e3sm_diags_<date>
+$ pip install .
+$ `cd` back to zppy directory
+# Then edit tests/integration/utils.py `diags_environment_commands` to use that environment.
+```
+
+```
 $ zppy -c tests/integration/generated/test_<cfg-name>_#expand machine#.cfg
 # Some cfg files should be run twice (bundles)
 # Some cfg files are meant to be run after another (run mvm_2 after mvm_1 completes)
