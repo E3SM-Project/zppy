@@ -148,6 +148,7 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
             depend_on_climo = set(
                 [
                     "lat_lon",
+                    "lat_lon_land",
                     "zonal_mean_xy",
                     "zonal_mean_2d",
                     "polar",
@@ -271,6 +272,8 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
 
+            for d in dependencies:
+                print(f"   d: {d}")
             print(f"   environment_commands={c['environment_commands']}")
             print_url(c, "e3sm_diags")
 
