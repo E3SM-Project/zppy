@@ -135,6 +135,7 @@ def get_chyrsalis_expansions(config):
     d = {
         "bundles_walltime": "07:00:00",
         "case_name": "v3.LR.historical_0051",
+        "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20240610",
@@ -162,6 +163,7 @@ def get_compy_expansions(config):
     d = {
         "bundles_walltime": "02:00:00",
         "case_name": "v3.LR.historical_0051",
+        "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /qfs/people/fors729/mambaforge/etc/profile.d/conda.sh; conda activate e3sm_diags_20240328",
@@ -189,6 +191,7 @@ def get_perlmutter_expansions(config):
     d = {
         "bundles_walltime": "6:00:00",
         "case_name": "v3.LR.historical_0051",
+        "case_name_v2": "v2.LR.historical_0201",
         "constraint": "cpu",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         "diags_environment_commands": "source /global/homes/f/forsyth/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20240429",
@@ -264,9 +267,6 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         expansions["dry_run"] = "False"
 
     cfg_names = [
-        "bundles",
-        "complete_run",
-        "debug",
         "min_case_add_dependencies",
         "min_case_tc_analysis_simultaneous_1",
         "min_case_tc_analysis_simultaneous_2",
@@ -297,6 +297,9 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "min_case_ilamb_land_only",
         "min_case_ilamb",
         "min_case_mpas_analysis",
+        "weekly_bundles",
+        "weekly_comprehensive_v2",
+        "weekly_comprehensive_v3",
     ]
     for cfg_name in cfg_names:
         cfg_template = f"{git_top_level}/tests/integration/template_{cfg_name}.cfg"
@@ -312,11 +315,11 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     substitute_expansions(expansions, directions_template, directions_generated)
 
     script_names = [
+        "archive",
         "bash_generation",
-        "bundles",
         "campaign",
-        "complete_run",
         "defaults",
+        "weekly",
     ]
     for script_name in script_names:
         script_template = f"{git_top_level}/tests/integration/template_update_{script_name}_expected_files.sh"
