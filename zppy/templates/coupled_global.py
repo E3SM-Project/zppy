@@ -1040,17 +1040,18 @@ def create_viewer(figstr, regions, component_to_plots_dict):
     # just has css, js
     viewer = OutputViewer(path=".")
     viewer.add_page("Table", regions)
-    viewer.add_group("Summary Table")
     components = component_to_plots_dict.keys()
     for component in components:
+        viewer.add_group(component)
         plot_names = component_to_plots_dict[component]
         for plot_name in plot_names:
             viewer.add_row(plot_name)
             for rgn in regions:
+                component_short = component[0:3]
                 viewer.add_col(
-                    f"{figstr}_{rgn}_{component}_{plot_name}.png",
+                    f"{figstr}_{rgn}_{component_short}_{plot_name}.png",
                     is_file=True,
-                    title="title",
+                    title=f"{rgn}_{component_short}_{plot_name}",
                 )
 
     url = viewer.generate_page()
@@ -1071,7 +1072,45 @@ def run_by_region(parameters):
             raise RuntimeError(f"Invalid rgn={rgn}")
         run(parameters, rgn)
     figstr = parameters[3]
-    component_to_plots_dict = {"atm": ["TREFHT"], "lnd": ["FSH", "LAISHA", "RH2M"]}
+    # Going by zppy/templates/ilamb/ilamb.cfg
+    component_to_plots_dict = {
+        "atm": ["TREFHT"],
+        "lnd > Ecosystem and Carbon Cycle > Biomass": [
+            "QVEGE",
+            "QVEGT",
+            "TOTVEGC",
+        ],  # biomass/cVeg
+        "lnd > Ecosystem and Carbon Cycle > Gross Primary Productivity": ["GPP"],  # gpp
+        "lnd > Ecosystem and Carbon Cycle > Leaf Area Index": [
+            "LAISHA",
+            "LAISUN",
+        ],  # lai
+        "lnd > Ecosystem and Carbon Cycle > Global Net Ecosystem Carbon Balance": [
+            "NBP"
+        ],  # nbp
+        "lnd > Ecosystem and Carbon Cycle > Soil Carbon": [
+            "QSOIL",
+            "SOIL1C",
+            "SOIL2C",
+            "SOIL3C",
+            "SOIL4C",
+        ],  # cSoil/soilc
+        "lnd > Hyrdology Cycle > Runoff": ["QRUNOFF"],  # runoff/mrro
+        "lnd > Hyrdology Cycle > Sensible Heat": ["FSH"],  # hfss/sh
+        "lnd > Hyrdology Cycle > Terrestial Water Storage Anomaly": ["TSA"],  # twsa/tws
+        "lnd > Hyrdology Cycle > Snow Water Equivalent": ["H2OSNO"],  # swe/snw
+        "lnd > Forcings > Surface Relative Humidity": ["RH2M"],  # rhums/hurs
+        "lnd > Other": [
+            "QINTR",
+            "QOVER",
+            "SOILWATER_10CM",
+            "TOTLITC",
+            "CWDC",
+            "WOOD_HARVESTC",
+            "AR",
+            "HR",
+        ],
+    }
     url = create_viewer(figstr, regions, component_to_plots_dict)
     print(url)
 
