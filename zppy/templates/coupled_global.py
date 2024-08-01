@@ -2,6 +2,7 @@
 import glob
 import math
 import os
+import shutil
 import stat
 import sys
 import traceback
@@ -1043,6 +1044,7 @@ def create_viewer(figstr, regions, component_to_plots_dict):
 
     url = viewer.generate_page()
     viewer.generate_viewer
+    shutil.copy("table/index.html", "viewer/index.html")
     return url
 
 
