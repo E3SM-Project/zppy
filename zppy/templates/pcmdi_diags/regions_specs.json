@@ -1,0 +1,292 @@
+{
+    "global": {
+        "domain": "cdutil.region.domain(latitude=(-90.0, 90.0))",
+        "group" : "Mean Climate"
+    },
+    "NH": {
+        "domain": "cdutil.region.domain(latitude=(0.0, 90.0))",
+        "group" : "Mean Climate"
+    },
+    "SH": {
+        "domain": "cdutil.region.domain(latitude=(-90.0, 0))",
+        "group" : "Mean Climate"
+    },
+    "NHEX": {
+        "domain": "cdutil.region.domain(latitude=(30.0, 90.0))",
+        "group" : "Mean Climate"
+    },
+    "SHEX": {
+        "domain": "cdutil.region.domain(latitude=(-90.0, -30.0))",
+        "group" : "Mean Climate"
+    },
+    "TROPICS": {
+        "domain": "cdutil.region.domain(latitude=(-30.0, 30.0))",
+        "group" : "Mean Climate"
+    },
+    "90S50S": {
+        "domain": "cdutil.region.domain(latitude=(-90.0, -50.0))",
+        "group" : "Mean Climate"
+    },
+    "50S20S": {
+        "domain": "cdutil.region.domain(latitude=(-50.0, -20.0))",
+        "group" : "Mean Climate"
+    },
+    "20S20N": {
+        "domain": "cdutil.region.domain(latitude=(-20.0, 20.0))",
+        "group" : "Mean Climate"
+    },
+    "20N50N": {
+        "domain": "cdutil.region.domain(latitude=(20.0, 50.0))",
+        "group" : "Mean Climate"
+    },
+    "50N90N": {
+        "domain": "cdutil.region.domain(latitude=(50.0, 90.0))",
+        "group" : "Mean Climate"
+    },
+    "ocean_NH": {
+        "value":  0.0,
+        "domain": "cdutil.region.domain(latitude=(0.0, 90.0))",
+        "group" : "Mean Climate"
+    },
+    "ocean_SH": {
+        "value":  0.0,
+        "domain": "cdutil.region.domain(latitude=(-90.0, 0.0))",
+        "group" : "Mean Climate"
+    },
+    "land_NH": {
+        "value":   100,
+        "domain": "cdutil.region.domain(latitude=(0.0, 90.0))",
+        "group" : "Mean Climate"
+    },
+    "land_SH": {
+        "value":   100,
+        "domain": "cdutil.region.domain(latitude=(-90.0, 0.0))",
+        "group" : "Mean Climate"
+    },
+    "land_NHEX": {
+        "value": 100,
+        "domain": "cdutil.region.domain(latitude=(30.0, 90.0))",
+        "group" : "Mean Climate"
+    },
+    "land_SHEX": {
+        "value": 100,
+        "domain": "cdutil.region.domain(latitude=(-90.0, -30.0))",
+        "group" : "Mean Climate"
+    },
+    "land_TROPICS": {
+        "value": 100,
+        "domain": "cdutil.region.domain(latitude=(-30.0, 30.0))",
+        "group" : "Mean Climate"
+    },
+    "land": {
+        "value": 100,
+        "group" : "Mean Climate"
+    },
+    "ocean_NHEX": {
+        "value": 0,
+        "domain": "cdutil.region.domain(latitude=(30.0, 90.0))",
+        "group" : "Mean Climate"
+    },
+    "ocean_SHEX": {
+        "value": 0,
+        "domain": "cdutil.region.domain(latitude=(-90.0, -30.0))",
+        "group" : "Mean Climate"
+    },
+    "ocean_TROPICS": {
+        "value": 0,
+        "domain": "cdutil.region.domain(latitude=(30.0, 30.0))",
+        "group" : "Mean Climate"
+    },
+    "ocean": {
+        "value": 0,
+        "group" : "Mean Climate"
+    },
+    "ocean_50S50N": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-50.0, 50.0))",
+        "group" : "Mean Climate"
+    },
+    "ocean_50S20S": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-50.0, -20.0))",
+        "group" : "Mean Climate"
+    },
+    "ocean_20S20N": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-20.0, 20.0))",
+        "group" : "Mean Climate"
+    },
+    "ocean_20N50N": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(20.0, 50.0))",
+        "group" : "Mean Climate"
+    },
+    "ocean_50N90N": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(50.0, 90.0))",
+        "group" : "Mean Climate"
+    },
+    "ocean_90S50S": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-90.0, -50.0))",
+        "group" : "Mean Climate"
+    },
+    "NAM": {
+        "domain": "cdutil.region.domain(latitude=(20.0, 90), longitude=(-180, 180))",
+        "group" : "Modes of variability"
+    },
+    "NAO": {
+        "domain": "cdutil.region.domain(latitude=(20.0, 80), longitude=(-90, 40))",
+        "group" : "Modes of variability"
+    },
+    "SAM": {
+        "domain": "cdutil.region.domain(latitude=(-20.0, -90), longitude=(0, 360))",
+        "group" : "Modes of variability"
+    },
+    "PSA1": {
+        "domain": "cdutil.region.domain(latitude=(-20.0, -90), longitude=(0, 360))",
+        "group" : "Modes of variability"
+    },
+    "PSA2": {
+        "domain": "cdutil.region.domain(latitude=(-20.0, -90), longitude=(0, 360))",
+        "group" : "Modes of variability"
+    },
+    "PNA": {
+        "domain": "cdutil.region.domain(latitude=(20.0, 85), longitude=(120, 240))",
+        "group" : "Modes of variability"
+    },
+    "PDO": {
+        "domain": "cdutil.region.domain(latitude=(20.0, 70), longitude=(110, 260))",
+        "group" : "Modes of variability"
+    },
+    "AMO": {
+        "domain": "cdutil.region.domain(latitude=(0.0, 70), longitude=(-80, 0))",
+        "group" : "Modes of variability"
+    },
+    "AllMW": {
+        "domain": "cdutil.region.domain(latitude=(-40.0, 45.0), longitude=(0.0, 360.0))",
+        "group" : "Monsoon domains for Wang metrics (All Monsoon)"
+    },
+    "AllM": {
+        "domain": "cdutil.region.domain(latitude=(-45.0, 45.0), longitude=(0.0, 360.0))",
+        "group" : "Monsoon domains for all Monsoon"
+    },
+    "NAMM": {
+        "domain": "cdutil.region.domain(latitude=(0.0, 45.0), longitude=(210.0, 310.0))",
+        "group" : "North American Monsoon"
+    },
+    "SAMM": {
+        "domain": "cdutil.region.domain(latitude=(-45.0, 0.0), longitude=(240.0, 330.0))",
+        "group" : "South American Monsoon"
+    },
+    "NAFM": {
+        "domain": "cdutil.region.domain(latitude=(0.0, 45.0), longitude=(310.0, 60.0))",
+        "group" : "North African Monsoon"
+    },
+    "SAFM": {
+        "domain": "cdutil.region.domain(latitude=(-45.0, 0.0), longitude=(0.0, 90.0))",
+        "group" : "South African Monsoon"
+    },
+    "ASM": {
+        "domain": "cdutil.region.domain(latitude=(0.0, 45.0), longitude=(60.0, 180.0))",
+        "group" : "Asian Summer Monsoon"
+    },
+    "AUSM": {
+        "domain": "cdutil.region.domain(latitude=(-45.0, 0.0), longitude=(90.0, 160.0))",
+        "group" : "Australian Monsoon"
+    },
+    "AIR": {
+        "domain": "cdutil.region.domain(latitude=(7.0, 25.0), longitude=(65.0, 85.0))",
+        "group" : "Monsoon domains for Sperber metrics (All India rainfall)"
+    },
+    "AUS": {
+        "domain": "cdutil.region.domain(latitude=(-20.0, -10.0), longitude=(120.0, 150.0))",
+        "group" : "Monsoon domains for Sperber metrics (North Australian)"
+    },
+    "Sahel": {
+        "domain": "cdutil.region.domain(latitude=(13.0, 18.0), longitude=(-10.0, 10.0))",
+        "group" : "Monsoon domains for Sperber metrics (Sahel)"
+    },
+    "GoG": {
+        "domain": "cdutil.region.domain(latitude=(0.0, 5.0), longitude=(-10.0, 10.0))",
+        "group" : "Monsoon domains for Sperber metrics (Gulf of Guinea)"
+    },
+    "NAmo": {
+        "domain": "cdutil.region.domain(latitude=(20.0, 37.0), longitude=(-112.0, -103.0))",
+        "group" : "Monsoon domains for Sperber metrics (North American)"
+    },
+    "SAmo": {
+        "domain": "cdutil.region.domain(latitude=(-20.0, 2.5), longitude=(-65.0, -40.0))",
+        "group" : "Monsoon domains for Sperber metrics (South American)"
+    },
+    "Nino34": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-5.0, 5.0), longitude=(190.0, 240.0))",
+        "group" : "ENSO domains (nino34)"
+    },
+    "Nino3": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-5.0, 5.0), longitude=(210.0, 270.0))",
+        "group" : "ENSO domains (nino3)"
+    },
+    "Nino4": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-5.0, 5.0), longitude=(160.0, 210.0))",
+        "group" : "ENSO domains (nino4)"
+    },
+    "ONI": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-5.0, 5.0), longitude=(190.0, 240.0))",
+        "group" : "ENSO domains (oceanic nino)"
+    },
+    "Nino12": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-10.0, 0.0), longitude=(270.0, 280.0))",
+        "group" : "ENSO domains (nino1+2)"
+    },
+    "AMMS": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-15.0, -5.0), longitude=(-20.0, 10.0))",
+        "group" : "Atlantic Meridional Mode (AMM) domains (SH)"
+    },
+    "AMMN": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(5.0, 15.0), longitude=(-50.0, -20.0))",
+        "group" : "Atlantic Meridional Mode (AMM) domains (NH)"
+    },
+    "ATL3": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-3.0, 3.0), longitude=(-20.0, 0.0))",
+        "group" : "Atlantic Nino domains"
+    },
+    "TSA": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-20.0, 0.0), longitude=(-30.0, 10.0))",
+        "group" : "Tropical Southern Atlantic domains"
+    },
+    "TNA": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(5.5, 23.5), longitude=(302.5, 345.0))",
+        "group" : "Tropical Northern Atlantic domains"
+    },
+    "TIO": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-15.0, 15.0), longitude=(40.0, 115.0))",
+        "group" : "Tropical Indian Ocean domains"
+    },
+    "IODE": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-10.0, 10.0), longitude=(50.0, 70.0))",
+        "group" : "Tropical Indian Ocean domains (East)"
+    },
+    "IODW": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-10.0, 0.0), longitude=(90.0, 110.0))",
+        "group" : "Tropical Indian Ocean domains (West)"
+    },
+    "SOCN": {
+        "value": 0.0,
+        "domain": "cdutil.region.domain(latitude=(-70.0, -50.0), longitude=(0.0, 360.0))",
+        "group" : "Southern Ocean domains"
+    }
+}
