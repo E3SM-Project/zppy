@@ -147,19 +147,38 @@ EOF
   cp -s $dest/*_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc $input_dir
   dest_cmip={{ output }}/post/{{ component }}/{{ grid }}/cmip_ts/{{ frequency }}
   mkdir -p ${dest_cmip}
+
   {{ e3sm_to_cmip_environment_commands }}
+
+  {% if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' -%}
+  #add code to do vertical interpolation variables at model levels before e3sm_to_cmip
+  IFS=',' read -ra mlvars <<< "{{ var3d }}"
+  for var in "${mlvars[@]}"
+  do
+    for file in ${input_dir}/${var}_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc
+    do
+      if [ -f ${file} ]; then
+        ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev19
+        #overwrite the model level data
+	mv ${file}.plev19 ${file}
+      fi
+    done
+  done
+  {% endif -%}
+
+  #call e3sm_to_cmip
   srun -N 1 e3sm_to_cmip \
   --output-path \
   ${dest_cmip}/${tmp_dir} \
   {% if input_files.split(".")[0] == 'clm2' or input_files.split(".")[0] == 'elm' -%}
   --var-list \
-  'mrsos, mrso, mrfso, mrros, mrro, prveg, evspsblveg, evspsblsoi, tran, tsl, lai, cLitter, cProduct, cSoilFast, cSoilMedium, cSoilSlow, fFire, fHarvest, cVeg, nbp, gpp, ra, rh' \
+  'snd, mrsos, mrso, mrfso, mrros, mrro, prveg, evspsblveg, evspsblsoi, tran, tsl, lai, cLitter, cProduct, cSoilFast, cSoilMedium, cSoilSlow, fFire, fHarvest, cVeg, nbp, gpp, ra, rh' \
   --realm \
   lnd \
   {% endif -%}
   {% if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' -%}
   --var-list \
-  'pr, tas, rsds, rlds, rsus' \
+  'ua, va, ta, wa, zg, hur, pr, prc, prsn, ts, tas, prw, psl, sfcWind, tasmax, tasmin, tauu, tauv, rtmt, rsdt, rsds, rsdscs, rlds, rldscs, rsus, rsuscs, rsut, rsutcs, rlus, rlut, rlutcs, clivi, clwvi, clt, evspsbl, hfls, hfss, huss' \
   --realm \
   atm \
   {% endif -%}
