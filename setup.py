@@ -18,7 +18,7 @@ def package_files(directory, prefixes, extensions):
 
 
 data_files = package_files(
-    "zppy", prefixes=[], extensions=["bash", "csh", "cfg", "ini", "sh", "json"]
+    "zppy", prefixes=[], extensions=["bash", "csh", "cfg", "ini", "sh", "json", "py"]
 )
 
 setup(

@@ -17,6 +17,7 @@ from zppy.global_time_series import global_time_series
 from zppy.ilamb import ilamb
 from zppy.logger import _setup_custom_logger
 from zppy.mpas_analysis import mpas_analysis
+from zppy.pcmdi_diags import pcmdi_diags
 from zppy.tc_analysis import tc_analysis
 from zppy.ts import ts
 from zppy.utils import check_status, submit_script
@@ -246,6 +247,9 @@ def _launch_scripts(config: ConfigObj, script_dir, job_ids_file, plugins) -> Non
 
     # ilamb tasks
     existing_bundles = ilamb(config, script_dir, existing_bundles, job_ids_file)
+
+    # pcmdi_diags tasks
+    existing_bundles = pcmdi_diags(config, script_dir, existing_bundles, job_ids_file)
 
     # zppy external plugins
     for plugin in plugins:
