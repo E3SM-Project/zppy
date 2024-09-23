@@ -31,8 +31,10 @@ def ilamb(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
         return existing_bundles
 
     # --- Generate and submit ilamb scripts ---
-    dependencies: List[str] = []
     for c in tasks:
+
+        dependencies: List[str] = []
+
         if "ts_num_years" in c.keys():
             c["ts_num_years"] = int(c["ts_num_years"])
         # Loop over year sets
