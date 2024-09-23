@@ -25,14 +25,14 @@ jobs:
       - id: skip_check
         uses: fkirc/skip-duplicate-actions@master
         with:
-          cancel_others: true
+          cancel_others: false
           paths_ignore: '["**/README.md", "**/docs/**"]'
 
   pre-commit-hooks:
     needs: check-jobs-to-skip
     if: ${{ needs.check-jobs-to-skip.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 5
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v3
@@ -73,10 +73,8 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: zppy_dev
-          miniforge-variant: Mambaforge
+          miniforge-variant: Miniforge3
           miniforge-version: latest
-          use-mamba: true
-          mamba-version: "*"
           environment-file: conda/dev.yml
           channel-priority: strict
           auto-update-conda: true
@@ -123,10 +121,8 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: zppy_dev
-          miniforge-variant: Mambaforge
+          miniforge-variant: Miniforge3
           miniforge-version: latest
-          use-mamba: true
-          mamba-version: "*"
           environment-file: conda/dev.yml
           channel-priority: strict
           auto-update-conda: true
