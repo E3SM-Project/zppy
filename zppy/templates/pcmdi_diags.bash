@@ -670,7 +670,8 @@ regions =json.load(open(os.path.join('${results_dir}','var_region_{{sub}}_catalo
 # Templates for model climatology files
 test_data_path = os.path.join(
   "${results_dir}",
-  "climo")
+  "climo",
+  "${case_id}")
 test_dic = json.load(open(os.path.join('${results_dir}','{}_{{sub}}_clim_catalogue.json'.format(test_data_dir))))
 template = test_dic['ts'][test_product]['template']
 filename_template = template.replace('ts',"%(variable)").replace(test_product,"%(model)")
@@ -679,7 +680,7 @@ del(test_dic)
 #######################################
 # ROOT PATH FOR OBSERVATIONS
 reference_data_set = list('{{ reference_sets }}'.split(","))
-reference_data_path = os.path.join('${results_dir}',"climo")
+reference_data_path = os.path.join('${results_dir}',"climo","${case_id}")
 observation_file = os.path.join('${results_dir}','{}_{{sub}}_clim_catalogue.json'.format(ref_data_dir))
 custom_observations  = os.path.abspath(observation_file)
 if not os.path.exists(custom_observations):
@@ -1336,7 +1337,7 @@ def main ():
   # calculate test and reference model climatology
   #####################################################################
   print("calculate mean climate diagnostics")
-  outpath = os.path.join('${results_dir}',"climo/")
+  outpath = os.path.join('${results_dir}',"climo","${case_id}","/")
   method = '{{climatology_process_method}}'
   for key in ["test","ref"]:
     if key == "test":
