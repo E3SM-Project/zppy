@@ -1,5 +1,6 @@
 import os
 import pprint
+from typing import List
 
 import jinja2
 
@@ -35,9 +36,13 @@ def mpas_analysis(config, scriptDir, existing_bundles, job_ids_file):
     # job should run at once. To gracefully handle this, we make each
     # MAPS-Analysis task dependant on all previous ones. This may not
     # be 100% fool-proof, but should be a reasonable start
-    dependencies = []
+
+    # Dependencies carried over from previous task.
+    carried_over_dependencies: List[str] = []
 
     for c in tasks:
+
+        dependencies: List[str] = carried_over_dependencies
 
         if config["mpas_analysis"]["shortTermArchive"]:
             c["subdir_ocean"] = "/archive/ocn/hist"
@@ -105,6 +110,7 @@ def mpas_analysis(config, scriptDir, existing_bundles, job_ids_file):
                 f.write(template.render(**c))
             makeExecutable(scriptFile)
 
+            c["dependencies"] = dependencies
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)
                 p.pprint(c)
@@ -133,7 +139,7 @@ def mpas_analysis(config, scriptDir, existing_bundles, job_ids_file):
                     # Note that this line should still be executed even if jobid == -1
                     # The later MPAS-Analysis tasks still depend on this task (and thus will also fail).
                     # Add to the dependency list
-                    dependencies.append(statusFile)
+                    carried_over_dependencies.append(statusFile)
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
 

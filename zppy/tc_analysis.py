@@ -27,9 +27,13 @@ def tc_analysis(config, scriptDir, existing_bundles, job_ids_file):
 
     # There is a `GenerateConnectivityFile: error while loading shared libraries: libnetcdf.so.11: cannot open shared object file: No such file or directory` error
     # when multiple year_sets are run simultaneously. Therefore, we will wait for the completion of one year_set before moving on to the next.
-    dependencies: List[str] = []
+
+    # Dependencies carried over from previous task.
+    carried_over_dependencies: List[str] = []
 
     for c in tasks:
+
+        dependencies: List[str] = carried_over_dependencies
 
         # Loop over year sets
         year_sets = getYears(c["years"])
@@ -61,6 +65,7 @@ def tc_analysis(config, scriptDir, existing_bundles, job_ids_file):
                 f.write(template.render(**c))
             makeExecutable(scriptFile)
 
+            c["dependencies"] = dependencies
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)
                 p.pprint(c)
@@ -88,7 +93,7 @@ def tc_analysis(config, scriptDir, existing_bundles, job_ids_file):
                     # Note that this line should still be executed even if jobid == -1
                     # The later tc_analysis tasks still depend on this task (and thus will also fail).
                     # Add to the dependency list
-                    dependencies.append(statusFile)
+                    carried_over_dependencies.append(statusFile)
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
 

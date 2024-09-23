@@ -32,9 +32,9 @@ def ilamb(config, scriptDir, existing_bundles, job_ids_file):
         return existing_bundles
 
     # --- Generate and submit ilamb scripts ---
-    dependencies: List[str] = []
-
     for c in tasks:
+
+        dependencies: List[str] = []
 
         if "ts_num_years" in c.keys():
             c["ts_num_years"] = int(c["ts_num_years"])
@@ -94,6 +94,7 @@ def ilamb(config, scriptDir, existing_bundles, job_ids_file):
                 f.write(template.render(**c))
             makeExecutable(scriptFile)
 
+            c["dependencies"] = dependencies
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)
                 p.pprint(c)
