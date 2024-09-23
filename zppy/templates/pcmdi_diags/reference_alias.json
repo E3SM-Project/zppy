@@ -63,6 +63,24 @@
            "alternate4" : "ERA-Interim",
            "alternate5" : "NOAA-20C"
            },
+  "rstcre" : {
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rltcre" : {
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
   "rlut" : {
            "default"    : "ceres_ebaf_v4.1",
            "alternate"  : "ceres_ebaf_v4.0",

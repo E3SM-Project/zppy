@@ -152,7 +152,7 @@ EOF
 
   {% if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' -%}
   #add code to do vertical interpolation variables at model levels before e3sm_to_cmip
-  IFS=',' read -ra mlvars <<< "{{ var3d }}"
+  IFS=',' read -ra mlvars <<< "{{ interp_vars }}"
   for var in "${mlvars[@]}"
   do
     for file in ${input_dir}/${var}_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc

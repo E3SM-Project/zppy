@@ -97,20 +97,23 @@ import json
 import sys
 import re
 import glob
-import errno
-from shutil import copyfile
-import numpy as np
 import collections
 import cdms2
 import gc
+import numpy as np
+from itertools import chain
+from shutil import copyfile
+from subprocess import Popen, PIPE, call
 
 def childCount():
     current_process = psutil.Process()
     children = current_process.children()
     return(len(children))
 
-def combine_time_series(varibles,start_yr,end_yr,num_years,
-                        mip,exp,realm,product,dir_source,outpath):
+def combine_time_series(variables, start_yr, end_yr, num_years,
+                        mip, exp, realm, product, dir_source,
+                        out_dic_file, outpath,
+                        multiprocessing, num_workers):
 
   #special case treatment (not in cmip cmor list)
   altmod_dic = {"sst"    : "ts",
@@ -122,9 +125,9 @@ def combine_time_series(varibles,start_yr,end_yr,num_years,
   # list of model data dictionary
   mod_out  = collections.OrderedDict()
   var_list = []
-  lstcmd0  = []
-  lstcmd1  = []
-  for key in varibles:
+  lstcm0  = []
+  lstcm1  = []
+  for key in variables:
     if "_" in key or "-" in key:
       var = re.split("_|-", key)[0]
     else:
@@ -169,11 +172,11 @@ def combine_time_series(varibles,start_yr,end_yr,num_years,
               cmd_list.append(fpath)
             cmd_list.append(output)
             cdm0 = (" ".join(cmd_list))
-            lstcmd0.append(cdm0)
+            lstcm0.append(cdm0)
             del(cmd_list,cdm0)
             if varin != var:
               cmd_extra = "ncrename -v {},{} {}".format(varin,var,output)
-              lstcmd1.append(cmd_extra)
+              lstcm1.append(cmd_extra)
               del(cmd_extra)
 
           ############################################################
@@ -189,11 +192,69 @@ def combine_time_series(varibles,start_yr,end_yr,num_years,
                            "end_yymm"   : yme,
                            "varin"      : varin }
       del(fpaths)
-      gc.collect()
-  return var_list, mod_out, lstcmd0, lstcmd1
+    del(var)
+    gc.collect()
 
-def locate_ts_observation (variables,obs_sets,start_yr,end_yr,input_path,output_path):
-  # special case treatment (inconsistent with cmip cmor vars)
+  # Save test model data information required for next step
+  json.dump(mod_out,
+            open(out_dic_file, "w"),
+            sort_keys=True,
+            indent=4,
+            separators=(",", ": "))
+  del(mod_out,variables,altmod_dic)
+
+  #finally process the data in parallel
+  lstall = list(chain(lstcm0,lstcm1))
+  lensub = [len(lstcm0),len(lstcm1)]
+  lensub = np.cumsum(lensub) - 1
+  print("Number of jobs starting is ", str(len(lstall)))
+  procs = []
+  for i,p in enumerate(lstall):
+    print('running %s' % (str(p)))
+    proc = Popen(p, stdout=PIPE, shell=True)
+    if multiprocessing == True:
+      procs.append(proc)
+      while (childCount() > num_workers):
+        time.sleep(0.25)
+        [pp.communicate() for pp in procs] # this will get the exit code
+        procs = []
+      else:
+        if (i == len(lstall)-1):
+          try:
+            outs, errs = proc.communicate()
+            if proc.returncode == 0:
+              print("stdout = {}; stderr = {}".format(str(outs),str(errs)))
+            else:
+              exit("ERROR: subprocess {} failed".format(str(lstall[i])))
+          except:
+            break
+    else:
+      return_code = proc.communicate()
+      if return_code != 0:
+        exit("Failed to run {}".format(str(p)))
+  del(lstall,lensub,lstcm0,lstcm1)
+
+  #set a delay to esure all process fully done
+  time.sleep(1)
+  print("done submitting")
+
+  if len(var_list) > 0:
+    print("# of variables available for diagnostics: ", len(var_list))
+  else:
+    exit("ERROR: can not found model variables to process....")
+
+  return var_list
+
+def locate_ts_observation (variables, obs_sets, start_yr, end_yr,
+                           input_path, out_dic_file, output_path,
+                           multiprocessing, num_workers):
+
+  # fixed observational name convention
+  mip = "obs"
+  realization = "00"
+  tableId = "Amon"
+
+  # special case treatment (these obs vars are inconsistent with cmor vars)
   altobs_dic = { "pr"      : "PRECT",
                  "sst"     : "ts",
                  "sfcWind" : "si10",
@@ -202,17 +263,13 @@ def locate_ts_observation (variables,obs_sets,start_yr,end_yr,input_path,output_
                  "rltcre"  : "toa_cre_lw_mon",
                  "rstcre"  : "toa_cre_sw_mon",
                  "rtmt"    : "toa_net_all_mon"}
+
   # find observational data avaiable in e3sm_diags
-  mip = "obs"
-  realization = "00"
-  tableId = "Amon"
-  obs_sets = list('{{ reference_sets }}'.split(","))
   obs_dic = json.load(open(os.path.join('.','reference_alias.json')))
   obs_out = collections.OrderedDict()
-
   var_list = []
-  lstcmd0  = []
-  lstcmd1  = []
+  lstcm0  = []
+  lstcm1  = []
   for i,key in enumerate(variables):
     if "_" in key or "-" in key:
       var = key.split("_|-", var)[0]
@@ -258,9 +315,9 @@ def locate_ts_observation (variables,obs_sets,start_yr,end_yr,input_path,output_
       fyme = template.split("_")[-1][0:6]
       yms = '{:04d}{:02d}'.format(start_yr,1)
       yme = '{:04d}{:02d}'.format(end_yr,12)
-      if int(yms) > int(fyms):
+      if int(yms) < int(fyms):
         yms = fyms
-      if int(yme) < int(fyme):
+      if int(yme) > int(fyme):
         yme = fyme
       del(template,fyms,fyme)
 
@@ -272,17 +329,12 @@ def locate_ts_observation (variables,obs_sets,start_yr,end_yr,input_path,output_
       output = os.path.join(output_path,fname)
 
       if not os.path.exists(output):
-        #cmd0 = "cp {} {}".format(fpaths[0],output)
-        #cmd0 = "ncap2 -O -s '{}' {} {}".format(
-        #        '@units="hours since 1850-01-01 00:00:00";time=udunits(time,@units);time@units=@units',
-        #fpaths[0],output)
-        cmd0 = "ncrcat -v {} -d time,{}-01-01,{}-12-31 {} {}".format(
+        cmd = "ncrcat -v {} -d time,{}-01-01,{}-12-31 {} {}".format(
                        varin,yms[0:4],yme[0:4],fpaths[0],output)
-        lstcmd0.append(cmd0)
-        del(cmd0)
+        lstcm0.append(cmd); del(cmd)
         if var != varin:
           cmd_extra = "ncrename -v {},{} {}".format(varin,var,output)
-          lstcmd1.append(cmd_extra)
+          lstcm1.append(cmd_extra)
           del(cmd_extra)
 
       #record the observation information
@@ -297,13 +349,60 @@ def locate_ts_observation (variables,obs_sets,start_yr,end_yr,input_path,output_
                        "end_yymm"    : yme,
                        "varin"       : varin}
 
-      var_list.append(var)
-      del(fname,output)
+      var_list.append(var); del(fname,output)
       gc.collect()
     else :
       print("warning: reference data not found for", var)
 
-  return var_list, obs_out, lstcmd0, lstcmd1
+  # Save observational information required for next step
+  json.dump(obs_out,
+            open(out_dic_file,"w"),
+            sort_keys=True,
+            indent=4,
+            separators=(",", ": "))
+  del(obs_dic,obs_out,obs_sets,altobs_dic)
+
+  #finally process the data in parallel
+  lstall = list(chain(lstcm0,lstcm1))
+  lensub = [len(lstcm0),len(lstcm1)]
+  lensub = np.cumsum(lensub) - 1
+  print("Number of jobs starting is ", str(len(lstall)))
+  procs = []
+  for i,p in enumerate(lstall):
+    print('running %s' % (str(p)))
+    proc = Popen(p, stdout=PIPE, shell=True)
+    if multiprocessing == True:
+      procs.append(proc)
+      while (childCount() > num_workers):
+        time.sleep(0.25)
+        [pp.communicate() for pp in procs] # this will get the exit code
+        procs = []
+      else:
+        if (i == len(lstall)-1):
+          try:
+            outs, errs = proc.communicate()
+            if proc.returncode == 0:
+              print("stdout = {}; stderr = {}".format(str(outs),str(errs)))
+            else:
+              exit("ERROR: subprocess {} failed".format(str(lstall[i])))
+          except:
+            break
+    else:
+      return_code = proc.communicate()
+      if return_code != 0:
+        exit("Failed to run {}".format(str(p)))
+  del(lstall,lensub,lstcm0,lstcm1)
+
+  #set a delay to avoid delay in writing process
+  time.sleep(1)
+  print("done submitting")
+
+  if len(var_list) > 0:
+    print("# of variables in observations: ", len(var_list))
+  else:
+    exit("ERROR: can not found model variables to process....")
+
+  return var_list
 
 def main():
   #basic information
@@ -311,6 +410,9 @@ def main():
   start_yr = int('${Y1}')
   end_yr = int('${Y2}')
   num_years = end_yr - start_yr + 1
+
+  multiprocessing = {{multiprocessing}}
+  num_workers = {{num_workers}}
 
   # Model
   # Test data directory
@@ -370,168 +472,42 @@ def main():
   ################################################################
   # process test model data for comparision
   ################################################################
-  print("process test model data for comparision")
-  #variable list in configuration file
+  # variable list in configuration file #
   variables = list("{{ vars }}".split(","))
-  cmor_vars, test_data_dic, test_cmd0, test_cmd1 = \
-           combine_time_series(
-                               variables, test_start_yr,test_end_yr,
-                               int({{ts_num_years}}), test_mip,
-                               test_exp, test_realm, test_product,
-                               test_dir_source, test_data_dir
-                              )
-
-  # Save test model data information required for next step
-  json.dump(test_data_dic,
-	    open(os.path.join('${results_dir}',
-                              '{}_{{sub}}_mon_catalogue.json'.format(test_data_dir)), "w"),
-            sort_keys=True,
-            indent=4,
-            separators=(",", ": "))
-  del(test_data_dic,variables)
-  print("# of cmorized model variables: ", len(cmor_vars))
-
-  #finally process the data in parallel
-  print("Number of jobs starting is ", str(len(test_cmd0)))
-  for i,p in enumerate(test_cmd0):
-    procs = subprocess.Popen([p], shell=True)
-    print('running %s' % (str(p)))
-    while (childCount() > {{num_workers}}):
-      time.sleep(0.25)
-      procs.communicate() # this will get the exit code
-    else:
-      if (i == len(test_cmd0)-1 ):
-        procs.communicate()
-        break
-
-  #second loop when rename is needed
-  if len(test_cmd1) > 0:
-    print("Number of jobs starting is ", str(len(test_cmd1)))
-    for i,p in enumerate(test_cmd1):
-      procs = subprocess.Popen([p], shell=True)
-      print('running %s' % (str(p)))
-      while (childCount() > {{num_workers}} ):
-        time.sleep(0.25)
-        procs.communicate() # this will get the exit code
-      else:
-        if (i == len(test_cmd1)-1 ):
-          procs.communicate()
-          break
-  del(test_cmd0,test_cmd1)
-
-  #set a delay to avoid delay in writing process
-  time.sleep(1)
-  print("done submitting")
-
+  print("process test model data for comparision")
+  test_dic_file = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(test_data_dir))
+  cmor_vars = combine_time_series(variables, test_start_yr,test_end_yr,
+                                  int({{ts_num_years}}), test_mip, test_exp,
+                                  test_realm, test_product, test_dir_source,
+                                  test_dic_file, test_data_dir,
+				  multiprocessing, num_workers)
   ################################################################
   # process reference data for comparison
   ################################################################
   print("process reference obs/model data for comparision")
 {% if run_type == "model_vs_obs" %}
   obs_sets = list('{{ reference_sets }}'.split(","))
-  refr_vars, obs_data_dic, obs_cmd0, obs_cmd1 = \
-	locate_ts_observation (
-                               cmor_vars,obs_sets,
-                               ref_start_yr,ref_end_yr,
-                               reference_dir_source,
-                               ref_data_dir
-			       )
+  refr_dic_file = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))
+  refr_vars = locate_ts_observation(cmor_vars, obs_sets,
+                                    ref_start_yr, ref_end_yr,
+                                    reference_dir_source,
+                                    refr_dic_file,ref_data_dir,
+                                    multiprocessing, num_workers)
 
-  # Save observational information required for next step
-  json.dump(obs_data_dic,
-	    open(os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir)),"w"),
-            sort_keys=True,
-            indent=4,
-            separators=(",", ": "))
-  del(obs_data_dic,obs_sets)
-  print("# of variables with observations: ", len(refr_vars))
+  print("# of variables in test model: ", len(cmor_vars))
+  print("# of variables in reference model: ", len(refr_vars))
   del(refr_vars,cmor_vars)
-
-  #finally process the data in parallel
-  print("Number of jobs starting is ", str(len(obs_cmd0)))
-  for i,p in enumerate(obs_cmd0):
-    procs = subprocess.Popen([p], shell=True)
-    print('running %s' % (str(p)))
-    while (childCount() > {{num_workers}}):
-      time.sleep(0.25)
-      procs.communicate() # this will get the exit code
-    else:
-      if (i == len(obs_cmd0)-1 ):
-        procs.communicate()
-        break
-
-  #second loop when rename is needed
-  if len(obs_cmd1) > 0:
-    print("Number of jobs starting is ", str(len(obs_cmd1)))
-    for i,p in enumerate(obs_cmd1):
-      procs = subprocess.Popen([p], shell=True)
-      print('running %s' % (str(p)))
-      while (childCount() > {{num_workers}}):
-        time.sleep(0.25)
-        procs.communicate() # this will get the exit code
-      else:
-        if (i == len(obs_cmd1)-1 ):
-          procs.communicate()
-          break
-
-  del(obs_cmd0,obs_cmd1)
-
-  #set a delay to avoid delay in writing process
-  time.sleep(1)
-  print("done submitting")
-
 {% elif run_type == "model_vs_model" %}
-  #variable list in configuration file
-  variables = list("{{ vars }}".split(","))
-  refr_vars, refr_data_dic, refr_cmd0, refr_cmd1 = \
-           combine_time_series(
-                               variables, ref_start_yr,ref_end_yr,
-                               int({{ts_num_years_ref}}), ref_mip,
-                               ref_exp, ref_realm, ref_product,
-                               ref_dir_source, ref_data_dir
-                              )
+  refr_dic_file = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))
+  refr_vars = combine_time_series(cmor_vars, ref_start_yr,ref_end_yr,
+                                  int({{ts_num_years_ref}}), ref_mip, ref_exp,
+                                  ref_realm, ref_product, ref_dir_source
+                                  refr_dic_file, ref_data_dir,
+                                  multiprocessing, num_workers)
 
-  # Save reference information required for next step
-  json.dump(ref_data_dic,
-	    open(os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir)),"w"),
-            sort_keys=True,
-            indent=4,
-            separators=(",", ": "))
-  del(ref_data_dic,variables)
-  print("# of variables with observations: ", len(refr_vars))
+  print("# of variables in test model: ", len(cmor_vars))
+  print("# of variables in reference model: ", len(refr_vars))
   del(refr_vars,cmor_vars)
-
-  #finally process the data in parallel
-  print("Number of jobs starting is ", str(len(refr_cmd0)))
-  for i,p in enumerate(refr_cmd0):
-    procs = subprocess.Popen([p], shell=True)
-    print('running %s' % (str(p)))
-    while (childCount() > {{num_workers}}):
-      time.sleep(0.25)
-      procs.communicate() # this will get the exit code
-    else:
-      if (i == len(refr_cmd0)-1 ):
-        procs.communicate()
-        break
-
-  if len(refr_cmd1) > 0:
-    print("Number of jobs starting is ", str(len(refr_cmd1)))
-    for i,p in enumerate(refr_cmd1):
-      procs = subprocess.Popen([p], shell=True)
-      print('running %s' % (str(p)))
-      while (childCount() > {{num_workers}}):
-        time.sleep(0.25)
-        procs.communicate() # this will get the exit code
-      else:
-        if (i == len(refr_cmd1)-1 ):
-          procs.communicate()
-          break
-  del(refr_cmd0,refr_cmd1)
-
-  #set a delay to avoid delay in writing process
-  time.sleep(1)
-  print("done submitting")
-
 {%- endif %}
 
 if __name__ == "__main__":
@@ -559,7 +535,6 @@ import sys
 import cdutil
 import datetime
 import json
-import subprocess
 
 #basic information
 short_name = '${short}'
@@ -630,14 +605,7 @@ else:
   ext = ".xml"
 
 user_notes = 'Provenance and results'
-
-num_workers = {{ num_workers }}
-multiprocessing = {{ multiprocessing }}
-if multiprocessing:
-  parallel = True
-else:
-  parallel = False
-
+parallel = False
 debug = {{ pmp_debug }}
 
 # Generate plots
@@ -686,6 +654,12 @@ regions_values = {"land":100.,"ocean":0.}
 
 #defined regions
 regions_specs = json.load(open(os.path.join(".",'regions_specs.json')))
+for kk in regions_specs.keys():
+  if "domain" in regions_specs[kk].keys():
+    if "latitude" in regions_specs[kk]['domain'].keys():
+      regions_specs[kk]['domain']['latitude'] = tuple(regions_specs[kk]['domain']['latitude'])
+    if "longitude" in regions_specs[kk]['domain'].keys():
+      regions_specs[kk]['domain']['longitude'] = tuple(regions_specs[kk]['domain']['longitude'])
 
 #region specified for each variable
 regions =json.load(open(os.path.join('${results_dir}','var_region_{{sub}}_catalogue.json')))
@@ -931,7 +905,6 @@ echo
 # Prepare configuration file
 cat > pcmdi.py << EOF
 import os
-import numpy
 import glob
 import json
 import re
@@ -946,15 +919,36 @@ import psutil
 import cdtime
 import MV2
 import pcmdi_metrics
+import resource
+import numpy as np
 from pcmdi_metrics.utils import StringConstructor, sort_human
 from argparse import RawTextHelpFormatter
 from shutil import copyfile
 from re import split
+from itertools import chain
+from subprocess import Popen, PIPE, call
 
 def childCount():
     current_process = psutil.Process()
     children = current_process.children()
     return(len(children))
+
+def generate_land_sea_mask(data_file,outpath):
+    data_dic = json.load(open(data_file))
+    for var in data_dic:
+      model = data_dic[var]['model']
+      mpath = data_dic[var]['file_path']
+      mpath_lf = os.path.join(outpath,"sftlf.{}.nc".format(model))
+      # generate land/sea mask if not exist
+      if not os.path.exists(mpath_lf):
+        print("generate land/sea mask file....")
+        return_code = call(['python','generate_sftlf.py',var,model,mpath,mpath_lf],text=False)
+      else:
+        return_code = 0
+      del(model,mpath,mpath_lf)
+    del(data_dic)
+
+    return return_code
 
 def merge_json(var,obs,metricdir,metricname,pmprdir):
     json_file_dir_template = os.path.join(
@@ -1028,15 +1022,23 @@ def merge_json(var,obs,metricdir,metricname,pmprdir):
 
 {%- if "mean_climate" in subset %}
 
-def calculate_climatology(start_yr,end_yr,data_file,outpath):
+def calculate_climatology(method,start_yr,end_yr,data_dic,out_dic,
+                          outpath,multiprocessing,num_workers):
+
+  #first check the monthly data dictionary
+  if not os.path.exists(data_dic):
+    exit("ERROR: monthly data dictionary file not found...")
+  else:
+    data_dic = json.load(open(data_dic))
+
+  if not os.path.exists(outpath):
+    os.makedirs(outpath)
+
   #####################################
   #calculate annual cycle climatology
   #####################################
-  if not os.path.exists(outpath):
-    os.makedirs(outpath)
-  data_dic = json.load(open(data_file))
   clim_dic = collections.OrderedDict()
-  lstcmd = []
+  lstcmd = []; lstcm0 = []; lstcm1 = []; lstcm2 = []
   for var in data_dic.keys():
     cyms = '{:04d}-{:02d}'.format(start_yr,1)
     cyme = '{:04d}-{:02d}'.format(end_yr,12)
@@ -1047,29 +1049,164 @@ def calculate_climatology(start_yr,end_yr,data_file,outpath):
       cyme = '{}-{}'.format(str(data_dic[var]['end_yymm'])[0:4],
                             str(data_dic[var]['end_yymm'])[4:6])
     infile = data_dic[var]['file_path']
-    outfile = data_dic[var]['template']
     if os.path.exists(infile):
-      cmd0 = (" ".join(["pcmdi_compute_climatologies.py",
-                        "--start", cyms,
-                        "--end", cyme,
-                        "--var", var,
-                        "--infile", infile,
-                        "--outpath", outpath,
-                        "--outfilename", outfile ]))
-      lstcmd.append(cmd0)
-      del(cmd0)
-
-      #document results info in dictionary file#
+      if method == "pcmdi":
+        #reform the output file template
+        outfile = ".".join(data_dic[var]['template'].split(".")[:-2])
+        outfile = outfile +".nc"
+        cmd = (" ".join(["pcmdi_compute_climatologies.py",
+                         "--start", cyms,
+                         "--end", cyme,
+                         "--var", var,
+                         "--infile", infile,
+                         "--outpath", outpath,
+                         "--outfilename", outfile ]))
+        lstcmd.append(cmd); del(cmd,outfile)
+      else:
+        # use nco to process mean climatology
+        # middle month days from January to February
+        dofm = [15,46,74,105,135,166,196,227,258,288,319,349]
+        #create a temporary directory to save temporary files
+        if not os.path.exists("tmpnco"):
+          os.mkdir("tmpnco",mode=0o777)
+        #derive annual cycle climate mean
+        for imon,mday in enumerate(dofm):
+          tmpfile = os.path.join('tmpnco',"{}_tmp_{:02d}-clim.nc".format(var,imon+1))
+          cmd = (" ".join(['ncra -O -h -F -d',
+                           'time,{},,12'.format(imon+1),
+                           infile,tmpfile]))
+          lstcmd.append(cmd)
+          cm0 = (" ".join(['ncatted -O -h -a',
+                           'units,time,o,c,"days since 0001-01-01 00:00:0.0"',
+                           tmpfile,tmpfile]))
+          lstcm0.append(cm0)
+          cm1 = (" ".join(['ncap2 -O -h -s',
+                           "'time=time*0+{};defdim({},{});time_bnds=make_bounds(time,{},{})'".format(
+                           mday,'"bnds"',2,'\$bnds','"time_bnds"'),
+                           tmpfile,tmpfile]))
+          lstcm1.append(cm1); del(cmd,cm0,cm1,tmpfile)
+        #derive seasonal and annual mean
+        for season in ["AC", "DJF", "JJA", "MAM", "SON", "ANN"]:
+          period = "{}-{}".format(cyms.replace("-",""),cyme.replace("-",""))
+          outfile = ".".join(data_dic[var]['template'].split(".")[:-2])
+          outfile = os.path.join(outpath,".".join([outfile,"{}.{}.{}.nc".format(period,season,'${case_id}')]))
+          if season == "AC":
+            cm2 = (" ".join(["ncrcat -O -v {} -d time,0,".format(var),
+                             os.path.join('tmpnco',"{}_*_*-clim.nc".format(var)),
+                             outfile]))
+          elif season == "DJF":
+            cm2 = (" ".join(["ncra -O -h",
+			     os.path.join('tmpnco',"{}_*_12-clim.nc".format(var)),
+			     os.path.join('tmpnco',"{}_*_01-clim.nc".format(var)),
+			     os.path.join('tmpnco',"{}_*_02-clim.nc".format(var)),
+                             outfile]))
+          elif season == "JJA":
+            cm2 = (" ".join(["ncra -O -h",
+                             os.path.join('tmpnco',"{}_*_06-clim.nc".format(var)),
+			     os.path.join('tmpnco',"{}_*_07-clim.nc".format(var)),
+                             os.path.join('tmpnco',"{}_*_08-clim.nc".format(var)),
+                             outfile]))
+          elif season == "MAM":
+            cm2 = (" ".join(["ncra -O -h",
+                             os.path.join('tmpnco',"{}_*_03-clim.nc".format(var)),
+			     os.path.join('tmpnco',"{}_*_04-clim.nc".format(var)),
+			     os.path.join('tmpnco',"{}_*_05-clim.nc".format(var)),
+                             outfile]))
+          elif season == "SON":
+            cm2 = (" ".join(["ncra -O -h",
+                             os.path.join('tmpnco',"{}_*_09-clim.nc".format(var)),
+			     os.path.join('tmpnco',"{}_*_10-clim.nc".format(var)),
+                             os.path.join('tmpnco',"{}_*_11-clim.nc".format(var)),
+                             outfile]))
+          elif season == "ANN":
+            cm2 = (" ".join(["ncra -O -h",
+                             os.path.join('tmpnco',"{}_*_*-clim.nc".format(var)),
+                             outfile]))
+          lstcm2.append(cm2); del(cm2,period,outfile)
+      #document climatology info in dictionary file#
       period = "{}-{}".format(cyms.replace("-",""),cyme.replace("-",""))
-      template = outfile.replace(".nc",".{}.AC.{}.nc".format(period,'${case_id}'))
+      template = ".".join(data_dic[var]['template'].split(".")[:-2])
+      template = template + ".{}.AC.{}.nc".format(period,'${case_id}')
       clim_dic[var] = {data_dic[var]['exp']   : data_dic[var]['model'],
                        data_dic[var]['model'] : {'template'  : template,
                                                  'period'    : period,
                                                  'data_path' : outpath}}
+  #save climatology dictionary
+  json.dump(clim_dic,
+	    open(out_dic,"w"),
+            sort_keys=True,
+            indent=4,
+            separators=(",", ": "))
 
-  return clim_dic,lstcmd
+  #finally process the data in parallela
+  if method == "pcmdi":
+    print("Number of jobs starting is ", str(len(lstcmd)))
+    procs = []
+    for i,p in enumerate(lstcmd):
+      print('running %s' % (str(p)))
+      proc = Popen(p, stdout=PIPE, shell=True)
+      if multiprocessing == True:
+        procs.append(proc)
+        while (childCount() > num_workers):
+          time.sleep(0.25)
+          [pp.communicate() for pp in procs] # this will get the exit code
+          procs = []
+        else:
+          if (i == len(lstcmd)-1):
+            try:
+              outs, errs = proc.communicate()
+              if proc.returncode == 0:
+                print("stdout = {}; stderr = {}".format(str(outs),str(errs)))
+              else:
+                exit("ERROR: subprocess {} failed".format(str(lstcmd[i])))
+            except:
+              break
+      else:
+        return_code = proc.communicate()
+        if return_code != 0:
+          exit("Failed to run {}".format(str(p)))
+  elif method == "nco":
+    lstall = list(chain(lstcmd,lstcm0,lstcm1,lstcm2))
+    lensub = [len(lstcmd),len(lstcm0),len(lstcm1),len(lstcm2)]
+    lensub = np.cumsum(lensub) - 1
+    print("Number of jobs starting is ", str(len(lstall)))
+    procs = []
+    for i,p in enumerate(lstall):
+      print('running %s' % (str(p)))
+      proc = Popen(p, stdout=PIPE, shell=True)
+      if multiprocessing == True:
+        procs.append(proc)
+        while (childCount() > num_workers):
+          time.sleep(0.25)
+          [pp.communicate() for pp in procs] # this will get the exit code
+          procs = []
+        else:
+          if (i == len(lstall)-1):
+            try:
+              outs, errs = proc.communicate()
+              if proc.returncode == 0:
+                print("stdout = {}; stderr = {}".format(str(outs),str(errs)))
+              else:
+                exit("ERROR: subprocess {} failed".format(str(lstall[i])))
+            except:
+              break
+      else:
+        return_code = proc.communicate()
+        if return_code != 0:
+          exit("Failed to run {}".format(str(p)))
+    # clean the temporary files
+    for tmpfil in glob.glob(os.path.join('tmpnco',"_*_*-clim.nc".format(var))):
+      if os.path.exists(tmpfil):
+        os.remove(tmpfil)
 
-def calculate_derived_variable(var,data_dic,outpath):
+  # add a delay to ensure the processing fully done
+  time.sleep(1)
+  print("done submitting")
+  del(lstcmd,lstcm0,lstall,lstcm1,lstcm2,clim_dic,data_dic)
+
+  return
+
+def calculate_derived_variable(var,data_dic,data_path):
   ####################################################
   #this function is used to calculate a quantity given
   #the data documented in the data_dic passed by user
@@ -1077,12 +1214,13 @@ def calculate_derived_variable(var,data_dic,outpath):
   #calculate the required diagnostic variables
   #####################################################
   derive_dic = json.load(open("derived_variable.json"))
-  vsublist = []
-  operator = []
+  vsublist = []; operator = []
+  #collect the variable and operation rulse for derivation
   for vv in derive_dic[var]:
     vsublist.append(vv)
     operator.append(derive_dic[var][vv])
-  #now search data file and process
+
+  #now search data file and judge if the derivation is possible
   l_derive = True
   for i,vv in enumerate(vsublist):
     infile = data_dic[vv]['data_path']
@@ -1091,6 +1229,7 @@ def calculate_derived_variable(var,data_dic,outpath):
     if (not os.path.exists(infile)) or (os.path.exists(outfile)):
       l_derive = False
 
+  # finally do derivation
   if l_derive:
     for i,vv in enumerate(derive_dic[var].keys()):
       infile = data_dic[vv]['data_path']
@@ -1118,6 +1257,9 @@ def main ():
   start_yr = int('${Y1}')
   end_yr = int('${Y2}')
   num_years = end_yr - start_yr + 1
+
+  num_workers = {{ num_workers }}
+  multiprocessing = {{multiprocessing}}
 
   # Model
   # Test data directory
@@ -1176,100 +1318,46 @@ def main ():
   # these data are not always available for model or observations
   ################################################################################
   # Model
-  test_dic = json.load(open(os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(test_data_dir))))
-  for var in test_dic:
-    model = test_dic[var]['model']
-    mpath = test_dic[var]['file_path']
-    mpath_lf = os.path.join('${fixed_dir}',"sftlf.{}.nc".format(model))
-    # generate land/sea mask if not exist
-    if not os.path.exists(mpath_lf) :
-      print("generate land/sea mask file....")
-      return_code = subprocess.call(
-                      ['python', 'generate_sftlf.py',
-                       var, model, mpath, mpath_lf],
-                    text=False)
-      if return_code != 0:
-        exit("Failed to generate land/sea mask...")
-    del(model,mpath,mpath_lf)
+  test_dic = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(test_data_dir))
+  return_code = generate_land_sea_mask(test_dic,'${fixed_dir}')
+  if return_code != 0:
+    exit("Failed to generate land/sea mask...")
   del(test_dic)
   # Reference
-  ref_dic = json.load(open(os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))))
-  for var in ref_dic:
-    refname = ref_dic[var]['model']
-    refpath_lf = os.path.join('${fixed_dir}','sftlf.{}.nc'.format(refname))
-    refpath = ref_dic[var]['file_path']
-    if not os.path.exists(refpath_lf):
-      print("generate land/sea mask file....")
-      return_code = subprocess.call(
-                      ['python', 'generate_sftlf.py',
-                       var,refname,refpath,refpath_lf],
-                    text=False)
-      if return_code != 0:
-        exit("Failed to generate land/sea mask...")
-    del(refname,refpath,refpath_lf)
+  ref_dic = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))
+  return_code = generate_land_sea_mask(ref_dic,'${fixed_dir}')
+  if return_code != 0:
+    exit("Failed to generate land/sea mask...")
   del(ref_dic)
 
   # Run PCMDI for diagnostics
 {%- if "mean_climate" in subset %}
+  #####################################################################
+  # calculate test and reference model climatology
+  #####################################################################
   print("calculate mean climate diagnostics")
-  #####################################################################
-  # calculate test model climatology
-  #####################################################################
   outpath = os.path.join('${results_dir}',"climo/")
-  test_data_dic = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(test_data_dir))
-  test_clim_dic, test_cmd = calculate_climatology(test_start_yr,test_end_yr,test_data_dic,outpath)
-  #save the climatology dictionary files
-  json.dump(test_clim_dic,
-            open(os.path.join('${results_dir}','{}_{{sub}}_clim_catalogue.json'.format(test_data_dir)),"w"),
-            sort_keys=True,
-            indent=4,
-            separators=(",", ": "))
-  #finally process the data in parallel
-  print("Number of jobs starting is ", str(len(test_cmd)))
-  for i,p in enumerate(test_cmd):
-    procs = subprocess.Popen([p], shell=True)
-    print('running %s' % (str(p)))
-    while (childCount() > {{num_workers}}):
-      time.sleep(0.25)
-      procs.communicate() # this will get the exit code
-    else:
-      if (i == len(test_cmd)-1):
-        procs.communicate()
-        break
-  del(test_data_dic,test_clim_dic,test_cmd)
-
-  # add a delay to ensure the writing process fully done
-  time.sleep(1)
-  print("done submitting")
-
-  #####################################################################
-  # calculate reference climatology
-  #####################################################################
-  ref_data_dic = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))
-  ref_clim_dic, ref_cmd = calculate_climatology(ref_start_yr,ref_end_yr,ref_data_dic,outpath)
-  #save the climatology dictionary files
-  json.dump(ref_clim_dic,
-            open(os.path.join('${results_dir}','{}_{{sub}}_clim_catalogue.json'.format(ref_data_dir)),"w"),
-            sort_keys=True,
-            indent=4,
-            separators=(",", ": "))
-  #finally process the data in parallel
-  print("Number of jobs starting is ", str(len(ref_cmd)))
-  for i,p in enumerate(ref_cmd):
-    procs = subprocess.Popen([p], shell=True)
-    print('running %s' % (str(p)))
-    while (childCount() > {{num_workers}}):
-      time.sleep(0.25)
-      procs.communicate() # this will get the exit code
-    else:
-      if (i == len(ref_cmd)-1 ):
-        procs.communicate()
-        break
-  del(ref_data_dic,ref_clim_dic,ref_cmd)
-
-  #set a delay to ensure writing process done
-  time.sleep(1)
-  print("done submitting")
+  method = '{{climatology_process_method}}'
+  for key in ["test","ref"]:
+    if key == "test":
+      data_dir = test_data_dir
+      start_yr = test_start_yr
+      end_yr   = test_end_yr
+    elif key == "ref":
+      data_dir = ref_data_dir
+      start_yr = ref_start_yr
+      end_yr   = ref_end_yr
+    data_dic = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(data_dir))
+    clim_dic = os.path.join('${results_dir}','{}_{{sub}}_clim_catalogue.json'.format(data_dir))
+    if method in [ "pcmdi", "PCMDI", "default" ]:
+      #method 1: built in PCMDI package (may have memory issue for highres data)
+      calculate_climatology("pcmdi",start_yr,end_yr,data_dic,clim_dic,outpath,multiprocessing,num_workers)
+    elif method in [ "nco", "NCO", "alternate"]:
+      #method 2: use nco package(default,faster)
+      calculate_climatology("nco",start_yr,end_yr,data_dic,clim_dic,outpath,multiprocessing,num_workers)
+    if not os.path.exists(clim_dic):
+      exist("ERROR: failed to process data climatology....")
+    del(data_dir,start_yr,end_yr,data_dic,clim_dic)
 
   #####################################################################
   # call mean_climate_driver.py to process diagnostics
@@ -1280,7 +1368,6 @@ def main ():
     default_regions = list('{{ regions }}'.split(","))
   else:
     default_regions = ["global", "NHEX", "SHEX", "TROPICS"]
-
   # create command list for mean climate driver
   lstcmd = []
   reg_var_dic = {}
@@ -1288,11 +1375,10 @@ def main ():
     vkys = vv.split("-")[0]
     reg_var_dic[vkys] = default_regions
     vars = vv
-    cmd0 = (" ".join(["mean_climate_driver.py",
-                      "-p", "parameterfile.py",
-		      "--vars", '{}'.format(vars)]))
-    lstcmd.append(cmd0)
-    del(cmd0,vars,vkys)
+    cmd = (" ".join(["mean_climate_driver.py",
+                     "-p", "parameterfile.py",
+                     "--vars", '{}'.format(vars)]))
+    lstcmd.append(cmd); del(cmd,vars,vkys)
 
   #create regions for regional mean of each variable
   json.dump(reg_var_dic,
@@ -1300,50 +1386,39 @@ def main ():
             sort_keys=True,
             indent=4,
             separators=(",", ": "))
-  del(reg_var_dic)
 
   #finally process the data in parallel
   print("Number of jobs starting is ", str(len(lstcmd)))
-  for i,p in enumerate(lstcmd):
-    procs = subprocess.Popen([p], shell=True)
-    print('running %s' % (str(p)))
-    while (childCount() > {{num_workers}}):
-      time.sleep(0.25)
-      procs.communicate() # this will get the exit code
-    else:
-      if (i == len(lstcmd)-1 ):
-        procs.communicate()
-        break
-  del(lstcmd,default_regions)
+  procs = []
+  if len(lstcmd) > 0:
+    for i,p in enumerate(lstcmd):
+      print('running %s' % (str(p)))
+      proc = Popen(p, stdout=PIPE, shell=True)
+      if multiprocessing == True:
+        procs.append(proc)
+        while (childCount() > num_workers):
+          time.sleep(0.25)
+          [pp.communicate() for pp in procs]
+          procs = []
+        else:
+          if (i == len(lstcmd)-1):
+            try:
+              outs, errs = proc.communicate()
+              if proc.returncode == 0:
+                print("stdout = {}; stderr = {}".format(str(outs),str(errs)))
+              else:
+                exit("ERROR: subprocess {} failed".format(str(lstcmd[i])))
+            except:
+              break
+      else:
+        return_code = proc.communicate()
+        if return_code != 0:
+          exit("Failed to run {}".format(str(p)))
 
   #set a delay to avoid delay in writing process
   time.sleep(1)
   print("done submitting")
-
-  # post process to reorgnize the metric data file
-  variables = [s.split("/")[-1]
-                for s in glob.glob(
-                    os.path.join(
-                        '${results_dir}',
-                        "metrics_results",
-                        "mean_climate",
-  		  	 '{{mip}}',
-                        '{{exp}}',
-                        '${case_id}',
-                        "*",
-                    )
-                )
-                if os.path.isdir(s)
-            ]
-
-  #obs_sets = list('{{ reference_sets }}'.split(","))
-  #for i, var in enumerate(variables):
-  #  if len(obs_sets) != len(variables):
-  #    obs = obs_sets[0]
-  #  else:
-  #    obs = obs_sets[i]
-  #  merge_json('{{mip}}', '{{exp}}', '${case_id}', var, obs,
-  #             test_start_yr, test_end_yr, '${results_dir}')
+  del(reg_var_dic,regional,lstcmd,default_regions)
 
 {%- endif %}
 
@@ -1354,7 +1429,9 @@ def main ():
 {% elif subset == "variability_mode_cpl" %}
   modes = list({{ cpl_modes }})
 {%- endif %}
-
+  #####################################################################
+  # call variability_modes_driver.py to process diagnostics
+  #####################################################################
   lstcmd = []
   for variability_mode in modes:
     if variability_mode in ["NPO", "NPGO", "PSA1"]:
@@ -1366,74 +1443,84 @@ def main ():
     else:
       eofn_obs = "1"
       eofn_mod = "1"
-
-    #####################################################################
-    # call variability_modes_driver.py to process diagnostics
-    #####################################################################
-    cmd0 = (" ".join(['variability_modes_driver.py',
-                      '-p', "parameterfile.py",
-                      '--variability_mode', variability_mode,
-                      '--eofn_mod', eofn_mod,
-                      '--eofn_obs', eofn_obs ]))
-    lstcmd.append(cmd0)
-    del(cmd0)
-
+    cmd = (" ".join(['variability_modes_driver.py',
+                     '-p', "parameterfile.py",
+                     '--variability_mode', variability_mode,
+                     '--eofn_mod', eofn_mod,
+                     '--eofn_obs', eofn_obs ]))
+    lstcmd.append(cmd); del(cmd)
   #finally process the data in parallel
   print("Number of jobs starting is ", str(len(lstcmd)))
+  procs = []
   for i,p in enumerate(lstcmd):
-    procs = subprocess.Popen([p], shell=True)
     print('running %s' % (str(p)))
-    while (childCount() > {{num_workers}}):
-      time.sleep(0.25)
-      procs.communicate() # this will get the exit code
+    proc = Popen(p, stdout=PIPE, shell=True)
+    if multiprocessing == True:
+      procs.append(proc)
+      while (childCount() > num_workers):
+        time.sleep(0.25)
+        [pp.communicate() for pp in procs] # this will get the exit code
+        procs = []
+      else:
+        if (i == len(lstcmd)-1):
+          try:
+            outs, errs = proc.communicate()
+            if proc.returncode == 0:
+              print("stdout = {}; stderr = {}".format(str(outs),str(errs)))
+            else:
+              exit("ERROR: subprocess {} failed".format(str(lstcmd[i])))
+          except:
+            break
     else:
-      if (i == len(lstcmd)-1 ):
-        procs.communicate()
-        break
-  del(lstcmd)
-
+      return_code = proc.communicate()
+      if return_code != 0:
+        exit("Failed to run {}".format(str(p)))
   #set a delay to avoid delay in writing process
   time.sleep(1)
   print("done submitting")
-
+  del(lstcmd)
 {%- endif %}
 
 {%- if "enso" in subset %}
+  #####################################################################
+  # call enso_driver.py to process diagnostics
+  #####################################################################
   print("calculate enso metrics")
   groups = list({{ groups }})
   lstcmd = []
   for metricsCollection in groups:
-    #####################################################################
-    # call enso_driver.py to process diagnostics
-    #####################################################################
-    cmd0 = (" ".join(['enso_driver.py',
+    cmd = (" ".join(['enso_driver.py',
                       '-p', "parameterfile.py",
                       '--metricsCollection',metricsCollection]))
-    lstcmd.append(cmd0)
-    del(cmd0)
-
+    lstcmd.append(cmd); del(cmd)
   #finally process the data in parallel
   print("Number of jobs starting is ", str(len(lstcmd)))
+  procs = []
   for i,p in enumerate(lstcmd):
-    procs = subprocess.Popen([p], shell=True)
     print('running %s' % (str(p)))
+    proc = Popen(p, stdout=PIPE, shell=True)
+    procs.append(proc)
     while (childCount() > {{num_workers}}):
       time.sleep(0.25)
-      procs.communicate() # this will get the exit code
+      [pp.communicate() for pp in procs] # this will get the exit code
+      procs = []
     else:
-      if (i == len(lstcmd)-1 ):
-        procs.communicate()
-        break
-  del(lstcmd)
-
+      if (i == len(lstcmd)-1):
+        try:
+          outs, errs = proc.communicate()
+          if proc.returncode == 0:
+            print("stdout = {}; stderr = {}".format(str(outs),str(errs)))
+          else:
+            exit("ERROR: subprocess {} failed".format(str(lstcmd[i])))
+        except:
+          break
   #set a delay to avoid delay in writing process
   time.sleep(1)
   print("done submitting")
-
+  del(lstcmd,procs)
   #post process and generate figures
   #print("mip, exp, MC, case_id:", '{{ mip}}', '{{ exp }}', metricsCollection, '${case_id}')
   #merge_jsons('{{ mip }}', '{{ exp}}', '${case_id}', metricsCollection, '${results_dir}')
-
 {%- endif %}
 
 if __name__ == "__main__":
