@@ -33,9 +33,11 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
         return existing_bundles
 
     # --- Generate and submit e3sm_diags scripts ---
-    dependencies: List[str] = []
+    carried_over_dependencies: List[str] = []
 
     for c in tasks:
+
+        dependencies: List[str] = carried_over_dependencies
 
         c["scriptDir"] = scriptDir
 
@@ -237,6 +239,8 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                             end_yr,
                             c["ts_num_years"],
                         )
+
+            c["dependencies"] = dependencies
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)
                 p.pprint(c)
@@ -267,7 +271,7 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                         # Note that this line should still be executed even if jobid == -1
                         # The later tc_analysis-using e3sm_diags tasks still depend on this task (and thus will also fail).
                         # Add to the dependency list
-                        dependencies.append(statusFile)
+                        carried_over_dependencies.append(statusFile)
                 else:
                     print("...adding to bundle '%s'" % (c["bundle"]))
 

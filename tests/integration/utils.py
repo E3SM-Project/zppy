@@ -271,6 +271,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
 
     cfg_names = [
         "min_case_add_dependencies",
+        "min_case_carryover_dependencies",
         "min_case_tc_analysis_simultaneous_1",
         "min_case_tc_analysis_simultaneous_2",
         "min_case_e3sm_diags_depend_on_climo_mvm_1",
