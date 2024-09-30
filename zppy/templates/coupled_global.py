@@ -1,4 +1,5 @@
-# Script to plot some global atmosphere and ocean time series
+# Script to generate global time series plots
+import csv
 import glob
 import math
 import os
@@ -1022,24 +1023,88 @@ class OutputViewer(object):
             )
 
 
-def create_viewer(figstr, regions, component_to_plots_dict):
+class LandVariable(object):
+    def __init__(self, csv_row: List[str]):
+        self.variable_name = csv_row[
+            0
+        ]  # the name of the ELM variable on the monthly h0 history file
+        self.metric = csv_row[
+            1
+        ]  # “A” or “T” for global average over land area or global total, respectively
+        self.scale_factor = csv_row[
+            2
+        ]  # the factor that should convert from original units to final units, after standard processing with nco
+        self.original_units = csv_row[
+            3
+        ]  # test string for the units as given on the history file (included here for possible testing)
+        self.final_units = csv_row[
+            4
+        ]  # the units that should be reported in time series plots, based on A/T and Scale Factor
+        self.group = csv_row[
+            5
+        ]  # a name used to cluster variables together, to be separated in groups within the output web pages
+        self.long_name = csv_row[
+            6
+        ]  # Descriptive text to add to the plot page to help users identify the variable
+
+
+def construct_land_variables() -> List[LandVariable]:
+    var_list: List[LandVariable] = []
+    header = True
+    with open("zppy_land_fields.csv", newline="") as csv_file:
+        var_reader = csv.reader(
+            csv_file,
+        )
+        for row in var_reader:
+            # Skip the header row
+            if header:
+                header = False
+            else:
+                var_list.append(LandVariable(row))
+    return var_list
+
+
+class LandGroup(object):
+    def __init__(self, name: str, land_variables: List[LandVariable]):
+        self.group_name = name
+        self.short_name = name.lower().replace(" ", "")
+        self.land_variables = land_variables
+
+
+def get_land_groups(land_variables: List[LandVariable]) -> List[LandGroup]:
+    group_names: List[str] = []
+    groups: List[LandGroup] = []
+    for lv in land_variables:
+        g: str = lv.group
+        if g not in group_names:
+            # A new group!
+            groups.append(LandGroup(g, [lv]))
+        else:
+            # Add a new variable to this existing group
+            for group in groups:
+                if g == group.group_name:
+                    group.land_variables.append(lv)
+    return groups
+
+
+def create_viewer(figstr, regions):
     # TODO: change to results dir
     # Currently: https://web.lcrc.anl.gov/public/e3sm/diagnostic_output/ac.forsyth2/zppy_min_case_global_time_series_single_plots_www/test-601-output-viewer/v3.LR.historical_0051/global_time_series/global_time_series_1985-1995_results/viewer/
     # just has css, js
     viewer = OutputViewer(path=".")
     viewer.add_page("Table", regions)
-    components = component_to_plots_dict.keys()
-    for component in components:
-        viewer.add_group(component)
-        plot_names = component_to_plots_dict[component]
+    land_variables: List[LandVariable] = construct_land_variables()
+    groups: List[LandGroup] = get_land_groups(land_variables)
+    for group in groups:
+        viewer.add_group(group.group_name)
+        plot_names = list(map(lambda lv: lv.variable_name, group.land_variables))
         for plot_name in plot_names:
             viewer.add_row(plot_name)
             for rgn in regions:
-                component_short = component[0:3]
                 viewer.add_col(
-                    f"{figstr}_{rgn}_{component_short}_{plot_name}.png",
+                    f"{figstr}_{rgn}_{group.short_name}_{plot_name}.png",
                     is_file=True,
-                    title=f"{rgn}_{component_short}_{plot_name}",
+                    title=f"{rgn}_{group.short_name}_{plot_name}",
                 )
 
     url = viewer.generate_page()
@@ -1061,46 +1126,7 @@ def run_by_region(parameters):
             raise RuntimeError(f"Invalid rgn={rgn}")
         run(parameters, rgn)
     figstr = parameters[3]
-    # Going by zppy/templates/ilamb/ilamb.cfg
-    component_to_plots_dict = {
-        "atm": ["TREFHT"],
-        "lnd > Ecosystem and Carbon Cycle > Biomass": [
-            "QVEGE",
-            "QVEGT",
-            "TOTVEGC",
-        ],  # biomass/cVeg
-        "lnd > Ecosystem and Carbon Cycle > Gross Primary Productivity": ["GPP"],  # gpp
-        "lnd > Ecosystem and Carbon Cycle > Leaf Area Index": [
-            "LAISHA",
-            "LAISUN",
-        ],  # lai
-        "lnd > Ecosystem and Carbon Cycle > Global Net Ecosystem Carbon Balance": [
-            "NBP"
-        ],  # nbp
-        "lnd > Ecosystem and Carbon Cycle > Soil Carbon": [
-            "QSOIL",
-            "SOIL1C",
-            "SOIL2C",
-            "SOIL3C",
-            "SOIL4C",
-        ],  # cSoil/soilc
-        "lnd > Hyrdology Cycle > Runoff": ["QRUNOFF"],  # runoff/mrro
-        "lnd > Hyrdology Cycle > Sensible Heat": ["FSH"],  # hfss/sh
-        "lnd > Hyrdology Cycle > Terrestial Water Storage Anomaly": ["TSA"],  # twsa/tws
-        "lnd > Hyrdology Cycle > Snow Water Equivalent": ["H2OSNO"],  # swe/snw
-        "lnd > Forcings > Surface Relative Humidity": ["RH2M"],  # rhums/hurs
-        "lnd > Other": [
-            "QINTR",
-            "QOVER",
-            "SOILWATER_10CM",
-            "TOTLITC",
-            "CWDC",
-            "WOOD_HARVESTC",
-            "AR",
-            "HR",
-        ],
-    }
-    url = create_viewer(figstr, regions, component_to_plots_dict)
+    url = create_viewer(figstr, regions)
     print(url)
 
 
