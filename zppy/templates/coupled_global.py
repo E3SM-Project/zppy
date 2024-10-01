@@ -1,9 +1,9 @@
 # Script to generate global time series plots
 import csv
+import distutils.dir_util
 import glob
 import math
 import os
-import shutil
 import stat
 import sys
 import traceback
@@ -1038,38 +1038,34 @@ class OutputViewer(object):
 
 class LandVariable(object):
     def __init__(self, csv_row: List[str]):
-        self.variable_name = csv_row[
-            0
-        ]  # the name of the ELM variable on the monthly h0 history file
-        self.metric = csv_row[
-            1
-        ]  # “A” or “T” for global average over land area or global total, respectively
-        self.scale_factor = csv_row[
-            2
-        ]  # the factor that should convert from original units to final units, after standard processing with nco
-        self.original_units = csv_row[
-            3
-        ]  # test string for the units as given on the history file (included here for possible testing)
-        self.final_units = csv_row[
-            4
-        ]  # the units that should be reported in time series plots, based on A/T and Scale Factor
-        self.group = csv_row[
-            5
-        ]  # a name used to cluster variables together, to be separated in groups within the output web pages
-        self.long_name = csv_row[
-            6
-        ]  # Descriptive text to add to the plot page to help users identify the variable
+        # TODO: use these fields...
+        # the name of the ELM variable on the monthly h0 history file
+        self.variable_name = csv_row[0]
+        # “A” or “T” for global average over land area or global total, respectively
+        self.metric = csv_row[1]
+        # the factor that should convert from original units to final units, after standard processing with nco
+        self.scale_factor = csv_row[2]
+        # test string for the units as given on the history file (included here for possible testing)
+        self.original_units = csv_row[3]
+        # the units that should be reported in time series plots, based on A/T and Scale Factor
+        self.final_units = csv_row[4]
+        # a name used to cluster variables together, to be separated in groups within the output web pages
+        self.group = csv_row[5]
+        # Descriptive text to add to the plot page to help users identify the variable
+        self.long_name = csv_row[6]
 
 
 def construct_land_variables() -> List[LandVariable]:
     var_list: List[LandVariable] = []
     header = True
+    # If this file is being run stand-alone, then
+    # it will search the directory above the git directory
     with open("zppy_land_fields.csv", newline="") as csv_file:
-        var_reader = csv.reader(
-            csv_file,
-        )
+        print("In File")
+        var_reader = csv.reader(csv_file)
         for row in var_reader:
             # Skip the header row
+            print(f"row={row}")
             if header:
                 header = False
             else:
@@ -1091,6 +1087,7 @@ def get_land_groups(land_variables: List[LandVariable]) -> List[LandGroup]:
         g: str = lv.group
         if g not in group_names:
             # A new group!
+            group_names.append(g)
             groups.append(LandGroup(g, [lv]))
         else:
             # Add a new variable to this existing group
@@ -1100,29 +1097,39 @@ def get_land_groups(land_variables: List[LandVariable]) -> List[LandGroup]:
     return groups
 
 
-def create_viewer(figstr, regions):
-    # TODO: change to results dir
-    # Currently: https://web.lcrc.anl.gov/public/e3sm/diagnostic_output/ac.forsyth2/zppy_min_case_global_time_series_single_plots_www/test-601-output-viewer/v3.LR.historical_0051/global_time_series/global_time_series_1985-1995_results/viewer/
-    # just has css, js
+def create_viewer(figstr, regions, component, requested_plots):
     viewer = OutputViewer(path=".")
     viewer.add_page("Table", regions)
     land_variables: List[LandVariable] = construct_land_variables()
     groups: List[LandGroup] = get_land_groups(land_variables)
     for group in groups:
-        viewer.add_group(group.group_name)
-        plot_names = list(map(lambda lv: lv.variable_name, group.land_variables))
-        for plot_name in plot_names:
-            viewer.add_row(plot_name)
-            for rgn in regions:
-                viewer.add_col(
-                    f"{figstr}_{rgn}_{group.short_name}_{plot_name}.png",
-                    is_file=True,
-                    title=f"{rgn}_{group.short_name}_{plot_name}",
-                )
+        vars_in_group = list(map(lambda lv: lv.variable_name, group.land_variables))
+        for plot_name in requested_plots:
+            if plot_name in vars_in_group:
+                # There's at least one plot in this group.
+                # So, we want to add it to the viewer.
+                viewer.add_group(group.group_name)
+                break
+        for plot_name in vars_in_group:
+            # Only plot the requested plots
+            if plot_name in requested_plots:
+                viewer.add_row(plot_name)
+                for rgn in regions:
+                    # v3.LR.historical_0051_glb_lnd_SOIL4C.png
+                    # viewer/c-state/glb_lnd_soil4c.html
+                    viewer.add_col(
+                        f"{figstr}_{rgn}_{component}_{plot_name}.png",
+                        is_file=True,
+                        title=f"{rgn}_{component}_{plot_name}",
+                    )
 
     url = viewer.generate_page()
     viewer.generate_viewer
-    shutil.copy("table/index.html", "viewer/index.html")
+    # Copy the contents of `table` into the `viewer` directory
+    # (which initially only has `css` and `js` subdirectories)
+    # Because `viewer` already exists,
+    # `shutil.copytree` will not work.
+    distutils.dir_util.copy_tree("table", "viewer")
     return url
 
 
@@ -1139,9 +1146,48 @@ def run_by_region(parameters):
             raise RuntimeError(f"Invalid rgn={rgn}")
         run(parameters, rgn)
     figstr = parameters[3]
-    url = create_viewer(figstr, regions)
+    # plots_original = param_get_list(parameters[8])
+    # if parameters[9].lower() == "false":
+    #     atmosphere_only = False
+    # else:
+    #     atmosphere_only = True
+    # plots_atm = param_get_list(parameters[10])
+    # plots_ice = param_get_list(parameters[11])
+    plots_lnd = param_get_list(parameters[12])
+    # plots_ocn = param_get_list(parameters[13])
+    nrows = int(parameters[14])
+    ncols = int(parameters[15])
+    plots_per_page = nrows * ncols
+    if plots_per_page == 1:
+        # In this case, we don't want the summary PDF.
+        # Rather, we want to construct a viewer similar to E3SM Diags.
+        # TODO: make viewer home page to point to multiple viewers
+        url = create_viewer(figstr, regions, "lnd", plots_lnd)
     print(url)
 
 
 if __name__ == "__main__":
     run_by_region(sys.argv)
+    """
+    run_by_region(
+        [
+            "coupled_global.py",
+            "/lcrc/group/e3sm/ac.forsyth2/zppy_min_case_global_time_series_single_plots_output/test-616-20240930/v3.LR.historical_0051",
+            "v3.LR.historical_0051",
+            "v3.LR.historical_0051",
+            "1985",
+            "1989",
+            "Blue",
+            "5",
+            "None",
+            "false",
+            "TREFHT",
+            "None",
+            "FSH,RH2M,LAISHA,LAISUN,QINTR,QOVER,QRUNOFF,QSOIL,QVEGE,QVEGT,SOILWATER_10CM,TSA,H2OSNO,TOTLITC,CWDC,SOIL1C,SOIL2C,SOIL3C,SOIL4C,WOOD_HARVESTC,TOTVEGC,NBP,GPP,AR,HR",
+            "None",
+            "1",
+            "1",
+            "glb,n,s",
+        ]
+    )
+    """
