@@ -1,5 +1,6 @@
 import os
 import pprint
+import shutil
 from typing import List
 
 import jinja2
@@ -121,6 +122,10 @@ def global_time_series(config, scriptDir, existing_bundles, job_ids_file):  # no
                 with open(script_file, "w") as f:
                     f.write(script_template.render(**c))
                 makeExecutable(script_file)
+            resources = ["zppy_land_fields.csv"]
+            for resource in resources:
+                resource_file = os.path.join(c["global_time_series_dir"], resource)
+                shutil.copy(f"zppy/templates/{resource}", resource_file)
 
             # Create script
             with open(scriptFile, "w") as f:

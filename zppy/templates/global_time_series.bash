@@ -68,7 +68,7 @@ fi
 echo 'Update time series figures'
 cd ${global_ts_dir}
 atmosphere_only={{ atmosphere_only }}
-python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} {{ plots_original }} ${atmosphere_only,,} {{ plots_atm }} {{ plots_ice }} {{ plots_lnd }} {{ plots_ocn }} {{ regions }}
+python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} {{ plots_original }} ${atmosphere_only,,} {{ plots_atm }} {{ plots_ice }} {{ plots_lnd }} {{ plots_ocn }} {{ nrows }} {{ ncols }} {{ regions }}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (6)' > {{ prefix }}.status
@@ -82,6 +82,8 @@ results_dir_absolute_path={{ scriptDir }}/${results_dir}
 mkdir -p ${results_dir_absolute_path}
 cp *.pdf ${results_dir_absolute_path}
 cp *.png ${results_dir_absolute_path}
+cp -r viewer ${results_dir_absolute_path}
+cp -r table ${results_dir_absolute_path}
 
 ################################################################################
 # Copy output to web server
