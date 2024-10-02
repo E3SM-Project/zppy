@@ -84,23 +84,31 @@ cat > generate_sftlf.py << EOF
 {% include process_sftlf %}
 EOF
 
+{%- if ("mean_climate" in sets) %}
+#file to genereate figures for mean climate metrics(temporary)
+cat > mean_climate_plot_parser.py << EOF
+{% include clim_plot_parser %}
+EOF
+#file to genereate figures for mean climate metrics(temporary)
+cat > mean_climate_plot_driver.py << EOF
+{% include clim_plot_driver %}
+EOF
+{%- endif %}
+
 # script for pcmdi pre-processing
 cat > collect_data.py << EOF
 import os
-import pprint
-import shlex
-import requests
 import subprocess
 import time
 import psutil
 import json
 import sys
-import re
 import glob
 import collections
 import cdms2
 import gc
 import numpy as np
+from re import split
 from itertools import chain
 from shutil import copyfile
 from subprocess import Popen, PIPE, call
@@ -111,25 +119,20 @@ def childCount():
     return(len(children))
 
 def combine_time_series(variables, start_yr, end_yr, num_years,
-                        mip, exp, realm, product, dir_source,
-                        out_dic_file, outpath,
+                        cmip_name, dir_source, out_dic_file, outpath,
                         multiprocessing, num_workers):
-
-  #special case treatment (not in cmip cmor list)
+  #special case treatment (variables not in cmip cmor list)
   altmod_dic = {"sst"    : "ts",
                 "taux"   : "tauu",
                 "tauy"   : "tauv",
                 "rstcre" : "SWCF",
                 "rltcre" : "LWCF"}
-
   # list of model data dictionary
-  mod_out  = collections.OrderedDict()
-  var_list = []
-  lstcm0  = []
-  lstcm1  = []
+  var_list = []; lstcm0 = []; lstcm1 = []
+  mod_out = collections.OrderedDict()
   for key in variables:
     if "_" in key or "-" in key:
-      var = re.split("_|-", key)[0]
+      var = split("_|-", key)[0]
     else:
       var = key
     varin = var
@@ -142,6 +145,7 @@ def combine_time_series(variables, start_yr, end_yr, num_years,
       del(fpaths)
     else:
       fpaths = sorted(glob.glob(os.path.join(dir_source,varin+"_*.nc")))
+      #########################################################################################
       #code below attempts to address special scenarios
       if len(fpaths) < 1 and var in altmod_dic.keys():
         varin = altmod_dic.get(var,var)
@@ -150,51 +154,50 @@ def combine_time_series(variables, start_yr, end_yr, num_years,
           fpaths = sorted(glob.glob(os.path.join(dir_source1,varin+"_*.nc")))
         else:
           fpaths = sorted(glob.glob(os.path.join(dir_source,varin+"_*.nc")))
+      #########################################################################################
       if len(fpaths) > 0:
         tableId = fpaths[0].split("/")[-1].split("_")[1]
         if tableId not in [ "Amon", "Lmon", "Omon", "SImon" ]:
            tableId = "Amon"
-
         yms = '{:04d}01'.format(start_yr)
         yme = '{:04d}12'.format(end_yr)
         fname = "{}.{}.{}.{}.{}.{}.{}-{}.nc".format(
-                 mip,exp,product.replace(".","-"),realm,tableId,var,yms,yme)
-
-        if not os.path.exists(outpath):
-          os.makedirs(outpath)
+		    cmip_name.split(".")[0],
+                    cmip_name.split(".")[1],
+                    cmip_name.split(".")[2].replace(".","-"),
+                    cmip_name.split(".")[3],
+                    tableId,var,yms,yme)
         output = os.path.join(outpath,fname)
-        if not os.path.exists(output):
-          if var not in var_list:
-            var_list.append(var)
-            cmd_list = []
-            cmd_list.append("ncrcat -v {} -d time,{}-01-01,{}-12-31".format(varin,yms[0:4],yme[0:4]))
-            for fpath in fpaths:
-              cmd_list.append(fpath)
-            cmd_list.append(output)
-            cdm0 = (" ".join(cmd_list))
-            lstcm0.append(cdm0)
-            del(cmd_list,cdm0)
-            if varin != var:
-              cmd_extra = "ncrename -v {},{} {}".format(varin,var,output)
-              lstcm1.append(cmd_extra)
-              del(cmd_extra)
-
+        if (var not in var_list) or (not os.path.exists(output)):
+          var_list.append(var)
+          cmd_list = []
+          cmd_list.append("ncrcat -v {} -d time,{}-01-01,{}-12-31".format(varin,yms[0:4],yme[0:4]))
+          for fpath in fpaths:
+            cmd_list.append(fpath)
+          cmd_list.append(output)
+          cdm0 = (" ".join(cmd_list))
+          lstcm0.append(cdm0)
+          del(cmd_list,cdm0)
+          if varin != var:
+            cmd_extra = "ncrename -v {},{} {}".format(varin,var,output)
+            lstcm1.append(cmd_extra)
+            del(cmd_extra)
           ############################################################
           #record the test model data information
-          mod_out[var] = { "mip"        : mip,
-                           "exp"        : exp,
-                           "realization": realm,
+          mod_out[var] = { "mip"        : cmip_name.split(".")[0],
+                           "exp"        : cmip_name.split(".")[1],
+			   "model"      : cmip_name.split(".")[2].replace(".","-"),
+                           "realization": cmip_name.split(".")[3],
                            "tableId"    : tableId,
-                           "model"      : product.replace(".","-"),
                            "file_path"  : output,
                            "template"   : fname,
                            "start_yymm" : yms,
                            "end_yymm"   : yme,
                            "varin"      : varin }
+        del(tableId,yms,yme,fname,output)
       del(fpaths)
-    del(var)
+    del(var,varin)
     gc.collect()
-
   # Save test model data information required for next step
   json.dump(mod_out,
             open(out_dic_file, "w"),
@@ -204,6 +207,8 @@ def combine_time_series(variables, start_yr, end_yr, num_years,
   del(mod_out,variables,altmod_dic)
 
   #finally process the data in parallel
+  if not os.path.exists(outpath):
+    os.makedirs(outpath,mode=0o777)
   lstall = list(chain(lstcm0,lstcm1))
   lensub = [len(lstcm0),len(lstcm1)]
   lensub = np.cumsum(lensub) - 1
@@ -246,14 +251,10 @@ def combine_time_series(variables, start_yr, end_yr, num_years,
   return var_list
 
 def locate_ts_observation (variables, obs_sets, start_yr, end_yr,
-                           input_path, out_dic_file, output_path,
+                           input_path, out_dic_file, outpath,
                            multiprocessing, num_workers):
-
-  # fixed observational name convention
-  mip = "obs"
-  realization = "00"
-  tableId = "Amon"
-
+  # fixed observational name convention to be consistent with cmip
+  mip = "obs"; realization = "00"; tableId = "Amon"
   # special case treatment (these obs vars are inconsistent with cmor vars)
   altobs_dic = { "pr"      : "PRECT",
                  "sst"     : "ts",
@@ -264,23 +265,19 @@ def locate_ts_observation (variables, obs_sets, start_yr, end_yr,
                  "rstcre"  : "toa_cre_sw_mon",
                  "rtmt"    : "toa_net_all_mon"}
 
-  # find observational data avaiable in e3sm_diags
+  # find and process observational data avaiable in e3sm_diags
+  var_list = []; lstcm0  = []; lstcm1  = []
   obs_dic = json.load(open(os.path.join('.','reference_alias.json')))
   obs_out = collections.OrderedDict()
-  var_list = []
-  lstcm0  = []
-  lstcm1  = []
   for i,key in enumerate(variables):
     if "_" in key or "-" in key:
       var = key.split("_|-", var)[0]
     else:
       var = key
-
     if len(obs_sets) != len(variables):
       option = obs_sets[0]
     else:
       option = obs_sets[i]
-
     if "default" in obs_sets or "alternate" in obs_sets:
       obstag = obs_dic[var][option]
     else:
@@ -291,7 +288,6 @@ def locate_ts_observation (variables, obs_sets, start_yr, end_yr,
         obstag = obs_sets[i]
       option = inv_map[obstag]
       del(inv_map)
-
     varin = var
     if "ceres_ebaf" in obstag:
       fpaths = sorted(glob.glob(os.path.join(input_path,
@@ -319,16 +315,13 @@ def locate_ts_observation (variables, obs_sets, start_yr, end_yr,
         yms = fyms
       if int(yme) > int(fyme):
         yme = fyme
-      del(template,fyms,fyme)
 
       #rename file following cmip-like convention
-      if not os.path.exists(output_path):
-        os.makedirs(output_path)
       fname = "{}.{}.{}.{}.{}.{}.{}-{}.nc".format(
                mip,option,obsname.replace(".","-"),realization,tableId,var,yms,yme)
-      output = os.path.join(output_path,fname)
-
-      if not os.path.exists(output):
+      output = os.path.join(outpath,fname)
+      if (var not in var_list) or (not os.path.exists(output)):
+        var_list.append(var)
         cmd = "ncrcat -v {} -d time,{}-01-01,{}-12-31 {} {}".format(
                        varin,yms[0:4],yme[0:4],fpaths[0],output)
         lstcm0.append(cmd); del(cmd)
@@ -337,22 +330,22 @@ def locate_ts_observation (variables, obs_sets, start_yr, end_yr,
           lstcm1.append(cmd_extra)
           del(cmd_extra)
 
-      #record the observation information
-      obs_out[var] = { "mip"         : mip,
-                       "exp"         : option,
-                       "realization" : realization,
-                       "tableId"     : tableId,
-                       "model"       : obsname,
-                       "file_path"   : output,
-                       "template"    : fname,
-                       "start_yymm"  : yms,
-                       "end_yymm"    : yme,
-                       "varin"       : varin}
-
-      var_list.append(var); del(fname,output)
-      gc.collect()
+        #record the observation information
+        obs_out[var] = { "mip"         : mip,
+                         "exp"         : option,
+                         "realization" : realization,
+                         "tableId"     : tableId,
+                         "model"       : obsname,
+                         "file_path"   : output,
+                         "template"    : fname,
+                         "start_yymm"  : yms,
+                         "end_yymm"    : yme,
+                         "varin"       : varin}
+      del(template,obsname,fyms,fyme,yms,yme,fname,output)
     else :
       print("warning: reference data not found for", var)
+    del(var,varin,option,obstag)
+    gc.collect()
 
   # Save observational information required for next step
   json.dump(obs_out,
@@ -363,6 +356,8 @@ def locate_ts_observation (variables, obs_sets, start_yr, end_yr,
   del(obs_dic,obs_out,obs_sets,altobs_dic)
 
   #finally process the data in parallel
+  if not os.path.exists(outpath):
+    os.makedirs(outpath,mode=0o777)
   lstall = list(chain(lstcm0,lstcm1))
   lensub = [len(lstcm0),len(lstcm1)]
   lensub = np.cumsum(lensub) - 1
@@ -428,10 +423,7 @@ def main():
   test_dir_source='{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly'
 
   #info for pcmdi data structure
-  test_mip = '{{ mip }}'
-  test_exp = '{{ exp }}'
-  test_realm = '{{ realization }}'
-  test_product = '{{ product }}'
+  test_cmip_name = '{{cmip_name}}'
 
   #Ref
 {% if run_type == "model_vs_obs" %}
@@ -453,20 +445,14 @@ def main():
   ref_start_yr = {{ ref_start_yr }}
   ref_end_yr = {{ ref_final_yr }}
   #info for pcmdi data structure
-  ref_mip = '{{ ref_mip }}'
-  ref_exp = '{{ ref_exp }}'
-  ref_realm = '{{ ref_realization }}'
-  ref_product = '{{ ref_product }}'
+  ref_cmip_name = '{{ cmip_name_ref }}'
 
   # Optionally, swap test and reference model
   if {{ swap_test_ref }}:
     test_data_dir, ref_data_dir = ref_data_dir, test_data_dir
     test_name, ref_name = ref_name, test_name
     short_test_name, short_ref_name = short_ref_name, short_test_name
-    ref_mip, test_mip = test_mip, ref_mip
-    ref_exp, test_exp = test_exp, ref_exp
-    ref_realm, test_realm = test_realm, ref_realm
-    ref_product, test_product = test_product, ref_product
+    ref_cmip_name, test_cmip_name = test_cmip_name, ref_cmip_name
 {%- endif %}
 
   ################################################################
@@ -475,35 +461,33 @@ def main():
   # variable list in configuration file #
   variables = list("{{ vars }}".split(","))
   print("process test model data for comparision")
-  test_dic_file = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(test_data_dir))
-  cmor_vars = combine_time_series(variables, test_start_yr,test_end_yr,
-                                  int({{ts_num_years}}), test_mip, test_exp,
-                                  test_realm, test_product, test_dir_source,
-                                  test_dic_file, test_data_dir,
-				  multiprocessing, num_workers)
+  test_dic_file = os.path.join("${results_dir}",'{}_{{sub}}_mon_catalogue.json'.format(test_data_dir))
+  cmor_vars = combine_time_series(variables,test_start_yr,test_end_yr,
+                                  int({{ts_num_years}}),test_cmip_name,
+                                  test_dir_source,test_dic_file,test_data_dir,
+				  multiprocessing,num_workers)
   ################################################################
   # process reference data for comparison
   ################################################################
   print("process reference obs/model data for comparision")
 {% if run_type == "model_vs_obs" %}
   obs_sets = list('{{ reference_sets }}'.split(","))
-  refr_dic_file = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))
-  refr_vars = locate_ts_observation(cmor_vars, obs_sets,
-                                    ref_start_yr, ref_end_yr,
+  refr_dic_file = os.path.join("${results_dir}",'{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))
+  refr_vars = locate_ts_observation(cmor_vars,obs_sets,
+                                    ref_start_yr,ref_end_yr,
                                     reference_dir_source,
                                     refr_dic_file,ref_data_dir,
-                                    multiprocessing, num_workers)
+                                    multiprocessing,num_workers)
 
   print("# of variables in test model: ", len(cmor_vars))
   print("# of variables in reference model: ", len(refr_vars))
   del(refr_vars,cmor_vars)
 {% elif run_type == "model_vs_model" %}
-  refr_dic_file = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))
-  refr_vars = combine_time_series(cmor_vars, ref_start_yr,ref_end_yr,
-                                  int({{ts_num_years_ref}}), ref_mip, ref_exp,
-                                  ref_realm, ref_product, ref_dir_source
-                                  refr_dic_file, ref_data_dir,
-                                  multiprocessing, num_workers)
+  refr_dic_file = os.path.join("${results_dir}",'{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))
+  refr_vars = combine_time_series(cmor_vars,ref_start_yr,ref_end_yr,
+                                  int({{ts_num_years_ref}}),ref_cmip_name,
+                                  ref_dir_source,refr_dic_file,ref_data_dir,
+                                  multiprocessing,num_workers)
 
   print("# of variables in test model: ", len(cmor_vars))
   print("# of variables in reference model: ", len(refr_vars))
@@ -532,8 +516,6 @@ fi
 cat > parameterfile.py << EOF
 import os
 import sys
-import cdutil
-import datetime
 import json
 
 #basic information
@@ -554,10 +536,7 @@ short_test_name = short_name
 test_start_yr = start_yr
 test_end_yr = end_yr
 test_dir_source='{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly'
-test_mip = '{{ mip }}'
-test_exp = '{{ exp }}'
-test_realm = '{{ realization }}'
-test_product = '{{ product }}'
+test_cmip_name = '{{ cmip_name }}'
 
 # Ref
 {% if run_type == "model_vs_obs" %}
@@ -578,23 +557,18 @@ ref_name = '${ref_name}'
 short_ref_name = '{{ short_ref_name }}'
 ref_start_yr = {{ ref_start_yr }}
 ref_end_yr = {{ ref_final_yr }}
-ref_mip = '{{ ref_mip }}'
-ref_exp = '{{ ref_exp }}'
-ref_realm = '{{ ref_realization }}'
-ref_product = '{{ ref_product }}'
+ref_cmip_name = '{{ cmip_name_ref }}'
+
 # Optionally, swap test and reference model
 if {{ swap_test_ref }}:
   test_data_dir, ref_data_dir = ref_data_dir, test_data_dir
   test_name, ref_name = ref_name, test_name
   short_test_name, short_ref_name = short_ref_name, short_test_name
-  ref_mip, test_mip = test_mip, ref_mip
-  ref_exp, test_exp = test_exp, ref_exp
-  ref_realm, test_realm = test_realm, ref_realm
-  ref_product, test_product = test_product, ref_product
+  ref_cmip_name, test_cmip_name = test_cmip_name, ref_cmip_name
 {%- endif %}
 
 # shared options
-case_id = '${case_id}'
+case_id = "${case_id}"
 
 # Record NetCDF output
 nc_out_obs = {{ nc_out_obs }}
@@ -615,27 +589,31 @@ plot_obs = {{ plot_obs }} # optional
 # Additional settings
 run_type = '{{ run_type }}'
 diff_title = '{{ diff_title }}'
-output_format = {{ output_format }}
-output_format_subplot = {{ output_format_subplot }}
+figure_format = '{{ figure_format }}'
 
 {%- if "mean_climate" in subset %}
 #############################################################
 #parameter setup specific for mean climate metrics
 #############################################################
-mip = test_mip
-exp = test_exp
-realm = test_realm
+mip = test_cmip_name.split(".")[0]
+exp = test_cmip_name.split(".")[1]
+product = test_cmip_name.split(".")[2]
+realm = test_cmip_name.split(".")[3]
 realization = realm
 
-modver = '${case_id}'
+{% if run_type == "model_vs_obs" %}
+test_data_set = [ test_cmip_name.split(".")[2] ]
+{% elif run_type == "model_vs_model" %}
+test_data_set = [ test_cmip_name.split(".")[2], ref_cmip_name.split(".")[2] ]
+{%- endif %}
+
+modver = "${case_id}"
 
 # Generate CMEC compliant json
 cmec = {{ cmec }}
 
 # SIMULATION PARAMETER
 period = "{:04d}{:02d}-{:04d}{:02d}".format(test_start_yr,1,test_end_yr,12)
-
-test_data_set = [ test_product ]
 
 # INTERPOLATION OPTIONS
 target_grid = '{{ target_grid }}'  # OPTIONS: '2.5x2.5' or an actual cdms2 grid object
@@ -662,7 +640,7 @@ for kk in regions_specs.keys():
       regions_specs[kk]['domain']['longitude'] = tuple(regions_specs[kk]['domain']['longitude'])
 
 #region specified for each variable
-regions =json.load(open(os.path.join('${results_dir}','var_region_{{sub}}_catalogue.json')))
+regions =json.load(open(os.path.join("${results_dir}",'var_region_{{sub}}_catalogue.json')))
 
 #######################################
 # DATA LOCATION: MODELS, OBS AND METRICS OUTPUT
@@ -672,16 +650,16 @@ test_data_path = os.path.join(
   "${results_dir}",
   "climo",
   "${case_id}")
-test_dic = json.load(open(os.path.join('${results_dir}','{}_{{sub}}_clim_catalogue.json'.format(test_data_dir))))
-template = test_dic['ts'][test_product]['template']
-filename_template = template.replace('ts',"%(variable)").replace(test_product,"%(model)")
+test_dic = json.load(open(os.path.join("${results_dir}",'{}_{{sub}}_clim_catalogue.json'.format(test_data_dir))))
+template = test_dic['ts'][product]['template']
+filename_template = template.replace('ts',"%(variable)").replace(product,"%(model)")
 del(test_dic)
 
 #######################################
 # ROOT PATH FOR OBSERVATIONS
 reference_data_set = list('{{ reference_sets }}'.split(","))
-reference_data_path = os.path.join('${results_dir}',"climo","${case_id}")
-observation_file = os.path.join('${results_dir}','{}_{{sub}}_clim_catalogue.json'.format(ref_data_dir))
+reference_data_path = os.path.join("${results_dir}","climo","${case_id}")
+observation_file = os.path.join("${results_dir}",'{}_{{sub}}_clim_catalogue.json'.format(ref_data_dir))
 custom_observations  = os.path.abspath(observation_file)
 if not os.path.exists(custom_observations):
   sys.exit("ERROR: observation climatology file is missing....")
@@ -713,7 +691,7 @@ diagnostics_output_path= os.path.join(
 # depracated in new version of pcmdi
 #############################################
 generate_sftlf = {{ generate_sftlf }}
-os.path.join('${fixed_dir}',"sftlf_%(model).nc")
+os.path.join("${fixed_dir}","sftlf_%(model).nc")
 test_clims_interpolated_output = diagnostics_output_path
 
 {%- endif %}
@@ -722,12 +700,18 @@ test_clims_interpolated_output = diagnostics_output_path
 ############################################################
 #parameter setup specific for mode variability metrics
 ############################################################
-mip = test_mip
-exp = test_exp
-realm = test_realm
-realization = realm
+mip = test_cmip_name.split(".")[0]
+exp = test_cmip_name.split(".")[1]
+product = test_cmip_name.split(".")[2]
 
-modnames = [ test_product ]
+{% if run_type == "model_vs_obs" %}
+modnames = [ test_cmip_name.split(".")[2] ]
+{% elif run_type == "model_vs_model" %}
+modnames = [ test_cmip_name.split(".")[2], ref_cmip_name.split(".")[2] ]
+{%- endif %}
+
+realm = test_cmip_name.split(".")[3]
+realization = realm
 
 msyear    = test_start_yr
 meyear    = test_end_yr
@@ -747,20 +731,20 @@ ModUnitsAdjust = {{ ModUnitsAdjust }}
 landmask = {{ landmask }}
 
 #open dictional file to locate model and reference files
-test_dic = json.load(open(os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(test_data_dir))))
+test_dic = json.load(open(os.path.join("${results_dir}",'{}_{{sub}}_mon_catalogue.json'.format(test_data_dir))))
 modpath = test_dic[varModel]['file_path']
 model = test_dic[varModel]['model']
-if model != test_product:
-  print("warning: model {} in dataset differ from user setup {}".format(model,test_product))
+if model != product:
+  print("warning: model {} in dataset differ from user setup {}".format(model,product))
   print("warning: use model in datasets to continue....")
   modnames = [model]
 del (test_dic)
 
 #setup template for fixed files (e.g. land/sea mask)
-modpath_lf = os.path.join('${fixed_dir}',"sftlf_%(model).nc")
+modpath_lf = os.path.join("${fixed_dir}","sftlf_%(model).nc")
 
 #open dictional file to locate reference data
-ref_dic = json.load(open(os.path.join('${results_dir}',
+ref_dic = json.load(open(os.path.join("${results_dir}",
                                       '{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))))
 reference_data_name = ref_dic[varOBS]['model']
 reference_data_path = ref_dic[varOBS]['file_path']
@@ -811,9 +795,16 @@ results_dir = os.path.join(
 ############################################################
 #parameter setup specific for enso metrics
 ############################################################
-mip = test_mip
-exp = test_exp
-realm = test_realm
+mip = test_cmip_name.split(".")[0]
+exp = test_cmip_name.split(".")[1]
+
+{% if run_type == "model_vs_obs" %}
+modnames = [ test_cmip_name.split(".")[2] ]
+{% elif run_type == "model_vs_model" %}
+modnames = [ test_cmip_name.split(".")[2], ref_cmip_name.split(".")[2] ]
+{%- endif %}
+
+realm = test_cmip_name.split(".")[3]
 realization = realm
 
 msyear = test_start_yr
@@ -822,14 +813,12 @@ meyear = test_end_yr
 osyear = ref_start_yr
 oeyear = ref_end_yr
 
-modnames = [ test_product ]
-
 #######################################
 # Model (test)
 # setup template for fixed files (e.g. land/sea mask)
-modpath_lf = os.path.join('${fixed_dir}',"sftlf_%(model).nc")
+modpath_lf = os.path.join("${fixed_dir}","sftlf_%(model).nc")
 # construct model template
-test_dic = json.load(open(os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(test_data_dir))))
+test_dic = json.load(open(os.path.join("${results_dir}",'{}_{{sub}}_mon_catalogue.json'.format(test_data_dir))))
 vv0 = list(test_dic.keys())[0]
 tableId = test_dic[vv0]['tableId']
 modpath = os.path.join(
@@ -843,14 +832,14 @@ del(test_dic,vv0)
 reference_data_path = {}
 reference_data_lf_path = {}
 #orgnize obs catalog
-ref_dic = json.load(open(os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))))
+ref_dic = json.load(open(os.path.join("${results_dir}",'{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))))
 for var in ref_dic:
   refname = ref_dic[var]['model']
   if refname not in reference_data_path.keys():
     reference_data_path[refname] = {}
   reference_data_path[refname][var] = {'template': ref_dic[var]['template']}
   #land/sea mask
-  reference_data_lf_path[refname] = os.path.join('${fixed_dir}','sftlf.{}.nc'.format(refname))
+  reference_data_lf_path[refname] = os.path.join("${fixed_dir}",'sftlf.{}.nc'.format(refname))
   #update time information(minimum overlap)
   ref_syear = str(ref_dic[var]['start_yymm'])[0:4]
   ref_eyear = str(ref_dic[var]['end_yymm'])[0:4]
@@ -911,23 +900,27 @@ import json
 import re
 import sys
 import cdms2
+import psutil
+import numpy as np
 import collections
-import datetime
-import cdutil
 import subprocess
 import time
-import psutil
-import cdtime
-import MV2
 import pcmdi_metrics
-import resource
-import numpy as np
-from pcmdi_metrics.utils import StringConstructor, sort_human
+from pcmdi_metrics.utils import StringConstructor
 from argparse import RawTextHelpFormatter
 from shutil import copyfile
 from re import split
 from itertools import chain
 from subprocess import Popen, PIPE, call
+
+{%- if "mean_climate" in subset %}
+from mean_climate_plot_parser import (
+    create_mean_climate_plot_parser,
+)
+from mean_climate_plot_driver import (
+    mean_climate_metrics_plot,
+)
+{%- endif %}
 
 def childCount():
     current_process = psutil.Process()
@@ -951,78 +944,7 @@ def generate_land_sea_mask(data_file,outpath):
 
     return return_code
 
-def merge_json(var,obs,metricdir,metricname,pmprdir):
-    json_file_dir_template = os.path.join(
-        metricdir,
-        metricname,
-	{{mip}},
-	{{exp}},
-        '${case_id}',
-        "%(var)"
-    )
-    json_file_dir_template = StringConstructor(json_file_dir_template)
-    json_file_dir = os.path.join(
-        pmprdir,
-        json_file_dir_template(mip=mip, exp=exp, case_id=case_id, var=var),
-    )
-
-    print("json_file_dir:", json_file_dir)
-
-    json_file_template = "%(model)_%(var)_*_%(obs).json"
-    json_file_template = StringConstructor(json_file_template)
-
-    # Search for individual JSONs
-    json_files = sorted(
-        glob.glob(
-            os.path.join(
-                json_file_dir,
-                json_file_template(
-                    # mip=mip,
-                    # exp=exp,
-                    var=var,
-                    model="*",
-                    # run="*",
-                    obs=obs,
-                ),
-            )
-        )
-    )
-
-    print("json_files:", json_files)
-
-    # Remove diveDown JSONs and previously generated merged JSONs if included
-    json_files_revised = copy.copy(json_files)
-    for j, json_file in enumerate(json_files):
-        filename_component = json_file.split("/")[-1].split(".")[0].split("_")
-        if "allModels" in filename_component:
-            json_files_revised.remove(json_file)
-        elif "allRuns" in filename_component:
-            json_files_revised.remove(json_file)
-
-    # Load individual JSON and merge to one big dictionary
-    for j, json_file in enumerate(json_files_revised):
-        print(j, json_file)
-        f = open(json_file)
-        dict_tmp = json.loads(f.read())
-        if j == 0:
-            dict_final = dict_tmp.copy()
-        else:
-            dict_merge(dict_final, dict_tmp)
-        f.close()
-
-    # Dump final dictionary to JSON
-    final_json_filename = StringConstructor("%(var)_%(mip)_%(exp)_%(case_id).json")(
-        var=var, mip=mip, exp=exp, case_id=case_id
-    )
-    final_json_file = os.path.join(json_file_dir, "..", final_json_filename)
-
-    with open(final_json_file, "w") as fp:
-        json.dump(dict_final, fp, sort_keys=True, indent=4)
-
-    return
-
 {%- if "mean_climate" in subset %}
-
 def calculate_climatology(method,start_yr,end_yr,data_dic,out_dic,
                           outpath,multiprocessing,num_workers):
 
@@ -1033,7 +955,7 @@ def calculate_climatology(method,start_yr,end_yr,data_dic,out_dic,
     data_dic = json.load(open(data_dic))
 
   if not os.path.exists(outpath):
-    os.makedirs(outpath)
+    os.makedirs(outpath,mode=0o777)
 
   #####################################
   #calculate annual cycle climatology
@@ -1053,14 +975,13 @@ def calculate_climatology(method,start_yr,end_yr,data_dic,out_dic,
     if os.path.exists(infile):
       if method == "pcmdi":
         #reform the output file template
-        outfile = ".".join(data_dic[var]['template'].split(".")[:-2])
-        outfile = outfile +".nc"
+        outfile = ".".join(data_dic[var]['template'].split(".")[:-2]) + ".nc"
         cmd = (" ".join(["pcmdi_compute_climatologies.py",
                          "--start", cyms,
                          "--end", cyme,
                          "--var", var,
                          "--infile", infile,
-                         "--outpath", outpath,
+                         "--outpath", outpath+"/",
                          "--outfilename", outfile ]))
         lstcmd.append(cmd); del(cmd,outfile)
       else:
@@ -1089,8 +1010,8 @@ def calculate_climatology(method,start_yr,end_yr,data_dic,out_dic,
         #derive seasonal and annual mean
         for season in ["AC", "DJF", "JJA", "MAM", "SON", "ANN"]:
           period = "{}-{}".format(cyms.replace("-",""),cyme.replace("-",""))
-          outfile = ".".join(data_dic[var]['template'].split(".")[:-2])
-          outfile = os.path.join(outpath,".".join([outfile,"{}.{}.{}.nc".format(period,season,'${case_id}')]))
+          outpre = ".".join(data_dic[var]['template'].split(".")[:-2])
+          outfile = os.path.join(outpath,".".join([outpre,"{}.{}.{}.nc".format(period,season,"${case_id}")]))
           if season == "AC":
             cm2 = (" ".join(["ncrcat -O -v {} -d time,0,".format(var),
                              os.path.join('tmpnco',"{}_*_*-clim.nc".format(var)),
@@ -1123,11 +1044,11 @@ def calculate_climatology(method,start_yr,end_yr,data_dic,out_dic,
             cm2 = (" ".join(["ncra -O -h",
                              os.path.join('tmpnco',"{}_*_*-clim.nc".format(var)),
                              outfile]))
-          lstcm2.append(cm2); del(cm2,period,outfile)
+          lstcm2.append(cm2); del(cm2,period,outfile,outpre)
       #document climatology info in dictionary file#
       period = "{}-{}".format(cyms.replace("-",""),cyme.replace("-",""))
-      template = ".".join(data_dic[var]['template'].split(".")[:-2])
-      template = template + ".{}.AC.{}.nc".format(period,'${case_id}')
+      template = ".".join(data_dic[var]['template'].split(".")[:-2]) + \
+                 ".{}.AC.{}.nc".format(period,"${case_id}")
       clim_dic[var] = {data_dic[var]['exp']   : data_dic[var]['model'],
                        data_dic[var]['model'] : {'template'  : template,
                                                  'period'    : period,
@@ -1274,10 +1195,7 @@ def main ():
   test_start_yr = start_yr
   test_end_yr = end_yr
   test_dir_source='{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly'
-  test_mip = '{{ mip }}'
-  test_exp = '{{ exp }}'
-  test_realm = '{{ realization }}'
-  test_product = '{{ product }}'
+  test_cmip_name = '{{ cmip_name }}'
 
   # Ref
 {% if run_type == "model_vs_obs" %}
@@ -1298,20 +1216,14 @@ def main ():
   short_ref_name = '{{ short_ref_name }}'
   ref_start_yr = {{ ref_start_yr }}
   ref_end_yr = {{ ref_final_yr }}
-  ref_mip = '{{ ref_mip }}'
-  ref_exp = '{{ ref_exp }}'
-  ref_realm = '{{ ref_realization }}'
-  ref_product = '{{ ref_product }}'
+  ref_cmip_name = '{{ cmip_name_ref }}'
 
   # Optionally, swap test and reference model
   if {{ swap_test_ref }}:
     test_data_dir, ref_data_dir = ref_data_dir, test_data_dir
     test_name, ref_name = ref_name, test_name
     short_test_name, short_ref_name = short_ref_name, short_test_name
-    ref_mip, test_mip = test_mip, ref_mip
-    ref_exp, test_exp = test_exp, ref_exp
-    ref_realm, test_realm = test_realm, ref_realm
-    ref_product, test_product = test_product, ref_product
+    ref_cmip_name, test_cmip_name = test_cmip_name, ref_cmip_name
 {%- endif %}
 
   ################################################################################
@@ -1319,14 +1231,14 @@ def main ():
   # these data are not always available for model or observations
   ################################################################################
   # Model
-  test_dic = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(test_data_dir))
-  return_code = generate_land_sea_mask(test_dic,'${fixed_dir}')
+  test_dic = os.path.join("${results_dir}",'{}_{{sub}}_mon_catalogue.json'.format(test_data_dir))
+  return_code = generate_land_sea_mask(test_dic,"${fixed_dir}")
   if return_code != 0:
     exit("Failed to generate land/sea mask...")
   del(test_dic)
   # Reference
-  ref_dic = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))
-  return_code = generate_land_sea_mask(ref_dic,'${fixed_dir}')
+  ref_dic = os.path.join("${results_dir}",'{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))
+  return_code = generate_land_sea_mask(ref_dic,"${fixed_dir}")
   if return_code != 0:
     exit("Failed to generate land/sea mask...")
   del(ref_dic)
@@ -1337,7 +1249,7 @@ def main ():
   # calculate test and reference model climatology
   #####################################################################
   print("calculate mean climate diagnostics")
-  outpath = os.path.join('${results_dir}',"climo","${case_id}","/")
+  outpath = os.path.join("${results_dir}","climo","${case_id}")
   method = '{{climatology_process_method}}'
   for key in ["test","ref"]:
     if key == "test":
@@ -1348,8 +1260,8 @@ def main ():
       data_dir = ref_data_dir
       start_yr = ref_start_yr
       end_yr   = ref_end_yr
-    data_dic = os.path.join('${results_dir}','{}_{{sub}}_mon_catalogue.json'.format(data_dir))
-    clim_dic = os.path.join('${results_dir}','{}_{{sub}}_clim_catalogue.json'.format(data_dir))
+    data_dic = os.path.join("${results_dir}",'{}_{{sub}}_mon_catalogue.json'.format(data_dir))
+    clim_dic = os.path.join("${results_dir}",'{}_{{sub}}_clim_catalogue.json'.format(data_dir))
     if method in [ "pcmdi", "PCMDI", "default" ]:
       #method 1: built in PCMDI package (may have memory issue for highres data)
       calculate_climatology("pcmdi",start_yr,end_yr,data_dic,clim_dic,outpath,multiprocessing,num_workers)
@@ -1383,7 +1295,7 @@ def main ():
 
   #create regions for regional mean of each variable
   json.dump(reg_var_dic,
-            open(os.path.join('${results_dir}','var_region_{{sub}}_catalogue.json'),"w"),
+            open(os.path.join("${results_dir}",'var_region_{{sub}}_catalogue.json'),"w"),
             sort_keys=True,
             indent=4,
             separators=(",", ": "))
@@ -1419,7 +1331,34 @@ def main ():
   #set a delay to avoid delay in writing process
   time.sleep(1)
   print("done submitting")
-  del(reg_var_dic,regional,lstcmd,default_regions)
+  del(reg_var_dic,regional,lstcmd)
+
+  #generate diagnostics figures
+  print("--- prepare for mean climate metrics plot ---")
+  parser = create_mean_climate_plot_parser()
+  parameter = parser.get_parameter(argparse_vals_only=False)
+  parameter.regions = default_regions
+  parameter.run_type = "${run_type}"
+  parameter.period = "{}-{}".format(test_start_yr,test_end_yr)
+  parameter.pcmdi_data_set = "{{pcmdi_data_set}}"
+  parameter.pcmdi_data_path = os.path.join('{{pcmdi_data_path}}',"mean_climate")
+  parameter.test_data_set = "{}.{}".format(test_cmip_name,"${case_id}")
+  parameter.test_data_path = os.path.join("${results_dir}","metrics_results","mean_climate")
+{% if run_type == "model_vs_obs" %}
+  parameter.refr_data_set = ""
+  parameter.refr_data_path = ""
+{% elif run_type == "model_vs_model" %}
+  parameter.refr_data_set = "{}.{}".format(ref_cmip_name,"${case_id}")
+  parameter.refr_data_path = os.path.join("${results_dir}","metrics_results","mean_climate")
+{%- endif %}
+  parameter.output_path = os.path.join("${results_dir}","graphics","mean_climate")
+  parameter.ftype = '{{ figure_format }}'
+  parameter.debug = {{ pmp_debug }}
+
+  #generate diagnostics figures
+  print("--- generate mean climate metrics plot ---")
+  mean_climate_metrics_plot(parameter)
+  del(parameter)
 
 {%- endif %}
 
@@ -1519,9 +1458,6 @@ def main ():
   time.sleep(1)
   print("done submitting")
   del(lstcmd,procs)
-  #post process and generate figures
-  #print("mip, exp, MC, case_id:", '{{ mip}}', '{{ exp }}', metricsCollection, '${case_id}')
-  #merge_jsons('{{ mip }}', '{{ exp}}', '${case_id}', metricsCollection, '${results_dir}')
 {%- endif %}
 
 if __name__ == "__main__":

@@ -158,9 +158,9 @@ EOF
     for file in ${input_dir}/${var}_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc
     do
       if [ -f ${file} ]; then
-        ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev19
+        ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev
         #overwrite the model level data
-	mv ${file}.plev19 ${file}
+	mv ${file}.plev ${file}
       fi
     done
   done
