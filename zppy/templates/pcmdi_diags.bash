@@ -27,7 +27,6 @@ echo "RUNNING ${id}" > {{ prefix }}.status
 
 # Basic definitions
 case="{{ case }}"
-short="{{ short_name }}"
 www="{{ www }}"
 y1={{ year1 }}
 y2={{ year2 }}
@@ -401,7 +400,6 @@ def locate_ts_observation (variables, obs_sets, start_yr, end_yr,
 
 def main():
   #basic information
-  short_name = '${short}'
   start_yr = int('${Y1}')
   end_yr = int('${Y2}')
   num_years = end_yr - start_yr + 1
@@ -417,7 +415,6 @@ def main():
   test_data_dir = 'ts_test'
 {%- endif %}
   test_name = '${case}'
-  short_test_name = short_name
   test_start_yr = start_yr
   test_end_yr = end_yr
   test_dir_source='{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly'
@@ -471,7 +468,7 @@ def main():
   ################################################################
   print("process reference obs/model data for comparision")
 {% if run_type == "model_vs_obs" %}
-  obs_sets = list('{{ reference_sets }}'.split(","))
+  obs_sets = list('{{ obs_sets }}'.split(","))
   refr_dic_file = os.path.join("${results_dir}",'{}_{{sub}}_mon_catalogue.json'.format(ref_data_dir))
   refr_vars = locate_ts_observation(cmor_vars,obs_sets,
                                     ref_start_yr,ref_end_yr,
@@ -519,7 +516,6 @@ import sys
 import json
 
 #basic information
-short_name = '${short}'
 start_yr = int('${Y1}')
 end_yr = int('${Y2}')
 num_years = end_yr - start_yr + 1
@@ -532,7 +528,6 @@ test_data_dir = 'ts'
 test_data_dir = 'ts_test'
 {%- endif %}
 test_name = '${case}'
-short_test_name = short_name
 test_start_yr = start_yr
 test_end_yr = end_yr
 test_dir_source='{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly'
@@ -588,7 +583,6 @@ plot_obs = {{ plot_obs }} # optional
 
 # Additional settings
 run_type = '{{ run_type }}'
-diff_title = '{{ diff_title }}'
 figure_format = '{{ figure_format }}'
 
 {%- if "mean_climate" in subset %}
@@ -657,7 +651,7 @@ del(test_dic)
 
 #######################################
 # ROOT PATH FOR OBSERVATIONS
-reference_data_set = list('{{ reference_sets }}'.split(","))
+reference_data_set = list('{{ obs_sets }}'.split(","))
 reference_data_path = os.path.join("${results_dir}","climo","${case_id}")
 observation_file = os.path.join("${results_dir}",'{}_{{sub}}_clim_catalogue.json'.format(ref_data_dir))
 custom_observations  = os.path.abspath(observation_file)
@@ -1175,7 +1169,6 @@ def calculate_derived_variable(var,data_dic,data_path):
 {%- endif %}
 
 def main ():
-  short_name = '${short}'
   start_yr = int('${Y1}')
   end_yr = int('${Y2}')
   num_years = end_yr - start_yr + 1
@@ -1191,7 +1184,6 @@ def main ():
   test_data_dir = 'ts_test'
 {%- endif %}
   test_name = '${case}'
-  short_test_name = short_name
   test_start_yr = start_yr
   test_end_yr = end_yr
   test_dir_source='{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly'
