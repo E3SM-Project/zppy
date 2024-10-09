@@ -6,6 +6,7 @@ import jinja2
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
+    ParameterNotProvidedError,
     add_dependencies,
     checkStatus,
     getTasks,
@@ -37,6 +38,14 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
 
     for c in tasks:
 
+        # Check parameters that aren't used until e3sm_diags.bash
+        if ("qbo" in c["sets"]) and (c["ref_final_yr"] == ""):
+            raise ParameterNotProvidedError("ref_final_yr")
+        need_ref_start_yr = set(["enso_diags", "qbo"])
+        set_of_sets = set(c["sets"])
+        if (need_ref_start_yr & set_of_sets) and (c["ref_start_yr"] == ""):
+            raise ParameterNotProvidedError("ref_start_yr")
+
         c["scriptDir"] = scriptDir
 
         if "ts_num_years" in c.keys():
@@ -57,21 +66,41 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
             c["ref_year2"] = rs[1]
             if c["subsection"]:
                 c["sub"] = c["subsection"]
-            else:
+            elif c["guess_section_parameters"]:
                 c["sub"] = c["grid"]
-            # Make a guess for observation paths, if need be
+            else:
+                raise ParameterNotProvidedError("subsection")
             if c["reference_data_path"] == "":
-                c[
-                    "reference_data_path"
-                ] = f"{c['diagnostics_base_path']}/observations/Atm/climatology/"
+                if c["guess_path_parameters"]:
+                    c[
+                        "reference_data_path"
+                    ] = f"{c['diagnostics_base_path']}/observations/Atm/climatology/"
+                else:
+                    raise ParameterNotProvidedError("reference_data_path")
             if ("tc_analysis" in c["sets"]) and (c["tc_obs"] == ""):
-                c[
-                    "tc_obs"
-                ] = f"{c['diagnostics_base_path']}/observations/Atm/tc-analysis/"
+                if c["guess_path_parameters"]:
+                    c[
+                        "tc_obs"
+                    ] = f"{c['diagnostics_base_path']}/observations/Atm/tc-analysis/"
+                else:
+                    raise ParameterNotProvidedError("tc_obs")
             if ("ts_num_years" in c.keys()) and (c["obs_ts"] == ""):
-                c[
-                    "obs_ts"
-                ] = f"{c['diagnostics_base_path']}/observations/Atm/time-series/"
+                if c["guess_path_parameters"]:
+                    c[
+                        "obs_ts"
+                    ] = f"{c['diagnostics_base_path']}/observations/Atm/time-series/"
+                else:
+                    raise ParameterNotProvidedError("obs_ts")
+            if ("diurnal_cycle" in c["sets"]) and (c["dc_obs_climo"] == ""):
+                if c["guess_path_parameters"]:
+                    c["dc_obs_climo"] = c["reference_data_path"]
+                else:
+                    raise ParameterNotProvidedError("dc_obs_climo")
+            if ("streamflow" in c["sets"]) and (c["streamflow_obs_ts"] == ""):
+                if c["guess_path_parameters"]:
+                    c["streamflow_obs_ts"] = c["obs_ts"]
+                else:
+                    raise ParameterNotProvidedError("streamflow_obs_ts")
             if c["run_type"] == "model_vs_obs":
                 prefix = "e3sm_diags_%s_%s_%04d-%04d" % (
                     c["sub"],
@@ -80,6 +109,46 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                     c["year2"],
                 )
             elif c["run_type"] == "model_vs_model":
+                # Check mvm-specific parameters that aren't used until e3sm_diags.bash
+                if c["diff_title"] == "":
+                    raise ParameterNotProvidedError("diff_title")
+                need_ref_final_yr = set(
+                    ["enso_diags", "tropical_subseasonal", "streamflow", "tc_analysis"]
+                )
+                if (need_ref_final_yr & set_of_sets) and (c["ref_final_yr"] == ""):
+                    raise ParameterNotProvidedError("ref_final_yr")
+                if c["ref_name"] == "":
+                    raise ParameterNotProvidedError("ref_name")
+                need_ref_start_yr = set(
+                    ["tropical_subseasonal", "streamflow", "tc_analysis"]
+                )
+                if (need_ref_start_yr & set_of_sets) and (c["ref_start_yr"] == ""):
+                    raise ParameterNotProvidedError("ref_start_yr")
+                if c["short_ref_name"] == "":
+                    raise ParameterNotProvidedError("short_ref_name")
+                need_ts_num_years_ref = set(
+                    [
+                        "enso_diags",
+                        "qbo",
+                        "area_mean_time_series",
+                        "tropical_subseasonal",
+                        "streamflow",
+                    ]
+                )
+                if (
+                    (need_ts_num_years_ref & set_of_sets)
+                    and ("ts_num_years_ref" in c.keys())
+                    and (c["ts_num_years_ref"] == "")
+                ):
+                    raise ParameterNotProvidedError("ts_num_years_ref")
+                # Those same sets need `ts_subsection` too.
+                if (
+                    (need_ts_num_years_ref & set_of_sets)
+                    and ("ts_subsection" in c.keys())
+                    and (c["ts_subsection"] == "")
+                ):
+                    raise ParameterNotProvidedError("ts_subsection")
+
                 prefix = "e3sm_diags_%s_%s_%04d-%04d_vs_%04d-%04d" % (
                     c["sub"],
                     c["tag"],
@@ -94,42 +163,62 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                 if ("diurnal_cycle" in c["sets"]) and (
                     c["reference_data_path_climo_diurnal"] == ""
                 ):
-                    c[
-                        "reference_data_path_climo_diurnal"
-                    ] = f"{reference_data_path}/atm/{c['grid']}/clim_diurnal_8xdaily"
+                    if c["guess_path_parameters"]:
+                        c[
+                            "reference_data_path_climo_diurnal"
+                        ] = f"{reference_data_path}/atm/{c['grid']}/clim_diurnal_8xdaily"
+                    else:
+                        raise ParameterNotProvidedError(
+                            "reference_data_path_climo_diurnal"
+                        )
                 if ("tc_analysis" in c["sets"]) and (c["reference_data_path_tc"] == ""):
+                    # We have to guess parameters here,
+                    # because multiple year sets are defined in a single subtask.
                     c[
                         "reference_data_path_tc"
                     ] = f"{reference_data_path}/atm/tc-analysis_{c['ref_year1']}_{c['ref_year2']}"
-                if ("ts_num_years" in c.keys()) and (c["reference_data_path_ts"] == ""):
-                    c[
-                        "reference_data_path_ts"
-                    ] = f"{reference_data_path}/atm/{c['grid']}/ts/monthly"
-                if ("streamflow" in c["sets"]) and (
-                    c["reference_data_path_ts_rof"] == ""
+                need_reference_data_path_ts = set(
+                    ["enso_diags", "qbo", "area_mean_time_series"]
+                )
+                if (need_reference_data_path_ts & set_of_sets) and (
+                    c["reference_data_path_ts"] == ""
                 ):
-                    c[
-                        "reference_data_path_ts_rof"
-                    ] = f"{reference_data_path}/rof/native/ts/monthly"
-                if c["gauges_path"] == "":
-                    gauges_path_prefix = c["diagnostics_base_path"]
-                    gauges_path_suffix = "observations/Atm/time-series/GSIM/GSIM_catchment_characteristics_all_1km2.csv"
-                    c["gauges_path"] = os.path.join(
-                        gauges_path_prefix, gauges_path_suffix
-                    )
+                    if c["guess_path_parameters"]:
+                        c[
+                            "reference_data_path_ts"
+                        ] = f"{reference_data_path}/atm/{c['grid']}/ts/monthly"
+                    else:
+                        raise ParameterNotProvidedError("reference_data_path_ts")
                 if ("tropical_subseasonal" in c["sets"]) and (
                     c["reference_data_path_ts_daily"] == ""
                 ):
-                    c[
-                        "reference_data_path_ts_daily"
-                    ] = f"{reference_data_path}/atm/{c['grid']}/ts/daily"
+                    if c["guess_path_parameters"]:
+                        c[
+                            "reference_data_path_ts_daily"
+                        ] = f"{reference_data_path}/atm/{c['grid']}/ts/daily"
+                    else:
+                        raise ParameterNotProvidedError("reference_data_path_ts_daily")
+                if "streamflow" in c["sets"]:
+                    if c["reference_data_path_ts_rof"] == "":
+                        if c["guess_path_parameters"]:
+                            c[
+                                "reference_data_path_ts_rof"
+                            ] = f"{reference_data_path}/rof/native/ts/monthly"
+                        else:
+                            raise ParameterNotProvidedError(
+                                "reference_data_path_ts_rof"
+                            )
+                    if c["gauges_path"] == "":
+                        if c["guess_path_parameters"]:
+                            gauges_path_prefix = c["diagnostics_base_path"]
+                            gauges_path_suffix = "observations/Atm/time-series/GSIM/GSIM_catchment_characteristics_all_1km2.csv"
+                            c["gauges_path"] = os.path.join(
+                                gauges_path_prefix, gauges_path_suffix
+                            )
+                        else:
+                            raise ParameterNotProvidedError("gauges_path")
             else:
                 raise ValueError("Invalid run_type={}".format(c["run_type"]))
-            if "diurnal_cycle" in c["sets"]:
-                if c["dc_obs_climo"] == "":
-                    c["dc_obs_climo"] = c["reference_data_path"]
-            if ("streamflow" in c["sets"]) and (c["streamflow_obs_ts"] == ""):
-                c["streamflow_obs_ts"] = c["obs_ts"]
             print(prefix)
             c["prefix"] = prefix
             scriptFile = os.path.join(scriptDir, "%s.bash" % (prefix))
@@ -157,13 +246,14 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                     "zonal_mean_2d_stratosphere",
                 ]
             )
-            in_sets = set(c["sets"])
             # Check if any requested sets depend on climo:
-            if depend_on_climo & in_sets:
+            if depend_on_climo & set_of_sets:
                 if "climo_subsection" in c.keys() and c["climo_subsection"] != "":
                     climo_sub = c["climo_subsection"]
-                else:
+                elif c["guess_section_parameters"]:
                     climo_sub = c["sub"]
+                else:
+                    raise ParameterNotProvidedError("climo_subsection")
                 dependencies.append(
                     os.path.join(
                         scriptDir,
@@ -193,16 +283,20 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                     end_yr = yr + c["ts_num_years"] - 1
                     if "ts_subsection" in c.keys() and c["ts_subsection"] != "":
                         ts_sub = c["ts_subsection"]
-                    else:
+                    elif c["guess_section_parameters"]:
                         ts_sub = c["sub"]
+                    else:
+                        raise ParameterNotProvidedError("ts_subsection")
 
                     if (
                         "ts_daily_subsection" in c.keys()
                         and c["ts_daily_subsection"] != ""
                     ):
                         ts_daily_sub = c["ts_daily_subsection"]
-                    else:
+                    elif c["guess_section_parameters"]:
                         ts_daily_sub = c["sub"]
+                    else:
+                        raise ParameterNotProvidedError("ts_daily_subsection")
                     if (
                         ("enso_diags" in c["sets"])
                         or ("qbo" in c["sets"])
@@ -237,6 +331,8 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                             end_yr,
                             c["ts_num_years"],
                         )
+
+            c["dependencies"] = dependencies
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)
                 p.pprint(c)

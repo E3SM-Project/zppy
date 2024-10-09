@@ -320,3 +320,8 @@ def add_dependencies(
         )
         y1 += num_years
         y2 += num_years
+
+
+# -----------------------------------------------------------------------------
+class ParameterNotProvidedError(RuntimeError):
+    pass

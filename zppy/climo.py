@@ -6,6 +6,7 @@ import jinja2
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
+    ParameterNotProvidedError,
     checkStatus,
     getComponent,
     getTasks,
@@ -71,8 +72,10 @@ def climo(config, scriptDir, existing_bundles, job_ids_file):
             c["scriptDir"] = scriptDir
             if c["subsection"]:
                 sub = c["subsection"]
-            else:
+            elif c["guess_section_parameters"]:
                 sub = c["grid"]
+            else:
+                raise ParameterNotProvidedError("subsection")
             prefix = "climo_%s_%04d-%04d" % (sub, c["yr_start"], c["yr_end"])
             print(prefix)
             c["prefix"] = prefix

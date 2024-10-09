@@ -207,9 +207,11 @@ create_links_ts ${ts_dir_source} ${ts_dir_ref} ${ref_Y1} ${ref_Y2} 6
 {%- endif %}
 {%- endif %}
 
+{%- if "tropical_subseasonal" in sets %}
 ts_daily_dir={{ output }}/post/atm/{{ grid }}/ts/daily/{{ '%dyr' % (ts_num_years) }}
 {% if run_type == "model_vs_model" %}
 ts_daily_dir_ref={{ reference_data_path_ts_daily }}/{{ ts_num_years_ref }}yr
+{%- endif %}
 {%- endif %}
 
 {%- if "streamflow" in sets %}
@@ -227,9 +229,6 @@ create_links_ts_rof ${ts_rof_dir_source} ${ts_rof_dir_ref} ${ref_Y1} ${ref_Y2} 8
 {%- endif %}
 {%- endif %}
 
-{% if run_type == "model_vs_obs" %}
-ref_name={{ ref_name }}
-{%- endif %}
 {% if (run_type == "model_vs_model") and keep_mvm_case_name_in_fig %}
 ref_name={{ ref_name }}
 {%- endif %}
