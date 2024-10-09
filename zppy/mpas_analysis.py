@@ -105,6 +105,7 @@ def mpas_analysis(config, scriptDir, existing_bundles, job_ids_file):
                 f.write(template.render(**c))
             makeExecutable(scriptFile)
 
+            c["dependencies"] = dependencies
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)
                 p.pprint(c)

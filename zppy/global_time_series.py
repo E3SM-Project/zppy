@@ -183,6 +183,7 @@ def global_time_series(config, scriptDir, existing_bundles, job_ids_file):  # no
                         )
                     )
 
+            c["dependencies"] = dependencies
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)
                 p.pprint(c)

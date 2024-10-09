@@ -6,6 +6,7 @@ import jinja2
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
+    ParameterNotProvidedError,
     add_dependencies,
     checkStatus,
     getTasks,
@@ -45,10 +46,6 @@ def ilamb(config, scriptDir, existing_bundles, job_ids_file):
             c["year1"] = s[0]
             c["year2"] = s[1]
             c["scriptDir"] = scriptDir
-            if c["subsection"]:
-                c["sub"] = c["subsection"]
-            else:
-                c["sub"] = c["grid"]
 
             if c["ilamb_obs"] == "":
                 ilamb_obs_prefix = c["diagnostics_base_path"]
@@ -56,6 +53,11 @@ def ilamb(config, scriptDir, existing_bundles, job_ids_file):
                 c["ilamb_obs"] = os.path.join(ilamb_obs_prefix, ilamb_obs_suffix)
 
             # List of dependencies
+            if c["ts_land_subsection"] == "":
+                if c["guess_section_parameters"]:
+                    c["ts_land_subsection"] = "land_monthly"
+                else:
+                    raise ParameterNotProvidedError("ts_land_subsection")
             add_dependencies(
                 dependencies,
                 scriptDir,
@@ -66,6 +68,11 @@ def ilamb(config, scriptDir, existing_bundles, job_ids_file):
                 c["ts_num_years"],
             )
             if not c["land_only"]:
+                if c["ts_atm_subsection"] == "":
+                    if c["guess_section_parameters"]:
+                        c["ts_atm_subsection"] = "atm_monthly_180x360_aave"
+                    else:
+                        raise ParameterNotProvidedError("ts_atm_subsection")
                 add_dependencies(
                     dependencies,
                     scriptDir,
@@ -94,6 +101,7 @@ def ilamb(config, scriptDir, existing_bundles, job_ids_file):
                 f.write(template.render(**c))
             makeExecutable(scriptFile)
 
+            c["dependencies"] = dependencies
             with open(settingsFile, "w") as sf:
                 p = pprint.PrettyPrinter(indent=2, stream=sf)
                 p.pprint(c)
