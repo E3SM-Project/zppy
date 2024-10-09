@@ -61,17 +61,17 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                 c["sub"] = c["grid"]
             # Make a guess for observation paths, if need be
             if c["reference_data_path"] == "":
-                c[
-                    "reference_data_path"
-                ] = f"{c['diagnostics_base_path']}/observations/Atm/climatology/"
+                c["reference_data_path"] = (
+                    f"{c['diagnostics_base_path']}/observations/Atm/climatology/"
+                )
             if ("tc_analysis" in c["sets"]) and (c["tc_obs"] == ""):
-                c[
-                    "tc_obs"
-                ] = f"{c['diagnostics_base_path']}/observations/Atm/tc-analysis/"
+                c["tc_obs"] = (
+                    f"{c['diagnostics_base_path']}/observations/Atm/tc-analysis/"
+                )
             if ("ts_num_years" in c.keys()) and (c["obs_ts"] == ""):
-                c[
-                    "obs_ts"
-                ] = f"{c['diagnostics_base_path']}/observations/Atm/time-series/"
+                c["obs_ts"] = (
+                    f"{c['diagnostics_base_path']}/observations/Atm/time-series/"
+                )
             if c["run_type"] == "model_vs_obs":
                 prefix = "e3sm_diags_%s_%s_%04d-%04d" % (
                     c["sub"],
@@ -94,23 +94,23 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                 if ("diurnal_cycle" in c["sets"]) and (
                     c["reference_data_path_climo_diurnal"] == ""
                 ):
-                    c[
-                        "reference_data_path_climo_diurnal"
-                    ] = f"{reference_data_path}/atm/{c['grid']}/clim_diurnal_8xdaily"
+                    c["reference_data_path_climo_diurnal"] = (
+                        f"{reference_data_path}/atm/{c['grid']}/clim_diurnal_8xdaily"
+                    )
                 if ("tc_analysis" in c["sets"]) and (c["reference_data_path_tc"] == ""):
-                    c[
-                        "reference_data_path_tc"
-                    ] = f"{reference_data_path}/atm/tc-analysis_{c['ref_year1']}_{c['ref_year2']}"
+                    c["reference_data_path_tc"] = (
+                        f"{reference_data_path}/atm/tc-analysis_{c['ref_year1']}_{c['ref_year2']}"
+                    )
                 if ("ts_num_years" in c.keys()) and (c["reference_data_path_ts"] == ""):
-                    c[
-                        "reference_data_path_ts"
-                    ] = f"{reference_data_path}/atm/{c['grid']}/ts/monthly"
+                    c["reference_data_path_ts"] = (
+                        f"{reference_data_path}/atm/{c['grid']}/ts/monthly"
+                    )
                 if ("streamflow" in c["sets"]) and (
                     c["reference_data_path_ts_rof"] == ""
                 ):
-                    c[
-                        "reference_data_path_ts_rof"
-                    ] = f"{reference_data_path}/rof/native/ts/monthly"
+                    c["reference_data_path_ts_rof"] = (
+                        f"{reference_data_path}/rof/native/ts/monthly"
+                    )
                 if c["gauges_path"] == "":
                     gauges_path_prefix = c["diagnostics_base_path"]
                     gauges_path_suffix = "observations/Atm/time-series/GSIM/GSIM_catchment_characteristics_all_1km2.csv"
@@ -120,9 +120,9 @@ def e3sm_diags(config, scriptDir, existing_bundles, job_ids_file):  # noqa: C901
                 if ("tropical_subseasonal" in c["sets"]) and (
                     c["reference_data_path_ts_daily"] == ""
                 ):
-                    c[
-                        "reference_data_path_ts_daily"
-                    ] = f"{reference_data_path}/atm/{c['grid']}/ts/daily"
+                    c["reference_data_path_ts_daily"] = (
+                        f"{reference_data_path}/atm/{c['grid']}/ts/daily"
+                    )
             else:
                 raise ValueError("Invalid run_type={}".format(c["run_type"]))
             if "diurnal_cycle" in c["sets"]:

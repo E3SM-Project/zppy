@@ -73,7 +73,7 @@ def getTasks(config, section_name):
     username = os.environ.get("USER")
     for c in tasks:
         for key in c:
-            if (type(c[key]) == str) and ("$USER" in c[key]):
+            if isinstance(c[key], str) and ("$USER" in c[key]):
                 c[key] = c[key].replace("$USER", username)
 
     return tasks
@@ -82,9 +82,9 @@ def getTasks(config, section_name):
 # -----------------------------------------------------------------------------
 def get_active_status(task):
     active = task["active"]
-    if type(active) == bool:
+    if isinstance(active, bool):
         return active
-    elif type(active) == str:
+    elif isinstance(active, str):
         active_lower_case = active.lower()
         if active_lower_case == "true":
             return True
@@ -101,7 +101,7 @@ def get_active_status(task):
 
 
 def getYears(years_list):
-    if type(years_list) == str:
+    if isinstance(years_list, str):
         # This will be the case if years_list is missing a trailing comma
         years_list = [years_list]
     year_sets = []

@@ -156,6 +156,7 @@ def get_ylim(standard_range, extreme_values):
 # -----------------------------------------------------------------------------
 # Plotting functions
 
+
 # 1
 def plot_net_toa_flux_restom(ax, xlim, exps, rgn):
     print("Plot 1: plot_net_toa_flux_restom")
@@ -748,24 +749,36 @@ def run(parameters, rgn):  # noqa: C901
     use_ocn = plots_ocn or (not atmosphere_only and has_original_ocn_plots)
     exps: List[Dict[str, Any]] = [
         {
-            "atmos": f"{case_dir}/post/atm/glb/ts/monthly/{ts_num_years}yr/"
-            if use_atmos
-            else None,
-            "ice": f"{case_dir}/post/ice/glb/ts/monthly/{ts_num_years}yr/"
-            if plots_ice
-            else None,
-            "land": f"{case_dir}/post/lnd/glb/ts/monthly/{ts_num_years}yr/"
-            if plots_lnd
-            else None,
-            "ocean": f"{case_dir}/post/ocn/glb/ts/monthly/{ts_num_years}yr/"
-            if use_ocn
-            else None,
-            "moc": f"{case_dir}/post/ocn/glb/ts/monthly/{ts_num_years}yr/"
-            if use_ocn
-            else None,
-            "vol": f"{case_dir}/post/ocn/glb/ts/monthly/{ts_num_years}yr/"
-            if use_ocn
-            else None,
+            "atmos": (
+                f"{case_dir}/post/atm/glb/ts/monthly/{ts_num_years}yr/"
+                if use_atmos
+                else None
+            ),
+            "ice": (
+                f"{case_dir}/post/ice/glb/ts/monthly/{ts_num_years}yr/"
+                if plots_ice
+                else None
+            ),
+            "land": (
+                f"{case_dir}/post/lnd/glb/ts/monthly/{ts_num_years}yr/"
+                if plots_lnd
+                else None
+            ),
+            "ocean": (
+                f"{case_dir}/post/ocn/glb/ts/monthly/{ts_num_years}yr/"
+                if use_ocn
+                else None
+            ),
+            "moc": (
+                f"{case_dir}/post/ocn/glb/ts/monthly/{ts_num_years}yr/"
+                if use_ocn
+                else None
+            ),
+            "vol": (
+                f"{case_dir}/post/ocn/glb/ts/monthly/{ts_num_years}yr/"
+                if use_ocn
+                else None
+            ),
             "name": experiment_name,
             "yoffset": 0.0,
             "yr": ([year1, year2],),

@@ -21,7 +21,7 @@ def compare(tester, actual, expected):
             tester.assertEqual(only_in_expected, set())
         incorrect_values = []
         for key in actual_keys:
-            if type(actual[key]) == Section:
+            if isinstance(actual[key], Section):
                 print("Calling `compare` again on {}".format(key))
                 compare(tester, actual[key], expected[key])
             elif actual[key] != expected[key]:
