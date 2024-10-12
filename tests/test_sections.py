@@ -5,7 +5,7 @@ import unittest
 from configobj import ConfigObj, Section
 from validate import Validator
 
-from zppy.utils import getTasks
+from zppy.utils import get_tasks
 
 
 def compare(tester, actual, expected):
@@ -73,8 +73,11 @@ class TestAllSets(unittest.TestCase):
             "dry_run": False,
             "e3sm_to_cmip_environment_commands": "",
             "environment_commands": "",
+            "fail_on_dependency_skip": False,
             "frequency": "monthly",
             "grid": "",
+            "guess_section_parameters": True,
+            "guess_path_parameters": True,
             "input": "INPUT",
             "input_files": "eam.h0",
             "input_subdir": "INPUT_SUBDIR",
@@ -112,7 +115,7 @@ class TestAllSets(unittest.TestCase):
             "years": ["0001:0020:5"],
         }
         compare(self, actual_section, expected_section)
-        actual_tasks = getTasks(config, section_name)
+        actual_tasks = get_tasks(config, section_name)
         self.assertEqual(len(actual_tasks), 1)
         actual_task = actual_tasks[0]
         expected_task = {
@@ -130,8 +133,11 @@ class TestAllSets(unittest.TestCase):
             "e3sm_to_cmip_environment_commands": "",
             "environment_commands": "",
             "extra_vars": "",
+            "fail_on_dependency_skip": False,
             "frequency": "monthly",
             "grid": "",
+            "guess_section_parameters": True,
+            "guess_path_parameters": True,
             "input": "INPUT",
             "input_component": "",
             "input_files": "eam.h0",
@@ -170,7 +176,7 @@ class TestAllSets(unittest.TestCase):
             "years": ["0001:0050:50"],
         }
         compare(self, actual_section, expected_section)
-        actual_tasks = getTasks(config, section_name)
+        actual_tasks = get_tasks(config, section_name)
         compare(self, len(actual_tasks), 1)
         actual_task = actual_tasks[0]
         expected_task = {
@@ -185,8 +191,11 @@ class TestAllSets(unittest.TestCase):
             "e3sm_to_cmip_environment_commands": "",
             "environment_commands": "",
             "exclude": False,
+            "fail_on_dependency_skip": False,
             "frequency": "monthly",
             "grid": "",
+            "guess_section_parameters": True,
+            "guess_path_parameters": True,
             "input": "INPUT",
             "input_component": "",
             "input_files": "eam.h0",
@@ -213,14 +222,14 @@ class TestAllSets(unittest.TestCase):
         section_name = "tc_analysis"
         actual_section = config[section_name]
         self.assertTrue(actual_section["active"] == "False")
-        actual_tasks = getTasks(config, section_name)
+        actual_tasks = get_tasks(config, section_name)
         self.assertEqual(len(actual_tasks), 0)
 
         # e3sm_diags: test an excluded task
         section_name = "e3sm_diags"
         actual_section = config[section_name]
         self.assertTrue("active" not in actual_section.keys())
-        actual_tasks = getTasks(config, section_name)
+        actual_tasks = get_tasks(config, section_name)
         self.assertEqual(len(actual_tasks), 0)
 
     def test_subsections(self):
@@ -239,8 +248,11 @@ class TestAllSets(unittest.TestCase):
             "dry_run": False,
             "e3sm_to_cmip_environment_commands": "",
             "environment_commands": "",
+            "fail_on_dependency_skip": False,
             "frequency": "monthly",
             "grid": "",
+            "guess_section_parameters": True,
+            "guess_path_parameters": True,
             "input": "INPUT",
             "input_files": "eam.h0",
             "input_subdir": "INPUT_SUBDIR",
@@ -298,7 +310,7 @@ class TestAllSets(unittest.TestCase):
             "vars": "FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT",
         }
         compare(self, actual_section, expected_section)
-        actual_tasks = getTasks(config, section_name)
+        actual_tasks = get_tasks(config, section_name)
         self.assertEqual(len(actual_tasks), 2)
         actual_task = actual_tasks[0]
         expected_task = {
@@ -316,8 +328,11 @@ class TestAllSets(unittest.TestCase):
             "e3sm_to_cmip_environment_commands": "",
             "environment_commands": "",
             "extra_vars": "",
+            "fail_on_dependency_skip": False,
             "frequency": "monthly",
             "grid": "",
+            "guess_section_parameters": True,
+            "guess_path_parameters": True,
             "input": "INPUT",
             "input_component": "",
             "input_files": "eam.h0",
@@ -357,8 +372,11 @@ class TestAllSets(unittest.TestCase):
             "e3sm_to_cmip_environment_commands": "",
             "environment_commands": "",
             "extra_vars": "",
+            "fail_on_dependency_skip": False,
             "frequency": "monthly",
             "grid": "",
+            "guess_section_parameters": True,
+            "guess_path_parameters": True,
             "input": "INPUT",
             "input_component": "",
             "input_files": "eam.h0",
@@ -413,7 +431,7 @@ class TestAllSets(unittest.TestCase):
             "years": ["0001:0050:50"],
         }
         compare(self, actual_section, expected_section)
-        actual_tasks = getTasks(config, section_name)
+        actual_tasks = get_tasks(config, section_name)
         self.assertEqual(len(actual_tasks), 2)
         actual_task = actual_tasks[0]
         expected_task = {
@@ -428,8 +446,11 @@ class TestAllSets(unittest.TestCase):
             "e3sm_to_cmip_environment_commands": "",
             "environment_commands": "",
             "exclude": False,
+            "fail_on_dependency_skip": False,
             "frequency": "monthly",
             "grid": "",
+            "guess_section_parameters": True,
+            "guess_path_parameters": True,
             "input": "INPUT",
             "input_component": "",
             "input_files": "eam.h0",
@@ -464,8 +485,11 @@ class TestAllSets(unittest.TestCase):
             "e3sm_to_cmip_environment_commands": "",
             "environment_commands": "",
             "exclude": False,
+            "fail_on_dependency_skip": False,
             "frequency": "monthly",
             "grid": "",
+            "guess_section_parameters": True,
+            "guess_path_parameters": True,
             "input": "INPUT",
             "input_component": "",
             "input_files": "eam.h0",

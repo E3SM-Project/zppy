@@ -207,9 +207,11 @@ create_links_ts ${ts_dir_source} ${ts_dir_ref} ${ref_Y1} ${ref_Y2} 6
 {%- endif %}
 {%- endif %}
 
+{%- if "tropical_subseasonal" in sets %}
 ts_daily_dir={{ output }}/post/atm/{{ grid }}/ts/daily/{{ '%dyr' % (ts_num_years) }}
 {% if run_type == "model_vs_model" %}
 ts_daily_dir_ref={{ reference_data_path_ts_daily }}/{{ ts_num_years_ref }}yr
+{%- endif %}
 {%- endif %}
 
 {%- if "streamflow" in sets %}
@@ -227,9 +229,6 @@ create_links_ts_rof ${ts_rof_dir_source} ${ts_rof_dir_ref} ${ref_Y1} ${ref_Y2} 8
 {%- endif %}
 {%- endif %}
 
-{% if run_type == "model_vs_obs" %}
-ref_name={{ ref_name }}
-{%- endif %}
 {% if (run_type == "model_vs_model") and keep_mvm_case_name_in_fig %}
 ref_name={{ ref_name }}
 {%- endif %}
@@ -390,7 +389,7 @@ trop_param.short_ref_name = '{{ short_ref_name }}'
 ref_start_yr = {{ ref_start_yr }}
 ref_end_yr = {{ ref_end_yr }}
 trop_param.ref_start_yr = f'{ref_start_yr:04}'
-trop_param.ref_end_yr = f'{ref_final_yr:04}'
+trop_param.ref_end_yr = f'{ref_end_yr:04}'
 # Optionally, swap test and reference model
 if {{ swap_test_ref }}:
    trop_param.test_data_path, trop_param.reference_data_path = trop_param.reference_data_path, trop_param.test_data_path
@@ -479,7 +478,6 @@ params.append(dc_param)
 
 {%- if "streamflow" in sets %}
 streamflow_param = StreamflowParameter()
-streamflow_param.reference_data_path = '{{ streamflow_obs_ts }}'
 streamflow_param.test_data_path = '${ts_rof_dir_primary}'
 streamflow_param.test_name = short_name
 streamflow_param.test_start_yr = start_yr

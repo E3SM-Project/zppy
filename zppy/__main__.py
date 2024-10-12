@@ -3,7 +3,7 @@ import errno
 import importlib
 import io
 import os
-from typing import List
+from typing import Any, List, Tuple
 
 from configobj import ConfigObj
 from mache import MachineInfo
@@ -18,12 +18,45 @@ from zppy.mpas_analysis import mpas_analysis
 from zppy.pcmdi_diags import pcmdi_diags
 from zppy.tc_analysis import tc_analysis
 from zppy.ts import ts
-from zppy.utils import checkStatus, submitScript
+from zppy.utils import check_status, submit_script
 
 
-# FIXME: C901 'main' is too complex (19)
-def main():  # noqa: C901
+def main():
+    args = _get_args()
+    print(
+        "For help, please see https://e3sm-project.github.io/zppy. Ask questions at https://github.com/E3SM-Project/zppy/discussions/categories/q-a."
+    )
+    # Subdirectory where templates are located
+    template_dir: str = os.path.join(os.path.dirname(__file__), "templates")
+    # Read configuration file and validate it
+    default_config: str = os.path.join(template_dir, "default.ini")
+    user_config: ConfigObj = ConfigObj(args.config, configspec=default_config)
+    user_config, plugins = _handle_plugins(user_config, default_config, args)
+    config: ConfigObj = _handle_campaigns(user_config, default_config, template_dir)
+    # Validate
+    _validate_config(config)
+    # Add templateDir to config
+    config["default"]["templateDir"] = template_dir
+    # Output script directory
+    output = config["default"]["output"]
+    username = os.environ.get("USER")
+    output = output.replace("$USER", username)
+    script_dir = os.path.join(output, "post/scripts")
+    job_ids_file = os.path.join(script_dir, "jobids.txt")
+    try:
+        os.makedirs(script_dir)
+    except OSError as exc:
+        if exc.errno != errno.EEXIST:
+            raise OSError("Cannot create script directory")
+        pass
+    machine_info = _get_machine_info(config)
+    config = _determine_parameters(machine_info, config)
+    if args.last_year:
+        config["default"]["last_year"] = args.last_year
+    _launch_scripts(config, script_dir, job_ids_file, plugins)
 
+
+def _get_args():
     # Command line parser
     parser = argparse.ArgumentParser(
         description="Launch E3SM post-processing tasks", usage="zppy -c <config>"
@@ -35,18 +68,12 @@ def main():  # noqa: C901
         "-l", "--last-year", type=int, help="last year to process", required=False
     )
     args = parser.parse_args()
+    return args
 
-    print(
-        "For help, please see https://e3sm-project.github.io/zppy. Ask questions at https://github.com/E3SM-Project/zppy/discussions/categories/q-a."
-    )
 
-    # Subdirectory where templates are located
-    templateDir = os.path.join(os.path.dirname(__file__), "templates")
-
-    # Read configuration file and validate it
-    default_config = os.path.join(templateDir, "default.ini")
-    user_config = ConfigObj(args.config, configspec=default_config)
-
+def _handle_plugins(
+    user_config: ConfigObj, default_config: str, args
+) -> Tuple[ConfigObj, List[Any]]:
     # Load all external plugins. Build a list.
     plugins = []
     if "plugins" in user_config["default"].keys():
@@ -56,7 +83,7 @@ def main():  # noqa: C901
                 plugin_module = importlib.import_module(plugin_name)
             except BaseException:
                 raise ValueError(
-                    "Could not load external zppy plugin module {}".format(plugin_name)
+                    f"Could not load external zppy plugin module {plugin_name}"
                 )
             # Path
             plugin_path = plugin_module.__path__[0]
@@ -64,7 +91,6 @@ def main():  # noqa: C901
             plugins.append(
                 {"name": plugin_name, "module": plugin_module, "path": plugin_path}
             )
-
     # Read configuration files again, this time including all plugins
     with open(default_config) as f:
         default = f.read()
@@ -76,44 +102,44 @@ def main():  # noqa: C901
             with open(plugin_default_file) as f:
                 default += "\n" + f.read()
     user_config = ConfigObj(args.config, configspec=io.StringIO(default))
+    return user_config, plugins
 
+
+def _handle_campaigns(
+    user_config: ConfigObj, default_config: str, template_dir: str
+) -> ConfigObj:
     # Handle 'campaign' option
     if "campaign" in user_config["default"]:
         campaign = user_config["default"]["campaign"]
     else:
         campaign = "none"
     if campaign != "none":
-        campaign_file = os.path.join(templateDir, "{}.cfg".format(campaign))
+        campaign_file = os.path.join(template_dir, f"{campaign}.cfg")
         if not os.path.exists(campaign_file):
-            raise ValueError(
-                "{} does not appear to be a known campaign".format(campaign)
-            )
+            raise ValueError(f"{campaign} does not appear to be a known campaign")
         campaign_config = ConfigObj(campaign_file, configspec=default_config)
         # merge such that user_config takes priority over campaign_config
         campaign_config.merge(user_config)
         config = campaign_config
     else:
         config = user_config
+    return config
 
-    # Validate
-    _validate_config(config)
 
-    # Add templateDir to config
-    config["default"]["templateDir"] = templateDir
+def _validate_config(config):
+    validator = Validator()
 
-    # Output script directory
-    output = config["default"]["output"]
-    username = os.environ.get("USER")
-    output = output.replace("$USER", username)
-    scriptDir = os.path.join(output, "post/scripts")
-    job_ids_file = os.path.join(scriptDir, "jobids.txt")
-    try:
-        os.makedirs(scriptDir)
-    except OSError as exc:
-        if exc.errno != errno.EEXIST:
-            raise OSError("Cannot create script directory")
-        pass
+    result = config.validate(validator)
+    if result is not True:
+        print("Validation results={}".format(result))
+        raise ValueError(
+            "Configuration file validation failed. Parameters listed as false in the validation results have invalid values."
+        )
+    else:
+        print("Configuration file validation passed.")
 
+
+def _get_machine_info(config: ConfigObj) -> MachineInfo:
     if ("machine" not in config["default"]) or (config["default"]["machine"] == ""):
         if "E3SMU_MACHINE" in os.environ:
             # Use the machine identified by E3SM-Unified
@@ -126,7 +152,10 @@ def main():  # noqa: C901
         # If `machine` is set, then MachineInfo can bypass the
         # `discover_machine()` function.
         machine = config["default"]["machine"]
-    machine_info = MachineInfo(machine=machine)
+    return MachineInfo(machine=machine)
+
+
+def _determine_parameters(machine_info: MachineInfo, config: ConfigObj) -> ConfigObj:
     default_machine = machine_info.machine
     (
         default_account,
@@ -178,37 +207,37 @@ def main():  # noqa: C901
         config["default"][
             "environment_commands"
         ] = f"source {unified_base}/load_latest_e3sm_unified_{machine}.sh"
+    return config
 
-    if args.last_year:
-        config["default"]["last_year"] = args.last_year
 
+def _launch_scripts(config: ConfigObj, script_dir, job_ids_file, plugins) -> None:
     existing_bundles: List[Bundle] = []
 
     # predefined bundles
-    existing_bundles = predefined_bundles(config, scriptDir, existing_bundles)
+    existing_bundles = predefined_bundles(config, script_dir, existing_bundles)
 
     # climo tasks
-    existing_bundles = climo(config, scriptDir, existing_bundles, job_ids_file)
+    existing_bundles = climo(config, script_dir, existing_bundles, job_ids_file)
 
     # time series tasks
-    existing_bundles = ts(config, scriptDir, existing_bundles, job_ids_file)
+    existing_bundles = ts(config, script_dir, existing_bundles, job_ids_file)
 
     # tc_analysis tasks
-    existing_bundles = tc_analysis(config, scriptDir, existing_bundles, job_ids_file)
+    existing_bundles = tc_analysis(config, script_dir, existing_bundles, job_ids_file)
 
     # e3sm_diags tasks
-    existing_bundles = e3sm_diags(config, scriptDir, existing_bundles, job_ids_file)
+    existing_bundles = e3sm_diags(config, script_dir, existing_bundles, job_ids_file)
 
     # mpas_analysis tasks
-    existing_bundles = mpas_analysis(config, scriptDir, existing_bundles, job_ids_file)
+    existing_bundles = mpas_analysis(config, script_dir, existing_bundles, job_ids_file)
 
     # global time series tasks
     existing_bundles = global_time_series(
-        config, scriptDir, existing_bundles, job_ids_file
+        config, script_dir, existing_bundles, job_ids_file
     )
 
     # ilamb tasks
-    existing_bundles = ilamb(config, scriptDir, existing_bundles, job_ids_file)
+    existing_bundles = ilamb(config, script_dir, existing_bundles, job_ids_file)
 
     # pcmdi_diags tasks
     existing_bundles = pcmdi_diags(config, scriptDir, existing_bundles, job_ids_file)
@@ -219,34 +248,22 @@ def main():  # noqa: C901
         plugin_func = getattr(plugin["module"], plugin["name"])
         # Call plugin
         existing_bundles = plugin_func(
-            plugin["path"], config, scriptDir, existing_bundles, job_ids_file
+            plugin["path"], config, script_dir, existing_bundles, job_ids_file
         )
 
     # Submit bundle jobs
     for b in existing_bundles:
-        skip = checkStatus(b.bundle_status)
+        skip = check_status(b.bundle_status)
         if skip:
             continue
         b.display_dependencies()
         b.render(config)
         if not b.dry_run:
-            submitScript(
+            submit_script(
                 b.bundle_file,
                 b.bundle_status,
                 b.export,
                 job_ids_file,
-                dependFiles=b.dependencies_external,
+                dependFiles=list(b.dependencies_external),
+                fail_on_dependency_skip=config["default"]["fail_on_dependency_skip"],
             )
-
-
-def _validate_config(config):
-    validator = Validator()
-
-    result = config.validate(validator)
-    if result is not True:
-        print("Validation results={}".format(result))
-        raise ValueError(
-            "Configuration file validation failed. Parameters listed as false in the validation results have invalid values."
-        )
-    else:
-        print("Configuration file validation passed.")
