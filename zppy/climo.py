@@ -1,108 +1,79 @@
-import os
-import pprint
-import re
+from typing import Any, Dict, List, Tuple
 
-import jinja2
+from configobj import ConfigObj
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
-    checkStatus,
-    getComponent,
-    getTasks,
-    getYears,
-    makeExecutable,
-    setMappingFile,
-    submitScript,
+    ParameterGuessType,
+    check_status,
+    define_or_guess,
+    get_file_names,
+    get_tasks,
+    get_years,
+    initialize_template,
+    make_executable,
+    set_component_and_prc_typ,
+    set_grid,
+    set_mapping_file,
+    submit_script,
+    write_settings_file,
 )
 
 
 # -----------------------------------------------------------------------------
-def climo(config, scriptDir, existing_bundles, job_ids_file):
+def climo(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
 
-    # --- Initialize jinja2 template engine ---
-    templateLoader = jinja2.FileSystemLoader(
-        searchpath=config["default"]["templateDir"]
-    )
-    templateEnv = jinja2.Environment(loader=templateLoader)
-    template = templateEnv.get_template("climo.bash")
+    template, _ = initialize_template(config, "climo.bash")
 
     # --- List of climo tasks ---
-    tasks = getTasks(config, "climo")
+    tasks: List[Dict[str, Any]] = get_tasks(config, "climo")
     if len(tasks) == 0:
         return existing_bundles
 
     # --- Generate and submit climo scripts ---
     for c in tasks:
-
-        setMappingFile(c)
-
-        # Grid name (if not explicitly defined)
-        #   'native' if no remapping
-        #   or extracted from mapping filename
-        if c["grid"] == "":
-            if c["mapping_file"] == "":
-                c["grid"] = "native"
-            else:
-                tmp = os.path.basename(c["mapping_file"])
-                # FIXME: W605 invalid escape sequence '\.'
-                tmp = re.sub("\.[^.]*\.nc$", "", tmp)  # noqa: W605
-                tmp = tmp.split("_")
-                if tmp[0] == "map":
-                    c["grid"] = "%s_%s" % (tmp[-2], tmp[-1])
-                else:
-                    raise ValueError(
-                        "Cannot extract target grid name from mapping file %s"
-                        % (c["mapping_file"])
-                    )
-
-        # Output component (for directory structure) and procedure type for ncclimo
-        c["component"], c["prc_typ"] = getComponent(
-            c["input_component"], c["input_files"]
-        )
-
+        set_mapping_file(c)
+        set_grid(c)
+        set_component_and_prc_typ(c)
+        year_sets: List[Tuple[int, int]] = get_years(c["years"])
         # Loop over year sets
-        year_sets = getYears(c["years"])
         for s in year_sets:
-
             c["yr_start"] = s[0]
             c["yr_end"] = s[1]
             if ("last_year" in c.keys()) and (c["yr_end"] > c["last_year"]):
                 continue  # Skip this year set
-            c["scriptDir"] = scriptDir
-            if c["subsection"]:
-                sub = c["subsection"]
-            else:
-                sub = c["grid"]
-            prefix = "climo_%s_%04d-%04d" % (sub, c["yr_start"], c["yr_end"])
+            c["scriptDir"] = script_dir
+            sub: str = define_or_guess(
+                c, "subsection", "grid", ParameterGuessType.SECTION_GUESS
+            )
+            prefix: str = f"climo_{sub}_{c['yr_start']:04d}-{c['yr_end']:04d}"
             print(prefix)
             c["prefix"] = prefix
-            scriptFile = os.path.join(scriptDir, "%s.bash" % (prefix))
-            statusFile = os.path.join(scriptDir, "%s.status" % (prefix))
-            settingsFile = os.path.join(scriptDir, "%s.settings" % (prefix))
-            skip = checkStatus(statusFile)
+            bash_file, settings_file, status_file = get_file_names(script_dir, prefix)
+            skip: bool = check_status(status_file)
             if skip:
                 continue
-
             # Create script
-            with open(scriptFile, "w") as f:
+            with open(bash_file, "w") as f:
                 f.write(template.render(**c))
-            makeExecutable(scriptFile)
-
-            with open(settingsFile, "w") as sf:
-                p = pprint.PrettyPrinter(indent=2, stream=sf)
-                p.pprint(c)
-                p.pprint(s)
-
+            make_executable(bash_file)
+            write_settings_file(settings_file, c, s)
             export = "ALL"
             existing_bundles = handle_bundles(
-                c, scriptFile, export, existing_bundles=existing_bundles
+                c, bash_file, export, existing_bundles=existing_bundles
             )
             if not c["dry_run"]:
                 if c["bundle"] == "":
                     # Submit job
-                    submitScript(scriptFile, statusFile, export, job_ids_file)
+                    submit_script(
+                        bash_file,
+                        status_file,
+                        export,
+                        job_ids_file,
+                        fail_on_dependency_skip=c["fail_on_dependency_skip"],
+                    )
                 else:
-                    print("...adding to bundle '%s'" % (c["bundle"]))
+                    print(f"...adding to bundle {c['bundle']}")
 
             print(f"   environment_commands={c['environment_commands']}")
 

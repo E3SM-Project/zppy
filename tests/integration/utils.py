@@ -62,21 +62,20 @@ def compare_images(
 
             mismatched_images.append(image_name)
 
-            simple_image_name = image_name.split("/")[-1].split(".")[0]
             shutil.copy(
                 path_to_actual_png,
-                os.path.join(diff_dir, "{}_actual.png".format(simple_image_name)),
+                os.path.join(diff_dir, "{}_actual.png".format(image_name)),
             )
             shutil.copy(
                 path_to_expected_png,
-                os.path.join(diff_dir, "{}_expected.png".format(simple_image_name)),
+                os.path.join(diff_dir, "{}_expected.png".format(image_name)),
             )
             # https://stackoverflow.com/questions/41405632/draw-a-rectangle-and-a-text-in-it-using-pil
             draw = ImageDraw.Draw(diff)
             (left, upper, right, lower) = diff.getbbox()
             draw.rectangle(((left, upper), (right, lower)), outline="red")
             diff.save(
-                os.path.join(diff_dir, "{}_diff.png".format(simple_image_name)),
+                os.path.join(diff_dir, "{}_diff.png".format(image_name)),
                 "PNG",
             )
 
@@ -139,7 +138,7 @@ def get_chyrsalis_expansions(config):
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         # To use default environment_commands, set to ""
-        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20240731",
+        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_1003",
         "diags_walltime": "5:00:00",
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
@@ -228,6 +227,7 @@ def get_expansions():
         expansions = get_perlmutter_expansions(config)
     else:
         raise ValueError(f"Unsupported machine={machine}")
+    expansions["diagnostics_base_path"] = config.get("diagnostics", "base_path")
     expansions["machine"] = machine
     expansions["unique_id"] = UNIQUE_ID
     return expansions
@@ -345,4 +345,4 @@ def generate_cfgs(unified_testing=False, dry_run=False):
 
 
 if __name__ == "__main__":
-    generate_cfgs(unified_testing=False)
+    generate_cfgs(unified_testing=False, dry_run=False)

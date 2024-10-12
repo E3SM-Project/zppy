@@ -1,10 +1,10 @@
 import os
 import os.path
-from typing import List, Set
+from typing import Any, Dict, List, Set
 
-import jinja2
+from configobj import ConfigObj
 
-from zppy.utils import getTasks, makeExecutable
+from zppy.utils import get_tasks, initialize_template, make_executable
 
 
 # -----------------------------------------------------------------------------
@@ -36,15 +36,8 @@ class Bundle(object):
 
         self.export: str = "NONE"
 
-    def render(self, config):
-
-        # Initialize jinja2 template engine
-        templateLoader = jinja2.FileSystemLoader(
-            searchpath=config["default"]["templateDir"]
-        )
-        templateEnv = jinja2.Environment(loader=templateLoader)
-        template = templateEnv.get_template("bundle.bash")
-
+    def render(self, config) -> None:
+        template, _ = initialize_template(config, "bundle.bash")
         # Populate dictionary
         c = {}
         c["machine"] = config["default"]["machine"]
@@ -64,16 +57,12 @@ class Bundle(object):
         # Create script
         with open(self.bundle_file, "w") as f:
             f.write(template.render(**c))
-        makeExecutable(self.bundle_file)
+        make_executable(self.bundle_file)
 
-        return
-
-    def add_task(self, scriptFile, dependFiles):
-
+    def add_task(self, script_file, depend_files) -> None:
         # Add tasks and dependencies
-        self.tasks.append(scriptFile)
-        self.dependencies.update(dependFiles)
-
+        self.tasks.append(script_file)
+        self.dependencies.update(depend_files)
         # Sort through dependencies to determine in or out of bundle
         # Remove extensions before performing inclusion test.
         tasks = [os.path.splitext(t)[0] for t in self.tasks]
@@ -85,7 +74,7 @@ class Bundle(object):
                 self.dependencies_external.add(dependency)
 
     # Useful for debugging
-    def display_dependencies(self):
+    def display_dependencies(self) -> None:
         print(f"Displaying dependencies for {self.bundle_name}")
         print("dependencies_internal:")
         if self.dependencies_internal:
@@ -106,7 +95,13 @@ class Bundle(object):
 
 
 # -----------------------------------------------------------------------------
-def handle_bundles(c, scriptFile, export, dependFiles=[], existing_bundles=[]):
+def handle_bundles(
+    c: Dict[str, Any],
+    script_file,
+    export,
+    dependFiles=[],
+    existing_bundles: List[Bundle] = [],
+) -> List[Bundle]:
     bundle_name = c["bundle"]
     if bundle_name == "":
         return existing_bundles
@@ -120,28 +115,26 @@ def handle_bundles(c, scriptFile, export, dependFiles=[], existing_bundles=[]):
         # So, the bundle does not already exist
         bundle = Bundle(c)
         existing_bundles.append(bundle)
-    bundle.add_task(scriptFile, dependFiles)
+    bundle.add_task(script_file, dependFiles)
     if export == "ALL":
         # If one task requires export="ALL", then the bundle script will need it as well
         bundle.export = export
-
     return existing_bundles
 
 
 # -----------------------------------------------------------------------------
-def predefined_bundles(config, scriptDir, existing_bundles):
-
+def predefined_bundles(
+    config: ConfigObj, script_dir: str, existing_bundles: List[Bundle]
+) -> List[Bundle]:
     # --- List of tasks ---
-    tasks = getTasks(config, "bundle")
+    tasks = get_tasks(config, "bundle")
     if len(tasks) == 0:
         return existing_bundles
-
     # --- Create new bundles as needed ---
     for c in tasks:
         if c["subsection"] is not None:
             c["bundle"] = c["subsection"]
-            c["scriptDir"] = scriptDir
+            c["scriptDir"] = script_dir
             bundle = Bundle(c)
             existing_bundles.append(bundle)
-
     return existing_bundles
