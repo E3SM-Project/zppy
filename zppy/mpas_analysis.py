@@ -60,7 +60,9 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
             if ("last_year" in c.keys()) and (c["enso_year2"] > c["last_year"]):
                 continue  # Skip this year set
             c["scriptDir"] = script_dir
-            prefix_suffix: str = f"_ts_{c['ts_year1']:04d}-{c['ts_year2']:04d}_climo_{c['climo_year1']:04d}-{c['climo_year2']:04d}"
+            prefix_suffix: str = (
+                f"_ts_{c['ts_year1']:04d}-{c['ts_year2']:04d}_climo_{c['climo_year1']:04d}-{c['climo_year2']:04d}"
+            )
             prefix: str
             if c["subsection"]:
                 prefix = f"mpas_analysis_{c['subsection']}{prefix_suffix}"
