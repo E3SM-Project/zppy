@@ -7,7 +7,7 @@ from setuptools import find_packages, setup
 def package_files(directory, prefixes, extensions):
     """based on https://stackoverflow.com/a/36693250/7728169"""
     paths = []
-    for (path, directories, filenames) in os.walk(directory):
+    for path, directories, filenames in os.walk(directory):
         for filename in filenames:
             parts = filename.split(".")
             prefix = parts[0]

@@ -73,6 +73,7 @@ def get_url_message(c: Dict[str, Any], task: str) -> str:
 
 # Beginning steps #############################################################
 
+
 # TODO: determine return type
 def initialize_template(config: ConfigObj, template_name: str) -> Tuple[Any, Any]:
     # --- Initialize jinja2 template engine ---
@@ -86,6 +87,7 @@ def initialize_template(config: ConfigObj, template_name: str) -> Tuple[Any, Any
 
 # TODO: type aliases require python 3.12 or higher
 # type TaskDict = Dict[str, Any]
+
 
 # Process specified section and its sub-sections to build the list of tasks.
 # If the section includes sub-sections, one task will be created for each
@@ -271,6 +273,7 @@ def get_years(years_input) -> List[Tuple[int, int]]:
 
 
 # `for s in year_sets` steps ##################################################
+
 
 # This returns a value
 def define_or_guess(
