@@ -15,12 +15,12 @@ dependencies:
   # Developer Tools
   # =================
   # If versions are updated, also update 'rev' in `.pre-commit-config.yaml`
-  - black=22.8.0        # version from https://anaconda.org/conda-forge/black
-  - flake8=5.0.4        # version from https://anaconda.org/conda-forge/flake8
+  - black=24.10.0        # version from https://anaconda.org/conda-forge/black
+  - flake8=7.1.1         # version from https://anaconda.org/conda-forge/flake8
   # This line also implicitly installs isort
-  - flake8-isort=4.2.0  # version from https://anaconda.org/conda-forge/flake8-isort
-  - mypy=0.982          # version from https://anaconda.org/conda-forge/mypy
-  - pre-commit=2.20.0   # version from https://anaconda.org/conda-forge/pre-commit
+  - flake8-isort=6.1.1  # version from https://anaconda.org/conda-forge/flake8-isort
+  - mypy=1.11.2         # version from https://anaconda.org/conda-forge/mypy
+  - pre-commit=4.0.1    # version from https://anaconda.org/conda-forge/pre-commit
   - tbump=6.9.0
   # Documentation
   # If versions are updated, also update in `.github/workflows/build_workflow.yml`

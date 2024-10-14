@@ -200,9 +200,9 @@ def check_and_define_parameters(c: Dict[str, Any]) -> None:
         if ("tc_analysis" in c["sets"]) and (c["reference_data_path_tc"] == ""):
             # We have to guess parameters here,
             # because multiple year sets are defined in a single subtask.
-            c[
-                "reference_data_path_tc"
-            ] = f"{reference_data_path}/atm/tc-analysis_{c['ref_year1']}_{c['ref_year2']}"
+            c["reference_data_path_tc"] = (
+                f"{reference_data_path}/atm/tc-analysis_{c['ref_year1']}_{c['ref_year2']}"
+            )
         if set(["enso_diags", "qbo", "area_mean_time_series"]) & set(c["sets"]):
             define_or_guess2(
                 c,
