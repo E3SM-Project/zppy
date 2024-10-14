@@ -32,9 +32,9 @@ class DependencySkipError(RuntimeError):
 
 def get_active_status(task: Dict[str, Any]) -> bool:
     active: Any = task["active"]
-    if type(active) == bool:
+    if isinstance(active, bool):
         return active
-    elif type(active) == str:
+    elif isinstance(active, str):
         active_lower_case: str = active.lower()
         if active_lower_case == "true":
             return True
@@ -151,7 +151,7 @@ def get_tasks(config: ConfigObj, section_name: str) -> List[Dict[str, Any]]:
     username = os.environ.get("USER")
     for c in tasks:
         for key in c:
-            if (type(c[key]) == str) and ("$USER" in c[key]):
+            if (isinstance(c[key], str)) and ("$USER" in c[key]):
                 c[key] = c[key].replace("$USER", username)
 
     return tasks
@@ -242,7 +242,7 @@ def check_required_parameters(
 # "year_begin-year_end"
 def get_years(years_input) -> List[Tuple[int, int]]:
     years_list: List[str]
-    if type(years_input) == str:
+    if isinstance(years_input, str):
         # This will be the case if years_list is missing a trailing comma
         years_list = [years_input]
     else:
