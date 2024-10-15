@@ -138,7 +138,7 @@ def get_chyrsalis_expansions(config):
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         # To use default environment_commands, set to ""
-        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_1003",
+        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20241015",
         "diags_walltime": "5:00:00",
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
@@ -290,6 +290,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "min_case_e3sm_diags_streamflow",
         "min_case_e3sm_diags_tc_analysis_mvm_1",
         "min_case_e3sm_diags_tc_analysis_mvm_2",
+        "min_case_e3sm_diags_tc_analysis_parallel",
         "min_case_e3sm_diags_tc_analysis",
         "min_case_e3sm_diags_tropical_subseasonal_mvm_1",
         "min_case_e3sm_diags_tropical_subseasonal_mvm_2",

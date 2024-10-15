@@ -34,8 +34,8 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
         return existing_bundles
 
     # --- Generate and submit e3sm_diags scripts ---
-    dependencies: List[str] = []
     for c in tasks:
+        dependencies: List[str] = []
         check_parameters_for_bash(c)
         c["scriptDir"] = script_dir
         if "ts_num_years" in c.keys():
@@ -92,14 +92,6 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
                         dependFiles=dependencies,
                         fail_on_dependency_skip=c["fail_on_dependency_skip"],
                     )
-
-                    # Due to a `socket.gaierror: [Errno -2] Name or service not known` error when running e3sm_diags with tc_analysis
-                    # on multiple year_sets, if tc_analysis is in sets, then e3sm_diags should be run sequentially.
-                    if "tc_analysis" in c["sets"]:
-                        # Note that this line should still be executed even if jobid == -1
-                        # The later tc_analysis-using e3sm_diags tasks still depend on this task (and thus will also fail).
-                        # Add to the dependency list
-                        dependencies.append(status_file)
                 else:
                     print(f"...adding to bundle {c['bundle']}")
 
