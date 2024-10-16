@@ -1,6 +1,10 @@
-# Script to plot some global atmosphere and ocean time series
+# Script to generate global time series plots
+import csv
+import distutils.dir_util
 import glob
 import math
+import os
+import stat
 import sys
 import traceback
 from typing import Any, Dict, List, Optional, Tuple
@@ -12,6 +16,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray
 from netCDF4 import Dataset
+from output_viewer.build import build_page, build_viewer
+from output_viewer.index import (
+    OutputFile,
+    OutputGroup,
+    OutputIndex,
+    OutputPage,
+    OutputRow,
+)
+from output_viewer.utils import rechmod
 from readTS import TS
 
 mpl.use("Agg")
@@ -600,14 +613,22 @@ def set_var(
         del ts
 
 
-def make_plot_pdfs(
-    figstr, rgn, component, xlim, exps, plot_list, valid_plots, invalid_plots
+# FIXME: C901 'main' is too complex (19)
+def make_plot_pdfs(  # noqa: C901
+    figstr,
+    rgn,
+    component,
+    xlim,
+    exps,
+    plot_list,
+    valid_plots,
+    invalid_plots,
+    nrows,
+    ncols,
 ):
     num_plots = len(plot_list)
     if num_plots == 0:
         return
-    nrows = 4
-    ncols = 2
     plots_per_page = nrows * ncols
     num_pages = math.ceil(num_plots / plots_per_page)
 
@@ -615,7 +636,10 @@ def make_plot_pdfs(
     # https://stackoverflow.com/questions/58738992/save-multiple-figures-with-subplots-into-a-pdf-with-multiple-pages
     pdf = matplotlib.backends.backend_pdf.PdfPages(f"{figstr}_{rgn}_{component}.pdf")
     for page in range(num_pages):
-        fig = plt.figure(1, figsize=[13.5, 16.5])
+        if plots_per_page == 1:
+            fig = plt.figure(1, figsize=[13.5 / 2, 16.5 / 4])
+        else:
+            fig = plt.figure(1, figsize=[13.5, 16.5])
         fig.suptitle(f"{figstr}_{rgn}_{component}")
         for j in range(plots_per_page):
             # The final page doesn't need to be filled out with plots.
@@ -662,7 +686,9 @@ def make_plot_pdfs(
 
         fig.tight_layout()
         pdf.savefig(1)
-        if num_pages > 1:
+        if plots_per_page == 1:
+            fig.savefig(f"{figstr}_{rgn}_{component}_{plot_name}.png", dpi=150)
+        elif num_pages > 1:
             fig.savefig(f"{figstr}_{rgn}_{component}_{page}.png", dpi=150)
         else:
             fig.savefig(f"{figstr}_{rgn}_{component}.png", dpi=150)
@@ -726,6 +752,8 @@ def run(parameters, rgn):  # noqa: C901
     plots_ice = param_get_list(parameters[11])
     plots_lnd = param_get_list(parameters[12])
     plots_ocn = param_get_list(parameters[13])
+    nrows = int(parameters[14])
+    ncols = int(parameters[15])
     vars_original = []
     if "net_toa_flux_restom" or "net_atm_energy_imbalance" in plots_original:
         vars_original.append("RESTOM")
@@ -833,19 +861,64 @@ def run(parameters, rgn):  # noqa: C901
     invalid_plots: List[str] = []
 
     make_plot_pdfs(
-        figstr, rgn, "original", xlim, exps, plots_original, valid_plots, invalid_plots
+        figstr,
+        rgn,
+        "original",
+        xlim,
+        exps,
+        plots_original,
+        valid_plots,
+        invalid_plots,
+        nrows,
+        ncols,
     )
     make_plot_pdfs(
-        figstr, rgn, "atm", xlim, exps, plots_atm, valid_plots, invalid_plots
+        figstr,
+        rgn,
+        "atm",
+        xlim,
+        exps,
+        plots_atm,
+        valid_plots,
+        invalid_plots,
+        nrows,
+        ncols,
     )
     make_plot_pdfs(
-        figstr, rgn, "ice", xlim, exps, plots_ice, valid_plots, invalid_plots
+        figstr,
+        rgn,
+        "ice",
+        xlim,
+        exps,
+        plots_ice,
+        valid_plots,
+        invalid_plots,
+        nrows,
+        ncols,
     )
     make_plot_pdfs(
-        figstr, rgn, "lnd", xlim, exps, plots_lnd, valid_plots, invalid_plots
+        figstr,
+        rgn,
+        "lnd",
+        xlim,
+        exps,
+        plots_lnd,
+        valid_plots,
+        invalid_plots,
+        nrows,
+        ncols,
     )
     make_plot_pdfs(
-        figstr, rgn, "ocn", xlim, exps, plots_ocn, valid_plots, invalid_plots
+        figstr,
+        rgn,
+        "ocn",
+        xlim,
+        exps,
+        plots_ocn,
+        valid_plots,
+        invalid_plots,
+        nrows,
+        ncols,
     )
 
     print(f"These {rgn} region plots generated successfully: {valid_plots}")
@@ -854,8 +927,214 @@ def run(parameters, rgn):  # noqa: C901
     )
 
 
+# Copied from e3sm_diags
+class OutputViewer(object):
+    def __init__(self, path=".", index_name="Results"):
+        self.path = os.path.abspath(path)
+        self.index = OutputIndex(index_name)
+        self.cache = {}  # dict of { OutputPage: { OutputGroup: [OutputRow] } }
+        self.page = None
+        self.group = None
+        self.row = None
+
+    def add_page(self, page_title, *args, **kwargs):
+        """Add a page to the viewer's index"""
+        self.page = OutputPage(page_title, *args, **kwargs)
+        self.cache[self.page] = {}
+        self.index.addPage(self.page)
+
+    def set_page(self, page_title):
+        """Sets the page with the title name as the current page"""
+        for output_page in self.cache:
+            if page_title == output_page.title:
+                self.page = output_page
+                return
+        raise RuntimeError("There is no page titled: %s" % page_title)
+
+    def add_group(self, group_name):
+        """Add a group to the current page"""
+        if self.page is None:
+            raise RuntimeError("You must first insert a page with add_page()")
+        self.group = OutputGroup(group_name)
+        if self.group not in self.cache[self.page]:
+            self.cache[self.page][self.group] = []  # group doesn't have any rows yet
+        self.page.addGroup(self.group)
+
+    def set_group(self, group_name):
+        """Sets the group with the title name as the current group"""
+        for output_group in self.cache[self.page]:
+            if group_name == output_group.title:
+                self.group = output_group
+                return
+        raise RuntimeError("There is no group titled: %s" % group_name)
+
+    def add_row(self, row_name):
+        """Add a row with the title name to the current group"""
+        if self.group is None:
+            raise RuntimeError("You must first insert a group with add_group()")
+        self.row = OutputRow(row_name, [])
+        if self.row not in self.cache[self.page][self.group]:
+            self.cache[self.page][self.group].append(self.row)
+        self.page.addRow(self.row, len(self.page.groups) - 1)  # type: ignore
+
+    def set_row(self, row_name):
+        """Sets the row with the title name as the current row"""
+        for output_row in self.cache[self.page][self.group]:
+            if row_name == output_row.title:
+                self.row = output_row
+                return
+        raise RuntimeError("There is no row titled: %s" % row_name)
+
+    def add_cols(self, cols):
+        """Add multiple string cols to the current row"""
+        self.row.columns.append(cols)  # type: ignore
+
+    def add_col(self, col, is_file=False, **kwargs):
+        """Add a single col to the current row. Set is_file to True if the col is a file path."""
+        if is_file:
+            self.row.columns.append(OutputFile(col, **kwargs))  # type: ignore
+        else:
+            self.row.columns.append(col)  # type: ignore
+
+    def generate_page(self):
+        """
+        Generate and return the location of the current HTML page.
+        """
+        self.index.toJSON(os.path.join(self.path, "index.json"))
+
+        default_mask = stat.S_IMODE(os.stat(self.path).st_mode)
+        rechmod(self.path, default_mask)
+
+        if os.access(self.path, os.W_OK):
+            default_mask = stat.S_IMODE(
+                os.stat(self.path).st_mode
+            )  # mode of files to be included
+            url = build_page(
+                self.page,
+                os.path.join(self.path, "index.json"),
+                default_mask=default_mask,
+            )
+            return url
+
+        raise RuntimeError("Error geneating the page.")
+
+    def generate_viewer(self):
+        """Generate the webpage"""
+        self.index.toJSON(os.path.join(self.path, "index.json"))
+
+        default_mask = stat.S_IMODE(os.stat(self.path).st_mode)
+        rechmod(self.path, default_mask)
+
+        if os.access(self.path, os.W_OK):
+            default_mask = stat.S_IMODE(
+                os.stat(self.path).st_mode
+            )  # mode of files to be included
+            build_viewer(
+                os.path.join(self.path, "index.json"),
+                diag_name="My Diagnostics",
+                default_mask=default_mask,
+            )
+
+
+class LandVariable(object):
+    def __init__(self, csv_row: List[str]):
+        # TODO: use these fields...
+        # the name of the ELM variable on the monthly h0 history file
+        self.variable_name = csv_row[0]
+        # “A” or “T” for global average over land area or global total, respectively
+        self.metric = csv_row[1]
+        # the factor that should convert from original units to final units, after standard processing with nco
+        self.scale_factor = csv_row[2]
+        # test string for the units as given on the history file (included here for possible testing)
+        self.original_units = csv_row[3]
+        # the units that should be reported in time series plots, based on A/T and Scale Factor
+        self.final_units = csv_row[4]
+        # a name used to cluster variables together, to be separated in groups within the output web pages
+        self.group = csv_row[5]
+        # Descriptive text to add to the plot page to help users identify the variable
+        self.long_name = csv_row[6]
+
+
+def construct_land_variables() -> List[LandVariable]:
+    var_list: List[LandVariable] = []
+    header = True
+    # If this file is being run stand-alone, then
+    # it will search the directory above the git directory
+    with open("zppy_land_fields.csv", newline="") as csv_file:
+        print("In File")
+        var_reader = csv.reader(csv_file)
+        for row in var_reader:
+            # Skip the header row
+            print(f"row={row}")
+            if header:
+                header = False
+            else:
+                var_list.append(LandVariable(row))
+    return var_list
+
+
+class LandGroup(object):
+    def __init__(self, name: str, land_variables: List[LandVariable]):
+        self.group_name = name
+        self.short_name = name.lower().replace(" ", "")
+        self.land_variables = land_variables
+
+
+def get_land_groups(land_variables: List[LandVariable]) -> List[LandGroup]:
+    group_names: List[str] = []
+    groups: List[LandGroup] = []
+    for lv in land_variables:
+        g: str = lv.group
+        if g not in group_names:
+            # A new group!
+            group_names.append(g)
+            groups.append(LandGroup(g, [lv]))
+        else:
+            # Add a new variable to this existing group
+            for group in groups:
+                if g == group.group_name:
+                    group.land_variables.append(lv)
+    return groups
+
+
+def create_viewer(figstr, regions, component, requested_plots):
+    viewer = OutputViewer(path=".")
+    viewer.add_page("Table", regions)
+    land_variables: List[LandVariable] = construct_land_variables()
+    groups: List[LandGroup] = get_land_groups(land_variables)
+    for group in groups:
+        vars_in_group = list(map(lambda lv: lv.variable_name, group.land_variables))
+        for plot_name in requested_plots:
+            if plot_name in vars_in_group:
+                # There's at least one plot in this group.
+                # So, we want to add it to the viewer.
+                viewer.add_group(group.group_name)
+                break
+        for plot_name in vars_in_group:
+            # Only plot the requested plots
+            if plot_name in requested_plots:
+                viewer.add_row(plot_name)
+                for rgn in regions:
+                    # v3.LR.historical_0051_glb_lnd_SOIL4C.png
+                    # viewer/c-state/glb_lnd_soil4c.html
+                    viewer.add_col(
+                        f"{figstr}_{rgn}_{component}_{plot_name}.png",
+                        is_file=True,
+                        title=f"{rgn}_{component}_{plot_name}",
+                    )
+
+    url = viewer.generate_page()
+    viewer.generate_viewer
+    # Copy the contents of `table` into the `viewer` directory
+    # (which initially only has `css` and `js` subdirectories)
+    # Because `viewer` already exists,
+    # `shutil.copytree` will not work.
+    distutils.dir_util.copy_tree("table", "viewer")
+    return url
+
+
 def run_by_region(parameters):
-    regions = parameters[14].split(",")
+    regions = parameters[16].split(",")
     for rgn in regions:
         if rgn.lower() in ["glb", "global"]:
             rgn = "glb"
@@ -866,7 +1145,49 @@ def run_by_region(parameters):
         else:
             raise RuntimeError(f"Invalid rgn={rgn}")
         run(parameters, rgn)
+    figstr = parameters[3]
+    # plots_original = param_get_list(parameters[8])
+    # if parameters[9].lower() == "false":
+    #     atmosphere_only = False
+    # else:
+    #     atmosphere_only = True
+    # plots_atm = param_get_list(parameters[10])
+    # plots_ice = param_get_list(parameters[11])
+    plots_lnd = param_get_list(parameters[12])
+    # plots_ocn = param_get_list(parameters[13])
+    nrows = int(parameters[14])
+    ncols = int(parameters[15])
+    plots_per_page = nrows * ncols
+    if plots_per_page == 1:
+        # In this case, we don't want the summary PDF.
+        # Rather, we want to construct a viewer similar to E3SM Diags.
+        # TODO: make viewer home page to point to multiple viewers
+        url = create_viewer(figstr, regions, "lnd", plots_lnd)
+    print(url)
 
 
 if __name__ == "__main__":
     run_by_region(sys.argv)
+    """
+    run_by_region(
+        [
+            "coupled_global.py",
+            "/lcrc/group/e3sm/ac.forsyth2/zppy_min_case_global_time_series_single_plots_output/test-616-20240930/v3.LR.historical_0051",
+            "v3.LR.historical_0051",
+            "v3.LR.historical_0051",
+            "1985",
+            "1989",
+            "Blue",
+            "5",
+            "None",
+            "false",
+            "TREFHT",
+            "None",
+            "FSH,RH2M,LAISHA,LAISUN,QINTR,QOVER,QRUNOFF,QSOIL,QVEGE,QVEGT,SOILWATER_10CM,TSA,H2OSNO,TOTLITC,CWDC,SOIL1C,SOIL2C,SOIL3C,SOIL4C,WOOD_HARVESTC,TOTVEGC,NBP,GPP,AR,HR",
+            "None",
+            "1",
+            "1",
+            "glb,n,s",
+        ]
+    )
+    """
