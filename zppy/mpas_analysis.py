@@ -31,8 +31,13 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
     # job should run at once. To gracefully handle this, we make each
     # MPAS-Analysis task dependant on all previous ones. This may not
     # be 100% fool-proof, but should be a reasonable start
-    dependencies = []
+
+    # Dependencies carried over from previous task.
+    carried_over_dependencies: List[str] = []
+
     for c in tasks:
+
+        dependencies: List[str] = carried_over_dependencies
         set_subdirs(config, c)
         # Loop over year sets
         ts_year_sets: List[Tuple[int, int]] = get_years(c["ts_years"])
@@ -75,7 +80,7 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
             skip: bool = check_status(status_file)
             if skip:
                 # Add to the dependency list
-                dependencies.append(status_file)
+                carried_over_dependencies.append(status_file)
                 continue
             # Create script
             with open(bash_file, "w") as f:
@@ -107,7 +112,7 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
                     # Note that this line should still be executed even if jobid == -1
                     # The later MPAS-Analysis tasks still depend on this task (and thus will also fail).
                     # Add to the dependency list
-                    dependencies.append(status_file)
+                    carried_over_dependencies.append(status_file)
                 else:
                     print(f"...adding to bundle {c['bundle']}")
 
