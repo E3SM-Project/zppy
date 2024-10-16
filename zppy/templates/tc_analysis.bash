@@ -90,13 +90,6 @@ cat ${result_dir}out.dat0* > ${result_dir}cyclones_${file_name}.txt
 StitchNodes --in_fmt "lon,lat,slp,wind" --in_connect ${result_dir}connect_CSne${res}_v2.dat --range 6.0 --mintime 6 --maxgap 1 --in ${result_dir}cyclones_${file_name}.txt --out ${result_dir}cyclones_stitch_${file_name}.dat --threshold "wind,>=,17.5,6;lat,<=,40.0,6;lat,>=,-40.0,6"
 rm ${result_dir}cyclones_${file_name}.txt
 
-# If cyclones_stitch file is empty, exit
-if ! [ -s ${result_dir}cyclones_stitch_${file_name}.dat ]; then
-  cd {{ scriptDir }}
-  echo 'ERROR (1)' > {{ prefix }}.status
-  exit 1
-fi
-
 # Generate histogram of detections
 HistogramNodes --in ${result_dir}cyclones_stitch_${file_name}.dat --iloncol 2 --ilatcol 3 --out ${result_dir}cyclones_hist_${file_name}.nc
 
