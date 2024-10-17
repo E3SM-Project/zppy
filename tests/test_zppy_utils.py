@@ -5,6 +5,7 @@ from zppy.utils import (
     ParameterGuessType,
     ParameterNotProvidedError,
     add_dependencies,
+    check_parameter_defined,
     check_required_parameters,
     define_or_guess,
     define_or_guess2,
@@ -459,6 +460,12 @@ class TestZppyUtils(unittest.TestCase):
             c, "required_parameter", "backup_option", ParameterGuessType.SECTION_GUESS
         )
         self.assertEqual(c["required_parameter"], "backup_option")
+
+    def test_check_parameter_defined(self):
+        c = {"a": 1, "b": 2, "c": ""}
+        check_parameter_defined(c, "a")
+        self.assertRaises(ParameterNotProvidedError, check_parameter_defined, c, "c")
+        self.assertRaises(ParameterNotProvidedError, check_parameter_defined, c, "d")
 
     def test_get_file_names(self):
         bash, settings, status = get_file_names("script_dir", "prefix")

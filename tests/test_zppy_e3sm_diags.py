@@ -533,6 +533,32 @@ class TestZppyE3SMDiags(unittest.TestCase):
         dependencies = []
         add_climo_dependencies(c, dependencies, "script_dir")
         self.assertEqual(dependencies, ["script_dir/climo_cdsub_1980-1990.status"])
+        c = {"sets": ["diurnal_cycle"]}
+        c.update(base)
+        dependencies = []
+        self.assertRaises(
+            ParameterNotProvidedError,
+            add_climo_dependencies,
+            c,
+            dependencies,
+            "script_dir",
+        )
+
+        c = {"sets": ["lat_lon_land"], "climo_land_subsection": "lndsub"}
+        c.update(base)
+        dependencies = []
+        add_climo_dependencies(c, dependencies, "script_dir")
+        self.assertEqual(dependencies, ["script_dir/climo_lndsub_1980-1990.status"])
+        c = {"sets": ["lat_lon_land"]}
+        c.update(base)
+        dependencies = []
+        self.assertRaises(
+            ParameterNotProvidedError,
+            add_climo_dependencies,
+            c,
+            dependencies,
+            "script_dir",
+        )
 
         c = {"sets": ["tc_analysis"]}
         c.update(base)
