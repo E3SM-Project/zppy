@@ -241,6 +241,8 @@ def add_climo_dependencies(
             "meridional_mean_2d",
             "annual_cycle_zonal_mean",
             "zonal_mean_2d_stratosphere",
+            "aerosol_aeronet",  # TODO: check if correct
+            "aerosol_budget",  # TODO: check if correct
         ]
     )
     # Check if any requested sets depend on climo:
