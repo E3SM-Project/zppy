@@ -1,0 +1,354 @@
+Variable,Average or Total (A/T),Scale Factor,Original Units,Final Units,Group,Long name
+BCDEP,A,1.00000E+00, kg/m^2/s, kg/m^2/s,Aerosol Flux, total black carbon deposition (dry+wet) from atmosphere
+DSTDEP,A,1.00000E+00, kg/m^2/s, kg/m^2/s,Aerosol Flux, total dust deposition (dry+wet) from atmosphere
+DSTFLXT,A,1.00000E+00, kg/m2/s, kg/m^2/s,Aerosol Flux, total surface dust emission
+OCDEP,A,1.00000E+00, kg/m^2/s, kg/m^2/s,Aerosol Flux, total OC deposition (dry+wet) from atmosphere
+SNOBCMCL,A,1.00000E+00, kg/m2, kg/m^2,Aerosol State, mass of black carbon in snow column
+SNOBCMSL,A,1.00000E+00, kg/m2, kg/m^2,Aerosol State, mass of black carbon in top snow layer
+SNODSTMCL,A,1.00000E+00, kg/m2, kg/m^2,Aerosol State, mass of dust in snow column
+SNODSTMSL,A,1.00000E+00, kg/m2, kg/m^2,Aerosol State, mass of dust in top snow layer
+SNOOCMCL,A,1.00000E+00, kg/m2, kg/m^2,Aerosol State, mass of OC in snow column
+SNOOCMSL,A,1.00000E+00, kg/m2, kg/m^2,Aerosol State, mass of OC in top snow layer
+AGNPP,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, aboveground NPP
+AR,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, autotrophic respiration (maintenance + growth)
+BGNPP,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, belowground NPP
+CH4PROD,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, gridcell total production of CH4
+DWT_CONV_CFLUX_GRC,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, land conversion C flux
+DWT_SLASH_CFLUX,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, slash C flux to litter and CWD due to land use
+ER,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, total ecosystem respiration (autotrophic + heterotrophic)
+FCH4,T,3.15360E-02, kgC/m2/s, PgC/yr,C Flux, gridcell surface CH4 flux to atmosphere (+ to atm)
+FCH4TOCO2,T,3.15360E-02, gC/m2/s, PgC/yr,C Flux, gridcell oxidation of CH4 to CO2
+FPSN,A,1.00000E+00, umol/m2s, umol/m2s,C Flux, photosynthesis
+FPSN_WC,A,1.00000E+00, umol/m2s, umol/m2s,C Flux, Rubisco-limited photosynthesis
+FPSN_WJ,A,1.00000E+00, umol/m2s, umol/m2s,C Flux, RuBP-limited photosynthesis
+FPSN_WP,A,1.00000E+00, umol/m2s, umol/m2s,C Flux, product-limited photosynthesis
+FROOTC_ALLOC,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, fine root C allocation
+GPP,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, gross primary production
+GR,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, total growth respiration
+HR,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, total heterotrophic respiration
+LAND_USE_FLUX,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, total C emitted from land cover conversion and wood product pools
+LEAFC_ALLOC,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, leaf C allocation
+LITFALL,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, litterfall (leaves and fine roots)
+LITHR,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, litter heterotrophic respiration
+LITTERC_HR,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, litter C heterotrophic respiration
+LITTERC_LOSS,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, litter C loss
+MR,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, maintenance respiration
+NBP,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, net biome production (positive for sink)
+NEE,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, net ecosystem exchange of carbon (positive for source)
+NEP,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, net ecosystem production (no fire/landuse/harvest flux: positive for sink
+NPP,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, net primary production
+PSNSHA,A,1.00000E+00, umolCO2/m^2/s, umolCO2/m^2/s,C Flux, shaded leaf photosynthesis
+PSNSHADE_TO_CPOOL,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, C fixation from shaded canopy
+PSNSUN,A,1.00000E+00, umolCO2/m^2/s, umolCO2/m^2/s,C Flux, sunlit leaf photosynthesis
+PSNSUN_TO_CPOOL,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, C fixation from sunlit canopy
+RR,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, root respiration (fine root MR + total root GR)
+SOILC_HR,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, soil C heterotrophic respiration
+SOILC_LOSS,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, soil C loss
+SOMHR,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, soil organic matter heterotrophic respiration
+SOM_C_LEACHED,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, total flux of C from SOM pools due to leaching
+SR,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, total soil respiration (HR + root resp)
+WOODC_ALLOC,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, wood C allocation
+WOOD_HARVESTC,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, wood harvest C (to product pools)
+XR,T,3.15360E-02, gC/m^2/s, PgC/yr,C Flux, total excess respiration
+CPOOL,T,1.00000E-09, gC/m^2, PgC,C State, temporary photosynthate C pool
+CWDC,T,1.00000E-09, gC/m^2, PgC,C State, coarse woody debris C
+DEADCROOTC,T,1.00000E-09, gC/m^2, PgC,C State, dead coarse root C
+DEADSTEMC,T,1.00000E-09, gC/m^2, PgC,C State, dead stem C
+DISPVEGC,T,1.00000E-09, gC/m^2, PgC,C State, displayed vegetation carbon (excluding storage and cpool)
+FROOTC,T,1.00000E-09, gC/m^2, PgC,C State, fine root C
+LEAFC,T,1.00000E-09, gC/m^2, PgC,C State, leaf C
+LITR1C,T,1.00000E-09, gC/m^2, PgC,C State, LITR1 C
+LITR2C,T,1.00000E-09, gC/m^2, PgC,C State, LITR2 C
+LITR3C,T,1.00000E-09, gC/m^2, PgC,C State, LITR3 C
+LITTERC,T,1.00000E-09, gC/m^2, PgC,C State, litter C
+LIVECROOTC,T,1.00000E-09, gC/m^2, PgC,C State, live coarse root C
+LIVESTEMC,T,1.00000E-09, gC/m^2, PgC,C State, live stem C
+SEEDC_GRC,T,1.00000E-09, gC/m^2, PgC,C State, pool for seeding new PFTs via dynamic landcover
+SOIL1C,T,1.00000E-09, gC/m^2, PgC,C State, SOIL1 C
+SOIL2C,T,1.00000E-09, gC/m^2, PgC,C State, SOIL2 C
+SOIL3C,T,1.00000E-09, gC/m^2, PgC,C State, SOIL3 C
+SOIL4C,T,1.00000E-09, gC/m^2, PgC,C State, SOIL4 C
+SOILC,T,1.00000E-09, gC/m^2, PgC,C State, soil C
+STORVEGC,T,1.00000E-09, gC/m^2, PgC,C State, stored vegetation carbon (excluding cpool)
+TOTCOLC,T,1.00000E-09, gC/m^2, PgC,C State, total column-level C (no product pools)
+TOTECOSYSC,T,1.00000E-09, gC/m^2, PgC,C State, total ecosystem C (no product pools)
+TOTLITC,T,1.00000E-09, gC/m^2, PgC,C State, total litter carbon
+TOTLITC_1m,T,1.00000E-09, gC/m^2, PgC,C State, total litter C to 1 meter
+TOTPFTC,T,1.00000E-09, gC/m^2, PgC,C State, total PFT-level C (with cpool)
+TOTPRODC,T,1.00000E-09, gC/m^2, PgC,C State, total wood product C
+TOTSOMC,T,1.00000E-09, gC/m^2, PgC,C State, total soil organic matter C
+TOTSOMC_1m,T,1.00000E-09, gC/m^2, PgC,C State, total soil organic matter C to 1 meter
+TOTVEGC,T,1.00000E-09, gC/m^2, PgC,C State, total vegetation C (no cpool)
+TOTVEGC_ABG,T,1.00000E-09, gC/m^2, PgC,C State, total aboveground vegetation C (no cpool)
+WOODC,T,1.00000E-09, gC/m^2, PgC,C State, wood C
+XSMRPOOL,T,1.00000E-09, gC/m^2, PgC,C State, temporary photosynthate C pool
+EFLX_DYNBAL,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, dynamic land cover change conversion energy flux
+EFLX_GRND_LAKE,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, net heat flux into lake/snow surface (excluding light transmission)
+EFLX_LH_TOT,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, total latent heat flux [+ to atm]
+EFLX_LH_TOT_R,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, rural total evaporation
+ERRSEB,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, surface energy conservation error
+ERRSOI,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, soil/lake energy conservation error
+ERRSOL,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, solar radiation conservation error
+FCEV,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, canopy evaporation
+FCTR,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, canopy transpiration
+FGEV,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, ground evaporation
+FGR,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, heat flux into soil/snow including snow melt
+FGR12,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, heat flux between soil layers 1 and 2
+FGR_R,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, rural heat flux into soil/snow including snow melt
+FIRA,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, net longwave radiation
+FIRA_R,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, rural net longwave radiation
+FIRE,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, emitted longwave radiation
+FIRE_R,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, rural emitted longwave radiation
+FLDS,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, atmospheric longwave radiation
+FSA,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, absorbed solar radiation
+FSA_R,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, rural absorbed solar radiation
+FSDS,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, atmospheric incident solar radiation
+FSDSND,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, direct nir incident solar radiation
+FSDSNDLN,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, direct nir incident solar radiation at local noon
+FSDSNI,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, diffuse nir incident solar radiation
+FSDSVD,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, direct vis incident solar radiation
+FSDSVDLN,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, direct vis incident solar radiation at local noon
+FSDSVI,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, diffuse vis incident solar radiation
+FSDSVILN,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, diffuse vis incident solar radiation at local noon
+FSH,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, sensible heat
+FSH_G,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, sensible heat from ground
+FSH_NODYNLNDUSE,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, sensible heat not including correction for land use change
+FSH_R,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, rural sensible heat
+FSH_V,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, sensible heat from veg
+FSM,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, snow melt heat flux
+FSM_R,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, rural snow melt heat flux
+FSR,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, reflected solar radiation
+FSRND,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, direct nir reflected solar radiation
+FSRNDLN,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, direct nir reflected solar radiation at local noon
+FSRNI,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, diffuse nir reflected solar radiation
+FSRVD,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, direct vis reflected solar radiation
+FSRVDLN,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, direct vis reflected solar radiation at local noon
+FSRVI,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, diffuse vis reflected solar radiation
+PARVEGLN,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, absorbed par by vegetation at local noon
+SABG,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, solar rad absorbed by ground
+SABG_PEN,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, rural solar rad penetrating top soil or snow layer
+SABV,A,1.00000E+00, W/m^2, W/m^2,Energy Flux, solar rad absorbed by veg
+GC_HEAT1,A,1.00000E+00, J/m^2, J/m^2,Energy State, initial gridcell total heat content
+HC,A,1.00000E+00, MJ/m2, MJ/m2,Energy State, heat content of soil/snow/lake
+HCSOI,A,1.00000E+00, MJ/m2, MJ/m2,Energy State, soil heat content
+TBOT,A,1.00000E+00, K, K,Energy State, atmospheric air temperature
+TG,A,1.00000E+00, K, K,Energy State, ground temperature
+TG_R,A,1.00000E+00, K, K,Energy State, rural ground temperature
+TH2OSFC,A,1.00000E+00, K, K,Energy State, surface water temperature
+THBOT,A,1.00000E+00, K, K,Energy State, atmospheric air potential temperature
+TREFMNAV,A,1.00000E+00, K, K,Energy State, daily minimum of average 2-m temperature
+TREFMNAV_R,A,1.00000E+00, K, K,Energy State, rural daily minimum of average 2-m temperature
+TREFMXAV,A,1.00000E+00, K, K,Energy State, daily maximum of average 2-m temperature
+TREFMXAV_R,A,1.00000E+00, K, K,Energy State, rural daily maximum of average 2-m temperature
+TSA,A,1.00000E+00, K, K,Energy State, 2m air temperature
+TSA_R,A,1.00000E+00, K, K,Energy State, rural 2m air temperature
+TSOI_10CM,A,1.00000E+00, K, K,Energy State, soil temperature in top 10cm of soil
+TV,A,1.00000E+00, K, K,Energy State, vegetation temperature
+COL_FIRE_CLOSS,T,3.15360E-02, gC/m^2/s, PgC/yr,Fire, total column-level fire C loss (non-peat and non-conversion)
+FAREA_BURNED,A,1.00000E+00, proportion, proportion,Fire, timestep fractional area burned
+NFIRE,A,1.00000E+00, counts/km2/sec, counts/km2/sec,Fire, fire counts valid only in Reg.C
+PFT_FIRE_CLOSS,T,3.15360E-02, gC/m^2/s, PgC/yr,Fire, total PFT-level fire C loss (non-peat and non-conversion)
+DEFICIT,A,8.64000E+04, mm/s, mm/day,H2O Flux, runoff supply deficit
+DWB,A,8.64000E+04, mm/s, mm/day,H2O Flux, net change in total water mass
+QCHARGE,A,8.64000E+04, mm/s, mm/day,H2O Flux, aquifer recharge rate (vegetated landunits only)
+QDRAI,A,8.64000E+04, mm/s, mm/day,H2O Flux, sub-surface drainage
+QDRAI_PERCH,A,8.64000E+04, mm/s, mm/day,H2O Flux, perched water table drainage
+QDRAI_XS,A,8.64000E+04, mm/s, mm/day,H2O Flux, saturation excess drainage
+QDRIP,A,8.64000E+04, mm/s, mm/day,H2O Flux, throughfall
+QFLOOD,A,8.64000E+04, mm/s, mm/day,H2O Flux, runoff from river flooding
+QFLX_ICE_DYNBAL,A,8.64000E+04, mm/s, mm/day,H2O Flux, ice dynamic land cover change conversion runoff flux
+QFLX_LIQ_DYNBAL,A,8.64000E+04, mm/s, mm/day,H2O Flux, liq dynamic land cover change conversion runoff flux
+QH2OSFC,A,8.64000E+04, mm/s, mm/day,H2O Flux, surface water runoff
+QINFL,A,8.64000E+04, mm/s, mm/day,H2O Flux, infiltration
+QINTR,A,8.64000E+04, mm/s, mm/day,H2O Flux, interception
+QIRRIG_GRND,A,8.64000E+04, mm/s, mm/day,H2O Flux, groundwater irrigation
+QIRRIG_ORIG,A,8.64000E+04, mm/s, mm/day,H2O Flux, original total irrigation water demand (surface + ground)
+QIRRIG_REAL,A,8.64000E+04, mm/s, mm/day,H2O Flux, actual water added through irrigation (surface + ground)
+QIRRIG_SURF,A,8.64000E+04, mm/s, mm/day,H2O Flux, surface water irrigation
+QIRRIG_WM,A,8.64000E+04, mm/s, mm/day,H2O Flux, surface water irrigation demand sent to MOSART/WM
+QOVER,A,8.64000E+04, mm/s, mm/day,H2O Flux, surface runoff
+QRGWL,A,8.64000E+04, mm/s, mm/day,H2O Flux," surface runoff at glaciers (liquid only), wetlands, lakes"
+QRUNOFF,A,8.64000E+04, mm/s, mm/day,H2O Flux, total liquid runoff (does not include QSNWCPICE)
+QRUNOFF_NODYNLNDUSE,A,8.64000E+04, mm/s, mm/day,H2O Flux, total liquid runoff (does not include QSNWCPICE) not including correction for land use change
+QRUNOFF_R,A,8.64000E+04, mm/s, mm/day,H2O Flux, rural total runoff
+QSNOMELT,A,8.64000E+04, mm/s, mm/day,H2O Flux, snow melt
+QSNWCPICE,A,8.64000E+04, mm/s, mm/day,H2O Flux, excess snowfall due to snow capping
+QSNWCPICE_NODYNLNDUSE,A,8.64000E+04, mm/s, mm/day,H2O Flux, excess snowfall due to snow capping not including correction for land use change
+QSOIL,A,8.64000E+04, mm/s, mm/day,H2O Flux, ground evaporation
+QVEGE,A,8.64000E+04, mm/s, mm/day,H2O Flux, canopy evaporation
+QVEGT,A,8.64000E+04, mm/s, mm/day,H2O Flux, canopy transpiration
+RAIN,A,8.64000E+04, mm/s, mm/day,H2O Flux, atmospheric rain
+SNOW,A,8.64000E+04, mm/s, mm/day,H2O Flux, atmospheric snow
+SNOW_SINKS,A,8.64000E+04, mm/s, mm/day,H2O Flux, snow sinks (liquid water)
+SNOW_SOURCES,A,8.64000E+04, mm/s, mm/day,H2O Flux, snow sources (liquid water)
+SUPPLY,A,8.64000E+04, mm/s, mm/day,H2O Flux, runoff supply for land use
+ERRH2O,A,1.00000E+00, mm, mm,H2O State, total water conservation error
+ERRH2OSNO,A,1.00000E+00, mm, mm,H2O State, imbalance in snow depth (liquid water)
+GC_ICE1,A,1.00000E+00, mm, mm,H2O State, initial gridcell total ice content
+GC_LIQ1,A,1.00000E+00, mm, mm,H2O State, initial gridcell total liq content
+H2OCAN,A,1.00000E+00, mm, mm,H2O State, intercepted water
+H2OSFC,A,1.00000E+00, mm, mm,H2O State, surface water depth
+H2OSNO,A,1.00000E+00, mm, mm,H2O State, snow depth (liquid water)
+H2OSNO_TOP,A,1.00000E+00, kg/m2, mm,H2O State, mass of snow in top snow layer
+INT_SNOW,A,1.00000E+00, mm, mm,H2O State, accumulated SWE (vegetated landunits only)
+Q2M,A,1.00000E+00, kg/kg, kg/kg,H2O State, 2m specific humidity
+QBOT,A,1.00000E+00, kg/kg, kg/kg,H2O State, atmospheric specific humidity
+RH2M,A,1.00000E+00, %, kg/kg,H2O State, 2m relative humidity
+RH2M_R,A,1.00000E+00, %, kg/kg,H2O State, rural 2m relative humidity
+SNOWDP,A,1.00000E+00, m, m,H2O State, gridcell mean snow height
+SNOWICE,A,1.00000E+00, kg/m2, mm,H2O State, snow ice
+SNOWLIQ,A,1.00000E+00, kg/m2, mm,H2O State, snow liquid water
+SNOW_DEPTH,A,1.00000E+00, m, m,H2O State, snow height of snow covered area
+SOILWATER_10CM,A,1.00000E+00, kg/m2, mm,H2O State, soil liquid water + ice in top 10cm of soil (veg landunits only)
+TWS,A,1.00000E+00, mm, mm,H2O State, total water storage
+TWS_MONTH_BEGIN,A,1.00000E+00, mm, mm,H2O State, total water storage at the beginning of a month
+TWS_MONTH_END,A,1.00000E+00, mm, mm,H2O State, total water storage at the end of a month
+VOLR,A,1.00000E+00, m3, m3,H2O State, river channel total water storage
+VOLRMCH,A,1.00000E+00, m3, m3,H2O State, river channel main channel water storage
+WA,A,1.00000E+00, mm, mm,H2O State, water in the unconfined aquifer (vegetated landunits only)
+ACTUAL_IMMOB,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, actual N immobilization
+DENIT,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, total rate of denitrification
+DWT_CONV_NFLUX_GRC,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, land conversion N flux
+DWT_SLASH_NFLUX,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, slash N flux to litter and CWD due to land use
+F_DENIT,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, denitrification flux
+F_NIT,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, nitrification flux
+GROSS_NMIN,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, gross rate of N mineralization
+NDEP_TO_SMINN,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, atmospheric N deposition to soil mineral N
+NET_NMIN,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, net rate of N mineralization
+NFIX_TO_SMINN,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, symbiotic/asymbiotic N fixation to soil mineral N
+PFT_FIRE_NLOSS,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, total pft-level fire N loss
+SMINN_TO_NPOOL,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, deployment of soil mineral N uptake
+SMINN_TO_PLANT,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, plant uptake of soil mineral N
+SMIN_NO3_LEACHED,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, soil NO3 pool loss to leaching
+SMIN_NO3_RUNOFF,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, soil NO3 pool loss to runoff
+SUPPLEMENT_TO_SMINN,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, supplemental N supply
+WOOD_HARVESTN,T,3.15360E+01, gN/m^2/s, TgN/yr,N Flux, wood harvest N (to product pools)
+RETRANSN,T,1.00000E-06, gN/m^2, TgN,N State, plant pool of retranslocated N
+CWDN,T,1.00000E-06, gN/m^2, TgN,N State, coarse woody debris N
+DEADCROOTN,T,1.00000E-06, gN/m^2, TgN,N State, dead coarse root N
+DEADSTEMN,T,1.00000E-06, gN/m^2, TgN,N State, dead stem N
+DISPVEGN,T,1.00000E-06, gN/m^2, TgN,N State, displayed vegetation nitrogen
+FROOTN,T,1.00000E-06, gN/m^2, TgN,N State, fine root N
+LEAFN,T,1.00000E-06, gN/m^2, TgN,N State, leaf N
+LITR1N,T,1.00000E-06, gN/m^2, TgN,N State, LITR1 N
+LITR2N,T,1.00000E-06, gN/m^2, TgN,N State, LITR2 N
+LITR3N,T,1.00000E-06, gN/m^2, TgN,N State, LITR3 N
+LIVECROOTN,T,1.00000E-06, gN/m^2, TgN,N State, live coarse root N
+LIVESTEMN,T,1.00000E-06, gN/m^2, TgN,N State, live stem N
+NPOOL,T,1.00000E-06, gN/m^2, TgN,N State, temporary plant N pool
+SMINN,T,1.00000E-06, gN/m^2, TgN,N State, soil mineral N
+SMIN_NH4,T,1.00000E-06, gN/m^2, TgN,N State, soil mineral NH4
+SMIN_NO3,T,1.00000E-06, gN/m^2, TgN,N State, soil mineral NO3
+SOIL1N,T,1.00000E-06, gN/m^2, TgN,N State, SOIL1 N
+SOIL2N,T,1.00000E-06, gN/m^2, TgN,N State, SOIL2 N
+SOIL3N,T,1.00000E-06, gN/m^2, TgN,N State, SOIL3 N
+SOIL4N,T,1.00000E-06, gN/m^2, TgN,N State, SOIL4 N
+STORVEGN,T,1.00000E-06, gN/m^2, TgN,N State, stored vegetation nitrogen
+TOTCOLN,T,1.00000E-06, gN/m^2, TgN,N State, total column-level N (no product pools)
+TOTECOSYSN,T,1.00000E-06, gN/m^2, TgN,N State, total ecosystem N (no product pools)
+TOTLITN,T,1.00000E-06, gN/m^2, TgN,N State, total litter N
+TOTPFTN,T,1.00000E-06, gN/m^2, TgN,N State, total PFT-level N
+TOTSOMN,T,1.00000E-06, gN/m^2, TgN,N State, total soil organic matter N
+TOTVEGN,T,1.00000E-06, gN/m^2, TgN,N State, total vegetation N
+ACTUAL_IMMOB_P,T,3.15360E+01, gP/m^2/s, TgP/yr,P Flux, actual P immobilization
+ADSORBTION_P,T,3.15360E+01, gP/m^2/s, TgP/yr,P Flux, adsorb P flux
+BIOCHEM_PMIN,T,3.15360E+01, gP/m^2/s, TgP/yr,P Flux, biochemical rate of P mineralization
+DESORPTION_P,T,3.15360E+01, gP/m^2/s, TgP/yr,P Flux, desorp P flux
+DWT_CONV_PFLUX_GRC,T,3.15360E+01, gP/m^2/s, TgP/yr,P Flux, land conversion P flux
+DWT_SLASH_PFLUX,T,3.15360E+01, gP/m^2/s, TgP/yr,P Flux, slash P flux to litter and CWD due to land use
+GROSS_PMIN,T,3.15360E+01, gP/m^2/s, TgP/yr,P Flux, gross rate of P mineralization
+NET_PMIN,T,3.15360E+01, gP/m^2/s, TgP/yr,P Flux, net rate of P mineralization
+PDEP_TO_SMINP,T,3.15360E+01, gP/m^2/s, TgP/yr,P Flux, atmospheric P deposition to soil mineral P
+RETRANSP,T,3.15360E+01, gP/m^2, TgP/yr,P Flux, plant pool of retranslocated P
+SMINP_LEACHED,T,3.15360E+01, gP/m^2/s, TgP/yr,P Flux, soil mineral P pool loss to leaching
+SMINP_TO_PLANT,T,3.15360E+01, gP/m^2/s, TgP/yr,P Flux, plant uptake of soil mineral P
+SMINP_TO_PPOOL,T,3.15360E+01, gP/m^2/s, TgP/yr,P Flux, deployment of soil mineral P uptake
+SUPPLEMENT_TO_SMINP,T,3.15360E+01, gP/m^2/s, TgP/yr,P Flux, supplemental P supply
+CWDP,T,1.00000E-06, gP/m^2, TgP,P State, coarse woody debris P
+DEADCROOTP,T,1.00000E-06, gP/m^2, TgP,P State, dead coarse root P
+DEADSTEMP,T,1.00000E-06, gP/m^2, TgP,P State, dead stem P
+DISPVEGP,T,1.00000E-06, gP/m^2, TgP,P State, displayed vegetation phosphorus
+FROOTP,T,1.00000E-06, gP/m^2, TgP,P State, fine root P
+LABILEP,T,1.00000E-06, gP/m^2, TgP,P State, soil labile P
+LEAFP,T,1.00000E-06, gP/m^2, TgP,P State, leaf P
+LITR1P,T,1.00000E-06, gP/m^2, TgP,P State, LITR1 P
+LITR2P,T,1.00000E-06, gP/m^2, TgP,P State, LITR2 P
+LITR3P,T,1.00000E-06, gP/m^2, TgP,P State, LITR3 P
+LIVECROOTP,T,1.00000E-06, gP/m^2, TgP,P State, live coarse root P
+LIVESTEMP,T,1.00000E-06, gP/m^2, TgP,P State, live stem P
+OCCLP,T,1.00000E-06, gP/m^2, TgP,P State, soil occluded P
+PPOOL,T,1.00000E-06, gP/m^2, TgP,P State, temporary plant P pool
+PRIMP,T,1.00000E-06, gP/m^2, TgP,P State, soil primary P
+SECONDP,T,1.00000E-06, gP/m^2, TgP,P State, soil secondary P
+SMINP,T,1.00000E-06, gP/m^2, TgP,P State, soil mineral P
+SOIL1P,T,1.00000E-06, gP/m^2, TgP,P State, SOIL1 P
+SOIL2P,T,1.00000E-06, gP/m^2, TgP,P State, SOIL2 P
+SOIL3P,T,1.00000E-06, gP/m^2, TgP,P State, SOIL3 P
+SOIL4P,T,1.00000E-06, gP/m^2, TgP,P State, SOIL4 P
+SOLUTIONP,T,1.00000E-06, gP/m^2, TgP,P State, soil solution P
+STORVEGP,T,1.00000E-06, gP/m^2, TgP,P State, stored vegetation phosphorus
+TOTCOLP,T,1.00000E-06, gP/m^2, TgP,P State, total column-level P (no product pools)
+TOTECOSYSP,T,1.00000E-06, gP/m^2, TgP,P State, total ecosystem P (no product pools)
+TOTLITP,T,1.00000E-06, gP/m^2, TgP,P State, total litter P
+TOTLITP_1m,T,1.00000E-06, gP/m^2, TgP,P State, total litter P to 1 meter
+TOTPFTP,T,1.00000E-06, gP/m^2, TgP,P State, total PFT-level P
+TOTSOMP,T,1.00000E-06, gP/m^2, TgP,P State, total soil organic matter P
+TOTSOMP_1m,T,1.00000E-06, gP/m^2, TgP,P State, total soil organic matter P to 1 meter
+TOTVEGP,T,1.00000E-06, gP/m^2, TgP,P State, total vegetation P
+ALT,A,1.00000E+00, m, m,Physical State, current active layer thickness
+ALTMAX,A,1.00000E+00, m, m,Physical State, maximum annual active layer thickness
+FCOV,A,1.00000E+00, proportion, proportion,Physical State, fractional impermeable area
+FH2OSFC,A,1.00000E+00, proportion, proportion,Physical State, fraction of ground covered by surface water
+FINUNDATED,A,1.00000E+00, proportion, proportion,Physical State, fractional inundated area of vegetated columns
+FROST_TABLE,A,1.00000E+00, m, m,Physical State, frost table depth (vegetated landunits only)
+FSAT,A,1.00000E+00, unitless, unitless,Physical State, fractional area with water table at surface
+FSNO,A,1.00000E+00, proportion, proportion,Physical State, fraction of ground covered by snow
+FSNO_EFF,A,1.00000E+00, proportion, proportion,Physical State, effective fraction of ground covered by snow
+LAKEICETHICK,A,1.00000E+00, m, m,Physical State, thickness of lake ice (including physical expansion on freezing)
+SNOINTABS,A,1.00000E+00, %, %,Physical State, percent of incoming solar absorbed by lower snow layers
+SoilAlpha,A,1.00000E+00, unitless, unitless,Physical State, factor limiting ground evap
+TKE1,A,1.00000E+00, W/(mK), W/(mK),Physical State, top lake level eddy thermal conductivity
+ZBOT,A,1.00000E+00, m, m,Physical State, atmospheric reference height
+ZWT,A,1.00000E+00, m, m,Physical State, water table depth (vegetated landunits only)
+ZWT_CH4_UNSAT,A,1.00000E+00, m, m,Physical State, depth of water table for methane production used in non-inundated area
+ZWT_PERCH,A,1.00000E+00, m, m,Physical State, perched water table depth (vegetated landunits only)
+PBOT,A,1.00000E+00, Pa, Pa,Pressure, atmospheric pressure
+PCH4,A,1.00000E+00, Pa, Pa,Pressure, atmospheric partial pressure of CH4
+PCO2,A,1.00000E+00, Pa, Pa,Pressure, atmospheric partial pressure of CO2
+BUILDHEAT,A,1.00000E+00, W/m^2, W/m^2,Urban, heat flux from urban building interior to walls and roof
+EFLX_LH_TOT_U,A,1.00000E+00, W/m^2, W/m^2,Urban, urban total evaporation
+FGR_U,A,1.00000E+00, W/m^2, W/m^2,Urban, urban heat flux into soil/snow including snow melt
+FIRA_U,A,1.00000E+00, W/m^2, W/m^2,Urban, urban net longwave radiation
+FIRE_U,A,1.00000E+00, W/m^2, W/m^2,Urban, urban emitted longwave radiation
+FSA_U,A,1.00000E+00, W/m^2, W/m^2,Urban, urban absorbed solar radiation
+FSH_U,A,1.00000E+00, W/m^2, W/m^2,Urban, urban sensible heat
+FSM_U,A,1.00000E+00, W/m^2, W/m^2,Urban, urban snow melt heat flux
+HEAT_FROM_AC,A,1.00000E+00, W/m^2, W/m^2,Urban, sensible heat flux from air conditioning
+QRUNOFF_U,A,8.64000E+04, mm/s, mm/day,Urban, urban total runoff
+RH2M_U,A,1.00000E+00, %, %,Urban, urban 2m relative humidity
+SoilAlpha_U,A,1.00000E+00, unitless, unitless,Urban, urban factor limiting ground evap
+TBUILD,A,1.00000E+00, K, K,Urban, internal urban building temperature
+TG_U,A,1.00000E+00, K, K,Urban, urban ground temperature
+TREFMNAV_U,A,1.00000E+00, K, K,Urban, urban daily minimum of average 2-m temperature
+TREFMXAV_U,A,1.00000E+00, K, K,Urban, urban daily maximum of average 2-m temperature
+TSA_U,A,1.00000E+00, K, K,Urban, urban 2m air temperature
+URBAN_AC,A,1.00000E+00, W/m^2, W/m^2,Urban, urban air conditioning flux
+URBAN_HEAT,A,1.00000E+00, W/m^2, W/m^2,Urban, urban heating flux
+WASTEHEAT,A,1.00000E+00, W/m^2, W/m^2,Urban, sensible heat flux from heating/cooling sources of urban waste heat
+FPG_P,A,1.00000E+00, proportion, proportion,Veg State, fraction of potential gpp due to P limitation
+FPI_P,A,1.00000E+00, proportion, proportion,Veg State, fraction of potential immobilization of phosphorus
+FPG,A,1.00000E+00, proportion, proportion,Veg State, fraction of potential gpp due to N limitation
+FPI,A,1.00000E+00, proportion, proportion,Veg State, fraction of potential immobilization of nitrogen
+BTRAN,A,1.00000E+00, proportion, proportion,Veg State, transpiration beta factor
+ELAI,A,1.00000E+00, m^2/m^2, m^2/m^2,Veg State, exposed one-sided leaf area index
+ESAI,A,1.00000E+00, m^2/m^2, m^2/m^2,Veg State, exposed one-sided stem area index
+HTOP,A,1.00000E+00, m, m,Veg State, height of canopy top
+LAISHA,A,1.00000E+00,m^2/m^2,m^2/m^2,Veg State, shaded projected leaf area index
+LAISUN,A,1.00000E+00,m^2/m^2,m^2/m^2,Veg State, sunlit projected leaf area index
+TLAI,A,1.00000E+00,m^2/m^2,m^2/m^2,Veg State, total projected leaf area index
+TSAI,A,1.00000E+00,m^2/m^2,m^2/m^2,Veg State, total projected stem area index
+TAUX,A,1.00000E+00, kg/m/s^2, kg/m/s^2,Winds, zonal surface stress
+TAUY,A,1.00000E+00, kg/m/s^2, kg/m/s^2,Winds, meridional surface stress
+U10,A,1.00000E+00, m/s, m/s,Winds, 10-m wind
+U10WITHGUSTS,A,1.00000E+00, m/s, m/s,Winds, 10-m wind with gustiness enhancement included
+WIND,A,1.00000E+00, m/s, m/s,Winds, atmospheric wind velocity magnitude
