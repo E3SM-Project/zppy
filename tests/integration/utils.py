@@ -62,13 +62,23 @@ def compare_images(
 
             mismatched_images.append(image_name)
 
+            diff_dir_actual_png = os.path.join(
+                diff_dir, "{}_actual.png".format(image_name)
+            )
+            # image_name could contain a number of subdirectories.
+            os.makedirs(os.path.dirname(diff_dir_actual_png), exist_ok=True)
             shutil.copy(
                 path_to_actual_png,
-                os.path.join(diff_dir, "{}_actual.png".format(image_name)),
+                diff_dir_actual_png,
             )
+            diff_dir_expected_png = os.path.join(
+                diff_dir, "{}_expected.png".format(image_name)
+            )
+            # image_name could contain a number of subdirectories.
+            os.makedirs(os.path.dirname(diff_dir_expected_png), exist_ok=True)
             shutil.copy(
                 path_to_expected_png,
-                os.path.join(diff_dir, "{}_expected.png".format(image_name)),
+                diff_dir_expected_png,
             )
             # https://stackoverflow.com/questions/41405632/draw-a-rectangle-and-a-text-in-it-using-pil
             draw = ImageDraw.Draw(diff)
