@@ -6,8 +6,8 @@ from configobj import ConfigObj
 from zppy.bundle import handle_bundles
 from zppy.utils import (
     ParameterGuessType,
-    ParameterNotProvidedError,
     add_dependencies,
+    check_parameter_defined,
     check_required_parameters,
     check_status,
     define_or_guess,
@@ -111,12 +111,9 @@ def check_parameters_for_bash(c: Dict[str, Any]) -> None:
 
 def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
     # Check mvm-specific parameters that aren't used until e3sm_diags.bash is run.
-    if c["diff_title"] == "":
-        raise ParameterNotProvidedError("diff_title")
-    if c["ref_name"] == "":
-        raise ParameterNotProvidedError("ref_name")
-    if c["short_ref_name"] == "":
-        raise ParameterNotProvidedError("short_ref_name")
+    check_parameter_defined(c, "diff_title")
+    check_parameter_defined(c, "ref_name")
+    check_parameter_defined(c, "short_ref_name")
 
     check_required_parameters(
         c,
@@ -244,6 +241,8 @@ def add_climo_dependencies(
             "meridional_mean_2d",
             "annual_cycle_zonal_mean",
             "zonal_mean_2d_stratosphere",
+            "aerosol_aeronet",
+            "aerosol_budget",
         ]
     )
     # Check if any requested sets depend on climo:
@@ -256,9 +255,17 @@ def add_climo_dependencies(
             os.path.join(script_dir, f"climo_{climo_sub}{status_suffix}"),
         )
     if "diurnal_cycle" in c["sets"]:
+        check_parameter_defined(c, "climo_diurnal_subsection")
         dependencies.append(
             os.path.join(
                 script_dir, f"climo_{c['climo_diurnal_subsection']}{status_suffix}"
+            )
+        )
+    if "lat_lon_land" in c["sets"]:
+        check_parameter_defined(c, "climo_land_subsection")
+        dependencies.append(
+            os.path.join(
+                script_dir, f"climo_{c['climo_land_subsection']}{status_suffix}"
             )
         )
     if "tc_analysis" in c["sets"]:
