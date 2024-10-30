@@ -73,6 +73,8 @@ def load_cmip_metrics_data(cmip_file):
                 # move highlight_models to the end
                 for model in highlight_models:
                     idxs = df[df.iloc[:, 0] == model].index
+                    cmip_models.remove(model)
+                    cmip_models.append(model)
                     for idx in idxs:
                         df = shift_row_to_bottom(df, idx)
                 cmip_lib.df_dict[stat][season][region] = df
@@ -623,7 +625,7 @@ def mean_climate_metrics_plot(parameter):
                 highlight_models,
                 file_template,
                 figure_template,
-                outdir,
+                ptrait_fig_dir,
                 data_version=None,
                 watermark=False,
             )
