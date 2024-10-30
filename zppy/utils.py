@@ -314,6 +314,11 @@ def define_or_guess2(
             raise ParameterNotProvidedError(parameter)
 
 
+def check_parameter_defined(c: Dict[str, Any], relevant_parameter: str) -> None:
+    if (relevant_parameter not in c.keys()) or (c[relevant_parameter] == ""):
+        raise ParameterNotProvidedError(relevant_parameter)
+
+
 def get_file_names(script_dir: str, prefix: str):
     return tuple(
         [
