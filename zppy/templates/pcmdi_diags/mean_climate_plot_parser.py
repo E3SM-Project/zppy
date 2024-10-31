@@ -283,23 +283,6 @@ def fill_plot_var_and_units(model_lib, cmip_lib):
             variable_units.append(varunt)
             variable_names.append(var)
             del (indv1, indv2, varunt)
-
-        # sanity check for cmip data
-        for stat in cmip_lib.df_dict:
-            for season in cmip_lib.df_dict[stat]:
-                for region in cmip_lib.df_dict[stat][season]:
-                    df = pd.DataFrame(cmip_lib.df_dict[stat][season][region])
-                    for i, model in enumerate(df["model"].tolist()):
-                        if model in ["E3SM-1-0", "E3SM-1-1-ECA"]:
-                            idxs = df[df.iloc[:, 0] == model].index
-                            df.loc[idxs, "ta850"] = np.nan
-                            del idxs
-                        if model in ["CIESM"]:
-                            idxs = df[df.iloc[:, 0] == model].index
-                            df.loc[idxs, "pr"] = np.nan
-                            del idxs
-                    cmip_lib.df_dict[stat][season][region] = df
-                    del df
         else:
             print("Warning: {} is not found in metrics data".format(var))
             print(
@@ -307,6 +290,23 @@ def fill_plot_var_and_units(model_lib, cmip_lib):
                     var
                 )
             )
+
+    # sanity check for cmip data
+    for stat in cmip_lib.df_dict:
+        for season in cmip_lib.df_dict[stat]:
+            for region in cmip_lib.df_dict[stat][season]:
+                df = pd.DataFrame(cmip_lib.df_dict[stat][season][region])
+                for i, model in enumerate(df["model"].tolist()):
+                    if model in ["E3SM-1-0", "E3SM-1-1-ECA"]:
+                        idxs = df[df.iloc[:, 0] == model].index
+                        df.loc[idxs, "ta-850"] = np.nan
+                        del idxs
+                    if model in ["CIESM"]:
+                        idxs = df[df.iloc[:, 0] == model].index
+                        df.loc[idxs, "pr"] = np.nan
+                        del idxs
+                cmip_lib.df_dict[stat][season][region] = df
+                del df
 
     return model_lib, cmip_lib, variable_names, variable_units
 
