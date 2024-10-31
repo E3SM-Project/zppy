@@ -39,12 +39,14 @@ def load_test_model_data(test_file, refr_file, mip, run_type):
         for season in test_lib.df_dict[stat]:
             for region in test_lib.df_dict[stat][season]:
                 df = pd.DataFrame(test_lib.df_dict[stat][season][region])
-                for model in df["model"].tolist():
-                    new_name = "{}-{}".format(mip.upper(), model.upper())
-                    df["model"] = list(
+                for i, model in enumerate(df["model"].tolist()):
+                    model_run = df["model_run"].tolist()[i]
+                    new_name = "{}-{}".format(mip.upper(), model_run.upper())
+                    idxs = df[df.iloc[:, 2] == model_run].index
+                    df.loc[idxs, "model"] = list(
                         map(
                             lambda x: x.replace(model, new_name),
-                            df["model"],
+                            df.loc[idxs, "model"],
                         )
                     )
                     if new_name not in test_models:
@@ -210,6 +212,7 @@ def port4sea_plot(
     file_template,
     figure_template,
     outdir,
+    add_vertical_line,
     data_version=None,
     watermark=False,
 ):
@@ -302,6 +305,13 @@ def port4sea_plot(
         logo_off=logo_off,
     )
 
+    if add_vertical_line:
+        ax.axvline(
+            x=len(xaxis_labels) - len(highlight_models) - len(test_models),
+            color="k",
+            linewidth=3,
+        )
+
     if landscape:
         ax.set_xticklabels(xaxis_labels, rotation=45, va="bottom", ha="left")
         ax.set_yticklabels(yaxis_labels, rotation=0, va="center", ha="right")
@@ -387,6 +397,7 @@ def paracord_plot(
     file_template,
     figure_template,
     outdir,
+    identify_all_models,
     data_version=None,
     watermark=False,
 ):
@@ -404,19 +415,21 @@ def paracord_plot(
     model_data = data_dict[var_names].to_numpy()
 
     # construct the string for plot
-    model_list = cmip_models + test_models + ["CMIP MME"]
+    model_list = data_dict[
+        "model"
+    ].to_list()  # cmip_models + test_models + ["CMIP6 MME"]
     model_list_group2 = highlight_models + test_models
-    models_to_highlight = ["CMIP MME"] + test_models
-
-    figsize = (32, 8)
-    fontsize = 20
-    legend_ncol = int(11 * figsize[0] / 32.0)
+    models_to_highlight = test_models + [
+        data_dict["model"].to_list()[-1]
+    ]  # ["CMIP6 MME"]
+    figsize = (40, 12)
+    fontsize = 24
+    legend_ncol = int(7 * figsize[0] / 40.0)
     legend_posistion = (0.50, -0.14)
-
     # color map for markers
     colormap = "tab20_r"
     # color map for highlight lines
-    lncolors = [
+    xcolors = [
         "#000000",
         "#e41a1c",
         "#ff7f00",
@@ -428,7 +441,7 @@ def paracord_plot(
         "#377eb8",
         "#dede00",
     ]
-
+    lncolors = xcolors[1 : len(test_models) + 1] + [xcolors[0]]
     # Add Watermark/Logo
     if watermark:
         logo_rect = [0.85, 0.15, 0.07, 0.07]
@@ -437,6 +450,14 @@ def paracord_plot(
         logo_rect = [0, 0, 0, 0]
         logo_off = True
 
+    xlabel = "Metric"
+    if "rms" in stat:
+        ylabel = "RMS Error (" + stat.upper() + ")"
+    elif "std" in stat:
+        ylabel = "Standard Deviation (" + stat.upper() + ")"
+    else:
+        ylabel = "value (" + stat.upper() + ")"
+
     if not np.isnan(model_data).all():
         print(model_data.min(), model_data.max())
         title = "Model Performance of {} Climatology ({}, {})".format(
@@ -444,25 +465,32 @@ def paracord_plot(
         )
         fig, ax = parallel_coordinate_plot(
             model_data,
-            var_names,
+            var_units,
             model_list,
             model_names2=model_list_group2,
-            group1_name="CMIP MME",
-            group2_name="E3SM Models",
+            group1_name="CMIP6",
+            group2_name="E3SM",
             models_to_highlight=models_to_highlight,
             models_to_highlight_colors=lncolors,
             models_to_highlight_labels=models_to_highlight,
+            identify_all_models=identify_all_models,  # hide indiviaul model markers for CMIP6 models
+            vertical_center="median",
+            vertical_center_line=True,
             title=title,
             figsize=figsize,
+            axes_labelsize=fontsize * 1.1,
+            title_fontsize=fontsize * 1.1,
+            yaxes_label=ylabel,
+            xaxes_label=xlabel,
             colormap=colormap,
             show_boxplot=False,
             show_violin=True,
             violin_colors=("lightgrey", "pink"),
             legend_ncol=legend_ncol,
             legend_bbox_to_anchor=legend_posistion,
-            legend_fontsize=fontsize * 0.6,
-            xtick_labelsize=fontsize * 0.8,
-            ytick_labelsize=fontsize * 0.8,
+            legend_fontsize=fontsize * 0.85,
+            xtick_labelsize=fontsize * 0.95,
+            ytick_labelsize=fontsize * 0.95,
             logo_rect=logo_rect,
             logo_off=logo_off,
         )
@@ -514,7 +542,6 @@ def mean_climate_metrics_plot(parameter):
     test_exp = parameter.test_data_set.split(".")[1]
     test_product = parameter.test_data_set.split(".")[2]
     test_case_id = parameter.test_data_set.split(".")[-1]
-
     # output directory
     outdir = os.path.join(parameter.output_path, test_mip, test_exp, test_case_id)
 
@@ -540,12 +567,10 @@ def mean_climate_metrics_plot(parameter):
     test_models, test_lib = load_test_model_data(
         test_file, refr_file, test_mip, parameter.run_type
     )
-
     # collect overlap sets of variables for plotting:
-    test_lib, cmip_lib, var_names, var_unit_list = fill_plot_var_and_units(
+    test_lib, cmip_lib, var_list, var_unit_list = fill_plot_var_and_units(
         test_lib, cmip_lib
     )
-
     # search overlap of regions in test and reference
     regions = []
     for reg in parameter.regions:
@@ -563,7 +588,6 @@ def mean_climate_metrics_plot(parameter):
         shutil.rmtree(parall_fig_dir)
     os.makedirs(parall_fig_dir)
     print("Parallel Coordinate  Plots (4 seasons), loop each region and metric....")
-
     # add ensemble mean
     for metric in [
         "rms_xyt",
@@ -577,16 +601,20 @@ def mean_climate_metrics_plot(parameter):
         for region in regions:
             for season in ["ann"]:
                 data_dict = merged_lib.df_dict[metric][season][region]
-                data_dict.loc["CMIP MME"] = cmip_lib.df_dict[metric][season][
+                data_dict.loc["CMIP MMM"] = cmip_lib.df_dict[metric][season][
                     region
                 ].mean(numeric_only=True, skipna=True)
-                data_dict.at["CMIP MME", "model"] = "CMIP MME"
+                data_dict.at["CMIP MMM", "model"] = "CMIP MMM"
+                if parameter.parcord_show_markers is not None:
+                    identify_all_models = parameter.parcord_show_markers
+                else:
+                    identify_all_models = True
                 paracord_plot(
                     metric,
                     region,
                     season,
                     data_dict,
-                    var_names,
+                    var_list,
                     var_unit_list,
                     cmip_models,
                     test_models,
@@ -594,6 +622,7 @@ def mean_climate_metrics_plot(parameter):
                     file_template,
                     figure_template,
                     parall_fig_dir,
+                    identify_all_models,
                     data_version=None,
                     watermark=False,
                 )
@@ -613,12 +642,16 @@ def mean_climate_metrics_plot(parameter):
     for metric in ["rms_xy", "cor_xy", "bias_xy"]:
         for region in regions:
             print("working on {} in {} region".format(metrics_inquire(metric), region))
+            if parameter.add_vertical_line is not None:
+                add_vertical_line = parameter.add_vertical_line
+            else:
+                add_vertical_line = False
             port4sea_plot(
                 metric,
                 region,
                 seasons,
                 data_dict,
-                var_names,
+                var_list,
                 var_unit_list,
                 cmip_models,
                 test_models,
@@ -626,11 +659,12 @@ def mean_climate_metrics_plot(parameter):
                 file_template,
                 figure_template,
                 ptrait_fig_dir,
+                add_vertical_line,
                 data_version=None,
                 watermark=False,
             )
 
     # release the data space
-    del (merged_lib, cmip_lib, test_lib, var_unit_list, var_names, regions)
+    del (merged_lib, cmip_lib, test_lib, var_unit_list, var_list, regions)
 
     return

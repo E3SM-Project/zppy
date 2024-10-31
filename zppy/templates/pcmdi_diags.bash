@@ -1338,14 +1338,18 @@ def main ():
   parameter.test_data_path = os.path.join("${results_dir}","metrics_results","mean_climate")
 {% if run_type == "model_vs_obs" %}
   parameter.refr_data_set = ""
+  parameter.refr_period = ""
   parameter.refr_data_path = ""
 {% elif run_type == "model_vs_model" %}
   parameter.refr_data_set = "{}.{}".format(ref_cmip_name,"${case_id}")
+  parameter.refr_period = "{}-{}".format(ref_start_yr,ref_end_yr)
   parameter.refr_data_path = os.path.join("${results_dir}","metrics_results","mean_climate")
 {%- endif %}
   parameter.output_path = os.path.join("${results_dir}","graphics","mean_climate")
   parameter.ftype = '{{ figure_format }}'
   parameter.debug = {{ pmp_debug }}
+  parameter.parcord_show_markers = {{parcord_show_markers}} #False
+  parameter.add_vertical_line = {{portrait_vertical_line}}  #True
 
   #generate diagnostics figures
   print("--- generate mean climate metrics plot ---")

@@ -3,6 +3,8 @@ import ast
 import glob
 import os
 
+import numpy as np
+import pandas as pd
 from pcmdi_metrics.mean_climate.lib import pmp_parser
 
 
@@ -95,6 +97,18 @@ def create_mean_climate_plot_parser():
         required=False,
     )
 
+    parser.add_argument(
+        "--parcord_show_markers",
+        dest="parcord_show_markers",
+        help="show markers for individual model in parallel coordinate plots",
+        required=False,
+    )
+    parser.add_argument(
+        "--add_vertical_line",
+        dest="add_vertical_line",
+        help="draw a vertical line to separate test and reference models for portrait plots",
+        required=False,
+    )
     return parser
 
 
@@ -197,46 +211,46 @@ def exclude_models(df, excluded_models):
 def fill_plot_var_and_units(model_lib, cmip_lib):
     # we define fixed sets of variables used for final plotting.
     units_all = {
-        "prw": "[kg m^{-2}]",
-        "pr": "[mm d^{-1}]",
-        "prsn": "[mm d^{-1}]",
-        "prc": "[mm d^{-1}]",
-        "hfls": "[W m^{-2}]",
-        "hfss": "[W m^{-2}]",
-        "clivi": "[kg m^{-2}]",
-        "clwvi": "[kg m^{-2}]",
+        "prw": "[kg m$^{-2}$]",
+        "pr": "[mm d$^{-1}$]",
+        "prsn": "[mm d$^{-1}$]",
+        "prc": "[mm d$^{-1}$]",
+        "hfls": "[W m$^{-2}$]",
+        "hfss": "[W m$^{-2}$]",
+        "clivi": "[kg $m^{-2}$]",
+        "clwvi": "[kg $m^{-2}$]",
         "psl": "[Pa]",
-        "evspsbl": "[kg m^{-2} s^{-1}]",
-        "rlds": "[W m^{-2}]",
-        "rldscs": "[W m^{-2}]",
-        "rtmt": "[W m^{-2}]",
-        "rsdt": "[W m^{-2}]",
-        "rlus": "[W m^{-2}]",
-        "rluscs": "[W m^{-2}]",
-        "rlut": "[W m^{-2}]",
-        "rlutcs": "[W m^{-2}]",
-        "rsds": "[W m^{-2}]",
-        "rsdscs": "[W m^{-2}]",
-        "rstcre": "[W m^{-2}]",
-        "rltcre": "[W m^{-2}]",
-        "rsus": "[W m^{-2}]",
-        "rsuscs": "[W m^{-2}]",
-        "rsut": "[W m^{-2}]",
-        "rsutcs": "[W m^{-2}]",
+        "evspsbl": "[kg m$^{-2} s^{-1}$]",
+        "rlds": "[W m$^{-2}$]",
+        "rldscs": "[W $m^{-2}$]",
+        "rtmt": "[W m$^{-2}$]",
+        "rsdt": "[W m$^{-2}$]",
+        "rlus": "[W m$^{-2}$]",
+        "rluscs": "[W m$^{-2}$]",
+        "rlut": "[W m$^{-2}$]",
+        "rlutcs": "[W m$^{-2}$]",
+        "rsds": "[W m$^{-2}$]",
+        "rsdscs": "[W m$^{-2}$]",
+        "rstcre": "[W m$^{-2}$]",
+        "rltcre": "[W m$^{-2}$]",
+        "rsus": "[W m$^{-2}$]",
+        "rsuscs": "[W m$^{-2}$]",
+        "rsut": "[W m$^{-2}$]",
+        "rsutcs": "[W m$^{-2}$]",
         "ts": "[K]",
         "tas": "[K]",
         "tauu": "[Pa]",
         "tauv": "[Pa]",
-        "sfcWind": "[m s^{-1}]",
+        "sfcWind": "[m s$^{-1}$]",
         "zg-500": "[m]",
         "ta-200": "[K]",
         "ta-850": "[K]",
-        "ua-200": "[m s^{-1}]",
-        "ua-850": "[m s^{-1}]",
-        "va-200": "[m s^{-1}]",
-        "va-850": "[m s^{-1}]",
-        "uas": "[m s^{-1}]",
-        "vas": "[m s^{-1}]",
+        "ua-200": "[m s$^{-1}$]",
+        "ua-850": "[m s$^{-1}$]",
+        "va-200": "[m s$^{-1}$]",
+        "va-850": "[m s$^{-1}$]",
+        "uas": "[m s$^{-1}$]",
+        "vas": "[m s$^{-1}$]",
         "tasmin": "[K]",
         "tasmax": "[K]",
         "clt": "[%]",
@@ -246,28 +260,46 @@ def fill_plot_var_and_units(model_lib, cmip_lib):
     variable_units = []
     variable_names = []
     for var in units_all.keys():
-        varunt = var + str(units_all[var])
         # reorgnize cmip data
-        if ("rt" in cmip_lib.var_list) and ("rtmt" in model_lib.var_list):
-            # special case (rt is used in pcmdi datasets, but rtmt is for cmip)
-            cmip_lib.var_list = list(
-                map(lambda x: x.replace("rt", "rtmt"), cmip_lib.var_list)
-            )
-            for stat in cmip_lib.df_dict:
-                for season in cmip_lib.df_dict[stat]:
-                    for region in cmip_lib.df_dict[stat][season]:
-                        cmip_lib.df_dict[stat][season][region][
-                            "rtmt"
-                        ] = cmip_lib.df_dict[stat][season][region].pop("rt")
+        if var == "rtmt":
+            if ("rt" in cmip_lib.var_list) and ("rtmt" in model_lib.var_list):
+                # special case (rt is used in pcmdi datasets, but rtmt is for cmip)
+                cmip_lib.var_list = list(
+                    map(lambda x: x.replace("rt", "rtmt"), cmip_lib.var_list)
+                )
+                for stat in cmip_lib.df_dict:
+                    for season in cmip_lib.df_dict[stat]:
+                        for region in cmip_lib.df_dict[stat][season]:
+                            cmip_lib.df_dict[stat][season][region][
+                                "rtmt"
+                            ] = cmip_lib.df_dict[stat][season][region].pop("rt")
 
         if var in model_lib.var_list and var in cmip_lib.var_list:
+            varunt = var + "\n" + str(units_all[var])
             indv1 = cmip_lib.var_list.index(var)
             indv2 = model_lib.var_list.index(var)
             cmip_lib.var_unit_list[indv1] = varunt
             model_lib.var_unit_list[indv2] = varunt
             variable_units.append(varunt)
             variable_names.append(var)
-            del (indv1, indv2)
+            del (indv1, indv2, varunt)
+
+        # sanity check for cmip data
+        for stat in cmip_lib.df_dict:
+            for season in cmip_lib.df_dict[stat]:
+                for region in cmip_lib.df_dict[stat][season]:
+                    df = pd.DataFrame(cmip_lib.df_dict[stat][season][region])
+                    for i, model in enumerate(df["model"].tolist()):
+                        if model in ["E3SM-1-0", "E3SM-1-1-ECA"]:
+                            idxs = df[df.iloc[:, 0] == model].index
+                            df.loc[idxs, "ta850"] = np.nan
+                            del idxs
+                        if model in ["CIESM"]:
+                            idxs = df[df.iloc[:, 0] == model].index
+                            df.loc[idxs, "pr"] = np.nan
+                            del idxs
+                    cmip_lib.df_dict[stat][season][region] = df
+                    del df
         else:
             print("Warning: {} is not found in metrics data".format(var))
             print(
@@ -280,7 +312,6 @@ def fill_plot_var_and_units(model_lib, cmip_lib):
 
 
 def find_metrics_data(parameter):
-
     pmp_set = parameter.pcmdi_data_set
     pmp_path = parameter.pcmdi_data_path
     test_set = parameter.test_data_set
@@ -305,6 +336,7 @@ def find_metrics_data(parameter):
         for s in glob.glob(os.path.join(test_dir, "*{}.json".format(test_case_id)))
         if os.path.exists(s)
     ]
+    variables = list(set(variables))
 
     # find list of metrics data files
     test_list = []
@@ -318,7 +350,8 @@ def find_metrics_data(parameter):
         fcmip, rcode = find_cmip_metric_data(pmp_path, pmp_set, vv)
         if rcode == 0:
             if len(ftest) > 0 and len(fcmip) > 0:
-                test_list.append(ftest[0])
+                for fx in ftest:
+                    test_list.append(fx)
                 cmip_list.append(fcmip)
                 if debug:
                     print(ftest[0].split("/")[-1], fcmip.split("/")[-1])
@@ -327,7 +360,8 @@ def find_metrics_data(parameter):
                     os.path.join(refr_dir, "{}_*_{}.json".format(vv, refr_case_id))
                 )
                 if len(frefr) > 0:
-                    refr_list.append(frefr[0])
+                    for fr in frefr:
+                        refr_list.append(fr)
                     if debug:
                         print(
                             ftest[0].split("/")[-1],
