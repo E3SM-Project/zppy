@@ -7,12 +7,12 @@ import jinja2
 from zppy.bundle import handle_bundles
 from zppy.utils import (
     add_dependencies,
-    checkStatus,
-    getTasks,
-    getYears,
-    makeExecutable,
+    check_status,
+    get_tasks,
+    get_years,
+    make_executable,
     print_url,
-    submitScript,
+    submit_script,
 )
 
 
@@ -27,7 +27,7 @@ def pcmdi_diags(config, scriptDir, existing_bundles, job_ids_file):
     template = templateEnv.get_template("pcmdi_diags.bash")
 
     # --- List of pcmdi_diags tasks ---
-    tasks = getTasks(config, "pcmdi_diags")
+    tasks = get_tasks(config, "pcmdi_diags")
     if len(tasks) == 0:
         return existing_bundles
 
@@ -45,9 +45,9 @@ def pcmdi_diags(config, scriptDir, existing_bundles, job_ids_file):
         c["cmor_tables_prefix"] = c["diagnostics_base_path"]
 
         # Loop over year sets
-        year_sets = getYears(c["ts_years"])
+        year_sets = get_years(c["ts_years"])
         if ("ref_years" in c.keys()) and (c["ref_years"] != [""]):
-            ref_year_sets = getYears(c["ref_years"])
+            ref_year_sets = get_years(c["ref_years"])
         else:
             ref_year_sets = year_sets
         for s, rs in zip(year_sets, ref_year_sets):
@@ -63,9 +63,9 @@ def pcmdi_diags(config, scriptDir, existing_bundles, job_ids_file):
                 c["sub"] = c["grid"]
             # Make a guess for observation paths, if need be
             if ("ts_num_years" in c.keys()) and (c["obs_ts"] == ""):
-                c[
-                    "obs_ts"
-                ] = f"{c['diagnostics_base_path']}/observations/Atm/time-series/"
+                c["obs_ts"] = (
+                    f"{c['diagnostics_base_path']}/observations/Atm/time-series/"
+                )
             if c["run_type"] == "model_vs_obs":
                 prefix = "pcmdi_diags_%s_%s_%04d-%04d" % (
                     c["sub"],
@@ -86,9 +86,9 @@ def pcmdi_diags(config, scriptDir, existing_bundles, job_ids_file):
                     c["reference_data_path"].split("/post")[0] + "/post"
                 )
                 if ("ts_num_years" in c.keys()) and (c["reference_data_path_ts"] == ""):
-                    c[
-                        "reference_data_path_ts"
-                    ] = f"{reference_data_path}/atm/{c['grid']}/cmip_ts/monthly"
+                    c["reference_data_path_ts"] = (
+                        f"{reference_data_path}/atm/{c['grid']}/cmip_ts/monthly"
+                    )
             else:
                 raise ValueError("Invalid run_type={}".format(c["run_type"]))
             print(prefix)
@@ -96,14 +96,14 @@ def pcmdi_diags(config, scriptDir, existing_bundles, job_ids_file):
             scriptFile = os.path.join(scriptDir, "%s.bash" % (prefix))
             statusFile = os.path.join(scriptDir, "%s.status" % (prefix))
             settingsFile = os.path.join(scriptDir, "%s.settings" % (prefix))
-            skip = checkStatus(statusFile)
+            skip = check_status(statusFile)
             if skip:
                 continue
 
             # Create script
             with open(scriptFile, "w") as f:
                 f.write(template.render(**c))
-            makeExecutable(scriptFile)
+            make_executable(scriptFile)
 
             # Iterate from year1 to year2 incrementing by the number of years per time series file.
             if "ts_num_years" in c.keys():
@@ -141,7 +141,7 @@ def pcmdi_diags(config, scriptDir, existing_bundles, job_ids_file):
             if not c["dry_run"]:
                 if c["bundle"] == "":
                     # Submit job
-                    submitScript(
+                    submit_script(
                         scriptFile,
                         statusFile,
                         export,

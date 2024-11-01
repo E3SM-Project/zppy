@@ -79,7 +79,7 @@ cat > derived_variable.json << EOF
 {% include derived_variable %}
 EOF
 #file to genereate land/sea mask data if not available
-cat > generate_sftlf.py << EOF
+cat > process_sftlf.py << EOF
 {% include process_sftlf %}
 EOF
 
@@ -930,7 +930,7 @@ def generate_land_sea_mask(data_file,outpath):
       # generate land/sea mask if not exist
       if not os.path.exists(mpath_lf):
         print("generate land/sea mask file....")
-        return_code = call(['python','generate_sftlf.py',var,model,mpath,mpath_lf],text=False)
+        return_code = call(['python','process_sftlf.py',var,model,mpath,mpath_lf],text=False)
       else:
         return_code = 0
       del(model,mpath,mpath_lf)
