@@ -423,7 +423,7 @@ def paracord_plot(
         data_dict["model"].to_list()[-1]
     ]  # ["CMIP6 MME"]
     figsize = (40, 12)
-    fontsize = 24
+    fontsize = 20
     legend_ncol = int(7 * figsize[0] / 40.0)
     legend_posistion = (0.50, -0.14)
     # color map for markers
