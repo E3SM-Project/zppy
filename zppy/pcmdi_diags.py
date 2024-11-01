@@ -17,7 +17,7 @@ from zppy.utils import (
 
 
 # -----------------------------------------------------------------------------
-def pcmdi_diags(config, scriptDir, existing_bundles, job_ids_file):
+def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
     # Initialize jinja2 template engine
     templateLoader = jinja2.FileSystemLoader(
@@ -36,7 +36,7 @@ def pcmdi_diags(config, scriptDir, existing_bundles, job_ids_file):
 
     for c in tasks:
 
-        c["scriptDir"] = scriptDir
+        c["scriptDir"] = script_dir
 
         if "ts_num_years" in c.keys():
             c["ts_num_years"] = int(c["ts_num_years"])
@@ -93,9 +93,9 @@ def pcmdi_diags(config, scriptDir, existing_bundles, job_ids_file):
                 raise ValueError("Invalid run_type={}".format(c["run_type"]))
             print(prefix)
             c["prefix"] = prefix
-            scriptFile = os.path.join(scriptDir, "%s.bash" % (prefix))
-            statusFile = os.path.join(scriptDir, "%s.status" % (prefix))
-            settingsFile = os.path.join(scriptDir, "%s.settings" % (prefix))
+            scriptFile = os.path.join(script_dir, "%s.bash" % (prefix))
+            statusFile = os.path.join(script_dir, "%s.status" % (prefix))
+            settingsFile = os.path.join(script_dir, "%s.settings" % (prefix))
             skip = check_status(statusFile)
             if skip:
                 continue
@@ -118,7 +118,7 @@ def pcmdi_diags(config, scriptDir, existing_bundles, job_ids_file):
                     ):
                         add_dependencies(
                             dependencies,
-                            scriptDir,
+                            script_dir,
                             "ts",
                             "atm_monthly_180x360_aave",
                             start_yr,
