@@ -309,6 +309,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "min_case_global_time_series_custom",
         "min_case_global_time_series_original_8_no_ocn",
         "min_case_global_time_series_original_8",
+        "min_case_global_time_series_setup_only",
         "min_case_ilamb_land_only",
         "min_case_ilamb",
         "min_case_mpas_analysis",
