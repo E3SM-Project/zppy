@@ -27,11 +27,13 @@ def main():
     )
     # Subdirectory where templates are located
     template_dir: str = os.path.join(os.path.dirname(__file__), "templates")
+    # Subdirectory where defaults are located
+    defaults_dir: str = os.path.join(os.path.dirname(__file__), "defaults")
     # Read configuration file and validate it
-    default_config: str = os.path.join(template_dir, "default.ini")
+    default_config: str = os.path.join(defaults_dir, "default.ini")
     user_config: ConfigObj = ConfigObj(args.config, configspec=default_config)
     user_config, plugins = _handle_plugins(user_config, default_config, args)
-    config: ConfigObj = _handle_campaigns(user_config, default_config, template_dir)
+    config: ConfigObj = _handle_campaigns(user_config, default_config, defaults_dir)
     # Validate
     _validate_config(config)
     # Add templateDir to config
@@ -95,7 +97,7 @@ def _handle_plugins(
         default = f.read()
     for plugin in plugins:
         # Read plugin 'default.ini' if it exists
-        plugin_default_file = os.path.join(plugin["path"], "templates/default.ini")
+        plugin_default_file = os.path.join(plugin["path"], "defaults/default.ini")
         print(plugin_default_file)
         if os.path.isfile(plugin_default_file):
             with open(plugin_default_file) as f:
@@ -105,7 +107,7 @@ def _handle_plugins(
 
 
 def _handle_campaigns(
-    user_config: ConfigObj, default_config: str, template_dir: str
+    user_config: ConfigObj, default_config: str, defaults_dir: str
 ) -> ConfigObj:
     # Handle 'campaign' option
     if "campaign" in user_config["default"]:
@@ -113,7 +115,7 @@ def _handle_campaigns(
     else:
         campaign = "none"
     if campaign != "none":
-        campaign_file = os.path.join(template_dir, f"{campaign}.cfg")
+        campaign_file = os.path.join(defaults_dir, f"{campaign}.cfg")
         if not os.path.exists(campaign_file):
             raise ValueError(f"{campaign} does not appear to be a known campaign")
         campaign_config = ConfigObj(campaign_file, configspec=default_config)
