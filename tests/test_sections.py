@@ -34,16 +34,18 @@ def compare(tester, actual, expected):
 
 def get_config(test_case, config_file):
     # Subdirectory where templates are located
-    templateDir = os.path.join("zppy", "templates")
+    defaults_dir = os.path.join("zppy", "defaults")
 
     # Read configuration file and validate it
-    config = ConfigObj(config_file, configspec=os.path.join(templateDir, "default.ini"))
+    config = ConfigObj(
+        config_file, configspec=os.path.join(defaults_dir, "default.ini")
+    )
     validator = Validator()
 
     test_case.assertTrue(config.validate(validator))
 
     # Add templateDir to config
-    config["default"]["templateDir"] = templateDir
+    config["default"]["templateDir"] = os.path.join("zppy", "templates")
 
     # For debugging
     DISPLAY_CONFIG = False
@@ -104,7 +106,7 @@ class TestAllSets(unittest.TestCase):
         expected_section = {
             "active": "True",
             "area_nm": "area",
-            "cmip_metadata": "e3sm_to_cmip/default_metadata.json",
+            "cmip_metadata": "inclusions/e3sm_to_cmip/default_metadata.json",
             "dpf": 30,
             "extra_vars": "",
             "input_component": "",
@@ -125,7 +127,7 @@ class TestAllSets(unittest.TestCase):
             "area_nm": "area",
             "campaign": "none",
             "case": "CASE",
-            "cmip_metadata": "e3sm_to_cmip/default_metadata.json",
+            "cmip_metadata": "inclusions/e3sm_to_cmip/default_metadata.json",
             "constraint": "",
             "debug": False,
             "dpf": 30,
@@ -279,7 +281,7 @@ class TestAllSets(unittest.TestCase):
         expected_section = {
             "active": "True",
             "area_nm": "area",
-            "cmip_metadata": "e3sm_to_cmip/default_metadata.json",
+            "cmip_metadata": "inclusions/e3sm_to_cmip/default_metadata.json",
             "dpf": 30,
             "extra_vars": "",
             "input_component": "",
@@ -320,7 +322,7 @@ class TestAllSets(unittest.TestCase):
             "bundle": "",
             "campaign": "none",
             "case": "CASE",
-            "cmip_metadata": "e3sm_to_cmip/default_metadata.json",
+            "cmip_metadata": "inclusions/e3sm_to_cmip/default_metadata.json",
             "constraint": "",
             "debug": False,
             "dpf": 30,
@@ -364,7 +366,7 @@ class TestAllSets(unittest.TestCase):
             "bundle": "",
             "campaign": "none",
             "case": "CASE",
-            "cmip_metadata": "e3sm_to_cmip/default_metadata.json",
+            "cmip_metadata": "inclusions/e3sm_to_cmip/default_metadata.json",
             "constraint": "",
             "debug": False,
             "dpf": 30,
