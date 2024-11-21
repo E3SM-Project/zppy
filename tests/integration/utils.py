@@ -7,7 +7,7 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "test-642-working-env-20241121"
+UNIQUE_ID = "unique_id"
 
 # Image checking ##########################################################
 
@@ -153,6 +153,7 @@ def get_chyrsalis_expansions(config):
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
+        "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zppy_interfaces_dev_pr_1_20241121",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
         "partition_short": "debug",
@@ -182,6 +183,7 @@ def get_compy_expansions(config):
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
+        "global_time_series_environment_commands": "",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "slurm",
         "partition_short": "short",
@@ -211,6 +213,7 @@ def get_perlmutter_expansions(config):
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
+        "global_time_series_environment_commands": "",
         "mpas_analysis_walltime": "01:00:00",
         "partition_long": "",
         "partition_short": "",
@@ -309,7 +312,6 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "min_case_global_time_series_custom",
         "min_case_global_time_series_original_8_no_ocn",
         "min_case_global_time_series_original_8",
-        "min_case_global_time_series_setup_only",
         "min_case_ilamb_land_only",
         "min_case_ilamb",
         "min_case_mpas_analysis",

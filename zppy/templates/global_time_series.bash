@@ -23,7 +23,6 @@ results_dir={{ prefix }}_results
 zi-global-time-series --use_ocn {{ use_ocn }} --input {{ input }} --input_subdir {{ input_subdir }} --moc_file {{ moc_file }} --case_dir {{ output }} --experiment_name {{ experiment_name }} --figstr {{ figstr }} --color {{ color }} --ts_num_years {{ ts_num_years }} --plots_original {{ plots_original }} --atmosphere_only {{ atmosphere_only }} --plots_atm {{ plots_atm }} --plots_ice {{ plots_ice }} --plots_lnd {{ plots_lnd }} --plots_ocn {{ plots_ocn }} --nrows 4 --ncols 2 --results_dir ${results_dir} --regions {{ regions }} --start_yr {{ year1 }} --end_yr {{ year2 }}
 
 echo 'Copy images to directory'
-results_dir={{ prefix }}_results
 results_dir_absolute_path={{ scriptDir }}/${results_dir}
 mkdir -p ${results_dir_absolute_path}
 cp ${results_dir}/*.pdf ${results_dir_absolute_path}
