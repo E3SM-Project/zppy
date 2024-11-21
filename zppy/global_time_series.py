@@ -45,10 +45,6 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
             if skip:
                 continue
             determine_components(c)
-            # Load useful scripts
-            c["global_time_series_dir"] = os.path.join(script_dir, f"{prefix}_dir")
-            if not os.path.exists(c["global_time_series_dir"]):
-                os.mkdir(c["global_time_series_dir"])
             # Create script
             with open(bash_file, "w") as f:
                 f.write(template.render(**c))
