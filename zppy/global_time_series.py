@@ -2,6 +2,7 @@ import os
 from typing import Any, Dict, List
 
 from zppy.bundle import handle_bundles
+from zppy.logger import _setup_custom_logger
 from zppy.utils import (
     add_dependencies,
     check_status,
@@ -14,6 +15,8 @@ from zppy.utils import (
     submit_script,
     write_settings_file,
 )
+
+logger = _setup_custom_logger(__name__)
 
 
 # -----------------------------------------------------------------------------
@@ -45,17 +48,6 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
             if skip:
                 continue
             determine_components(c)
-            # Load useful scripts
-            c["global_time_series_dir"] = os.path.join(script_dir, f"{prefix}_dir")
-            if not os.path.exists(c["global_time_series_dir"]):
-                os.mkdir(c["global_time_series_dir"])
-            scripts = ["coupled_global.py", "readTS.py", "ocean_month.py"]
-            for script in scripts:
-                script_template = template_env.get_template(script)
-                script_file = os.path.join(c["global_time_series_dir"], script)
-                with open(script_file, "w") as f:
-                    f.write(script_template.render(**c))
-                make_executable(script_file)
             # Create script
             with open(bash_file, "w") as f:
                 f.write(template.render(**c))
@@ -97,8 +89,9 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
 def determine_components(c: Dict[str, Any]) -> None:
     # Handle legacy parameter
     if c["plot_names"]:
-        print("warning: plot_names for global_time_series is deprecated.")
-        print("Setting plot_names will override the new parameter, plots_original.")
+        logger.warning(
+            "warning: plot_names for global_time_series is deprecated. Setting plot_names will override the new parameter, plots_original."
+        )
         c["plots_original"] = c["plot_names"]
     # Determine which components are needed
     c["use_atm"] = False
@@ -108,9 +101,8 @@ def determine_components(c: Dict[str, Any]) -> None:
     if c["plots_original"]:
         c["use_atm"] = True
         if c["atmosphere_only"]:
-            print("warning: atmosphere_only for global_time_series is deprecated.")
-            print(
-                "preferred method: remove the 3 ocean plots (change_ohc,max_moc,change_sea_level) from plots_original."
+            logger.warning(
+                "warning: atmosphere_only for global_time_series is deprecated. Preferred method: remove the 3 ocean plots (change_ohc,max_moc,change_sea_level) from plots_original."
             )
         has_original_ocn_plots = (
             ("change_ohc" in c["plots_original"])

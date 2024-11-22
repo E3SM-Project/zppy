@@ -1,5 +1,5 @@
 #!/bin/bash
-{% include 'slurm_header.sh' %}
+{% include 'inclusions/slurm_header.sh' %}
 {{ environment_commands }}
 
 # Turn on debug output if needed
@@ -17,73 +17,21 @@ cd {{ scriptDir }}
 echo "RUNNING ${id}" > {{ prefix }}.status
 
 # Generate global time series plots
-
-# Names
-moc_file={{ moc_file }}
-experiment_name={{ experiment_name }}
-figstr={{ figstr }}
-case={{ case }}
-
-# Years
-start_yr={{ year1 }}
-end_yr={{ year2 }}
-ts_num_years={{ ts_num_years }}
-
-# Paths
-www={{ www }}
-case_dir={{ output }}
-global_ts_dir={{ global_time_series_dir }}
-
 ################################################################################
+results_dir={{ prefix }}_results
 
-export CDMS_NO_MPI=true
-
-use_atm={{ use_atm }}
-use_lnd={{ use_lnd }}
-
-use_ocn={{ use_ocn }}
-if [[ ${use_ocn,,} == "true" ]]; then
-    echo 'Create ocean time series'
-    cd ${global_ts_dir}
-    mkdir -p ${case_dir}/post/ocn/glb/ts/monthly/${ts_num_years}yr
-    input={{ input }}/{{ input_subdir }}
-    python ocean_month.py ${input} ${case_dir} ${start_yr} ${end_yr} ${ts_num_years}
-    if [ $? != 0 ]; then
-      cd {{ scriptDir }}
-      echo 'ERROR (3)' > {{ prefix }}.status
-      exit 3
-    fi
-
-    echo 'Copy moc file'
-    cd ${case_dir}/post/analysis/mpas_analysis/cache/timeseries/moc
-    cp ${moc_file} ../../../../../ocn/glb/ts/monthly/${ts_num_years}yr/
-    if [ $? != 0 ]; then
-      cd {{ scriptDir }}
-      echo 'ERROR (5)' > {{ prefix }}.status
-      exit 5
-    fi
-
-fi
-
-echo 'Update time series figures'
-cd ${global_ts_dir}
-atmosphere_only={{ atmosphere_only }}
-python coupled_global.py ${case_dir} ${experiment_name} ${figstr} ${start_yr} ${end_yr} {{ color }} ${ts_num_years} {{ plots_original }} ${atmosphere_only,,} {{ plots_atm }} {{ plots_ice }} {{ plots_lnd }} {{ plots_ocn }} {{ regions }}
-if [ $? != 0 ]; then
-  cd {{ scriptDir }}
-  echo 'ERROR (6)' > {{ prefix }}.status
-  exit 6
-fi
-
+zi-global-time-series --use_ocn {{ use_ocn }} --input {{ input }} --input_subdir {{ input_subdir }} --moc_file {{ moc_file }} --case_dir {{ output }} --experiment_name {{ experiment_name }} --figstr {{ figstr }} --color {{ color }} --ts_num_years {{ ts_num_years }} --plots_original {{ plots_original }} --atmosphere_only {{ atmosphere_only }} --plots_atm {{ plots_atm }} --plots_ice {{ plots_ice }} --plots_lnd {{ plots_lnd }} --plots_ocn {{ plots_ocn }} --nrows 4 --ncols 2 --results_dir ${results_dir} --regions {{ regions }} --start_yr {{ year1 }} --end_yr {{ year2 }}
 
 echo 'Copy images to directory'
-results_dir={{ prefix }}_results
 results_dir_absolute_path={{ scriptDir }}/${results_dir}
 mkdir -p ${results_dir_absolute_path}
-cp *.pdf ${results_dir_absolute_path}
-cp *.png ${results_dir_absolute_path}
+cp ${results_dir}/*.pdf ${results_dir_absolute_path}
+cp ${results_dir}/*.png ${results_dir_absolute_path}
 
 ################################################################################
+case={{ case }}
+www={{ www }}
+
 # Copy output to web server
 echo
 echo ===== COPY FILES TO WEB SERVER =====

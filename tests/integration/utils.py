@@ -148,11 +148,12 @@ def get_chyrsalis_expansions(config):
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         # To use default environment_commands, set to ""
-        "diags_environment_commands": "source /home/ac.forsyth2/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20241015",
+        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "5:00:00",
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
+        "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
         "partition_short": "debug",
@@ -177,11 +178,12 @@ def get_compy_expansions(config):
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         # To use default environment_commands, set to ""
-        "diags_environment_commands": "source /qfs/people/fors729/mambaforge/etc/profile.d/conda.sh; conda activate e3sm_diags_20240328",
+        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "03:00:00",
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
+        "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "slurm",
         "partition_short": "short",
@@ -206,11 +208,12 @@ def get_perlmutter_expansions(config):
         "constraint": "cpu",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         # To use default environment_commands, set to ""
-        "diags_environment_commands": "source /global/homes/f/forsyth/miniconda3/etc/profile.d/conda.sh; conda activate e3sm_diags_20240429",
+        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "6:00:00",
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
+        "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "mpas_analysis_walltime": "01:00:00",
         "partition_long": "",
         "partition_short": "",
