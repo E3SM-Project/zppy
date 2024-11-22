@@ -153,7 +153,7 @@ def get_chyrsalis_expansions(config):
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
-        "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zppy_interfaces_dev_pr_1_20241121v2",
+        "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zppy_interfaces_dev_pr_1_20241121v4",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
         "partition_short": "debug",

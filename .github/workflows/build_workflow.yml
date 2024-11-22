@@ -92,7 +92,7 @@ jobs:
       # Does not run the integration tests, which require server access
       - name: Run Unit Tests
         run: |
-          python -m unittest tests/test_*.py
+          pytest tests/test_*.py
 
   # If the branch updates documentation, then the docs will need to be updated.
   publish-docs:
