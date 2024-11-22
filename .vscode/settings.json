@@ -11,5 +11,4 @@
   "python.linting.flake8Enabled": true,
   "python.linting.flake8Args": ["--config=setup.cfg"],
   "python.linting.mypyEnabled": true,
-  "python.pythonPath": "/opt/miniconda3/envs/zstash_dev/bin/python"
 }
