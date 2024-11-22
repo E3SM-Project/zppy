@@ -12,6 +12,10 @@ from typing import Any, Dict, List, Set, Tuple
 import jinja2
 from configobj import ConfigObj
 
+from zppy.logger import _setup_custom_logger
+
+logger = _setup_custom_logger(__name__)
+
 
 # Classes #####################################################################
 class ParameterGuessType(Enum):
@@ -439,9 +443,9 @@ def submit_script(
         print(f"...{out}")
         if status != 0 or not out.startswith("Submitted batch job"):
             error_str = f"Problem submitting script {script_file}"
-            print(error_str)
-            print(command)
-            print(stderr)
+            logger.critical(error_str)
+            logger.critical(command)
+            logger.critical(stderr)
             raise RuntimeError(error_str)
         jobid = int(out.split()[-1])
         with open(job_ids_file, "a") as j:

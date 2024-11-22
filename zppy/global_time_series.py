@@ -2,6 +2,7 @@ import os
 from typing import Any, Dict, List
 
 from zppy.bundle import handle_bundles
+from zppy.logger import _setup_custom_logger
 from zppy.utils import (
     add_dependencies,
     check_status,
@@ -14,6 +15,8 @@ from zppy.utils import (
     submit_script,
     write_settings_file,
 )
+
+logger = _setup_custom_logger(__name__)
 
 
 # -----------------------------------------------------------------------------
@@ -86,8 +89,9 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
 def determine_components(c: Dict[str, Any]) -> None:
     # Handle legacy parameter
     if c["plot_names"]:
-        print("warning: plot_names for global_time_series is deprecated.")
-        print("Setting plot_names will override the new parameter, plots_original.")
+        logger.warning(
+            "warning: plot_names for global_time_series is deprecated. Setting plot_names will override the new parameter, plots_original."
+        )
         c["plots_original"] = c["plot_names"]
     # Determine which components are needed
     c["use_atm"] = False
@@ -97,9 +101,8 @@ def determine_components(c: Dict[str, Any]) -> None:
     if c["plots_original"]:
         c["use_atm"] = True
         if c["atmosphere_only"]:
-            print("warning: atmosphere_only for global_time_series is deprecated.")
-            print(
-                "preferred method: remove the 3 ocean plots (change_ohc,max_moc,change_sea_level) from plots_original."
+            logger.warning(
+                "warning: atmosphere_only for global_time_series is deprecated. Preferred method: remove the 3 ocean plots (change_ohc,max_moc,change_sea_level) from plots_original."
             )
         has_original_ocn_plots = (
             ("change_ohc" in c["plots_original"])
