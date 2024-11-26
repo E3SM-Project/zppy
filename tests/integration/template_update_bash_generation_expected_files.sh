@@ -7,4 +7,4 @@ rm -rf #expand expected_dir#expected_bash_files
 # You can just move (i.e., not copy) the output since re-running this test will re-generate the output.
 mv test_bash_generation_output/post/scripts #expand expected_dir#expected_bash_files
 # Rerun test
-python -u -m unittest tests/integration/test_bash_generation.py
+pytest tests/integration/test_bash_generation.py

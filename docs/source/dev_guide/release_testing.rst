@@ -83,7 +83,7 @@ Testing directions for making a release
         * Compy: ``source /share/apps/E3SM/conda_envs/load_latest_e3sm_unified_compy.sh``
         * Perlmutter: ``source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_pm-cpu.sh``
 
-7. Run the unit tests with ``python -u -m unittest tests/test_*.py``.
+7. Run the unit tests with ``pytest tests/test_*.py``.
 
     a. test dev (run before making a new zppy RC):
 
@@ -107,7 +107,7 @@ Testing directions for making a release
     * `Compy <https://github.com/E3SM-Project/zppy/blob/main/tests/integration/generated/directions_compy.md>`_
     * `Perlmutter <https://github.com/E3SM-Project/zppy/blob/main/tests/integration/generated/directions_pm-cpu.md>`_
 
-9. Run the integration tests with ``python -u -m unittest tests/integration/test_*.py``. Note that ``test_complete_run.py`` takes approximately 75 minutes to run on Compy.
+9. Run the integration tests with ``pytest tests/integration/test_*.py``. Note that ``test_complete_run.py`` takes approximately 75 minutes to run on Compy.
 
     a. test dev (run before making a new zppy RC):
 

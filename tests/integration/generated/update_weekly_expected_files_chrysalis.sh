@@ -27,4 +27,4 @@ do
 done
 
 # Rerun test
-python -u -m unittest tests/integration/test_weekly.py
+pytest tests/integration/test_weekly.py

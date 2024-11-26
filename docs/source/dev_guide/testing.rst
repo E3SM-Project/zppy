@@ -10,7 +10,7 @@ Run all unit tests by doing the following:
     .. code::
 
         pip install . # Install your changes (`python -m pip install .` also works)
-        python -u -m unittest tests/test_*.py # Run all unit tests
+        pytest tests/test_*.py # Run all unit tests
 
 Integration tests
 =================
@@ -24,7 +24,7 @@ Run all integration tests by doing the following:
 
         pip install . # Install your changes (`python -m pip install .` also works)
 
-        python -u -m unittest tests/integration/test_*.py # Run all integration tests
+        pytest tests/integration/test_*.py # Run all integration tests
 
 Automated tests
 ===============

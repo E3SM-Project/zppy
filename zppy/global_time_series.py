@@ -134,6 +134,9 @@ def determine_components(c: Dict[str, Any]) -> None:
     else:
         # For better string processing in global_time_series.bash
         c["plots_ocn"] = "None"
+    if ("moc_file" not in c.keys()) or (not c["moc_file"]):
+        # For better string processing in global_time_series.bash
+        c["moc_file"] = "None"
 
 
 def determine_and_add_dependencies(
