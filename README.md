@@ -13,9 +13,8 @@ simulations by automating commonly performed tasks.
 
 See [documentation](https://e3sm-project.github.io/zppy) for more details.
 
-- Run `python -m unittest discover -s tests -p "test_*.py"` to run all tests.
-- Run `python -m unittest tests/test_*.py` to run only unit tests.
-- Run `python -m unittest tests/integration/test_*.py` to run only integration tests (on server).
+- Run `pytest tests/test_*.py` to run only unit tests.
+- Run `pytest tests/integration/test_*.py` to run only integration tests (on server).
 
 ## License
 

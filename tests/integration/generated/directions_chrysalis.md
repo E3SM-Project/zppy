@@ -38,7 +38,7 @@ Changing `UNIQUE_ID` allows you to simultaneously run jobs
 launched from `zppy` on different branches,
 without worrying about overwriting results.
 
-NOTE: Actually running the tests (e.g., `python -u -m unittest tests/integration/test_*.py`)
+NOTE: Actually running the tests (e.g., `pytest tests/integration/test_*.py`)
 can not be done from two different branches simultaneously
 (since files in the `zppy` directory rather than an external directory get changed).
 

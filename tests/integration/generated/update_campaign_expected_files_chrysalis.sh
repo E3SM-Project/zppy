@@ -13,4 +13,4 @@ do
 done
 
 # Rerun test
-python -m unittest tests/integration/test_campaign.py
+pytest tests/integration/test_campaign.py

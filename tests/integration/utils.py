@@ -14,7 +14,6 @@ UNIQUE_ID = "unique_id"
 
 # Copied from E3SM Diags
 def compare_images(
-    test,
     missing_images,
     mismatched_images,
     image_name,
@@ -37,7 +36,7 @@ def compare_images(
     bbox = diff.getbbox()
     if not bbox:
         # If `diff.getbbox()` is None, then the images are in theory equal
-        test.assertIsNone(diff.getbbox())
+        assert diff.getbbox() is None
     else:
         # Sometimes, a few pixels will differ, but the two images appear identical.
         # https://codereview.stackexchange.com/questions/55902/fastest-way-to-count-non-zero-pixels-using-python-and-pillow
@@ -91,7 +90,7 @@ def compare_images(
 
 
 def check_mismatched_images(
-    test, actual_images_dir, expected_images_file, expected_images_dir, diff_dir
+    actual_images_dir, expected_images_file, expected_images_dir, diff_dir
 ):
     missing_images: List[str] = []
     mismatched_images: List[str] = []
@@ -107,7 +106,6 @@ def check_mismatched_images(
             path_to_expected_png = os.path.join(expected_images_dir, image_name)
 
             compare_images(
-                test,
                 missing_images,
                 mismatched_images,
                 image_name,
@@ -128,8 +126,8 @@ def check_mismatched_images(
     # Make diff_dir readable
     os.system(f"chmod -R 755 {diff_dir}")
 
-    test.assertEqual(missing_images, [])
-    test.assertEqual(mismatched_images, [])
+    assert missing_images == []
+    assert mismatched_images == []
 
 
 # Multi-machine testing ##########################################################
@@ -309,6 +307,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "min_case_e3sm_diags_tropical_subseasonal_mvm_1",
         "min_case_e3sm_diags_tropical_subseasonal_mvm_2",
         "min_case_e3sm_diags_tropical_subseasonal",
+        "min_case_global_time_series_comprehensive_v3_setup_only",
         "min_case_global_time_series_custom",
         "min_case_global_time_series_original_8_no_ocn",
         "min_case_global_time_series_original_8",
@@ -347,6 +346,9 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     print(f"UNIQUE_ID={UNIQUE_ID}")
     print(f"unified_testing={unified_testing}")
     print(f"diags_environment_commands={expansions['diags_environment_commands']}")
+    print(
+        f"global_time_series_environment_commands={expansions['global_time_series_environment_commands']}"
+    )
     print(
         f"e3sm_to_cmip_environment_commands={expansions['e3sm_to_cmip_environment_commands']}"
     )
