@@ -29,19 +29,13 @@ start="{{ '%04d' % (year1) }}"
 end="{{ '%04d' % (year2) }}"
 caseid="{{ case }}"
 drc_in={{ input }}/{{ input_subdir }}
-# Warning: tempest-remap can only write grid file on SCRATCH space.
-# The result files will be moved to another path at the end.
-result_dir_fin={{ output }}/post/atm # Directory will be {{ output }}/post/atm/tc-analysis_${Y1}_${Y2}
-mkdir -p $result_dir_fin
 y1={{ year1 }}
 y2={{ year2 }}
 Y1="{{ '%04d' % (year1) }}"
 Y2="{{ '%04d' % (year2) }}"
-result_dir={{ scratch }}/tc-analysis_${Y1}_${Y2}/
+result_dir={{ output }}/post/atm/tc-analysis_${Y1}_${Y2}/
 
-# Avoid "unable to remove target: Directory not empty" errors on `mv $result_dir $result_dir_fin` below.
 rm -rf ${result_dir}
-rm -rf ${result_dir_fin}/tc-analysis_${Y1}_${Y2}
 
 atm_name={{ atm_name }}
 
@@ -64,12 +58,15 @@ mkdir -p $result_dir
 file_name=${caseid}_${start}_${end}
 
 # Generate mesh files (.g).
-GenerateCSMesh --res $res --alt --file ${result_dir}outCSne$res.g
-out_type="CGLL"
-# For v2 production simulation with pg2 grids:
 if $pg2; then
-    GenerateVolumetricMesh --in ${result_dir}outCSne$res.g  --out ${result_dir}outCSne$res.g --np 2 --uniform
+    # For v2 and v3 production simulation with pg2 grids:
+    GenerateCSMesh --res $res --alt --file ${result_dir}outCSMeshne$res.g
+    GenerateVolumetricMesh --in ${result_dir}outCSMeshne$res.g  --out ${result_dir}outCSne$res.g --np 2 --uniform
     out_type="FV"
+else
+    # For v1 production simulation with np4 grids:
+    GenerateCSMesh --res $res --alt --file ${result_dir}outCSne$res.g
+    out_type="CGLL"
 fi
 echo $out_type
 # Generate connectivity files (.dat)
@@ -82,7 +79,16 @@ cd ${drc_in};eval ls ${caseid}.$atm_name.h2.*{${start}..${end}}*.nc >${result_di
 cd ${result_dir}
 # Detection threshold including:
 # The sea-level pressure (SLP) must be a local minimum; SLP must have a sufficient decrease (300 Pa) compared to surrounding nodes within 4 degree radius; The average of the 200 hPa and 500 hPa level temperature decreases by 0.6 K in all directions within a 4 degree radius from the location to fSLP minima
-DetectNodes --verbosity 0 --in_connect ${result_dir}connect_CSne${res}_v2.dat --closedcontourcmd "PSL,300.0,4.0,0;_AVG(T200,T500),-0.6,4,0.30" --mergedist 6.0 --searchbymin PSL --outputcmd "PSL,min,0;_VECMAG(UBOT,VBOT),max,2" --timestride 1 --in_data_list ${result_dir}inputfile_${file_name}.txt --out ${result_dir}out.dat
+if [ $res == 120 ]; then
+    echo $res
+    DetectNodes --verbosity 0 --in_connect ${result_dir}connect_CSne${res}_v2.dat --closedcontourcmd "PSL,300.0,4.0,0;_AVG(T200,T500),-0.6,4,0.30" --mergedist 6.0 --searchbymin PSL --outputcmd "PSL,min,0;_VECMAG(UBOT,VBOT),max,2" --timestride 1 --in_data_list ${result_dir}inputfile_${file_name}.txt --out ${result_dir}out.dat
+elif [ $res == 30 ]; then
+    echo $res
+    DetectNodes --verbosity 0 --in_connect ${result_dir}connect_CSne${res}_v2.dat --closedcontourcmd "PSL,300.0,4.0,0;_AVG(T200,T500),-0.6,4,1.0" --mergedist 6.0 --searchbymin PSL --outputcmd "PSL,min,0;_VECMAG(UBOT,VBOT),max,2" --timestride 1 --in_data_list ${result_dir}inputfile_${file_name}.txt --out ${result_dir}out.dat
+else
+    echo “$res value not supported”
+fi
+
 
 cat ${result_dir}out.dat0* > ${result_dir}cyclones_${file_name}.txt
 
@@ -94,7 +100,7 @@ rm ${result_dir}cyclones_${file_name}.txt
 HistogramNodes --in ${result_dir}cyclones_stitch_${file_name}.dat --iloncol 2 --ilatcol 3 --out ${result_dir}cyclones_hist_${file_name}.nc
 
 # Calculate relative vorticity
-sed -i 's/.nc/_vorticity.nc/' ${result_dir}outputfile_${file_name}.txt
+sed -i 's/\.nc/_vorticity.nc/' ${result_dir}outputfile_${file_name}.txt
 VariableProcessor --in_data_list ${result_dir}inputfile_${file_name}.txt --out_data_list ${result_dir}outputfile_${file_name}.txt --var "_CURL{4,0.5}(U850,V850)" --varout "VORT" --in_connect ${result_dir}connect_CSne${res}_v2.dat
 
 DetectNodes --verbosity 0 --in_connect ${result_dir}connect_CSne${res}_v2.dat --closedcontourcmd "VORT,-5.e-6,4,0" --mergedist 2.0 --searchbymax VORT --outputcmd "VORT,max,0" --in_data_list ${result_dir}outputfile_${file_name}.txt --out ${result_dir}aew_out.dat --minlat -35.0 --maxlat 35.0
@@ -104,10 +110,10 @@ StitchNodes --in_fmt "lon,lat,VORT" --in_connect ${result_dir}connect_CSne${res}
 rm ${result_dir}aew_${file_name}.txt
 
 HistogramNodes --in ${result_dir}aew_stitch_5e-6_${file_name}.dat --iloncol 2 --ilatcol 3 --nlat 256 --nlon 512 --out ${result_dir}aew_hist_${file_name}.nc
+
 rm ${result_dir}*out.dat00*.dat
 rm ${result_dir}${caseid}*.nc
 rm ${result_dir}*.txt
-mv $result_dir $result_dir_fin
 
 # Update status file and exit
 cd {{ scriptDir }}
