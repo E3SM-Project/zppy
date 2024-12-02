@@ -102,9 +102,9 @@ def save_figure_data(
             outdic = outdic.drop(columns=[var])
         else:
             # replace the variable with the name + units
-            outdic.columns.values[
-                outdic.columns.values.tolist().index(var)
-            ] = var_units[var_names.index(var)]
+            outdic.columns.values[outdic.columns.values.tolist().index(var)] = (
+                var_units[var_names.index(var)]
+            )
 
     # save data to .csv file
     outdic.to_csv(outfile)

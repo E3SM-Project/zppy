@@ -270,9 +270,9 @@ def fill_plot_var_and_units(model_lib, cmip_lib):
                 for stat in cmip_lib.df_dict:
                     for season in cmip_lib.df_dict[stat]:
                         for region in cmip_lib.df_dict[stat][season]:
-                            cmip_lib.df_dict[stat][season][region][
-                                "rtmt"
-                            ] = cmip_lib.df_dict[stat][season][region].pop("rt")
+                            cmip_lib.df_dict[stat][season][region]["rtmt"] = (
+                                cmip_lib.df_dict[stat][season][region].pop("rt")
+                            )
 
         if var in model_lib.var_list and var in cmip_lib.var_list:
             varunt = var + "\n" + str(units_all[var])
