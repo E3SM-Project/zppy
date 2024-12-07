@@ -1,20 +1,7 @@
 #!/bin/bash
-{% include 'inclusions/slurm_header.sh' %}
+{% include 'inclusions/slurm_header.bash' %}
+{% include 'inclusions/boilerplate.bash' %}
 {{ environment_commands }}
-
-# Turn on debug output if needed
-debug={{ debug }}
-if [[ "${debug,,}" == "true" ]]; then
-  set -x
-fi
-
-# Get jobid
-id=${SLURM_JOBID}
-
-# Update status file
-STARTTIME=$(date +%s)
-cd {{ scriptDir }}
-echo "RUNNING ${id}" > {{ prefix }}.status
 
 # Generate global time series plots
 ################################################################################

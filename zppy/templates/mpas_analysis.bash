@@ -1,26 +1,11 @@
 #!/bin/bash
-{% include 'inclusions/slurm_header.sh' %}
+{% include 'inclusions/slurm_header.bash' %}
+{% include 'inclusions/boilerplate.bash' %}
 {{ environment_commands }}
 
 # Additional settings for MPAS-Analysis
 export OMP_NUM_THREADS=1
 export HDF5_USE_FILE_LOCKING=FALSE
-
-# Turn on debug output if needed
-debug={{ debug }}
-if [[ "${debug,,}" == "true" ]]; then
-  set -x
-fi
-
-# Script dir
-cd {{ scriptDir }}
-
-# Get jobid
-id=${SLURM_JOBID}
-
-# Update status file
-STARTTIME=$(date +%s)
-echo "RUNNING ${id}" > {{ scriptDir }}/{{ prefix }}.status
 
 # Basic definitions
 case="{{ case }}"
