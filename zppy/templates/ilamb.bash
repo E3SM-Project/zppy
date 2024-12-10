@@ -33,8 +33,10 @@ Y2="{{ '%04d' % (year2) }}"
 scriptDir="{{ scriptDir }}"
 
 # Create temporary workdir
-workdir=`mktemp -d tmp.${id}.XXXX`
+hash=`mktemp --dry-run -d XXXX`
+workdir=tmp.{{ prefix }}.${id}.${hash}
 workdir=${scriptDir}/${workdir}
+mkdir ${workdir}
 model_root=${workdir}/model_data
 
 if [ $short != "" ]; then

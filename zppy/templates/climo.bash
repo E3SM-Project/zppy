@@ -19,7 +19,9 @@ STARTTIME=$(date +%s)
 echo "RUNNING ${id}" > {{ prefix }}.status
 
 # Create temporary workdir
-workdir=`mktemp -d tmp.${id}.XXXX`
+hash=`mktemp --dry-run -d XXXX`
+workdir=tmp.{{ prefix }}.${id}.${hash}
+mkdir ${workdir}
 cd ${workdir}
 
 {% if frequency == 'monthly' %}

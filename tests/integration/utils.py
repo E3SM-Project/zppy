@@ -314,6 +314,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "min_case_ilamb_land_only",
         "min_case_ilamb",
         "min_case_mpas_analysis",
+        "min_case_nco",
         "weekly_bundles",
         "weekly_comprehensive_v2",
         "weekly_comprehensive_v3",

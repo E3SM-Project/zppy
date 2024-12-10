@@ -40,7 +40,9 @@ tag="{{ tag }}"
 results_dir=${tag}_${Y1}-${Y2}
 
 # Create temporary workdir
-workdir=`mktemp -d tmp.${id}.XXXX`
+hash=`mktemp --dry-run -d XXXX`
+workdir=tmp.{{ prefix }}.${id}.${hash}
+mkdir ${workdir}
 cd ${workdir}
 
 create_links_climo()
