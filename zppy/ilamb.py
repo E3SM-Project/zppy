@@ -109,6 +109,17 @@ def determine_and_add_dependencies(
         c["year2"],
         c["ts_num_years"],
     )
+    add_dependencies(
+        dependencies,
+        script_dir,
+        "e3sm_to_cmip",
+        c[
+            "ts_land_subsection"
+        ],  # Relies on having the same subsection name as the corresponding ts subsection!
+        c["year1"],
+        c["year2"],
+        c["ts_num_years"],
+    )
     if not c["land_only"]:
         define_or_guess2(
             c,
@@ -121,6 +132,17 @@ def determine_and_add_dependencies(
             script_dir,
             "ts",
             c["ts_atm_subsection"],
+            c["year1"],
+            c["year2"],
+            c["ts_num_years"],
+        )
+        add_dependencies(
+            dependencies,
+            script_dir,
+            "e3sm_to_cmip",
+            c[
+                "ts_atm_subsection"
+            ],  # Relies on having the same subsection name as the corresponding ts subsection!
             c["year1"],
             c["year2"],
             c["ts_num_years"],

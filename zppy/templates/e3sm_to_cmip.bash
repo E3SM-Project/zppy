@@ -4,7 +4,9 @@
 {{ environment_commands }}
 
 # Create temporary workdir
-workdir=`mktemp -d tmp.${id}.XXXX`
+hash=`mktemp --dry-run -d XXXX`
+workdir=tmp.{{ prefix }}.${id}.${hash}
+mkdir ${workdir}
 cd ${workdir}
 
 tmp_dir=tmp_{{ prefix }}

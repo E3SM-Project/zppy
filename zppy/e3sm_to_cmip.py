@@ -65,7 +65,7 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
                 dependencies,
                 script_dir,
                 "ts",
-                sub,
+                sub,  # Relies on having the same subsection name as the corresponding ts subsection!
                 c["yr_start"],
                 c["yr_end"],
                 c["ts_num_years"],
