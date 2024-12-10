@@ -34,8 +34,9 @@ scriptDir="{{ scriptDir }}"
 
 # Create temporary workdir
 hash=`mktemp --dry-run -d XXXX`
-workdir=`mkdir tmp.{{ prefix }}.${id}.${hash}`
+workdir=tmp.{{ prefix }}.${id}.${hash}
 workdir=${scriptDir}/${workdir}
+mkdir ${workdir}
 model_root=${workdir}/model_data
 
 if [ $short != "" ]; then

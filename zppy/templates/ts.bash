@@ -20,7 +20,8 @@ echo "RUNNING ${id}" > {{ prefix }}.status
 
 # Create temporary workdir
 hash=`mktemp --dry-run -d XXXX`
-workdir=`mkdir tmp.{{ prefix }}.${id}.${hash}`
+workdir=tmp.{{ prefix }}.${id}.${hash}
+mkdir ${workdir}
 cd ${workdir}
 
 # Create symbolic links to input files
