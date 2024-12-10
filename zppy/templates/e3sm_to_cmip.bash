@@ -16,7 +16,7 @@ cat > default_metadata.json << EOF
 {% include cmip_metadata %}
 EOF
 {
-  export cmortables_dir={{ cmor_tables_prefix }}/cmip6-cmor-tables/Tables
+  export cmortables_dir={{ cmor_tables_prefix }}/e3sm_to_cmip_data/cmip6-cmor-tables/Tables
   #input_dir={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
   input_dir=${dest}/{{ '%04d' % (yr_start) }}_{{ '%04d' % (yr_end) }}
   mkdir -p $input_dir
