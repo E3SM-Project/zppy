@@ -7,7 +7,7 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "unique_id"
+UNIQUE_ID = "test-346-20241209"
 
 # Image checking ##########################################################
 
@@ -146,7 +146,7 @@ def get_chyrsalis_expansions(config):
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         # To use default environment_commands, set to ""
-        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+        "diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate e3sm_diags_main_20241209",
         "diags_walltime": "5:00:00",
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
@@ -285,6 +285,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "min_case_carryover_dependencies",
         "min_case_tc_analysis_simultaneous_1",
         "min_case_tc_analysis_simultaneous_2",
+        "min_case_e3sm_diags_comprehensive_v3",
         "min_case_e3sm_diags_depend_on_climo_mvm_1",
         "min_case_e3sm_diags_depend_on_climo_mvm_2",
         "min_case_e3sm_diags_depend_on_climo",
