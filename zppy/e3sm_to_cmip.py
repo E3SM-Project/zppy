@@ -47,6 +47,8 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
                 continue  # Skip this year set
             c["ypf"] = s[1] - s[0] + 1
             c["scriptDir"] = script_dir
+            if "ts_num_years" in c.keys():
+                c["ts_num_years"] = int(c["ts_num_years"])
             sub: str = define_or_guess(
                 c, "subsection", "grid", ParameterGuessType.SECTION_GUESS
             )
@@ -70,6 +72,7 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
                 c["yr_end"],
                 c["ts_num_years"],
             )
+            c["dependencies"] = dependencies
             write_settings_file(settings_file, c, s)
             export = "ALL"
             existing_bundles = handle_bundles(

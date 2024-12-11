@@ -9,6 +9,9 @@ workdir=tmp.{{ prefix }}.${id}.${hash}
 mkdir ${workdir}
 cd ${workdir}
 
+# From the ts task
+dest={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
+
 tmp_dir=tmp_{{ prefix }}
 
 # Generate CMIP ts
