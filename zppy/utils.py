@@ -201,7 +201,7 @@ def set_grid(c: Dict[str, Any]) -> None:
 
 # Output component (for directory structure) and procedure type for ncclimo
 def set_component_and_prc_typ(c: Dict[str, Any]) -> None:
-    if c["input_component"] != "":
+    if ("input_component" in c.keys()) and (c["input_component"] != ""):
         tmp = c["input_component"]
     else:
         tmp = c["input_files"].split(".")[0]

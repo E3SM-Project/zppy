@@ -5,6 +5,7 @@ from configobj import ConfigObj
 from zppy.bundle import handle_bundles
 from zppy.utils import (
     ParameterGuessType,
+    add_dependencies,
     check_status,
     define_or_guess,
     get_file_names,
@@ -21,17 +22,18 @@ from zppy.utils import (
 
 
 # -----------------------------------------------------------------------------
-def ts(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
+def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
 
-    template, _ = initialize_template(config, "ts.bash")
+    template, _ = initialize_template(config, "e3sm_to_cmip.bash")
 
     # --- List of tasks ---
-    tasks: List[Dict[str, Any]] = get_tasks(config, "ts")
+    tasks: List[Dict[str, Any]] = get_tasks(config, "e3sm_to_cmip")
     if len(tasks) == 0:
         return existing_bundles
 
-    # --- Generate and submit ts scripts ---
+    # --- Generate and submit e3sm_to_cmip scripts ---
     for c in tasks:
+        dependencies: List[str] = []
         set_mapping_file(c)
         set_grid(c)
         set_component_and_prc_typ(c)
@@ -45,10 +47,12 @@ def ts(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
                 continue  # Skip this year set
             c["ypf"] = s[1] - s[0] + 1
             c["scriptDir"] = script_dir
+            if "ts_num_years" in c.keys():
+                c["ts_num_years"] = int(c["ts_num_years"])
             sub: str = define_or_guess(
                 c, "subsection", "grid", ParameterGuessType.SECTION_GUESS
             )
-            prefix = f"ts_{sub}_{c['yr_start']:04d}-{c['yr_end']:04d}-{c['ypf']:04d}"
+            prefix = f"e3sm_to_cmip_{sub}_{c['yr_start']:04d}-{c['yr_end']:04d}-{c['ypf']:04d}"
             print(prefix)
             c["prefix"] = prefix
             bash_file, settings_file, status_file = get_file_names(script_dir, prefix)
@@ -59,6 +63,16 @@ def ts(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
             with open(bash_file, "w") as f:
                 f.write(template.render(**c))
             make_executable(bash_file)
+            add_dependencies(
+                dependencies,
+                script_dir,
+                "ts",
+                sub,  # Relies on having the same subsection name as the corresponding ts subsection!
+                c["yr_start"],
+                c["yr_end"],
+                c["ts_num_years"],
+            )
+            c["dependencies"] = dependencies
             write_settings_file(settings_file, c, s)
             export = "ALL"
             existing_bundles = handle_bundles(

@@ -1,25 +1,9 @@
 #!/bin/bash
-{% include 'inclusions/slurm_header.sh' %}
-
+{% include 'inclusions/slurm_header.bash' %}
+{% include 'inclusions/boilerplate.bash' %}
 {{ environment_commands }}
 
 set -e # Stop running script on error
-
-# Turn on debug output if needed
-debug={{ debug }}
-if [[ "${debug,,}" == "true" ]]; then
-  set -x
-fi
-
-# Script dir
-cd {{ scriptDir }}
-
-# Get jobid
-id=${SLURM_JOBID}
-
-# Update status file
-STARTTIME=$(date +%s)
-echo "RUNNING ${id}" > {{ prefix }}.status
 
 # A Bash script to post-process E3SM 6 hourly (h2) instantaneous output to generate a text file storing Tropical Cyclone tracks
 # tempestremap and tempestextremes are built in e3sm-unified from version 1.5.0.
