@@ -7,7 +7,7 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "test_zppy_pr650_20241211v3"
+UNIQUE_ID = "unique_id"
 
 # Image checking ##########################################################
 
@@ -146,12 +146,11 @@ def get_chyrsalis_expansions(config):
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         # To use default environment_commands, set to ""
-        "diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate e3sm_diags_2.12.1",
+        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "5:00:00",
-        "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
-        "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi_main_20241211",
+        "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
         "partition_short": "debug",
@@ -178,7 +177,6 @@ def get_compy_expansions(config):
         # To use default environment_commands, set to ""
         "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "03:00:00",
-        "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
         "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
@@ -208,7 +206,6 @@ def get_perlmutter_expansions(config):
         # To use default environment_commands, set to ""
         "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "6:00:00",
-        "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
         "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
@@ -356,13 +353,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     print(
         f"global_time_series_environment_commands={expansions['global_time_series_environment_commands']}"
     )
-    print(
-        f"e3sm_to_cmip_environment_commands={expansions['e3sm_to_cmip_environment_commands']}"
-    )
     print(f"environment_commands={expansions['environment_commands']}")
-    print(
-        "Reminder: `e3sm_to_cmip_environment_commands=''` => the environment of the `ts` task will be used"
-    )
     print(
         "Reminder: `environment_commands=''` => the latest E3SM Unified environment will be used"
     )
