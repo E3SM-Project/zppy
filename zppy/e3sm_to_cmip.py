@@ -76,7 +76,11 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
             write_settings_file(settings_file, c, s)
             export = "ALL"
             existing_bundles = handle_bundles(
-                c, bash_file, export, existing_bundles=existing_bundles
+                c,
+                bash_file,
+                export,
+                dependFiles=dependencies,
+                existing_bundles=existing_bundles,
             )
             if not c["dry_run"]:
                 if c["bundle"] == "":
@@ -86,6 +90,7 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
                         status_file,
                         export,
                         job_ids_file,
+                        dependFiles=dependencies,
                         fail_on_dependency_skip=c["fail_on_dependency_skip"],
                     )
                 else:

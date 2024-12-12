@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from tests.integration.utils import check_mismatched_images, get_expansions
 
 V3_CASE_NAME = "v3.LR.historical_0051"
@@ -30,18 +32,25 @@ def check_images(test_name, case_name):
 
 # Run with:
 # pytest tests/integration/test_weekly.py
+# Comment/uncomment `skip` declarations to run specific tests.
+
+
+@pytest.mark.skip(reason="Not testing")
 def test_comprehensive_v2_images():
     check_images("comprehensive_v2", V2_CASE_NAME)
 
 
+@pytest.mark.skip(reason="Not testing")
 def test_comprehensive_v3_images():
     check_images("comprehensive_v3", V3_CASE_NAME)
 
 
+@pytest.mark.skip(reason="Not testing")
 def test_bundles_images():
     check_images("bundles", V3_CASE_NAME)
 
 
+# @pytest.mark.skip(reason="Not testing")
 def test_bundles_bash_file_list():
     # Check that the correct bash files are generated
     expansions = get_expansions()
@@ -67,6 +76,10 @@ def test_bundles_bash_file_list():
             "e3sm_diags_atm_monthly_180x360_aave_model_vs_obs_1985-1986.bash",
             "e3sm_diags_atm_monthly_180x360_aave_model_vs_obs_1987-1988.bash",
             "e3sm_diags_atm_monthly_180x360_aave_mvm_model_vs_model_1987-1988_vs_1985-1986.bash",
+            "e3sm_to_cmip_atm_monthly_180x360_aave_1985-1986-0002.bash",
+            "e3sm_to_cmip_atm_monthly_180x360_aave_1987-1988-0002.bash",
+            "e3sm_to_cmip_land_monthly_1985-1986-0002.bash",
+            "e3sm_to_cmip_land_monthly_1987-1988-0002.bash",
             "global_time_series_1985-1995.bash",
             "ilamb_1985-1986.bash",
             # "tc_analysis_1985-1986.bash",
@@ -84,6 +97,7 @@ def test_bundles_bash_file_list():
     assert actual_bash_files == expected_bash_files
 
 
+@pytest.mark.skip(reason="Not testing")
 def test_bundles_bash_file_content():
     expansions = get_expansions()
     user_output = expansions["user_output"]

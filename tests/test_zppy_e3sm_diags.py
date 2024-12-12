@@ -546,7 +546,10 @@ def test_add_ts_dependencies():
         c.update(base)
         dependencies: List[str] = []
         add_ts_dependencies(c, dependencies, "script_dir", 1980)
-        assert dependencies == ["script_dir/ts_sub_1980-1984-0005.status"]
+        assert dependencies == [
+            "script_dir/ts_sub_1980-1984-0005.status",
+            "script_dir/e3sm_to_cmip_sub_1980-1984-0005.status",
+        ]
 
     c = {"sets": ["streamflow"]}
     c.update(base)

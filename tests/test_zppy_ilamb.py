@@ -16,6 +16,8 @@ def test_determine_and_add_dependencies():
     expected = [
         "script_dir/ts_land_monthly_1980-1984-0005.status",
         "script_dir/ts_land_monthly_1985-1989-0005.status",
+        "script_dir/e3sm_to_cmip_land_monthly_1980-1984-0005.status",
+        "script_dir/e3sm_to_cmip_land_monthly_1985-1989-0005.status",
     ]
     assert dependencies == expected
 
@@ -35,7 +37,11 @@ def test_determine_and_add_dependencies():
     expected = [
         "script_dir/ts_land_monthly_1980-1984-0005.status",
         "script_dir/ts_land_monthly_1985-1989-0005.status",
+        "script_dir/e3sm_to_cmip_land_monthly_1980-1984-0005.status",
+        "script_dir/e3sm_to_cmip_land_monthly_1985-1989-0005.status",
         "script_dir/ts_atm_monthly_180x360_aave_1980-1984-0005.status",
         "script_dir/ts_atm_monthly_180x360_aave_1985-1989-0005.status",
+        "script_dir/e3sm_to_cmip_atm_monthly_180x360_aave_1980-1984-0005.status",
+        "script_dir/e3sm_to_cmip_atm_monthly_180x360_aave_1985-1989-0005.status",
     ]
     assert dependencies == expected
