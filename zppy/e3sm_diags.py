@@ -295,16 +295,6 @@ def add_ts_dependencies(
             end_yr,
             c["ts_num_years"],
         )
-        # e3sm_to_cmip task
-        add_dependencies(
-            dependencies,
-            script_dir,
-            "e3sm_to_cmip",
-            ts_sub,  # Relies on having the same subsection name as the corresponding ts subsection!
-            start_yr,
-            end_yr,
-            c["ts_num_years"],
-        )
     if "streamflow" in c["sets"]:
         add_dependencies(
             dependencies,

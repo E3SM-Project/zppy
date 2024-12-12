@@ -35,7 +35,6 @@ def ts(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
         set_mapping_file(c)
         set_grid(c)
         set_component_and_prc_typ(c)
-        c["cmor_tables_prefix"] = c["diagnostics_base_path"]
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
         # Loop over year sets
         for s in year_sets:

@@ -13,9 +13,6 @@ from zppy.utils import (
     get_years,
     initialize_template,
     make_executable,
-    set_component_and_prc_typ,
-    set_grid,
-    set_mapping_file,
     submit_script,
     write_settings_file,
 )
@@ -34,9 +31,6 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
     # --- Generate and submit e3sm_to_cmip scripts ---
     for c in tasks:
         dependencies: List[str] = []
-        set_mapping_file(c)
-        set_grid(c)
-        set_component_and_prc_typ(c)
         c["cmor_tables_prefix"] = c["diagnostics_base_path"]
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
         # Loop over year sets
