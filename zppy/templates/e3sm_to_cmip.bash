@@ -33,7 +33,7 @@ EOF
   ${dest_cmip}/${tmp_dir} \
   {% if input_files.split(".")[0] == 'clm2' or input_files.split(".")[0] == 'elm' -%}
   --var-list \
-  '{{ cmip_var_lnd }}' \
+  '{{ cmip_var_land }}' \
   --realm \
   lnd \
   {% endif -%}
