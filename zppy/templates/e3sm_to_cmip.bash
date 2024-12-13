@@ -20,12 +20,11 @@ cat > default_metadata.json << EOF
 EOF
 {
   export cmortables_dir={{ cmor_tables_prefix }}/e3sm_to_cmip_data/cmip6-cmor-tables/Tables
-  #input_dir={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
   input_dir=${dest}/{{ '%04d' % (yr_start) }}_{{ '%04d' % (yr_end) }}
   mkdir -p $input_dir
 
   cp -s $dest/*_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc $input_dir
-  dest_cmip={{ output }}/post/{{ component }}/{{ grid }}/cmip_ts/{{ frequency }}
+  dest_cmip={{ output }}/post/{{ component }}/{{ ts_grid }}/cmip_ts/{{ frequency }}
   mkdir -p ${dest_cmip}
 
   srun -N 1 e3sm_to_cmip \
@@ -47,7 +46,7 @@ EOF
   if [ $? != 0 ]; then
     cd {{ scriptDir }}
     echo 'ERROR (1)' > {{ prefix }}.status
-    exit 4
+    exit 1
   fi
 
   # Move output ts files to final destination
@@ -55,16 +54,16 @@ EOF
   if [ $? != 0 ]; then
     cd {{ scriptDir }}
     echo 'ERROR (2)' > {{ prefix }}.status
-    exit 5
+    exit 2
   fi
 
-      rm -r ${dest_cmip}/${tmp_dir}
+  rm -r ${dest_cmip}/${tmp_dir}
 
 }
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (3)' > {{ prefix }}.status
-  exit 6
+  exit 3
 fi
 
 # Delete temporary workdir

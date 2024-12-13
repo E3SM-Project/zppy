@@ -7,7 +7,7 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "test_zppy_pr650_20241213v2"
+UNIQUE_ID = "test_zppy_pr650_20241216v7"
 
 # Image checking ##########################################################
 
@@ -53,11 +53,13 @@ def compare_images(
         fraction = num_nonzero_pixels / num_pixels
         # Fraction of mismatched pixels should be less than 0.02%
         if fraction >= 0.0002:
-            print("\npath_to_actual_png={}".format(path_to_actual_png))
-            print("path_to_expected_png={}".format(path_to_expected_png))
-            print("diff has {} nonzero pixels.".format(num_nonzero_pixels))
-            print("total number of pixels={}".format(num_pixels))
-            print("num_nonzero_pixels/num_pixels fraction={}".format(fraction))
+            verbose = False
+            if verbose:
+                print("\npath_to_actual_png={}".format(path_to_actual_png))
+                print("path_to_expected_png={}".format(path_to_expected_png))
+                print("diff has {} nonzero pixels.".format(num_nonzero_pixels))
+                print("total number of pixels={}".format(num_pixels))
+                print("num_nonzero_pixels/num_pixels fraction={}".format(fraction))
 
             mismatched_images.append(image_name)
 
@@ -90,7 +92,11 @@ def compare_images(
 
 
 def check_mismatched_images(
-    actual_images_dir, expected_images_file, expected_images_dir, diff_dir
+    actual_images_dir,
+    expected_images_file,
+    expected_images_dir,
+    diff_dir,
+    subdirs_to_check,
 ):
     missing_images: List[str] = []
     mismatched_images: List[str] = []
@@ -98,28 +104,35 @@ def check_mismatched_images(
     counter = 0
     with open(expected_images_file) as f:
         for line in f:
-            counter += 1
-            if counter % 250 == 0:
-                print("On line #", counter)
             image_name = line.strip("./").strip("\n")
-            path_to_actual_png = os.path.join(actual_images_dir, image_name)
-            path_to_expected_png = os.path.join(expected_images_dir, image_name)
+            proceed = False
+            for subdir in subdirs_to_check:
+                if image_name.startswith(subdir):
+                    proceed = True
+                    break
+            if proceed:
+                counter += 1
+                if counter % 250 == 0:
+                    print("On line #", counter)
+                path_to_actual_png = os.path.join(actual_images_dir, image_name)
+                path_to_expected_png = os.path.join(expected_images_dir, image_name)
 
-            compare_images(
-                missing_images,
-                mismatched_images,
-                image_name,
-                path_to_actual_png,
-                path_to_expected_png,
-                diff_dir,
-            )
+                compare_images(
+                    missing_images,
+                    mismatched_images,
+                    image_name,
+                    path_to_actual_png,
+                    path_to_expected_png,
+                    diff_dir,
+                )
+    print(f"Total number of images checked: {counter}")
 
     if missing_images:
-        print("Missing images:")
+        print(f"Missing images: {len(missing_images)}")
         for i in missing_images:
             print(i)
     if mismatched_images:
-        print("Mismatched images:")
+        print(f"Mismatched images: {len(mismatched_images)}")
         for i in mismatched_images:
             print(i)
 

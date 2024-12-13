@@ -34,8 +34,18 @@ cd ${model_root}/${case}
 # Create local links to input cmip time-series files
 lnd_ts_for_ilamb={{ output }}/post/lnd/{{ ts_land_grid }}/cmip_ts/monthly/
 atm_ts_for_ilamb={{ output }}/post/atm/{{ ts_atm_grid }}/cmip_ts/monthly/
-cp -s ${lnd_ts_for_ilamb}/*_*_*_*_*_*_${Y1}??-${Y2}??.nc .
-cp -s ${atm_ts_for_ilamb}/*_*_*_*_*_*_${Y1}??-${Y2}??.nc .
+cp -s ${lnd_ts_for_ilamb}/*.nc .
+if [ $? != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'ERROR (1)' > {{ prefix }}.status
+  exit 1
+fi
+cp -s ${atm_ts_for_ilamb}/*.nc .
+if [ $? != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'ERROR (2)' > {{ prefix }}.status
+  exit 2
+fi
 cd ../..
 
 echo
@@ -58,8 +68,8 @@ srun -N 1 ilamb-run --config ilamb.cfg --model_root $model_root  --regions globa
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (1)' > {{ prefix }}.status
-  exit 1
+  echo 'ERROR (3)' > {{ prefix }}.status
+  exit 3
 fi
 
 # Copy output to web server
@@ -72,8 +82,8 @@ web_dir=${www}/${case}/ilamb/{{ sub }}_${Y1}-${Y2}
 mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (2)' > {{ prefix }}.status
-  exit 2
+  echo 'ERROR (4)' > {{ prefix }}.status
+  exit 4
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
@@ -95,8 +105,8 @@ results_dir=_build/
 rsync -a --delete ${results_dir} ${web_dir}/
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (3)' > {{ prefix }}.status
-  exit 3
+  echo 'ERROR (5)' > {{ prefix }}.status
+  exit 5
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
