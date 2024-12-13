@@ -5,6 +5,7 @@ from zppy.ilamb import determine_and_add_dependencies
 
 def test_determine_and_add_dependencies():
     c = {
+        "e3sm_to_cmip_land_subsection": "land_monthly",
         "land_only": True,
         "ts_land_subsection": "land_monthly",
         "year1": 1980,
@@ -23,6 +24,8 @@ def test_determine_and_add_dependencies():
 
     # Have zppy guess the subsection names
     c = {
+        "e3sm_to_cmip_atm_subsection": "",
+        "e3sm_to_cmip_land_subsection": "",
         "land_only": False,
         "ts_land_subsection": "",
         "ts_atm_subsection": "",
