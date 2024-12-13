@@ -10,7 +10,7 @@ mkdir ${workdir}
 cd ${workdir}
 
 # From the ts task
-dest={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
+dest={{ output }}/post/{{ component }}/{{ ts_grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
 
 tmp_dir=tmp_{{ prefix }}
 
@@ -31,18 +31,10 @@ EOF
   srun -N 1 e3sm_to_cmip \
   --output-path \
   ${dest_cmip}/${tmp_dir} \
-  {% if input_files.split(".")[0] == 'clm2' or input_files.split(".")[0] == 'elm' -%}
   --var-list \
-  '{{ cmip_var_land }}' \
+  {{ cmip_vars }} \
   --realm \
-  lnd \
-  {% endif -%}
-  {% if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' -%}
-  --var-list \
-  '{{ cmip_var_atm }}' \
-  --realm \
-  atm \
-  {% endif -%}
+  {{ component }} \
   --input-path \
   ${input_dir} \
   --user-metadata \

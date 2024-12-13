@@ -8,14 +8,13 @@ from zppy.utils import (
     add_dependencies,
     check_status,
     define_or_guess,
+    define_or_guess2,
     get_file_names,
     get_tasks,
     get_years,
     initialize_template,
     make_executable,
     set_component_and_prc_typ,
-    set_grid,
-    set_mapping_file,
     submit_script,
     write_settings_file,
 )
@@ -34,8 +33,6 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
     # --- Generate and submit e3sm_to_cmip scripts ---
     for c in tasks:
         dependencies: List[str] = []
-        set_mapping_file(c)
-        set_grid(c)
         set_component_and_prc_typ(c)
         c["cmor_tables_prefix"] = c["diagnostics_base_path"]
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
@@ -52,6 +49,14 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
             sub: str = define_or_guess(
                 c, "subsection", "grid", ParameterGuessType.SECTION_GUESS
             )
+            # Run default variables if none are specified
+            if c["cmip_vars"] == "":
+                if c["component"] == "atm":
+                    c["cmip_vars"] = "pr, tas, rsds, rlds, rsus"
+                elif c["component"] == "lnd":
+                    c["cmip_vars"] = (
+                        "mrsos, mrso, mrfso, mrros, mrro, prveg, evspsblveg, evspsblsoi, tran, tsl, lai, cLitter, cProduct, cSoilFast, cSoilMedium, cSoilSlow, fFire, fHarvest, cVeg, nbp, gpp, ra, rh"
+                    )
             prefix = f"e3sm_to_cmip_{sub}_{c['yr_start']:04d}-{c['yr_end']:04d}-{c['ypf']:04d}"
             print(prefix)
             c["prefix"] = prefix
@@ -63,11 +68,13 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
             with open(bash_file, "w") as f:
                 f.write(template.render(**c))
             make_executable(bash_file)
+            # Default to the name of this task if ts_subsection is not defined
+            define_or_guess2(c, "ts_subsection", sub, ParameterGuessType.SECTION_GUESS)
             add_dependencies(
                 dependencies,
                 script_dir,
                 "ts",
-                sub,  # Relies on having the same subsection name as the corresponding ts subsection!
+                c["ts_subsection"],
                 c["yr_start"],
                 c["yr_end"],
                 c["ts_num_years"],
