@@ -145,6 +145,9 @@ def get_chyrsalis_expansions(config):
         "case_name": "v3.LR.historical_0051",
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
+        # To run this test, replace conda environment with your e3sm_diags dev environment
+        # To use default environment_commands, set to ""
+        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "5:00:00",
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
@@ -172,6 +175,9 @@ def get_compy_expansions(config):
         "case_name": "v3.LR.historical_0051",
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
+        # To run this test, replace conda environment with your e3sm_diags dev environment
+        # To use default environment_commands, set to ""
+        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "03:00:00",
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
@@ -199,6 +205,9 @@ def get_perlmutter_expansions(config):
         "case_name": "v3.LR.historical_0051",
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "cpu",
+        # To run this test, replace conda environment with your e3sm_diags dev environment
+        # To use default environment_commands, set to ""
+        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "6:00:00",
         "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
@@ -252,14 +261,18 @@ def substitute_expansions(expansions, file_in, file_out):
                 file_write.write(line)
 
 
-def generate_cfgs(unified_testing=False, diags_environment_commands="", dry_run=False):
+def generate_cfgs(
+    unified_testing=False,
+    diags_environment_commands=None,
+    global_time_series_environment_commands=None,
+    dry_run=False,
+):
     git_top_level = (
         subprocess.check_output("git rev-parse --show-toplevel".split())
         .strip()
         .decode("utf-8")
     )
     expansions = get_expansions()
-
     if unified_testing:
         expansions["environment_commands"] = expansions["environment_commands_test"]
     else:
@@ -269,8 +282,10 @@ def generate_cfgs(unified_testing=False, diags_environment_commands="", dry_run=
 
     if diags_environment_commands:
         expansions["diags_environment_commands"] = diags_environment_commands
-    else:
-        expansions["diags_environment_commands"] = ""
+    if global_time_series_environment_commands:
+        expansions["global_time_series_environment_commands"] = (
+            global_time_series_environment_commands
+        )
 
     machine = expansions["machine"]
 
@@ -368,6 +383,12 @@ def generate_cfgs(unified_testing=False, diags_environment_commands="", dry_run=
 
 
 if __name__ == "__main__":
-    generate_cfgs(
-        unified_testing=(sys.argv[1] == "True"), diags_environment_commands=sys.argv[2]
-    )
+    if len(sys.argv) <= 2:
+        generate_cfgs(unified_testing=False, dry_run=False)
+    else:
+        generate_cfgs(
+            unified_testing=sys.argv[2] == "True",
+            diags_environment_commands=sys.argv[3],
+            global_time_series_environment_commands=sys.argv[4],
+            dry_run=False,
+        )
