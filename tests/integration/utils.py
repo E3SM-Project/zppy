@@ -7,7 +7,7 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "test_zppy_pr650_20241216_min_cases_v2"
+UNIQUE_ID = "test_zppy_pr650_20241217_comprehensive_ilamb_v3"
 
 # Image checking ##########################################################
 
@@ -137,7 +137,12 @@ def check_mismatched_images(
             print(i)
 
     # Make diff_dir readable
-    os.system(f"chmod -R 755 {diff_dir}")
+    if os.path.exists(diff_dir):
+        os.system(f"chmod -R 755 {diff_dir}")
+    else:
+        # diff_dir won't exist if all the expected images are missing
+        # That is, if we're in this case, we expect the following:
+        assert len(missing_images) == counter
 
     assert missing_images == []
     assert mismatched_images == []

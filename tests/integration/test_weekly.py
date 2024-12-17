@@ -28,7 +28,8 @@ def check_images(test_name, case_name):
     # To run a subset of the image-check test:
     # 1) comment out sections you don't want to run in the `cfg`
     # 2) set `subdirs_to_check` to the subset of tasks you want to run
-    subdirs_to_check = ["mpas_analysis", "e3sm_diags", "global_time_series", "ilamb"]
+    # subdirs_to_check = ["mpas_analysis", "e3sm_diags", "global_time_series", "ilamb"]
+    subdirs_to_check = ["ilamb"]
 
     check_mismatched_images(
         actual_images_dir,

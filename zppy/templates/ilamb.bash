@@ -30,22 +30,35 @@ fi
 mkdir -p ${model_root}/${case}
 cd ${model_root}/${case}
 
+echo
+echo ===== Copy nc files =====
+echo
+
 # Create output directory
 # Create local links to input cmip time-series files
 lnd_ts_for_ilamb={{ output }}/post/lnd/{{ ts_land_grid }}/cmip_ts/monthly/
 atm_ts_for_ilamb={{ output }}/post/atm/{{ ts_atm_grid }}/cmip_ts/monthly/
-cp -s ${lnd_ts_for_ilamb}/*.nc .
-if [ $? != 0 ]; then
-  cd {{ scriptDir }}
-  echo 'ERROR (1)' > {{ prefix }}.status
-  exit 1
-fi
-cp -s ${atm_ts_for_ilamb}/*.nc .
-if [ $? != 0 ]; then
-  cd {{ scriptDir }}
-  echo 'ERROR (2)' > {{ prefix }}.status
-  exit 2
-fi
+# Go through the time series files for between year1 and year2,
+# using a step size equal to the number of years per time series file
+for year in `seq ${Y1} {{ ts_num_years }} ${Y2}`;
+do
+  start_year=`printf "%04d" ${year}`
+  end_year_int=$((${start_year} + {{ ts_num_years }} - 1))
+  end_year=`printf "%04d" ${end_year_int}`
+  echo "Copying files for ${start_year} to ${end_year}"
+  cp -s ${lnd_ts_for_ilamb}/*_*_*_*_*_*_${start_year}??-${end_year}??.nc .
+  if [ $? != 0 ]; then
+    cd {{ scriptDir }}
+    echo 'ERROR (1)' > {{ prefix }}.status
+    exit 1
+  fi
+  cp -s ${atm_ts_for_ilamb}/*_*_*_*_*_*_${start_year}??-${end_year}??.nc .
+  if [ $? != 0 ]; then
+    cd {{ scriptDir }}
+    echo 'ERROR (2)' > {{ prefix }}.status
+    exit 2
+  fi
+done
 cd ../..
 
 echo
