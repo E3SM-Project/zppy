@@ -7,7 +7,7 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "test_zppy_pr650_20241216v7"
+UNIQUE_ID = "test_zppy_pr650_20241216_min_cases_v2"
 
 # Image checking ##########################################################
 
@@ -327,6 +327,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "min_case_global_time_series_custom",
         "min_case_global_time_series_original_8_no_ocn",
         "min_case_global_time_series_original_8",
+        "min_case_ilamb_diff_years",
         "min_case_ilamb_land_only",
         "min_case_ilamb",
         "min_case_mpas_analysis",
