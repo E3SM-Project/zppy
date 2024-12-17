@@ -1,0 +1,34 @@
+name: zppy_dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Base
+  # =================
+  - python=3.9.13
+  - pip=22.2.2
+  - configobj=5.0.6
+  - jinja2=3.1.2
+  - mache>=1.5.0
+  - mpas_tools>=0.15.0
+  - pillow=9.2.0
+  # Developer Tools
+  # =================
+  # If versions are updated, also update 'rev' in `.pre-commit-config.yaml`
+  - black=22.8.0        # version from https://anaconda.org/conda-forge/black
+  - flake8=5.0.4        # version from https://anaconda.org/conda-forge/flake8
+  # This line also implicitly installs isort
+  - flake8-isort=4.2.0  # version from https://anaconda.org/conda-forge/flake8-isort
+  - mypy=0.982          # version from https://anaconda.org/conda-forge/mypy
+  - pre-commit=2.20.0   # version from https://anaconda.org/conda-forge/pre-commit
+  - tbump=6.9.0
+  # Documentation
+  # If versions are updated, also update in `.github/workflows/build_workflow.yml`
+  # =================
+  - sphinx=5.2.3
+  - sphinx-multiversion=0.2.4
+  - sphinx_rtd_theme=1.0.0
+  # Need to pin docutils because 0.17 has a bug with unordered lists
+  # https://github.com/readthedocs/sphinx_rtd_theme/issues/1115
+  - docutils=0.16
+prefix: /home/ac.szhang/.conda/envs/zppy_dev
