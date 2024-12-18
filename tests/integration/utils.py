@@ -53,11 +53,13 @@ def compare_images(
         fraction = num_nonzero_pixels / num_pixels
         # Fraction of mismatched pixels should be less than 0.02%
         if fraction >= 0.0002:
-            print("\npath_to_actual_png={}".format(path_to_actual_png))
-            print("path_to_expected_png={}".format(path_to_expected_png))
-            print("diff has {} nonzero pixels.".format(num_nonzero_pixels))
-            print("total number of pixels={}".format(num_pixels))
-            print("num_nonzero_pixels/num_pixels fraction={}".format(fraction))
+            verbose = False
+            if verbose:
+                print("\npath_to_actual_png={}".format(path_to_actual_png))
+                print("path_to_expected_png={}".format(path_to_expected_png))
+                print("diff has {} nonzero pixels.".format(num_nonzero_pixels))
+                print("total number of pixels={}".format(num_pixels))
+                print("num_nonzero_pixels/num_pixels fraction={}".format(fraction))
 
             mismatched_images.append(image_name)
 
@@ -90,7 +92,11 @@ def compare_images(
 
 
 def check_mismatched_images(
-    actual_images_dir, expected_images_file, expected_images_dir, diff_dir
+    actual_images_dir,
+    expected_images_file,
+    expected_images_dir,
+    diff_dir,
+    subdirs_to_check,
 ):
     missing_images: List[str] = []
     mismatched_images: List[str] = []
@@ -98,33 +104,45 @@ def check_mismatched_images(
     counter = 0
     with open(expected_images_file) as f:
         for line in f:
-            counter += 1
-            if counter % 250 == 0:
-                print("On line #", counter)
             image_name = line.strip("./").strip("\n")
-            path_to_actual_png = os.path.join(actual_images_dir, image_name)
-            path_to_expected_png = os.path.join(expected_images_dir, image_name)
+            proceed = False
+            for subdir in subdirs_to_check:
+                if image_name.startswith(subdir):
+                    proceed = True
+                    break
+            if proceed:
+                counter += 1
+                if counter % 250 == 0:
+                    print("On line #", counter)
+                path_to_actual_png = os.path.join(actual_images_dir, image_name)
+                path_to_expected_png = os.path.join(expected_images_dir, image_name)
 
-            compare_images(
-                missing_images,
-                mismatched_images,
-                image_name,
-                path_to_actual_png,
-                path_to_expected_png,
-                diff_dir,
-            )
+                compare_images(
+                    missing_images,
+                    mismatched_images,
+                    image_name,
+                    path_to_actual_png,
+                    path_to_expected_png,
+                    diff_dir,
+                )
+    print(f"Total number of images checked: {counter}")
 
     if missing_images:
-        print("Missing images:")
+        print(f"Missing images: {len(missing_images)}")
         for i in missing_images:
             print(i)
     if mismatched_images:
-        print("Mismatched images:")
+        print(f"Mismatched images: {len(mismatched_images)}")
         for i in mismatched_images:
             print(i)
 
     # Make diff_dir readable
-    os.system(f"chmod -R 755 {diff_dir}")
+    if os.path.exists(diff_dir):
+        os.system(f"chmod -R 755 {diff_dir}")
+    else:
+        # diff_dir won't exist if all the expected images are missing
+        # That is, if we're in this case, we expect the following:
+        assert len(missing_images) == counter
 
     assert missing_images == []
     assert mismatched_images == []
@@ -148,7 +166,6 @@ def get_chyrsalis_expansions(config):
         # To use default environment_commands, set to ""
         "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "5:00:00",
-        "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
         "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
@@ -178,7 +195,6 @@ def get_compy_expansions(config):
         # To use default environment_commands, set to ""
         "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "03:00:00",
-        "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
         "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
@@ -208,7 +224,6 @@ def get_perlmutter_expansions(config):
         # To use default environment_commands, set to ""
         "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "6:00:00",
-        "e3sm_to_cmip_environment_commands": "",
         "environment_commands_test": "",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
         "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
@@ -317,6 +332,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "min_case_global_time_series_custom",
         "min_case_global_time_series_original_8_no_ocn",
         "min_case_global_time_series_original_8",
+        "min_case_ilamb_diff_years",
         "min_case_ilamb_land_only",
         "min_case_ilamb",
         "min_case_mpas_analysis",
@@ -356,13 +372,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     print(
         f"global_time_series_environment_commands={expansions['global_time_series_environment_commands']}"
     )
-    print(
-        f"e3sm_to_cmip_environment_commands={expansions['e3sm_to_cmip_environment_commands']}"
-    )
     print(f"environment_commands={expansions['environment_commands']}")
-    print(
-        "Reminder: `e3sm_to_cmip_environment_commands=''` => the environment of the `ts` task will be used"
-    )
     print(
         "Reminder: `environment_commands=''` => the latest E3SM Unified environment will be used"
     )

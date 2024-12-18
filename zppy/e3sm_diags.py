@@ -285,6 +285,7 @@ def add_ts_dependencies(
     )
     depend_on_ts: Set[str] = set(["enso_diags", "qbo", "area_mean_time_series"])
     if depend_on_ts & set(c["sets"]):
+        # ts task
         add_dependencies(
             dependencies,
             script_dir,

@@ -1,26 +1,10 @@
 #!/bin/bash
-{% include 'inclusions/slurm_header.sh' %}
-
+{% include 'inclusions/slurm_header.bash' %}
+{% include 'inclusions/boilerplate.bash' %}
 {{ environment_commands }}
-
-# Turn on debug output if needed
-debug={{ debug }}
-if [[ "${debug,,}" == "true" ]]; then
-  set -x
-fi
 
 # Make sure UVCDAT doesn't prompt us about anonymous logging
 export UVCDAT_ANONYMOUS_LOG=False
-
-# Script dir
-cd {{ scriptDir }}
-
-# Get jobid
-id=${SLURM_JOBID}
-
-# Update status file
-STARTTIME=$(date +%s)
-echo "RUNNING ${id}" > {{ prefix }}.status
 
 # Basic definitions
 case="{{ case }}"

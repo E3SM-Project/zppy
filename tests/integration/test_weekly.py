@@ -23,25 +23,41 @@ def check_images(test_name, case_name):
     # The directory to place differences in.
     diff_dir = f"{actual_images_dir}image_check_failures_{test_name}"
 
+    # To run a subset of the image-check test:
+    # 1) comment out sections you don't want to run in the `cfg`
+    # 2) set `subdirs_to_check` to the subset of tasks you want to run
+    subdirs_to_check = ["mpas_analysis", "e3sm_diags", "global_time_series", "ilamb"]
+
     check_mismatched_images(
-        actual_images_dir, expected_images_file, expected_images_dir, diff_dir
+        actual_images_dir,
+        expected_images_file,
+        expected_images_dir,
+        diff_dir,
+        subdirs_to_check,
     )
 
 
 # Run with:
 # pytest tests/integration/test_weekly.py
+# Comment/uncomment `skip` declarations to run specific tests.
+
+
+# @pytest.mark.skip(reason="Not testing")
 def test_comprehensive_v2_images():
     check_images("comprehensive_v2", V2_CASE_NAME)
 
 
+# @pytest.mark.skip(reason="Not testing")
 def test_comprehensive_v3_images():
     check_images("comprehensive_v3", V3_CASE_NAME)
 
 
+# @pytest.mark.skip(reason="Not testing")
 def test_bundles_images():
     check_images("bundles", V3_CASE_NAME)
 
 
+# @pytest.mark.skip(reason="Not testing")
 def test_bundles_bash_file_list():
     # Check that the correct bash files are generated
     expansions = get_expansions()
@@ -67,6 +83,10 @@ def test_bundles_bash_file_list():
             "e3sm_diags_atm_monthly_180x360_aave_model_vs_obs_1985-1986.bash",
             "e3sm_diags_atm_monthly_180x360_aave_model_vs_obs_1987-1988.bash",
             "e3sm_diags_atm_monthly_180x360_aave_mvm_model_vs_model_1987-1988_vs_1985-1986.bash",
+            "e3sm_to_cmip_atm_monthly_180x360_aave_1985-1986-0002.bash",
+            "e3sm_to_cmip_atm_monthly_180x360_aave_1987-1988-0002.bash",
+            "e3sm_to_cmip_land_monthly_1985-1986-0002.bash",
+            "e3sm_to_cmip_land_monthly_1987-1988-0002.bash",
             "global_time_series_1985-1995.bash",
             "ilamb_1985-1986.bash",
             # "tc_analysis_1985-1986.bash",
@@ -84,6 +104,7 @@ def test_bundles_bash_file_list():
     assert actual_bash_files == expected_bash_files
 
 
+# @pytest.mark.skip(reason="Not testing")
 def test_bundles_bash_file_content():
     expansions = get_expansions()
     user_output = expansions["user_output"]

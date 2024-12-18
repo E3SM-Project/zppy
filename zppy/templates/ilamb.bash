@@ -1,26 +1,10 @@
 #!/bin/bash
-{% include 'inclusions/slurm_header.sh' %}
-
+{% include 'inclusions/slurm_header.bash' %}
+{% include 'inclusions/boilerplate.bash' %}
 {{ environment_commands }}
-
-# Turn on debug output if needed
-debug={{ debug }}
-if [[ "${debug,,}" == "true" ]]; then
-  set -x
-fi
 
 # Point to observation data
 export ILAMB_ROOT={{ ilamb_obs }}
-
-# Script dir
-cd {{ scriptDir }}
-
-# Get jobid
-id=${SLURM_JOBID}
-
-# Update status file
-STARTTIME=$(date +%s)
-echo "RUNNING ${id}" > {{ prefix }}.status
 
 # Basic definitions
 case="{{ case }}"
@@ -46,12 +30,35 @@ fi
 mkdir -p ${model_root}/${case}
 cd ${model_root}/${case}
 
+echo
+echo ===== Copy nc files =====
+echo
+
 # Create output directory
 # Create local links to input cmip time-series files
 lnd_ts_for_ilamb={{ output }}/post/lnd/{{ ts_land_grid }}/cmip_ts/monthly/
 atm_ts_for_ilamb={{ output }}/post/atm/{{ ts_atm_grid }}/cmip_ts/monthly/
-cp -s ${lnd_ts_for_ilamb}/*_*_*_*_*_*_${Y1}??-${Y2}??.nc .
-cp -s ${atm_ts_for_ilamb}/*_*_*_*_*_*_${Y1}??-${Y2}??.nc .
+# Go through the time series files for between year1 and year2,
+# using a step size equal to the number of years per time series file
+for year in `seq ${Y1} {{ ts_num_years }} ${Y2}`;
+do
+  start_year=`printf "%04d" ${year}`
+  end_year_int=$((${start_year} + {{ ts_num_years }} - 1))
+  end_year=`printf "%04d" ${end_year_int}`
+  echo "Copying files for ${start_year} to ${end_year}"
+  cp -s ${lnd_ts_for_ilamb}/*_*_*_*_*_*_${start_year}??-${end_year}??.nc .
+  if [ $? != 0 ]; then
+    cd {{ scriptDir }}
+    echo 'ERROR (1)' > {{ prefix }}.status
+    exit 1
+  fi
+  cp -s ${atm_ts_for_ilamb}/*_*_*_*_*_*_${start_year}??-${end_year}??.nc .
+  if [ $? != 0 ]; then
+    cd {{ scriptDir }}
+    echo 'ERROR (2)' > {{ prefix }}.status
+    exit 2
+  fi
+done
 cd ../..
 
 echo
@@ -74,8 +81,8 @@ srun -N 1 ilamb-run --config ilamb.cfg --model_root $model_root  --regions globa
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (1)' > {{ prefix }}.status
-  exit 1
+  echo 'ERROR (3)' > {{ prefix }}.status
+  exit 3
 fi
 
 # Copy output to web server
@@ -88,8 +95,8 @@ web_dir=${www}/${case}/ilamb/{{ sub }}_${Y1}-${Y2}
 mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (2)' > {{ prefix }}.status
-  exit 2
+  echo 'ERROR (4)' > {{ prefix }}.status
+  exit 4
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
@@ -111,8 +118,8 @@ results_dir=_build/
 rsync -a --delete ${results_dir} ${web_dir}/
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (3)' > {{ prefix }}.status
-  exit 3
+  echo 'ERROR (5)' > {{ prefix }}.status
+  exit 5
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}

@@ -109,6 +109,21 @@ def determine_and_add_dependencies(
         c["year2"],
         c["ts_num_years"],
     )
+    define_or_guess2(
+        c,
+        "e3sm_to_cmip_land_subsection",
+        "land_monthly",
+        ParameterGuessType.SECTION_GUESS,
+    )
+    add_dependencies(
+        dependencies,
+        script_dir,
+        "e3sm_to_cmip",
+        c["e3sm_to_cmip_land_subsection"],
+        c["year1"],
+        c["year2"],
+        c["ts_num_years"],
+    )
     if not c["land_only"]:
         define_or_guess2(
             c,
@@ -121,6 +136,21 @@ def determine_and_add_dependencies(
             script_dir,
             "ts",
             c["ts_atm_subsection"],
+            c["year1"],
+            c["year2"],
+            c["ts_num_years"],
+        )
+        define_or_guess2(
+            c,
+            "e3sm_to_cmip_atm_subsection",
+            "atm_monthly_180x360_aave",
+            ParameterGuessType.SECTION_GUESS,
+        )
+        add_dependencies(
+            dependencies,
+            script_dir,
+            "e3sm_to_cmip",
+            c["e3sm_to_cmip_atm_subsection"],
             c["year1"],
             c["year2"],
             c["ts_num_years"],
