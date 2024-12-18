@@ -1,7 +1,5 @@
 import os
 
-import pytest
-
 from tests.integration.utils import check_mismatched_images, get_expansions
 
 V3_CASE_NAME = "v3.LR.historical_0051"
@@ -28,8 +26,7 @@ def check_images(test_name, case_name):
     # To run a subset of the image-check test:
     # 1) comment out sections you don't want to run in the `cfg`
     # 2) set `subdirs_to_check` to the subset of tasks you want to run
-    # subdirs_to_check = ["mpas_analysis", "e3sm_diags", "global_time_series", "ilamb"]
-    subdirs_to_check = ["ilamb"]
+    subdirs_to_check = ["mpas_analysis", "e3sm_diags", "global_time_series", "ilamb"]
 
     check_mismatched_images(
         actual_images_dir,
@@ -55,12 +52,12 @@ def test_comprehensive_v3_images():
     check_images("comprehensive_v3", V3_CASE_NAME)
 
 
-@pytest.mark.skip(reason="Not testing")
+# @pytest.mark.skip(reason="Not testing")
 def test_bundles_images():
     check_images("bundles", V3_CASE_NAME)
 
 
-@pytest.mark.skip(reason="Not testing")
+# @pytest.mark.skip(reason="Not testing")
 def test_bundles_bash_file_list():
     # Check that the correct bash files are generated
     expansions = get_expansions()
@@ -107,7 +104,7 @@ def test_bundles_bash_file_list():
     assert actual_bash_files == expected_bash_files
 
 
-@pytest.mark.skip(reason="Not testing")
+# @pytest.mark.skip(reason="Not testing")
 def test_bundles_bash_file_content():
     expansions = get_expansions()
     user_output = expansions["user_output"]

@@ -7,7 +7,7 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "test_zppy_pr650_20241217_comprehensive_ilamb_v3"
+UNIQUE_ID = "test_zppy_pr650_20241217"
 
 # Image checking ##########################################################
 
