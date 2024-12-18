@@ -9,7 +9,6 @@ def test_determine_components():
     c: Dict[str, Any]
     # Test non-legacy
     c = {
-        "plot_names": "",
         "plots_original": "",
         "plots_atm": ["a"],
         "plots_ice": "",
@@ -27,7 +26,6 @@ def test_determine_components():
     assert c["plots_ocn"] == "None"
 
     c = {
-        "plot_names": "",
         "plots_original": "",
         "plots_atm": "",
         "plots_ice": ["a"],
@@ -45,7 +43,6 @@ def test_determine_components():
     assert c["plots_ocn"] == "None"
 
     c = {
-        "plot_names": "",
         "plots_original": "",
         "plots_atm": "",
         "plots_ice": "",
@@ -63,7 +60,6 @@ def test_determine_components():
     assert c["plots_ocn"] == "None"
 
     c = {
-        "plot_names": "",
         "plots_original": "",
         "plots_atm": "",
         "plots_ice": "",
@@ -79,57 +75,6 @@ def test_determine_components():
     assert c["plots_ice"] == "None"
     assert c["plots_lnd"] == "None"
     assert c["plots_ocn"] == ["a"]
-
-    # Test legacy
-    base = {"plots_atm": "", "plots_ice": "", "plots_lnd": "", "plots_ocn": ""}
-
-    c = {
-        "plot_names": ["a"],
-        "plots_original": "gets_overwritten",
-        "atmosphere_only": False,
-    }
-    c.update(base)
-    determine_components(c)
-    assert c["plots_original"] == ["a"]
-    assert c["use_atm"] == True
-    assert c["use_ice"] == False
-    assert c["use_lnd"] == False
-    assert c["use_ocn"] == False
-    assert c["plots_atm"] == "None"
-    assert c["plots_ice"] == "None"
-    assert c["plots_lnd"] == "None"
-    assert c["plots_ocn"] == "None"
-
-    for ocn_set in ["change_ohc", "max_moc", "change_sea_level"]:
-        c = {
-            "plot_names": "",
-            "plots_original": [ocn_set],
-            "atmosphere_only": False,
-        }
-        c.update(base)
-        determine_components(c)
-        assert c["plots_original"] == [ocn_set]
-        assert c["use_atm"] == True
-        assert c["use_ice"] == False
-        assert c["use_lnd"] == False
-        assert c["use_ocn"] == True
-        assert c["plots_atm"] == "None"
-        assert c["plots_ice"] == "None"
-        assert c["plots_lnd"] == "None"
-        assert c["plots_ocn"] == "None"
-
-    c = {"plot_names": "", "plots_original": ["a"], "atmosphere_only": True}
-    c.update(base)
-    determine_components(c)
-    assert c["plots_original"] == ["a"]
-    assert c["use_atm"] == True
-    assert c["use_ice"] == False
-    assert c["use_lnd"] == False
-    assert c["use_ocn"] == False
-    assert c["plots_atm"] == "None"
-    assert c["plots_ice"] == "None"
-    assert c["plots_lnd"] == "None"
-    assert c["plots_ocn"] == "None"
 
 
 def test_determine_and_add_dependencies():
