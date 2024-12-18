@@ -87,12 +87,6 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
 
 
 def determine_components(c: Dict[str, Any]) -> None:
-    # Handle legacy parameter
-    if c["plot_names"]:
-        logger.warning(
-            "warning: plot_names for global_time_series is deprecated. Setting plot_names will override the new parameter, plots_original."
-        )
-        c["plots_original"] = c["plot_names"]
     # Determine which components are needed
     c["use_atm"] = False
     c["use_ice"] = False
@@ -100,16 +94,12 @@ def determine_components(c: Dict[str, Any]) -> None:
     c["use_ocn"] = False
     if c["plots_original"]:
         c["use_atm"] = True
-        if c["atmosphere_only"]:
-            logger.warning(
-                "warning: atmosphere_only for global_time_series is deprecated. Preferred method: remove the 3 ocean plots (change_ohc,max_moc,change_sea_level) from plots_original."
-            )
         has_original_ocn_plots = (
             ("change_ohc" in c["plots_original"])
             or ("max_moc" in c["plots_original"])
             or ("change_sea_level" in c["plots_original"])
         )
-        if (not c["atmosphere_only"]) and has_original_ocn_plots:
+        if has_original_ocn_plots:
             c["use_ocn"] = True
     else:
         # For better string processing in global_time_series.bash
