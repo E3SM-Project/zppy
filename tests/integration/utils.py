@@ -7,7 +7,7 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "zppy_601_viewers_updated_nco_no_extra_vars"
+UNIQUE_ID = "unique_id"
 
 # Image checking ##########################################################
 
