@@ -2,14 +2,13 @@ import os
 import pprint
 from typing import List
 
-import jinja2
-
 from zppy.bundle import handle_bundles
 from zppy.utils import (
     add_dependencies,
     check_status,
     get_tasks,
     get_years,
+    initialize_template,
     make_executable,
     print_url,
     submit_script,
@@ -19,12 +18,7 @@ from zppy.utils import (
 # -----------------------------------------------------------------------------
 def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
-    # Initialize jinja2 template engine
-    templateLoader = jinja2.FileSystemLoader(
-        searchpath=config["default"]["templateDir"]
-    )
-    templateEnv = jinja2.Environment(loader=templateLoader)
-    template = templateEnv.get_template("pcmdi_diags.bash")
+    template, _ = initialize_template(config, "pcmdi_diags.bash")
 
     # --- List of pcmdi_diags tasks ---
     tasks = get_tasks(config, "pcmdi_diags")
