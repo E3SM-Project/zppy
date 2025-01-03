@@ -87,7 +87,7 @@ create_links_acyc_climo()
       done
     done
     #derive annual cycle climate mean
-    dofm=(15 46 74 105 135 166 196 227 258 288 319 349) #middle day of month
+    dofm=(15 46 74 105 125 166 196 227 258 288 319 349) #middle day of month
     for month in `seq 1 1 12`;
     do
       MM=`printf "%02d" ${month}`
@@ -98,7 +98,7 @@ create_links_acyc_climo()
     combined_name="${name_key}.${v}.${begin_year}01-${end_year}12.AC.${case_id}.nc"
     ncrcat -O -d time,0, ${v}_clm_*.nc ${combined_name}
     #modify time to avoid issues in pcmdi calculation
-    ncap2 -O -h -s 'time[time]={15.5, 45, 74.5, 105, 135.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5};time_bnds[time,bnds]={0, 31, 31, 59, 59, 90, 90, 120, 120, 151, 151, 181, 181, 212, 212, 243, 243, 273, 273, 304, 304, 334, 334, 365.};time@units="days since 1850-01-01 00:00:00";time@calendar="noleap";time@bounds="time_bnds"' ${combined_name} ${combined_name}
+    ncap2 -O -h -s 'time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5};time_bnds[time,bnds]={0, 31, 31, 59, 59, 90, 90, 120, 120, 151, 151, 181, 181, 212, 212, 243, 243, 273, 273, 304, 304, 334, 334, 365.};time@units="days since 1850-01-01 00:00:00";time@calendar="noleap";time@bounds="time_bnds"' ${combined_name} ${combined_name}
     rm -rvf ${v}_clm_*.nc
     if [ $? != 0 ]; then
       cd {{ scriptDir }}
@@ -175,7 +175,7 @@ create_links_acyc_climo_obs()
     tmp_file="tmp_combine_${ttag}.nc"
     ncrcat -d time,"${YYYYS}-01-01,${YYYYE}-12-31" ${file} ${tmp_file}
     # Go through the time serie file, and derive annual cycle climate mean
-    dofm=(15 46 74 105 135 166 196 227 258 288 319 349) #middle day of month
+    dofm=(15 46 74 105 125 166 196 227 258 288 319 349) #middle day of month
     for month in `seq 1 1 12`;
     do
       MM=`printf "%02d" ${month}`
@@ -186,7 +186,7 @@ create_links_acyc_climo_obs()
     combined_name="${PREFIX}.${ttag}.AC.${case_id}.nc"
     ncrcat -O -d time,0, tmp_clm_*.nc ${combined_name}
     #modify time to avoid issues in pcmdi calculation
-    ncap2 -O -h -s 'time[time]={15.5, 45, 74.5, 105, 135.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5};time@units="days since 1850-01-01 00:00:00";time@calendar="noleap";' ${combined_name} ${combined_name}
+    ncap2 -O -h -s 'time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5};time@units="days since 1850-01-01 00:00:00";time@calendar="noleap";' ${combined_name} ${combined_name}
     ncap2 -O -h -s 'defdim("bnds",2);time_bnds=make_bounds(time,$bnds,"time_bnds");time_bnds@units=time@units;time_bnds@calendar=time@calendar' ${combined_name} ${combined_name}
     rm -rvf tmp_*.nc
     if [ $? != 0 ]; then
@@ -285,7 +285,6 @@ import glob
 import json
 import time
 import datetime
-import xarray as xr
 import xcdat as xc
 import numpy as np
 import shutil
@@ -379,7 +378,6 @@ import glob
 import json
 import time
 import datetime
-import xarray as xr
 import xcdat as xc
 import numpy as np
 import shutil
@@ -511,7 +509,7 @@ create_links_ts_obs ${ts_dir_ref_source} ${ts_dir_ref} ${Y1} ${Y2} 8
 #collect data description and save in a json file
 #for the convinience of later-on process
 ##################################################
-mkdir -p ${results_dir}
+mkdir -p pcmdi_diags
 cat > data_info_collect.py << EOF
 import os
 import glob
@@ -593,7 +591,7 @@ for i,group in enumerate([test,refr]):
   else:
     out_dic = refr_dic
   out_file = os.path.join(
-           '${results_dir}',
+           'pcmdi_diags',
            '{}_{}_catalogue.json'.format(group,'{{subset}}')
   )
   json.dump(out_dic,
@@ -657,7 +655,7 @@ if generate_sftlf:
   #loop each group and process land/mask if not exist
   for group in [test,refr]:
      dic_file = os.path.join(
-                '${results_dir}',
+                'pcmdi_diags',
                 '{}_{}_catalogue.json'.format(group,'{{subset}}')
      )
      data_dic = json.load(open(dic_file))
@@ -674,18 +672,17 @@ if generate_sftlf:
          ds = xcdat_open(mpath, decode_times=True)
          ds = ds.bounds.add_missing_bounds()
          try:
-             lf_array = create_land_sea_mask(ds, method="pcmdi")
-             print("land mask is estimated using pcmdi method.")
-         except Exception:
              lf_array = create_land_sea_mask(ds, method="regionmask")
              print("land mask is estimated using regionmask method.")
+         except Exception:
+             lf_array = create_land_sea_mask(ds, method="pcmdi")
+             print("land mask is estimated using pcmdi method.")
          lf_array = lf_array * 100.0
          lf_array.attrs['long_name']= "land_area_fraction"
          lf_array.attrs['units'] = "%"
          lf_array.attrs['id'] = "sftlf"  # Rename
-         ds_lf = lf_array.to_dataset().compute()
+         ds_lf = lf_array.to_dataset(name='sftlf').compute()
          ds_lf = ds_lf.bounds.add_missing_bounds()
-         ds_lf = ds_lf.rename_vars({"lsmask": "sftlf"})
          ds_lf.fillna(1.0e20)
          ds_lf.attrs['model'] = model
          ds_lf.attrs['associated_files'] = mpath
@@ -704,6 +701,99 @@ if [ $? != 0 ]; then
   echo 'ERROR (10)' > {{ prefix }}.status
   exit 10
 fi
+
+{%- if '{{sythentic_plots}}' == "y" %}
+###################################################################
+# this module is added as an external module to generate sythentic
+# metrics plots for mean-climate diagnostics (compared with cmip
+###################################################################
+# Prepare configuration file
+cat > sythentic_plots.py << EOF
+import os
+import sys
+import glob
+import json
+import time
+import datetime
+import xcdat as xc
+import numpy as np
+import pcmdi_metrics
+
+# external module for plot
+sys.path.append('{{clim_plot_parser}}'.split("/")[-1])
+clim_plot_parser = '{{clim_plot_parser}}'.split("/")[-1]
+clim_plot_driver = '{{clim_plot_driver}}'.split("/")[-1]
+from clim_plot_parser import (
+    create_mean_climate_plot_parser,
+)
+from clim_plot_driver import (
+    mean_climate_metrics_plot,
+)
+
+parser = create_mean_climate_plot_parser()
+parameter = parser.get_parameter(argparse_vals_only=False)
+parameter.run_type = "${run_type}"
+
+{% if run_type == "model_vs_obs" %}
+parameter.refr_data_set = ""
+parameter.refr_period = ""
+parameter.refr_data_path = ""
+{% elif run_type == "model_vs_model" %}
+parameter.refr_data_set = '${cmip_name_ref}.${case_id}'
+parameter.refr_period = "{}-{}".format(${ref_Y1},${ref_Y2})
+parameter.refr_data_path = ${reference_data_path}
+{%- endif %}
+
+parameter.test_data_set = '${cmip_name}'
+parameter.test_period = "{:04d}-{:04d}".format(${Y1},${Y2})"
+parameter.test_data_path = os.path.join(
+    '${cmip_name}'.split(".")[0],
+    '${cmip_name}'.split(".")[1],
+    '${case_id}'
+)
+
+{%- if ("mean_climate" in subset) %}
+pcmdi_data_set = '{{pcmdi_cmip_mclm}}'
+pcmdi_data_key = 'mean_climate'
+{%- elif ("variability_mode" in subset) %}
+pcmdi_data_set = '{{pcmdi_cmip_mov}}'
+pcmdi_data_key = 'variability_modes'
+{%- elif ("enso" in subset) %}
+pcmdi_data_set = '{{pcmdi_cmip_enso}}'
+pcmdi_data_key = 'enso_metric'
+{%- endif %}
+
+#existing pcmdi cmip diagnostic metrics
+parameter.pcmdi_data_set = pcmdi_data_set
+parameter.pcmdi_data_path = os.path.join(
+   "{{pcmdi_data_path}}",
+   "variability_modes",
+   pcmdi_data_set.split(".")[0],
+   pcmdi_data_set.split(".")[1],
+   pcmdi_data_set.split(".")[2]
+)
+
+parameter.output_path = os.path.join(
+    "pcmdi_diags",
+    "graphics",
+    pcmdi_data_key,
+)
+parameter.ftype = '{{ figure_format }}'
+parameter.debug = {{ pmp_debug }}
+parameter.parcord_show_markers = {{parcord_show_markers}} #False
+parameter.add_vertical_line = {{portrait_vertical_line}}  #True
+
+#generate diagnostics figures
+
+print("--- generate mean climate metrics plot ---")
+compute_regions = '{{ regions }}'.split(",")
+compute_variables ='{{ vars }}'.split(",")
+
+mean_climate_metrics_plot(parameter)
+
+EOF
+
+{%- endif %}
 
 ########################################################
 # generate basic parameter file for pcmdi metrics driver
@@ -798,6 +888,7 @@ regrid_method_ocn = ( '{{ regrid_method_ocn }}' )
 #######################################
 # DATA LOCATION: MODELS
 # ---------------------------------------------
+realization = "*"
 test_data_set = [ product ]
 test_data_path = '${climo_dir_primary}'
 # Templates for model climatology files
@@ -805,7 +896,7 @@ filename_template = '.'.join([
   mip,
   exp,
   '%(model)',
-  '*',
+  '%(realization)',
   '${tableID}',
   '%(variable)',
   period,
@@ -817,10 +908,10 @@ filename_template = '.'.join([
 #observation info
 reference_data_path = '${climo_dir_ref}'
 custom_observations = os.path.join(
-   '${results_dir}',
+   'pcmdi_diags',
    '{}_{}_catalogue.json'.format(
-    '${climo_dir_ref}',
-    '{{subset}}'))
+   '${climo_dir_ref}',
+   '{{subset}}'))
 
 #load caclulated regions for each variable
 regions = json.load(open('regions.json'))
@@ -841,7 +932,7 @@ for key in regions_specs.keys():
 #######################################
 # DATA LOCATION: METRICS OUTPUT
 metrics_output_path = os.path.join(
-    '${results_dir}',
+    'pcmdi_diags',
     'metrics_results',
     'mean_climate',
      mip,
@@ -852,7 +943,7 @@ metrics_output_path = os.path.join(
 ############################################################
 # DATA LOCATION: INTERPOLATED MODELS' CLIMATOLOGIES
 diagnostics_output_path= os.path.join(
-    '${results_dir}',
+    'pcmdi_diags',
     'diagnostic_results',
     'mean_climate',
      mip,
@@ -863,7 +954,7 @@ test_clims_interpolated_output = diagnostics_output_path
 
 {%- endif %}
 
-{%- if "variability_mode" in subset  %}
+{%- if ("variability_mode" in subset)  %}
 ########################################
 #setup for mode variability diagnostics
 ########################################
@@ -887,7 +978,7 @@ modpath = '.'.join([
   mip,
   exp,
   '%(model)',
-  '*',
+  '%(realization)',
   '${tableID}',
   '%(variable)',
   period,
@@ -920,7 +1011,7 @@ update_json = {{ update_json }}
 
 #results directory structure.
 results_dir = os.path.join(
-    '${results_dir}',
+    'pcmdi_diags',
     '%(output_type)',
     'variability_modes',
     '%(mip)',
@@ -931,7 +1022,7 @@ results_dir = os.path.join(
 )
 {%- endif %}
 
-{%- if "enso" in subset %}
+{%- if ("enso" in subset) %}
 ###########################################
 #parameter setup specific for enso metrics
 ###########################################
@@ -956,7 +1047,7 @@ reference_data_lf_path = json.load(open('obs_landmask.json'))
 
 # OUTPUT
 results_dir = os.path.join(
-    '${results_dir}',
+    'pcmdi_diags',
     '%(output_type)',
     'enso_metric',
     '%(mip)',
@@ -982,11 +1073,9 @@ echo
 cat > pcmdi.py << EOF
 import os
 import glob
-import glob
 import json
 import time
 import datetime
-import xarray as xr
 import xcdat as xc
 import numpy as np
 
@@ -1008,6 +1097,89 @@ def childCount():
     children = current_process.children()
     return(len(children))
 
+def parallel_jobs(cmds,num_workers):
+    procs = []
+    for i,p in enumerate(cmds):
+       print('running %s' % (str(p)))
+       proc = Popen(p, stdout=PIPE, shell=True)
+       procs.append(proc)
+       if (i == len(cmds)-1):
+          outs, errs = proc.communicate()
+          rcode = proc.returncode
+          time.sleep(0.25); break
+       else:
+          njobs = childCount()
+          while (njobs > num_workers):
+               [pp.communicate() for pp in procs]
+               time.sleep(0.25)
+               procs = []
+    return outs,errs,rcode
+
+def serial_jobs(cmds,num_workers):
+    for i,p in enumerate(cmds):
+       print('running %s' % (str(p)))
+       proc = Popen(p, stdout=PIPE, shell=True)
+
+    return outs,errs,rcode
+
+def variable_region(regions,variables):
+    regv_dic = OrderedDict()
+    for var in variables:
+       vkey = var.split("-")[0]
+       regv_dic[vkey] = regions
+
+    #save region info dictionary
+    json.dump(regv_dic,
+              open('regions.json', "w"),
+              sort_keys=False,
+              indent=4,
+              separators=(",", ": "))
+    return
+
+def enso_obsvar_dict(obs_dic,variables):
+    #orgnize observation for enso driver
+    refr_dic = OrderedDict()
+    for var in variables:
+       vkey = var.split("-")[0]
+       refset  = obs_dic[var]['set']
+       refname = obs_dic[var][refset]
+       #data file in model->var sequence
+       if refname not in refr_dic.keys():
+          refr_dic[refname] = {}
+       refr_dic[refname][var] = obs_dic[var][refname]
+
+    #save data file dictionary
+    json.dump(refr_dic,
+              open('obs_catalogue.json', "w"),
+              sort_keys=False,
+              indent=4,
+              separators=(",", ": "))
+
+    return
+
+def enso_obsvar_lmsk(regions,variables):
+    #orgnize observation landmask for enso driver
+    relf_dic = OrderedDict()
+    for var in variables:
+       vkey = var.split("-")[0]
+       refset  = obs_dic[var]['set']
+       refname = obs_dic[var][refset]
+       #land/sea mask
+       if refname not in  relf_dic.keys():
+          relf_dic[refname] = os.path.join(
+                 "${fixed_dir}",
+                 'sftlf.{}.nc'.format(refname))
+
+    #save data file dictionary
+    json.dump(relf_dic,
+              open('obs_landmask.json', "w"),
+              sort_keys=False,
+              indent=4,
+              separators=(",", ": "))
+
+    return
+
+##############################
 start_yr = int('${Y1}')
 end_yr = int('${Y2}')
 num_years = end_yr - start_yr + 1
@@ -1023,7 +1195,7 @@ reference_data_path = '${climo_dir_ref}'
 reference_data_path = '${ts_dir_ref}'
 {%- endif %}
 observation_file = os.path.join(
-   '${results_dir}',
+   'pcmdi_diags',
    '{}_{}_catalogue.json'.format(
     reference_data_path,
     '{{subset}}')
@@ -1034,70 +1206,52 @@ obs_dic = json.load(open(observation_file))
 ######################################
 # call pcmdi mean climate diagnostics
 #####################################
-#customized region, otherwise default
-regional = '{{ regional }}'
-if regional  == "y":
-  default_regions = '{{ regions }}'.split(",")
-else:
-  default_regions = ["global", "NHEX", "SHEX", "TROPICS"]
-
+compute_regions = '{{regions}}'.split(",")
+compute_variables = '{{vars}}'.split(",")
+#assiagn region to each variable
+variable_region(
+    compute_regions,
+    compute_variables
+)
 ###################################################
 # generate the command list for each reference and
 # each variable (will execuate in parallel later)
 lstcmd = []
-regv_dic = OrderedDict()
-for var in "{{vars}}".split(","):
+for var in compute_variables:
   if var in obs_dic.keys():
     vkey = var.split("-")[0]
     refset = obs_dic[var]['set']
-    regv_dic[vkey] = default_regions
     lstcmd.append(" ".join([
                   'mean_climate_driver.py',
                   '-p  parameterfile.py'  ,
                   '--vars'                , '{}'.format(var),
                   '-r'                    , '{}'.format(refset),
-                  '--varname_in_test_data', '{}'.format(vkey),
                   '--case_id'             , '{}'.format('${case_id}')
                   ]))
 
-#save region info dictionary
-json.dump(regv_dic,
-          open('regions.json', "w"),
-          sort_keys=False,
-          indent=4,
-          separators=(",", ": "))
+if (len(lstcmd) > 0 ) and multiprocessing:
+  print("Parallel computing with {} jobs".format(str(len(lstcmd))))
+  stdout,stderr,return_code = parallel_jobs(lstcmd,num_workers)
+elif (len(lstcmd) > 0 ):
+  print("Serial computing with {} jobs".format(str(len(lstcmd))))
+  stdout,stderr,return_code = serial_jobs(lstcmd,num_workers)
+else:
+  print("no jobs to run...")
+  return_code = 0
 
-#finally process the data in parallel
-print("Number of jobs starting is ", str(len(lstcmd)))
-procs = []
-if len(lstcmd) > 0:
-  for i,p in enumerate(lstcmd):
-    print('running %s' % (str(p)))
-    proc = Popen(p, stdout=PIPE, shell=True)
-    if multiprocessing == True:
-      procs.append(proc)
-      while (childCount() > num_workers):
-        time.sleep(0.25)
-        [pp.communicate() for pp in procs]
-        procs = []
-      else:
-        if (i == len(lstcmd)-1):
-          try:
-            outs, errs = proc.communicate()
-            if proc.returncode == 0:
-              print("stdout = {}; stderr = {}".format(str(outs),str(errs)))
-            else:
-              exit("ERROR: subprocess {} failed".format(str(lstcmd[i])))
-          except:
-            break
-    else:
-      return_code = proc.communicate()
-      if return_code != 0:
-        exit("Failed to run {}".format(str(p)))
+if return_code != 0:
+  exit("ERROR: {} jobs failed".format('{{subset}}'))
+else:
+  print("successfully finish all jobs....")
+  #time delay to ensure process completely finished
+  time.sleep(1)
 
-#set a delay to avoid delay in writing process
-time.sleep(1)
-print("done submitting")
+{%- if '{{sythentic_plots}}' == 'y' %}
+#process sythetic metric plot if turned on
+return_code = subprocess.call(["python", 'sythentic_plots.py'])
+if return_code != 0:
+  exit("Failed to process {{sythentic_plots}}")
+{%- endif %}
 
 {%- endif %}
 
@@ -1148,72 +1302,35 @@ for variability_mode in var_modes:
             ]))
   lstcmd.append(cmd); del(cmd)
 
-#finally process the data in parallel
-print("Number of jobs starting is ", str(len(lstcmd)))
-procs = []
-for i,p in enumerate(lstcmd):
-  print('running %s' % (str(p)))
-  proc = Popen(p, stdout=PIPE, shell=True)
-  if multiprocessing == True:
-    procs.append(proc)
-    while (childCount() > num_workers):
-      time.sleep(0.25)
-      [pp.communicate() for pp in procs] # this will get the exit code
-      procs = []
-    else:
-      if (i == len(lstcmd)-1):
-        try:
-          outs, errs = proc.communicate()
-          if proc.returncode == 0:
-            print("stdout = {}; stderr = {}".format(str(outs),str(errs)))
-          else:
-            exit("ERROR: subprocess {} failed".format(str(lstcmd[i])))
-        except:
-          break
-  else:
-    return_code = proc.communicate()
-    if return_code != 0:
-      exit("Failed to run {}".format(str(p)))
-#set a delay to avoid delay in writing process
-time.sleep(1)
-print("done submitting")
-del(lstcmd)
+if (len(lstcmd) > 0 ) and multiprocessing:
+  print("Parallel computing with {} jobs".format(str(len(lstcmd))))
+  stdout,stderr,return_code = parallel_jobs(lstcmd,num_workers)
+elif (len(lstcmd) > 0 ):
+  print("Serial computing with {} jobs".format(str(len(lstcmd))))
+  stdout,stderr,return_code = serial_jobs(lstcmd,num_workers)
+else:
+  print("no jobs to run...")
+  return_code = 0
+
+if return_code != 0:
+  exit("ERROR: {} jobs failed".format('{{subset}}'))
+else:
+  print("successfully finish all jobs....")
+  #time delay to ensure process completely finished
+  time.sleep(1)
+
 {%- endif %}
 
 {%- if "enso" in subset %}
 #############################################
 # call enso_driver.py to process diagnostics
 #############################################
-#reorgnize observation needed for enso driver
-refr_dic = OrderedDict()
-relf_dic = OrderedDict()
-for var in list("{{vars}}".split(",")):
-  vkey = var.split("-")[0]
-  refset  = obs_dic[var]['set']
-  refname = obs_dic[var][refset]
-  #data file in model->var sequence
-  if refname not in refr_dic.keys():
-    refr_dic[refname] = {}
-  refr_dic[refname][var] = obs_dic[var][refname]
-  #land/sea mask
-  if refname not in  relf_dic.keys():
-    relf_dic[refname] = os.path.join(
-         "${fixed_dir}",
-         'sftlf.{}.nc'.format(refname))
 
-#save data file dictionary
-json.dump(refr_dic,
-          open('obs_catalogue.json', "w"),
-          sort_keys=False,
-          indent=4,
-          separators=(",", ": "))
+#orgnize observation var list
+enso_obsvar_dict(obs_dic,"{{vars}}".split(","))
 
-#save land/sea mask dictionary
-json.dump(relf_dic,
-          open('obs_landmask.json', "w"),
-          sort_keys=False,
-          indent=4,
-          separators=(",", ": "))
+#orgnize observation landmask
+enso_obsvar_lmsk(obs_dic,"{{vars}}".split(","))
 
 #now start enso driver
 print("calculate enso metrics")
@@ -1228,31 +1345,22 @@ for metricsCollection in enso_groups:
          ]))
   lstcmd.append(cmd); del(cmd)
 
-print("Number of jobs starting: ", str(len(lstcmd)))
+if (len(lstcmd) > 0 ) and multiprocessing:
+  print("Parallel computing with {} jobs".format(str(len(lstcmd))))
+  stdout,stderr,return_code = parallel_jobs(lstcmd,num_workers)
+elif (len(lstcmd) > 0 ):
+  print("Serial computing with {} jobs".format(str(len(lstcmd))))
+  stdout,stderr,return_code = serial_jobs(lstcmd,num_workers)
+else:
+  print("no jobs to run...")
+  return_code = 0
 
-#finally process the data in parallel
-procs = []
-for i,p in enumerate(lstcmd):
-  print('running %s' % (str(p)))
-  proc = Popen(p, stdout=PIPE, shell=True)
-  procs.append(proc)
-  while (childCount() > {{num_workers}}):
-    time.sleep(0.25)
-    [pp.communicate() for pp in procs] # this will get the exit code
-    procs = []
-  else:
-    if (i == len(lstcmd)-1):
-      try:
-        outs, errs = proc.communicate()
-        if proc.returncode == 0:
-          print("stdout = {}; stderr = {}".format(str(outs),str(errs)))
-        else:
-          exit("ERROR: subprocess {} failed".format(str(lstcmd[i])))
-      except:
-        break
-#set a delay to avoid delay in writing process
-time.sleep(1)
-print("done submitting")
+if return_code != 0:
+  exit("ERROR: {} jobs failed".format('{{subset}}'))
+else:
+  print("successfully finish all jobs....")
+  #time delay to ensure process completely finished
+  time.sleep(1)
 {%- endif %}
 EOF
 ################################
@@ -1266,85 +1374,146 @@ if [ $? != 0 ]; then
   exit 11
 fi
 
-################################################################
-# this post-processing module is to generate sythentic metrics
-# for mean-climate diagnostics (compared with cmip model results)
-################################################################
-{%- if "mean_climate" in subset %}
-echo
-echo ===== RUN PCMDI POST-PROCESSING =====
-echo
+###########################################
+# reorgnize pcmdi diagnostics output
+###########################################
 # Prepare configuration file
-cat > post_processing.py << EOF
+cat > graphic_viewer.py << EOF
 import os
-import glob
 import glob
 import json
 import time
 import datetime
-import xarray as xr
-import xcdat as xc
-import numpy as np
-import pcmdi_metrics
+import collections
+from collections import OrderedDict
 
-# external module for plot
+def get_mean_climate_graphics(regions,variables,fig_format,input_dir,output_dir):
+    diag_metric = "mean_climate"
+    seasons = ['DJF','MAM','JJA','SON','AC']
+    input_dir = input_dir.replace("%(metric_type)",diag_metric)
+
+    fig_sets = OrderedDict()
+    fig_sets['CLIM_patttern'] = ['graphics','*']
+    fig_sets['ERROR_metric'] = ['graphics','*']
+
+    for fset in fig_sets.keys():
+      fdir = input_dir.replace('%(output_type)',fig_sets[fset][0] )
+      output = output_dir.replace("%(group_type)",fset)
+      for region in regions:
+        for sea in seasons:
+          outpath = os.path.join(output,region,sea)
+          if not os.path.exists(outpath):
+              os.makedirs(outpath)
+          for var in variables:
+             fpaths = sorted(glob.glob(os.path.join(fdir,var,
+                     '{}{}_{}*.{}'.format(fig_sets[fset][1],region,sea,fig_format))))
+             for fpath in fpaths:
+                refname = fpath.split("/")[-2]
+                filname = fpath.split("/")[-1]
+                outfile = os.path.join(outpath,filname)
+                os.rename(fpath,outfile)
+
+    return
+
+def get_variability_graphics(modes,fig_format,input_dir,output_dir):
+    diag_metric = "variability_modes"
+    input_dir = input_dir.replace("%(metric_type)",diag_metric)
+
+    fig_sets = OrderedDict()
+    fig_sets['MOV_eofvar']  = ['diagnostic_results','EG_Spec*']
+    fig_sets['MOV_telecon'] = ['graphics','*teleconnection']
+    fig_sets['MOV_pattern'] = ['graphics','*']
+
+    for mode in modes:
+      for fset in fig_sets.keys():
+         fdir = input_dir.replace('%(output_type)',fig_sets[fset][0] )
+         output = output_dir.replace("%(group_type)",fset)
+         fpaths = sorted(glob.glob(os.path.join(fdir,mode,'*',
+                         '{}.{}'.format(fig_sets[fset][1],fig_format))))
+         for fpath in fpaths:
+             refname = fpath.split("/")[-2]
+             filname = fpath.split("/")[-1]
+             outpath = os.path.join(output,'{}_model_vs_{}'.format(mode,refname))
+             if not os.path.exists(outpath):
+                os.makedirs(outpath)
+             outfile = os.path.join(outpath,filname)
+             os.rename(fpath,outfile)
+    return
+
+def get_enso_graphics(groups,fig_format,refname,input_dir,output_dir):
+    diag_metric = "enso_metric"
+    input_dir = input_dir.replace("%(metric_type)",diag_metric)
+
+    fig_sets = OrderedDict()
+    fig_sets['ENSO_metric'] = ['graphics','*']
+
+    for fset in fig_sets.keys():
+      for group in groups:
+         fdir = input_dir.replace('%(output_type)',fig_sets[fset][0] )
+         output = output_dir.replace("%(group_type)",fset)
+         fpaths = sorted(glob.glob(os.path.join(fdir,group,
+                         '{}.{}'.format(fig_sets[fset][1],fig_format))))
+         for fpath in fpaths:
+             filname = fpath.split("/")[-1]
+             outpath = os.path.join(output,'{}_model_vs_{}'.format(group,refname))
+             if not os.path.exists(outpath):
+                os.makedirs(outpath)
+             outfile = os.path.join(outpath,filname)
+             os.rename(fpath,outfile)
+
+    return
+
+#############
+fig_format = '{{ figure_format }}'
+
+diag_types = ['metrics_results','diagnostic_result','graphics']
+
+input_template = os.path.join(
+    'pcmdi_diags',
+    '%(output_type)',
+    '%(metric_type)',
+    '${cmip_name}'.split(".")[0],
+    '${cmip_name}'.split(".")[1],
+    '${case_id}',
+)
+
+out_path = os.path.join(
+    '${results_dir}',
+    '%(group_type)'
+)
+
 {%- if ("mean_climate" in subset) %}
-import {{clim_plot_parser}}
-import {{clim_plot_driver}}
+compute_regions = '{{ regions }}'.split(",")
+compute_variables = '{{ vars }}'.split(",")
+get_mean_climate_graphics(
+  compute_regions,compute_variables,
+  fig_format,input_template,out_path
+)
+{% endif %}
+
+{%- if ("variability_mode" in subset) %}
+{%- if ("variability_mode_atm" in subset) %}
+compute_modes = '{{ atm_modes }}'.split(",")
+{% elif ("variability_mode_cpl" in subset) %}
+compute_modes = '{{ cpl_modes }}'.split(",")
+{%- endif %}
+get_variability_graphics(
+   compute_modes,fig_format,
+   input_template,out_path
+)
 {%- endif %}
 
-#customized region, otherwise default
-regional = '{{ regional }}'
-if regional  == "y":
-  default_regions = '{{ regions }}'.split(",")
-else:
-  default_regions = ["global", "NHEX", "SHEX", "TROPICS"]
-
-#generate diagnostics figures
-print("--- prepare for mean climate metrics plot ---")
-parser = create_mean_climate_plot_parser()
-parameter = parser.get_parameter(argparse_vals_only=False)
-parameter.regions = default_regions
-parameter.run_type = "${run_type}"
-parameter.period = "{:04d}-{:04d}".format(${Y1},${Y2})
-parameter.pcmdi_data_set = "{{pcmdi_data_set}}"
-parameter.pcmdi_data_path = os.path.join('{{pcmdi_data_path}}',"mean_climate")
-parameter.test_data_set = "{}.{}".format(${cmip_name},"${case_id}")
-parameter.test_data_path = os.path.join("${results_dir}","metrics_results","mean_climate")
-
-{% if run_type == "model_vs_obs" %}
-parameter.refr_data_set = ""
-parameter.refr_period = ""
-parameter.refr_data_path = ""
-{% elif run_type == "model_vs_model" %}
-parameter.refr_data_set = "{}.{}".format(${cmip_name_ref},"${case_id}")
-parameter.refr_period = "{}-{}".format(${ref_Y1},${ref_Y2})
-parameter.refr_data_path = os.path.join("${results_dir}","metrics_results","mean_climate")
-{%- endif %}
-
-parameter.output_path = os.path.join("${results_dir}","graphics","mean_climate")
-parameter.ftype = '{{ figure_format }}'
-parameter.debug = {{ pmp_debug }}
-parameter.parcord_show_markers = {{parcord_show_markers}} #False
-parameter.add_vertical_line = {{portrait_vertical_line}}  #True
-
-#generate diagnostics figures
-print("--- generate mean climate metrics plot ---")
-mean_climate_metrics_plot(parameter)
+{%- if ("enso" in subset) %}
+compute_groups = '{{ enso_groups }}'.split(",")
+obs_dict = json.load(open('obs_catalogue.json'))
+obs_name = list(obs_dict.keys())[0]
+get_enso_graphics(
+   compute_groups,fig_format,
+   obs_name,input_template,out_path
+)
+{% endif %}
 
 EOF
-
-################################
-# Run diagnostics
-command="srun -N 1 python -u post_processing.py"
-# Run diagnostics
-time ${command}
-if [ $? != 0 ]; then
-  cd {{ scriptDir }}
-  echo 'ERROR (12)' > {{ prefix }}.status
-  exit 12
-fi
-{% endif %}
 
 #################################
 # Copy output to web server
@@ -1353,12 +1522,12 @@ echo ===== COPY FILES TO WEB SERVER =====
 echo
 
 # Create top-level directory
-web_dir=${www}/${case}/pcmdi_diags #/{{ sub }}
+web_dir=${www}/${case}/pcmdi_diags
 mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (13)' > {{ prefix }}.status
-  exit 13
+  echo 'ERROR (12)' > {{ prefix }}.status
+  exit 12
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
@@ -1375,13 +1544,13 @@ do
 done
 {% endif %}
 
+############################################
 # Copy files
-#rsync -a --delete ${results_dir} ${web_dir}/
-rsync -a ${results_dir} ${web_dir}/
+rsync -a --delete ${results_dir} ${web_dir}/
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (14)' > {{ prefix }}.status
-  exit 14
+  echo 'ERROR (13)' > {{ prefix }}.status
+  exit 13
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
