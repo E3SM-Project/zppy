@@ -204,7 +204,7 @@
            },
   "wap" : {
            "default"    : "ERA5",
-           "alternate" : "MERRA2",
+           "alternate"  : "MERRA2",
            "alternate1" : "ERA-Interim",
            "alternate2" : "NOAA-20C"
            },

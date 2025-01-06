@@ -46,14 +46,14 @@ ref_name={{ ref_name }}
 ##################################################
 #info to construct pcmdi-preferred data convension
 ##################################################
-cmip_name='{{ cmip_name }}'
-tableID='{{ cmip_tableID }}'
+model_name='{{ model_name }}'
+tableID='{{ model_tableID }}'
 {% if run_type == "model_vs_obs" %}
-cmip_name_ref='obs.historical.%(model).00'
+model_name_ref='obs.historical.%(model).00'
 tableID_ref=${tableID}
 {% elif run_type == "model_vs_model" %}
-cmip_name_ref='{{ cmip_name_ref }}'
-tableID_ref='{{ cmip_tableID_ref }}'
+model_name_ref='{{ model_name_ref }}'
+tableID_ref='{{ model_tableID_ref }}'
 {%- endif %}
 case_id=v$(date '+%Y%m%d')
 
@@ -243,12 +243,12 @@ climo_dir_primary=climo_test
 {%- endif %}
 # Create local links to input climo files
 climo_dir_source={{ output }}/post/atm/{{ grid }}/cmip_ts/monthly
-create_links_acyc_climo ${climo_dir_source} ${climo_dir_primary} ${Y1} ${Y2} ${cmip_name}.${tableID} 1
+create_links_acyc_climo ${climo_dir_source} ${climo_dir_primary} ${Y1} ${Y2} ${model_name}.${tableID} 1
 {% if run_type == "model_vs_model" %}
 # Create local links to input climo files (ref model)
 climo_dir_source={{ reference_data_path }}
 climo_dir_ref=climo_ref
-create_links_acyc_climo ${climo_dir_source} ${climo_dir_ref} ${ref_Y1} ${ref_Y2} ${cmip_name_ref}.${tableID_ref} 2
+create_links_acyc_climo ${climo_dir_source} ${climo_dir_ref} ${ref_Y1} ${ref_Y2} ${model_name_ref}.${tableID_ref} 2
 {%- endif %}
 {%- endif %}
 
@@ -264,11 +264,11 @@ ts_dir_primary=ts_test
 {%- endif %}
 # Create netcdf files for time series variables
 ts_dir_source={{ output }}/post/atm/{{ grid }}/cmip_ts/monthly
-create_links_ts ${ts_dir_source} ${ts_dir_primary} ${Y1} ${Y2} ${cmip_name}.${tableID} 3
+create_links_ts ${ts_dir_source} ${ts_dir_primary} ${Y1} ${Y2} ${model_name}.${tableID} 3
 {% if run_type == "model_vs_model" %}
 ts_dir_source={{ reference_data_path_ts }}/{{ ts_num_years_ref }}yr
 ts_dir_ref=ts_ref
-create_links_ts ${ts_dir_source} ${ts_dir_ref} ${ref_Y1} ${ref_Y2} ${cmip_name_ref}.${tableID_ref} 4
+create_links_ts ${ts_dir_source} ${ts_dir_ref} ${ref_Y1} ${ref_Y2} ${model_name_ref}.${tableID_ref} 4
 {%- endif %}
 {%- endif %}
 
@@ -281,6 +281,7 @@ create_links_ts ${ts_dir_source} ${ts_dir_ref} ${ref_Y1} ${ref_Y2} ${cmip_name_r
 #########################################################
 cat > process_derived_var.py << EOF
 import os
+import re
 import glob
 import json
 import time
@@ -311,23 +312,23 @@ def derive_var(path,vout,var_dic,fname):
    ds.to_netcdf(out)
    return
 
+variables = '{{ vars }}'.split(",")
+
+{%- if ("mean_climate" in subset) %}
 {% if run_type == "model_vs_obs" %}
-cmip_groups = ['${cmip_name}.${tableID}']
-{%- if ("mean_climate" in subset) %}
+model_groups = ['${model_name}.${tableID}']
 run_groups=['${climo_dir_primary}']
-variables = '{{ cmip_vars }}'.split(",")
-{%- elif ("variability_mode_cpl" in subset) or ("variability_mode_atm" in subset) or ("enso" in subset) %}
-run_groups=['${ts_dir_primary}']
-variables = '{{ vars }}'.split(",")
-{%- endif %}
 {% elif run_type == "model_vs_model" %}
-cmip_groups = ['${cmip_name}.${tableID}','${cmip_name_ref}.${tableID_ref}']
-{%- if ("mean_climate" in subset) %}
+model_groups = ['${model_name}.${tableID}','${model_name_ref}.${tableID_ref}']
 run_groups=['${climo_dir_primary}','${climo_dir_ref}']
-variables = '{{ cmip_vars }}'.split(",")
+{%- endif %}
 {%- elif ("variability_mode_cpl" in subset) or ("variability_mode_atm" in subset) or ("enso" in subset) %}
-run_groups=['${ts_dir_primary}','${ts_dir_ref}']
-variables = '{{ vars }}'.split(",")
+{% if run_type == "model_vs_obs" %}
+model_groups = ['${model_name}.${tableID}']
+run_groups = ['${ts_dir_primary}']
+{% elif run_type == "model_vs_model" %}
+model_groups = ['${model_name}.${tableID}','${model_name_ref}.${tableID_ref}']
+run_groups = ['${ts_dir_primary}','${ts_dir_ref}']
 {%- endif %}
 {%- endif %}
 
@@ -338,16 +339,16 @@ variables = '{{ vars }}'.split(",")
 for i,group in enumerate(run_groups):
   for j,var in enumerate(variables):
     if "_" in var or "-" in var:
-      varin = var.split("_|-", varin)[0]
+      varin = re.split("_|-", var)[0]
     else:
       varin = var
     if varin in ['rltcre','rstcre']:
       fpaths = sorted(glob.glob(os.path.join(group,"*"+var+"_*.nc")))
       if len(fpaths) < 1:
         if varin == 'rstcre':
-          derive_var(group,varin,{'rsutcs':1,'rsut':-1},cmip_groups[i])
+          derive_var(group,varin,{'rsutcs':1,'rsut':-1},model_groups[i])
         elif varin == 'rltcre':
-          derive_var(group,varin,{'rlutcs':1,'rlut':-1},cmip_groups[i])
+          derive_var(group,varin,{'rlutcs':1,'rlut':-1},model_groups[i])
 
 EOF
 ###################
@@ -374,6 +375,7 @@ mkdir -p ${obstmp_dir}
 #create a python module to link observation data
 cat > link_observation.py << EOF
 import os
+import re
 import glob
 import json
 import time
@@ -404,10 +406,10 @@ def derive_var(path,vout,var_dic,fname):
    ds.to_netcdf(out)
    return
 
-cmip_name = '${cmip_name_ref}.${tableID_ref}'
+model_name = '${model_name_ref}.${tableID_ref}'
 
 {%- if ("mean_climate" in subset) %}
-variables = '{{ cmip_vars }}'.split(",")
+variables = '{{ vars }}'.split(",")
 obs_sets = '{{ obs_sets }}'.split(",")
 {%- elif ("variability_mode_cpl" in subset) or ("variability_mode_atm" in subset) or ("enso" in subset) %}
 variables = '{{ vars }}'.split(",")
@@ -430,7 +432,7 @@ obs_dic = json.load(open('{{reference_alias}}'))
 #loop each variable and process the data
 for i,var in enumerate(variables):
   if "_" in var or "-" in var:
-    varin = var.split("_|-", varin)[0]
+    varin = re.split("_|-", var)[0]
   else:
     varin = var
 
@@ -439,7 +441,7 @@ for i,var in enumerate(variables):
   else:
     obsid = obs_sets[0]
 
-  obsname = obs_dic[var][obsid]
+  obsname = obs_dic[varin][obsid]
   if "ceres_ebaf" in obsname:
     obsstr = obsname.replace("_","*").replace("-","*")
   else:
@@ -458,7 +460,7 @@ for i,var in enumerate(variables):
     obs = obsname.replace(".","_")
     out = os.path.join('${obstmp_dir}',
                        '{}.{}.{}-{}.nc'.format(
-	                cmip_name.replace('%(model)',obs),
+	                model_name.replace('%(model)',obs),
                         var,yms,yme))
     #rename variable if needed then save file
     if varin != var:
@@ -475,9 +477,9 @@ for i,var in enumerate(variables):
     fpaths = sorted(glob.glob(os.path.join('${obstmp_dir}',"*"+varin+"_*.nc")))
     if len(fpaths) < 1:
       if varin == 'rstcre':
-        derive_var('${obstmp_dir}',varin,{'rsutcs':1,'rsut':-1},cmip_name)
+        derive_var('${obstmp_dir}',varin,{'rsutcs':1,'rsut':-1},model_name)
       elif varin == 'rltcre':
-        derive_var('${obstmp_dir}',varin,{'rlutcs':1,'rlut':-1},cmip_name)
+        derive_var('${obstmp_dir}',varin,{'rlutcs':1,'rlut':-1},model_name)
 
 EOF
 ###################
@@ -512,6 +514,7 @@ create_links_ts_obs ${ts_dir_ref_source} ${ts_dir_ref} ${Y1} ${Y2} 8
 mkdir -p pcmdi_diags
 cat > data_info_collect.py << EOF
 import os
+import re
 import glob
 import json
 import collections
@@ -520,7 +523,7 @@ from collections import OrderedDict
 {%- if ("mean_climate" in subset) %}
 test = '${climo_dir_primary}'
 refr = '${climo_dir_ref}'
-variables = '{{ cmip_vars }}'.split(",")
+variables = '{{ vars }}'.split(",")
 {%- elif ("variability_mode_cpl" in subset) or ("variability_mode_atm" in subset) %}
 test = '${ts_dir_primary}'
 refr = '${ts_dir_ref}'
@@ -531,18 +534,18 @@ refr = '${ts_dir_ref}'
 variables = '{{ vars }}'.split(",")
 {%- endif %}
 
-test_data_set = ['${cmip_name}'.split(".")[1]]
+test_data_set = ['${model_name}'.split(".")[1]]
 {% if run_type == "model_vs_obs" %}
 refr_data_set = '{{ obs_sets }}'.split(",")
 {% elif run_type == "model_vs_model" %}
-refr_data_set = ['${cmip_name_ref}'.split(".")[1]]
+refr_data_set = ['${model_name_ref}'.split(".")[1]]
 {%- endif %}
 
 #collect variables when both model and observations are available
 refr_dic,test_dic = OrderedDict(),OrderedDict()
 for i,var in enumerate(variables):
   if "_" in var or "-" in var:
-    varin = var.split("_|-", varin)[0]
+    varin = re.split("_|-", var)[0]
   else:
     varin = var
   test_path = sorted(glob.glob(os.path.join(test,"*.{}.*.nc".format(varin))))
@@ -702,99 +705,6 @@ if [ $? != 0 ]; then
   exit 10
 fi
 
-{%- if '{{sythentic_plots}}' == "y" %}
-###################################################################
-# this module is added as an external module to generate sythentic
-# metrics plots for mean-climate diagnostics (compared with cmip
-###################################################################
-# Prepare configuration file
-cat > sythentic_plots.py << EOF
-import os
-import sys
-import glob
-import json
-import time
-import datetime
-import xcdat as xc
-import numpy as np
-import pcmdi_metrics
-
-# external module for plot
-sys.path.append('{{clim_plot_parser}}'.split("/")[-1])
-clim_plot_parser = '{{clim_plot_parser}}'.split("/")[-1]
-clim_plot_driver = '{{clim_plot_driver}}'.split("/")[-1]
-from clim_plot_parser import (
-    create_mean_climate_plot_parser,
-)
-from clim_plot_driver import (
-    mean_climate_metrics_plot,
-)
-
-parser = create_mean_climate_plot_parser()
-parameter = parser.get_parameter(argparse_vals_only=False)
-parameter.run_type = "${run_type}"
-
-{% if run_type == "model_vs_obs" %}
-parameter.refr_data_set = ""
-parameter.refr_period = ""
-parameter.refr_data_path = ""
-{% elif run_type == "model_vs_model" %}
-parameter.refr_data_set = '${cmip_name_ref}.${case_id}'
-parameter.refr_period = "{}-{}".format(${ref_Y1},${ref_Y2})
-parameter.refr_data_path = ${reference_data_path}
-{%- endif %}
-
-parameter.test_data_set = '${cmip_name}'
-parameter.test_period = "{:04d}-{:04d}".format(${Y1},${Y2})"
-parameter.test_data_path = os.path.join(
-    '${cmip_name}'.split(".")[0],
-    '${cmip_name}'.split(".")[1],
-    '${case_id}'
-)
-
-{%- if ("mean_climate" in subset) %}
-pcmdi_data_set = '{{pcmdi_cmip_mclm}}'
-pcmdi_data_key = 'mean_climate'
-{%- elif ("variability_mode" in subset) %}
-pcmdi_data_set = '{{pcmdi_cmip_mov}}'
-pcmdi_data_key = 'variability_modes'
-{%- elif ("enso" in subset) %}
-pcmdi_data_set = '{{pcmdi_cmip_enso}}'
-pcmdi_data_key = 'enso_metric'
-{%- endif %}
-
-#existing pcmdi cmip diagnostic metrics
-parameter.pcmdi_data_set = pcmdi_data_set
-parameter.pcmdi_data_path = os.path.join(
-   "{{pcmdi_data_path}}",
-   "variability_modes",
-   pcmdi_data_set.split(".")[0],
-   pcmdi_data_set.split(".")[1],
-   pcmdi_data_set.split(".")[2]
-)
-
-parameter.output_path = os.path.join(
-    "pcmdi_diags",
-    "graphics",
-    pcmdi_data_key,
-)
-parameter.ftype = '{{ figure_format }}'
-parameter.debug = {{ pmp_debug }}
-parameter.parcord_show_markers = {{parcord_show_markers}} #False
-parameter.add_vertical_line = {{portrait_vertical_line}}  #True
-
-#generate diagnostics figures
-
-print("--- generate mean climate metrics plot ---")
-compute_regions = '{{ regions }}'.split(",")
-compute_variables ='{{ vars }}'.split(",")
-
-mean_climate_metrics_plot(parameter)
-
-EOF
-
-{%- endif %}
-
 ########################################################
 # generate basic parameter file for pcmdi metrics driver
 ########################################################
@@ -814,10 +724,10 @@ end_yr = int('${Y2}')
 num_years = end_yr - start_yr + 1
 period = "{:04d}{:02d}-{:04d}{:02d}".format(start_yr,1,end_yr,12)
 
-mip = '${cmip_name}'.split(".")[0]
-exp = '${cmip_name}'.split(".")[1]
-product = '${cmip_name}'.split(".")[2]
-realm = '${cmip_name}'.split(".")[3]
+mip = '${model_name}'.split(".")[0]
+exp = '${model_name}'.split(".")[1]
+product = '${model_name}'.split(".")[2]
+realm = '${model_name}'.split(".")[3]
 
 ##############################################
 #Configuration shared with pcmdi diagnostics
@@ -1073,11 +983,13 @@ echo
 cat > pcmdi.py << EOF
 import os
 import glob
+import re
 import json
 import time
 import datetime
 import xcdat as xc
 import numpy as np
+import pandas as pd
 
 import collections
 from collections import OrderedDict
@@ -1085,6 +997,13 @@ from collections import OrderedDict
 import pcmdi_metrics
 from pcmdi_metrics.io import (
         xcdat_open
+)
+
+from pcmdi_metrics.graphics import (
+    Metrics,
+    normalize_by_median,
+    parallel_coordinate_plot,
+    portrait_plot,
 )
 
 import psutil
@@ -1141,12 +1060,12 @@ def enso_obsvar_dict(obs_dic,variables):
     refr_dic = OrderedDict()
     for var in variables:
        vkey = var.split("-")[0]
-       refset  = obs_dic[var]['set']
-       refname = obs_dic[var][refset]
+       refset  = obs_dic[vkey]['set']
+       refname = obs_dic[vkey][refset]
        #data file in model->var sequence
        if refname not in refr_dic.keys():
           refr_dic[refname] = {}
-       refr_dic[refname][var] = obs_dic[var][refname]
+       refr_dic[refname][vkey] = obs_dic[vkey][refname]
 
     #save data file dictionary
     json.dump(refr_dic,
@@ -1162,8 +1081,8 @@ def enso_obsvar_lmsk(regions,variables):
     relf_dic = OrderedDict()
     for var in variables:
        vkey = var.split("-")[0]
-       refset  = obs_dic[var]['set']
-       refname = obs_dic[var][refset]
+       refset  = obs_dic[vkey]['set']
+       refname = obs_dic[vkey][refset]
        #land/sea mask
        if refname not in  relf_dic.keys():
           relf_dic[refname] = os.path.join(
@@ -1176,6 +1095,409 @@ def enso_obsvar_lmsk(regions,variables):
               sort_keys=False,
               indent=4,
               separators=(",", ": "))
+
+    return
+
+
+def shift_row_to_bottom(df, index_to_shift):
+    idx = [i for i in df.index if i != index_to_shift]
+    return df.loc[idx + [index_to_shift]]
+
+def merge_data(model_lib,cmip_lib,model_name):
+    model_lib,cmip_lib = check_regions(model_lib,cmip_lib)
+    merge_lib = cmip_lib.merge(model_lib)
+    merge_lib = check_units(merge_lib)
+    for stat in merge_lib.df_dict:
+        for season in merge_lib.df_dict[stat]:
+            for region in merge_lib.df_dict[stat][season]:
+                highlight_models = []
+                df = merge_lib.df_dict[stat][season][region]
+                for model in df["model"].tolist():
+                    if "e3sm" in model.lower():
+                        highlight_models.append(model)
+                    if model in model_name:
+                        idxs = df[df.iloc[:, 0] == model].index
+                        df.loc[idxs, "model"] = model_name
+                highlight_models.append(model_name)
+                for model in highlight_models:
+                    for idx in df[df.iloc[:, 0] == model].index:
+                        df = shift_row_to_bottom(df, idx)
+                merge_lib.df_dict[stat][season][region] = df.fillna(value=np.nan)
+                del(df)
+    return merge_lib
+
+def check_regions(data_lib,ref_lib):
+    regions = [x for x in data_lib.regions if x in ref_lib.regions]
+    for stat in ref_lib.df_dict:
+        for season in ref_lib.df_dict[stat]:
+            subset_dict = dict((k, ref_lib.df_dict[stat][season][k]) for k in regions)
+            ref_lib.df_dict[stat][season] = subset_dict
+            del(subset_dict)
+    ref_lib.regions = regions
+
+    for stat in data_lib.df_dict:
+        for season in data_lib.df_dict[stat]:
+            subset_dict = dict((k, data_lib.df_dict[stat][season][k]) for k in regions)
+            data_lib.df_dict[stat][season] = subset_dict
+            del(subset_dict)
+    data_lib.regions = regions
+
+    return data_lib,ref_lib
+
+def check_references(data_dict):
+    reference_alias = {'CERES-EBAF-4-1': 'ceres_ebaf_v4_1',
+                       'CERES-EBAF-4-0': 'ceres_ebaf_v4_0',
+                       'CERES-EBAF-2-8': 'ceres_ebaf_v2_8',
+                       'GPCP-2-3'      : 'GPCP_v2_3',
+                       'GPCP-2-2'      : 'GPCP_v2_2',
+                       'GPCP-3-2'      : 'GPCP_v3_2',
+                       'NOAA_20C'      : 'NOAA-20C',
+                       'ERA-INT'       : 'ERA-Interim',
+                       'ERA-5'         : 'ERA5'}
+    for key,values in data_dict.items():
+        for i,value in enumerate(values):
+            if value in reference_alias.keys():
+                values[i] = reference_alias[value]
+        data_dict[key] = values
+    return data_dict
+
+def check_units(data_lib):
+    # we define fixed sets of variables used for final plotting.
+    units_all = {
+        "prw"   : "[kg m$^{-2}$]", "pr"    : "[mm d$^{-1}$]", "prsn"   : "[mm d$^{-1}$]",
+        "prc"   : "[mm d$^{-1}$]", "hfls"  : "[W m$^{-2}$]",  "hfss"   : "[W m$^{-2}$]",
+        "clivi" : "[kg $m^{-2}$]", "clwvi" : "[kg $m^{-2}$]", "psl"    : "[Pa]",
+        "rlds"  : "[W m$^{-2}$]",  "rldscs": "[W $m^{-2}$]",  "evspsbl": "[kg m$^{-2} s^{-1}$]",
+        "rtmt"  : "[W m$^{-2}$]",  "rsdt"  : "[W m$^{-2}$]",  "rlus"   : "[W m$^{-2}$]",
+        "rluscs": "[W m$^{-2}$]",  "rlut"  : "[W m$^{-2}$]",  "rlutcs" : "[W m$^{-2}$]",
+        "rsds"  : "[W m$^{-2}$]",  "rsdscs": "[W m$^{-2}$]",  "rstcre" : "[W m$^{-2}$]",
+        "rltcre": "[W m$^{-2}$]",  "rsus"  : "[W m$^{-2}$]",  "rsuscs" : "[W m$^{-2}$]",
+        "rsut"  : "[W m$^{-2}$]",  "rsutcs": "[W m$^{-2}$]",  "ts"     : "[K]",
+        "tas"   : "[K]",           "tauu"  : "[Pa]",          "tauv"   : "[Pa]",
+        "zg-500": "[m]",           "ta-200": "[K]",           "sfcWind": "[m s$^{-1}$]",
+        "ta-850": "[K]",           "ua-200": "[m s$^{-1}$]",  "ua-850" : "[m s$^{-1}$]",
+        "va-200": "[m s$^{-1}$]",  "va-850": "[m s$^{-1}$]",  "uas"    : "[m s$^{-1}$]",
+        "vas"   : "[m s$^{-1}$]",  "tasmin": "[K]",           "tasmax" : "[K]",
+        "clt"   : "[%]"}
+
+    common_vars = [x for x in data_lib.var_list if x in units_all.keys()]
+    #special case
+    if 'rtmt' not in common_vars:
+        if ('rt' in data_lib.var_list) or ('rmt' in data_lib.var_list):
+            common_vars.append('rtmt')
+
+    #collect unit list
+    common_unts = [units_all[x] for x in common_vars]
+
+    #collect reference list
+    reflist = data_lib.var_ref_dict.copy()
+    for var in reflist:
+        if var not in common_vars:
+            if var in ['rt','rmt']:
+                data_lib.var_ref_dict['rtmt'] = data_lib.var_ref_dict.pop(var)
+            else:
+                data_lib.var_ref_dict.pop(var)
+    data_lib.var_ref_dict = check_references(data_lib.var_ref_dict)
+    #now clean up data to exclude vars not in common lists
+    for stat in data_lib.df_dict:
+        for season in data_lib.df_dict[stat]:
+            for region in data_lib.df_dict[stat][season]:
+                df = data_lib.df_dict[stat][season][region]
+                if 'rt' in df.columns:
+                    df['rtmt'] = df['rt']
+                elif 'rmt' in df.columns:
+                    df['rtmt'] = df['rmt']
+                for var in df.columns[3:]:
+                    if var not in common_vars:
+                        df = df.drop(var,axis=1)
+                data_lib.df_dict[stat][season][region] = df
+                del(df)
+
+    data_lib.var_list = common_vars
+    data_lib.var_unit_list = common_unts
+
+    return data_lib
+
+def collect_metrics_data(parameter,group):
+    #merge data to an exisiting cmip base
+    cmip_files = glob.glob(os.path.join(
+            parameter['cmip_path'],
+            group,
+            parameter['cmip_name'].split(".")[0],
+            parameter['cmip_name'].split(".")[1],
+            parameter['cmip_name'].split(".")[2],
+            "*.json"))
+    if len(cmip_files) > 0 and os.path.exists(cmip_files[0]):
+        print('CMIP PCMDI DIAGs for Sythetic Metrics Found, Read data...')
+        cmip_lib = Metrics(cmip_files)
+        cmip_lib = check_units(cmip_lib)
+    else:
+        exit("Warning: CMIP PCMDI DIAGs for Sythetic Metrics Not Found,....")
+
+    model_name = '.'.join([
+        parameter['test_name'].split(".")[2],
+        parameter['test_name'].split(".")[3]])
+    model_files = glob.glob(os.path.join(
+        parameter['test_path'],
+        group,
+        parameter['test_name'].split(".")[0],
+        parameter['test_name'].split(".")[1],
+        parameter['case_id'],
+        "*.json"))
+    if len(model_files) > 0 and os.path.exists(model_files[0]):
+        print('{} PCMDI DIAGs for Sythetic Metrics Found, Read data...'.format(model_name))
+        model_lib = Metrics(model_files)
+        model_lib = check_units(model_lib)
+    else:
+        exit("Warning: Model PCMDI DIAGs for Sythetic Metrics Not Found,....")
+
+    #merge model data with reference cmip data
+    merge_lib = merge_data(model_lib,cmip_lib,model_name)
+
+    return merge_lib
+
+def archive_data(parameter,stat,region,season,data_dict,
+                 model_name,var_names,var_units,outdir):
+    outdic = pd.DataFrame(data_dict)
+    outdic = outdic.drop(columns=["model_run"])
+    for var in list(outdic.columns.values[3:]):
+        if var not in var_names:
+            outdic = outdic.drop(columns=[var])
+        else:
+            # replace the variable with the name + units
+            outdic.columns.values[outdic.columns.values.tolist().index(var)] = (
+                var_units[var_names.index(var)]
+            )
+    # save data to .csv file
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    outfile = "{}_{}_{}_{}.csv".format(stat,region,season,model_name)
+    outdic.to_csv(os.path.join(outdir,outfile))
+    return
+
+def parcord_metric_plot(parameter,group,data_lib):
+    metric_dict = {"rms_xyt"     : "RMSE",
+                   "std_xyt"     : "Stddev Model",
+                   "std-obs_xyt" : "Stddev Obs."}
+    season = "ann"
+    model_name = '.'.join([
+        parameter['test_name'].split(".")[2],
+        parameter['test_name'].split(".")[3]])
+
+    # process figure
+    fontsize = 20
+    figsize = (40, 18)
+    legend_box_xy = (1.08, 1.18)
+    legend_box_size = 4
+    legend_lw = 1.5
+    shrink = 0.8
+    legend_fontsize = fontsize * 0.8
+    # hide markers for CMIP models
+    identify_all_models = False
+
+    for stat in metric_dict.keys():
+        for region in data_lib.regions:
+            # data for final plot
+            data_dict = data_lib.df_dict[stat][season][region]
+            data_dict = data_dict.reset_index(drop=True)
+            #drop data if all is NaNs
+            var_names = data_lib.var_list.copy()
+            var_units = data_lib.var_unit_list.copy()
+            for column in data_dict.columns[3:]:
+                if np.all(np.isnan(data_dict[column].to_numpy())):
+                    data_dict = data_dict.drop(column, axis=1)
+                    index = var_names.index(column)
+                    var_names.remove(var_names[index])
+                    var_units.remove(var_units[index])
+
+            highlight_model1 = []
+            for model in data_dict['model'].to_list():
+                if "e3sm" in model.lower():
+                   highlight_model1.append(model)
+                elif model in model_name:
+                   highlight_model1.append(model_name)
+
+            # ensemble mean for CMIP group
+            irow_sub = data_dict[data_dict['model'] == highlight_model1[0]].index[0]
+            data_dict.loc["CMIP MMM"] = data_dict[:irow_sub].mean(
+                    numeric_only=True, skipna=True)
+            data_dict.at["CMIP MMM", "model"] = "CMIP MMM"
+            data_dict.loc["E3SM MMM"] = data_dict[irow_sub:].mean(
+                    numeric_only=True, skipna=True)
+            data_dict.at["E3SM MMM", "model"] = "E3SM MMM"
+
+            if parameter['save_data']:
+                outdir = os.path.join(parameter['out_dir'],region)
+                archive_data(parameter,stat,region,season,data_dict,
+                             model_name,var_names,var_units,outdir)
+
+            #label information
+            var_labels = []
+            for i,var in enumerate(var_names):
+                var_labels.append(var + "\n"  + var_units[i])
+            model_list = data_dict['model'].to_list()
+            highlight_model2 = data_dict['model'].to_list()[-3:]
+
+            #final plot data
+            data_var = data_dict[var_names].to_numpy()
+
+            figsize = (40, 12)
+            fontsize = 20
+            legend_ncol = int(7 * figsize[0] / 40.0)
+            legend_posistion = (0.50, -0.14)
+            # colors for highlight lines
+            xcolors = ["#000000","#e41a1c","#ff7f00","#4daf4a","#f781bf",
+                       "#a65628","#984ea3","#999999","#377eb8","#dede00"]
+            lncolors = xcolors[1 : len(highlight_model2)] + [xcolors[0]]
+
+            xlabel = "Metric"
+            ylabel = '{} ({})'.format(metric_dict[stat],stat.upper())
+            fig, ax = parallel_coordinate_plot(
+                data_var,
+                var_labels,
+                model_list,
+                model_names2=highlight_model1,
+                group1_name="CMIP6",
+                group2_name="E3SM",
+                models_to_highlight=highlight_model2,
+                models_to_highlight_colors=lncolors,
+                models_to_highlight_labels=highlight_model2,
+                identify_all_models=identify_all_models,
+                vertical_center="median",
+                vertical_center_line=True,
+                title="Model Performance of {} Climatology ({}, {})".format(
+                      season.upper(), stat.upper(), region.upper()),
+                figsize=figsize,
+                colormap="tab20_r",
+                show_boxplot=False,
+                show_violin=True,
+                violin_colors=("lightgrey", "pink"),
+                legend_ncol=legend_ncol,
+                legend_bbox_to_anchor=legend_posistion,
+                legend_fontsize=fontsize * 0.85,
+                xtick_labelsize=fontsize * 0.95,
+                ytick_labelsize=fontsize * 0.95,
+                logo_rect=[0, 0, 0, 0],
+                logo_off=True)
+
+            # Save figure as an image file
+            outdir = os.path.join(parameter['out_dir'],region)
+            if not os.path.exists(outdir):
+                os.makedirs(outdir)
+            outfile = "{}_{}_{}_parcord_{}.png".format(stat,region,season,model_name)
+            fig.savefig(os.path.join(outdir,outfile),facecolor="w", bbox_inches="tight")
+
+
+def portrait_metric_plot(parameter,group,data_lib):
+    metric_dict = {"cor_xy"  : "Pattern Corr.",
+                   "rms_xy"  : "Normalized RMSE by Median"}
+    seasons = ["djf", "mam", "jja", "son"]
+    var_names = data_lib.var_list
+    var_units = data_lib.var_unit_list
+    model_name = '.'.join([
+        parameter['test_name'].split(".")[2],
+        parameter['test_name'].split(".")[3]])
+    # process figure
+    fontsize = 20
+    add_vertical_line = True
+    figsize = (40, 18)
+    legend_box_xy = (1.08, 1.18)
+    legend_box_size = 4
+    legend_lw = 1.5
+    shrink = 0.8
+    legend_fontsize = fontsize * 0.8
+    var_label_unit_on = False
+
+    for stat in metric_dict.keys():
+        for region in data_lib.regions:
+            data_nor = dict()
+            for season in seasons:
+                data_dict = data_lib.df_dict[stat][season][region]
+                if stat == "cor_xy":
+                   data_nor[season] = data_dict[var_names].to_numpy().T
+                else:
+                   data_nor[season] = normalize_by_median(
+                        data_dict[var_names].to_numpy().T, axis=1)
+                if parameter['save_data']:
+                   outdir = os.path.join(parameter['out_dir'],region)
+                   archive_data(parameter,stat,region,season,data_dict,
+                                model_name,var_names,var_units,outdir)
+            # data for final plot
+            data_all_nor = np.stack([data_nor["djf"], data_nor["mam"],
+                                     data_nor["jja"], data_nor["son"]])
+
+            model_list = data_dict['model']
+            highlight_models = []
+            for model in model_list:
+                if "e3sm" in model.lower():
+                    highlight_models.append(model)
+            highlight_models.append(model_name)
+
+            lable_colors = []
+            for model in model_list:
+                if model in highlight_models:
+                   if model in model_name:
+                      lable_colors.append("#FC5A50")
+                   else:
+                      lable_colors.append("#5170d7")
+                else:
+                   lable_colors.append("#000000")
+            if stat == "cor_xy":
+               var_range = (-1.0, 1.0)
+               cmap_bounds = [0.1, 0.2, 0.4, 0.6, 0.65, 0.7, 0.75,
+                              0.8, 0.85, 0.9, 0.95, 1.0]
+            else:
+               var_range = (-0.5, 0.5)
+               cmap_bounds = [-0.5, -0.4, -0.3, -0.2, -0.1, 0, 0.1,
+                              0.2, 0.3, 0.4, 0.5]
+
+            x_labels = model_list
+            y_labels = []
+            if var_label_unit_on:
+              for i,var in enumerate(var_names):
+                  y_labels.append(var + "\n"  + var_units[i])
+            else:
+              y_labels = var_names
+
+            fig, ax, cbar = portrait_plot(
+                    data_all_nor,
+                    xaxis_labels=x_labels,
+                    yaxis_labels=y_labels,
+                    cbar_label=metric_dict[stat],
+                    cbar_label_fontsize=fontsize * 1.0,
+                    cbar_tick_fontsize=fontsize,
+                    box_as_square=True,
+                    vrange=var_range,
+                    figsize=figsize,
+                    cmap="RdYlBu_r",
+                    cmap_bounds=cmap_bounds,
+                    cbar_kw={"extend": "both", "shrink": shrink},
+                    missing_color="white",
+                    legend_on=True,
+                    legend_labels=["DJF", "MAM", "JJA", "SON"],
+                    legend_box_xy=legend_box_xy,
+                    legend_box_size=legend_box_size,
+                    legend_lw=legend_lw,
+                    legend_fontsize=legend_fontsize,
+                    logo_rect=[0, 0, 0, 0],
+                    logo_off=True)
+
+            ax.axvline(x = len(x_labels) - len(highlight_models), color="k",linewidth=3,)
+            ax.set_xticklabels(model_list,
+                       rotation=45, va="bottom", ha="left")
+            ax.set_yticklabels(y_labels,
+                       rotation=0, va="center", ha="right")
+
+            for xtick, color in zip(ax.get_xticklabels(), lable_colors):
+                xtick.set_color(color)
+            ax.yaxis.label.set_color(lable_colors[0])
+
+            # Save figure as an image file
+            outdir = os.path.join(parameter['out_dir'],region)
+            if not os.path.exists(outdir):
+                os.makedirs(outdir)
+            outfile = "{}_{}_4season_{}.png".format(stat,region,model_name)
+            fig.savefig(os.path.join(outdir,outfile),facecolor="w", bbox_inches="tight")
 
     return
 
@@ -1218,9 +1540,9 @@ variable_region(
 # each variable (will execuate in parallel later)
 lstcmd = []
 for var in compute_variables:
-  if var in obs_dic.keys():
-    vkey = var.split("-")[0]
-    refset = obs_dic[var]['set']
+  vkey = var.split("-")[0]
+  if vkey in obs_dic.keys():
+    refset = obs_dic[vkey]['set']
     lstcmd.append(" ".join([
                   'mean_climate_driver.py',
                   '-p  parameterfile.py'  ,
@@ -1246,11 +1568,23 @@ else:
   #time delay to ensure process completely finished
   time.sleep(1)
 
-{%- if '{{sythentic_plots}}' == 'y' %}
-#process sythetic metric plot if turned on
-return_code = subprocess.call(["python", 'sythentic_plots.py'])
-if return_code != 0:
-  exit("Failed to process {{sythentic_plots}}")
+{% if run_type == "model_vs_obs" %}
+synthetic_plot = '{{sythentic_plots}}'
+if synthetic_plot == "y":
+   print("generate sythentic metrics plot ...")
+   parameter = OrderedDict()
+   parameter['save_data'] = True
+   parameter['cmip_path'] = '{{pcmdi_data_path}}'
+   parameter['cmip_name'] = '{{pcmdi_cmip_clim}}'
+   parameter['test_name'] = '{{model_name}}'
+   parameter['test_path'] = os.path.join('pcmdi_diags','metrics_results')
+   parameter['case_id']   = '${case_id}'
+   parameter['out_dir']    = os.path.join('${results_dir}','ERROR_metric')
+   merge_lib = collect_metrics_data(parameter,'mean_climate')
+   print("Processing Portrait  Plots (4 seasons)....")
+   portrait_metric_plot(parameter,'mean_climate',merge_lib)
+   print("Processing Parallel Coordinate Plots (Annual Cycle)....")
+   parcord_metric_plot(parameter,'mean_climate',merge_lib)
 {%- endif %}
 
 {%- endif %}
@@ -1394,7 +1728,6 @@ def get_mean_climate_graphics(regions,variables,fig_format,input_dir,output_dir)
 
     fig_sets = OrderedDict()
     fig_sets['CLIM_patttern'] = ['graphics','*']
-    fig_sets['ERROR_metric'] = ['graphics','*']
 
     for fset in fig_sets.keys():
       fdir = input_dir.replace('%(output_type)',fig_sets[fset][0] )
@@ -1465,15 +1798,14 @@ def get_enso_graphics(groups,fig_format,refname,input_dir,output_dir):
 
 #############
 fig_format = '{{ figure_format }}'
-
 diag_types = ['metrics_results','diagnostic_result','graphics']
 
 input_template = os.path.join(
     'pcmdi_diags',
     '%(output_type)',
     '%(metric_type)',
-    '${cmip_name}'.split(".")[0],
-    '${cmip_name}'.split(".")[1],
+    '${model_name}'.split(".")[0],
+    '${model_name}'.split(".")[1],
     '${case_id}',
 )
 
@@ -1514,6 +1846,16 @@ get_enso_graphics(
 {% endif %}
 
 EOF
+################################
+# Run diagnostics
+command="srun -N 1 python -u graphic_viewer.py"
+# Run diagnostics
+time ${command}
+if [ $? != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'ERROR (12)' > {{ prefix }}.status
+  exit 12
+fi
 
 #################################
 # Copy output to web server
@@ -1526,8 +1868,8 @@ web_dir=${www}/${case}/pcmdi_diags
 mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (12)' > {{ prefix }}.status
-  exit 12
+  echo 'ERROR (13)' > {{ prefix }}.status
+  exit 13
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
@@ -1546,11 +1888,12 @@ done
 
 ############################################
 # Copy files
-rsync -a --delete ${results_dir} ${web_dir}/
+#rsync -a --delete ${results_dir} ${web_dir}/
+rsync -a ${results_dir} ${web_dir}/
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (13)' > {{ prefix }}.status
-  exit 13
+  echo 'ERROR (14)' > {{ prefix }}.status
+  exit 14
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
