@@ -408,13 +408,8 @@ def derive_var(path,vout,var_dic,fname):
 
 model_name = '${model_name_ref}.${tableID_ref}'
 
-{%- if ("mean_climate" in subset) %}
 variables = '{{ vars }}'.split(",")
 obs_sets = '{{ obs_sets }}'.split(",")
-{%- elif ("variability_mode_cpl" in subset) or ("variability_mode_atm" in subset) or ("enso" in subset) %}
-variables = '{{ vars }}'.split(",")
-obs_sets = '{{ obs_sets }}'.split(",")
-{%- endif %}
 ts_dir_ref_source = '{{ obs_ts }}'
 
 # variable map from observation to cmip
@@ -733,18 +728,18 @@ realm = '${model_name}'.split(".")[3]
 #Configuration shared with pcmdi diagnostics
 ##############################################
 # Record NetCDF output
-nc_out_obs = {{ nc_out_obs }}
-nc_out = {{ nc_out }}
-if nc_out:
+nc_out_obs = {{ mov_nc_out_obs }}
+nc_out_model = {{ mov_nc_out_model }}
+if nc_out_model or nc_out_obs:
   ext = ".nc"
 else:
   ext = ".xml"
 user_notes = 'Provenance and results'
-debug = {{ pmp_debug }}
+debug = {{ pcmdi_debug }}
 
 # Generate plots
-plot = {{ plot }}
-plot_obs = {{ plot_obs }} # optional
+plot_model = {{ mov_plot_model }}
+plot_obs = {{ mov_plot_obs }} # optional
 
 # Additional settings
 run_type = '{{ run_type }}'
@@ -884,18 +879,10 @@ landmask = {{ landmask }}
 #template for model file
 modnames = [ product ]
 realization = "*"
-modpath = '.'.join([
-  mip,
-  exp,
-  '%(model)',
-  '%(realization)',
-  '${tableID}',
-  '%(variable)',
-  period,
-  'AC',
-  '${case_id}',
-  'nc'
-])
+modpath = os.path.join(
+  '${ts_dir_primary}',
+  '{}.{}.%(model).%(realization).{}.%(variable).{}.nc'.format(mip,exp,${tableID},period)
+)
 
 #start and end year for analysis
 msyear = int(start_yr)
@@ -914,10 +901,10 @@ CBF = {{ CBF }}
 ConvEOF = {{ ConvEOF }}
 
 # Generate CMEC compliant json
-cmec = {{ cmec }}
+cmec = False
 
 # Update diagnostic file if exist
-update_json = {{ update_json }}
+update_json = False
 
 #results directory structure.
 results_dir = os.path.join(
@@ -938,12 +925,11 @@ results_dir = os.path.join(
 ###########################################
 modnames = [ product ]
 realization = realm
-
 modpath = os.path.join(
   '${ts_dir_primary}',
-  '.'.join([mip,exp,'%(model)','%(realization)',
-            '${tableID}','%(variable)',period,'nc'])
+  '{}.{}.%(model).%(realization).{}.%(variable).{}.nc'.format(mip,exp,${tableID},period)
 )
+
 #observation/reference file catalogue
 obs_cmor = True
 obs_cmor_path = '${ts_dir_ref}'
@@ -1276,10 +1262,8 @@ def archive_data(parameter,stat,region,season,data_dict,
     return
 
 def parcord_metric_plot(parameter,group,data_lib):
-    metric_dict = {"rms_xyt"     : "RMSE",
-                   "std_xyt"     : "Stddev Model",
-                   "std-obs_xyt" : "Stddev Obs."}
     season = "ann"
+    metric_dict = {"rms_xyt"     : "RMSE"}
     model_name = '.'.join([
         parameter['test_name'].split(".")[2],
         parameter['test_name'].split(".")[3]])
@@ -1287,22 +1271,26 @@ def parcord_metric_plot(parameter,group,data_lib):
     # process figure
     fontsize = 20
     figsize = (40, 18)
+    shrink = 0.8
     legend_box_xy = (1.08, 1.18)
     legend_box_size = 4
     legend_lw = 1.5
-    shrink = 0.8
     legend_fontsize = fontsize * 0.8
+    legend_ncol = int(7 * figsize[0] / 40.0)
+    legend_posistion = (0.50, -0.14)
     # hide markers for CMIP models
     identify_all_models = False
+    # colors for highlight lines
+    xcolors = ["#000000","#e41a1c","#ff7f00","#4daf4a","#f781bf",
+               "#a65628","#984ea3","#999999","#377eb8","#dede00"]
 
     for stat in metric_dict.keys():
         for region in data_lib.regions:
-            # data for final plot
-            data_dict = data_lib.df_dict[stat][season][region]
-            data_dict = data_dict.reset_index(drop=True)
-            #drop data if all is NaNs
             var_names = data_lib.var_list.copy()
             var_units = data_lib.var_unit_list.copy()
+            # data for final plot
+            data_dict = data_lib.df_dict[stat][season][region].reset_index(drop=True)
+            #drop data if all is NaNs
             for column in data_dict.columns[3:]:
                 if np.all(np.isnan(data_dict[column].to_numpy())):
                     data_dict = data_dict.drop(column, axis=1)
@@ -1331,28 +1319,22 @@ def parcord_metric_plot(parameter,group,data_lib):
                 archive_data(parameter,stat,region,season,data_dict,
                              model_name,var_names,var_units,outdir)
 
+            model_list = data_dict['model'].to_list()
+            highlight_model2 = data_dict['model'].to_list()[-3:]
+
+	    #final plot data
+            data_var = data_dict[var_names].to_numpy()
+
             #label information
             var_labels = []
             for i,var in enumerate(var_names):
                 var_labels.append(var + "\n"  + var_units[i])
-            model_list = data_dict['model'].to_list()
-            highlight_model2 = data_dict['model'].to_list()[-3:]
-
-            #final plot data
-            data_var = data_dict[var_names].to_numpy()
-
-            figsize = (40, 12)
-            fontsize = 20
-            legend_ncol = int(7 * figsize[0] / 40.0)
-            legend_posistion = (0.50, -0.14)
-            # colors for highlight lines
-            xcolors = ["#000000","#e41a1c","#ff7f00","#4daf4a","#f781bf",
-                       "#a65628","#984ea3","#999999","#377eb8","#dede00"]
-            lncolors = xcolors[1 : len(highlight_model2)] + [xcolors[0]]
 
             xlabel = "Metric"
             ylabel = '{} ({})'.format(metric_dict[stat],stat.upper())
-            fig, ax = parallel_coordinate_plot(
+            # colors for highlight lines
+            lncolors = xcolors[1 : len(highlight_model2)] + [xcolors[0]]
+            fig,ax = parallel_coordinate_plot(
                 data_var,
                 var_labels,
                 model_list,
@@ -1366,7 +1348,7 @@ def parcord_metric_plot(parameter,group,data_lib):
                 vertical_center="median",
                 vertical_center_line=True,
                 title="Model Performance of {} Climatology ({}, {})".format(
-                      season.upper(), stat.upper(), region.upper()),
+                      season.upper(),stat.upper(), region.upper()),
                 figsize=figsize,
                 colormap="tab20_r",
                 show_boxplot=False,
@@ -1389,14 +1371,13 @@ def parcord_metric_plot(parameter,group,data_lib):
 
 
 def portrait_metric_plot(parameter,group,data_lib):
+    seasons = ["djf", "mam", "jja", "son"]
     metric_dict = {"cor_xy"  : "Pattern Corr.",
                    "rms_xy"  : "Normalized RMSE by Median"}
-    seasons = ["djf", "mam", "jja", "son"]
-    var_names = data_lib.var_list
-    var_units = data_lib.var_unit_list
     model_name = '.'.join([
         parameter['test_name'].split(".")[2],
         parameter['test_name'].split(".")[3]])
+
     # process figure
     fontsize = 20
     add_vertical_line = True
@@ -1406,70 +1387,65 @@ def portrait_metric_plot(parameter,group,data_lib):
     legend_lw = 1.5
     shrink = 0.8
     legend_fontsize = fontsize * 0.8
-    var_label_unit_on = False
+
+    var_names = data_lib.var_list
+    var_units = data_lib.var_unit_list
 
     for stat in metric_dict.keys():
         for region in data_lib.regions:
             data_nor = dict()
             for season in seasons:
-                data_dict = data_lib.df_dict[stat][season][region]
+                data_dict = data_lib.df_dict[stat][season][region].copy()
                 if stat == "cor_xy":
                    data_nor[season] = data_dict[var_names].to_numpy().T
                 else:
                    data_nor[season] = normalize_by_median(
-                        data_dict[var_names].to_numpy().T, axis=1)
+		       data_dict[var_names].to_numpy().T, axis=1)
                 if parameter['save_data']:
+                   data_dict[var_names] = data_nor[season]
                    outdir = os.path.join(parameter['out_dir'],region)
                    archive_data(parameter,stat,region,season,data_dict,
                                 model_name,var_names,var_units,outdir)
-            # data for final plot
-            data_all_nor = np.stack([data_nor["djf"], data_nor["mam"],
-                                     data_nor["jja"], data_nor["son"]])
-
-            model_list = data_dict['model']
-            highlight_models = []
-            for model in model_list:
-                if "e3sm" in model.lower():
-                    highlight_models.append(model)
-            highlight_models.append(model_name)
+	    # data for final plot
+            data_all_nor = np.stack(
+	       [data_nor["djf"], data_nor["mam"], data_nor["jja"], data_nor["son"]]
+	    )
 
             lable_colors = []
+            highlight_models = []
+            model_list = data_dict['model'].to_list()
             for model in model_list:
-                if model in highlight_models:
-                   if model in model_name:
-                      lable_colors.append("#FC5A50")
-                   else:
-                      lable_colors.append("#5170d7")
+                if "e3sm" in model.lower():
+                   highlight_models.append(model)
+                   lable_colors.append("#5170d7")
+                elif model in model_name:
+                   highlight_models.append(model_name)
+                   lable_colors.append("#FC5A50")
                 else:
                    lable_colors.append("#000000")
+
             if stat == "cor_xy":
-               var_range = (-1.0, 1.0)
-               cmap_bounds = [0.1, 0.2, 0.4, 0.6, 0.65, 0.7, 0.75,
-                              0.8, 0.85, 0.9, 0.95, 1.0]
+               var_range = (0, 1.0)
+               cmap_color = "YlOrBr"
+               cmap_bounds = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.65,
+	                      0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
             else:
                var_range = (-0.5, 0.5)
-               cmap_bounds = [-0.5, -0.4, -0.3, -0.2, -0.1, 0, 0.1,
-                              0.2, 0.3, 0.4, 0.5]
-
-            x_labels = model_list
-            y_labels = []
-            if var_label_unit_on:
-              for i,var in enumerate(var_names):
-                  y_labels.append(var + "\n"  + var_units[i])
-            else:
-              y_labels = var_names
+               cmap_color = "RdYlBu_r"
+               cmap_bounds = [-0.5, -0.4, -0.3, -0.2, -0.1,
+	                      0, 0.1,0.2, 0.3, 0.4, 0.5]
 
             fig, ax, cbar = portrait_plot(
                     data_all_nor,
-                    xaxis_labels=x_labels,
-                    yaxis_labels=y_labels,
+                    xaxis_labels=model_list,
+                    yaxis_labels=var_names,
                     cbar_label=metric_dict[stat],
                     cbar_label_fontsize=fontsize * 1.0,
                     cbar_tick_fontsize=fontsize,
                     box_as_square=True,
                     vrange=var_range,
                     figsize=figsize,
-                    cmap="RdYlBu_r",
+                    cmap=cmap_color,
                     cmap_bounds=cmap_bounds,
                     cbar_kw={"extend": "both", "shrink": shrink},
                     missing_color="white",
@@ -1482,13 +1458,10 @@ def portrait_metric_plot(parameter,group,data_lib):
                     logo_rect=[0, 0, 0, 0],
                     logo_off=True)
 
-            ax.axvline(x = len(x_labels) - len(highlight_models), color="k",linewidth=3,)
-            ax.set_xticklabels(model_list,
-                       rotation=45, va="bottom", ha="left")
-            ax.set_yticklabels(y_labels,
-                       rotation=0, va="center", ha="right")
-
-            for xtick, color in zip(ax.get_xticklabels(), lable_colors):
+            ax.axvline(x=len(x_labels)-len(highlight_models),color="k",linewidth=3)
+            ax.set_xticklabels(model_list,rotation=45,va="bottom",ha="left")
+            ax.set_yticklabels(y_labels,rotation=0,va="center",ha="right")
+            for xtick,color in zip(ax.get_xticklabels(),lable_colors):
                 xtick.set_color(color)
             ax.yaxis.label.set_color(lable_colors[0])
 
