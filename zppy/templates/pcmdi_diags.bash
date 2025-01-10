@@ -318,7 +318,11 @@ from pcmdi_zppy_util import(
 
 model_name = '${model_name_ref}.${tableID_ref}'
 
+{%- if ("mean_climate" in subsection) %}
 variables = '{{ cmip_vars }}'.split(",")
+{%- elif ("variability_modes_cpl" in subsection) or ("variability_modes_atm" in subsection) or ("enso" in subsection) %}
+variables = '{{ vars }}'.split(",")
+{%- endif %}
 obs_sets = '{{ obs_sets }}'.split(",")
 ts_dir_ref_source = '{{ obs_ts }}'
 
@@ -1051,7 +1055,7 @@ for metric in metric_sets:
                      merge_lib.var_unit_list,
                      parameter['save_data'],
                      parameter['out_dir'])
-       elif metric == "variability_modes":
+        elif metric == "variability_modes":
            variability_modes_plot_driver(
                      metric, stat,
                      parameter['model_name'],
