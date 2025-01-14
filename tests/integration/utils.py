@@ -174,7 +174,6 @@ def get_chyrsalis_expansions(config):
         "partition_short": "debug",
         "qos_long": "regular",
         "qos_short": "regular",
-        "scratch": f"/lcrc/globalscratch/{username}/",
         "user_input": "/lcrc/group/e3sm/ac.forsyth2/",
         "user_output": f"/lcrc/group/e3sm/{username}/",
         "user_www": f"{web_base_path}/{username}/",
@@ -203,7 +202,6 @@ def get_compy_expansions(config):
         "partition_short": "short",
         "qos_long": "regular",
         "qos_short": "regular",
-        "scratch": f"/qfs/people/{username}/",
         "user_input": "/compyfs/fors729/",
         "user_output": f"/compyfs/{username}/",
         "user_www": f"{web_base_path}/{username}/",
@@ -232,7 +230,6 @@ def get_perlmutter_expansions(config):
         "partition_short": "",
         "qos_long": "regular",
         "qos_short": "regular",  # debug walltime too short?
-        "scratch": f"/pscratch/sd/{username[0]}/{username}/",
         # Use CFS for large datasets
         "user_input": "/global/cfs/cdirs/e3sm/forsyth/",
         "user_output": f"/global/cfs/cdirs/e3sm/{username}/",
