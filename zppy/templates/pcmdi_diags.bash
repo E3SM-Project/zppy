@@ -317,12 +317,7 @@ from pcmdi_zppy_util import(
 )
 
 model_name = '${model_name_ref}.${tableID_ref}'
-
-{%- if ("mean_climate" in subsection) %}
-variables = '{{ cmip_vars }}'.split(",")
-{%- elif ("variability_modes_cpl" in subsection) or ("variability_modes_atm" in subsection) or ("enso" in subsection) %}
 variables = '{{ vars }}'.split(",")
-{%- endif %}
 obs_sets = '{{ obs_sets }}'.split(",")
 ts_dir_ref_source = '{{ obs_ts }}'
 
@@ -370,9 +365,9 @@ for i,var in enumerate(variables):
     out = os.path.join('${obstmp_dir}',
                        '{}.{}.{}-{}.nc'.format(
 	                model_name.replace('%(model)',obs),
-                        var,yms,yme))
+                        varin,yms,yme))
     #rename variable if needed then save file
-    if varin != var:
+    if (varin != var) and ("_" not in var ) and ("-" not in var):
       ds = xcdat_open(fpaths[0])
       ds = ds.rename(name_dict={varin:var})
       ds.to_netcdf(out)
@@ -853,7 +848,7 @@ for var in variables:
    if varin in obs_dic.keys():
       refset = obs_dic[varin]['set']
       lstcmd.append(
-          " ".join(['mean_climate_driver.py','-p  parameterfile.py',
+          " ".join(['mean_climate_driver.py', ' -p  parameterfile.py',
                     '--vars'                , '{}'.format(var),
                     '-r'                    , '{}'.format(refset),
                     '--case_id'             , '{}'.format('${case_id}')
@@ -875,7 +870,7 @@ if return_code != 0:
 else:
    print("successfully finish all jobs....")
    #time delay to ensure process completely finished
-   time.sleep(5)
+   time.sleep(60)
 
 #orgnize diagnostic output
 collect_clim_diags(
