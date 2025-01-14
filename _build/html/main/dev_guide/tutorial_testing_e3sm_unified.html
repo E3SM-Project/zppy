@@ -254,7 +254,7 @@ environment we’re using, we probably want to rerun everything using the new en
 <span class="linenos">10</span>
 <span class="linenos">11</span><span class="k">[climo]</span>
 <span class="linenos">12</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">13</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51:70:20&quot;,</span>
+<span class="linenos">13</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51:70:20&quot;</span><span class="na">,</span>
 <span class="linenos">14</span><span class="c1"># Use default vars</span>
 <span class="linenos">15</span>
 <span class="linenos">16</span><span class="w">  </span><span class="k">[[ atm_monthly_180x360_aave ]]</span>
@@ -270,7 +270,7 @@ environment we’re using, we probably want to rerun everything using the new en
 <span class="linenos">26</span>
 <span class="linenos">27</span><span class="k">[ts]</span>
 <span class="linenos">28</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">29</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51:70:10&quot;,</span>
+<span class="linenos">29</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51:70:10&quot;</span><span class="na">,</span>
 <span class="linenos">30</span>
 <span class="linenos">31</span><span class="w">  </span><span class="k">[[ atm_monthly_180x360_aave ]]</span>
 <span class="linenos">32</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;archive/atm/hist&quot;</span>
@@ -302,7 +302,7 @@ environment we’re using, we probably want to rerun everything using the new en
 <span class="linenos">58</span>
 <span class="linenos">59</span><span class="k">[e3sm_diags]</span>
 <span class="linenos">60</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">61</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51:70:20&quot;,</span>
+<span class="linenos">61</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51:70:20&quot;</span><span class="na">,</span>
 <span class="linenos">62</span><span class="na">ts_num_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">10</span>
 <span class="linenos">63</span><span class="na">ref_start_yr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1979</span>
 <span class="linenos">64</span><span class="na">ref_final_yr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">2016</span>
@@ -320,21 +320,21 @@ environment we’re using, we probably want to rerun everything using the new en
 <span class="linenos">76</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
 <span class="linenos">77</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;24:00:00&quot;</span>
 <span class="linenos">78</span><span class="na">parallelTaskCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">6</span>
-<span class="linenos">79</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;,</span>
-<span class="linenos">80</span><span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;,</span>
-<span class="linenos">81</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">79</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;</span><span class="na">,</span>
+<span class="linenos">80</span><span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;</span><span class="na">,</span>
+<span class="linenos">81</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="s">&quot;51-70&quot;</span><span class="na">,</span>
 <span class="linenos">82</span><span class="na">mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;EC30to60E2r2&quot;</span>
 <span class="linenos">83</span><span class="na">anomalyRefYear</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">51</span>
 <span class="linenos">84</span>
 <span class="linenos">85</span><span class="k">[global_time_series]</span>
 <span class="linenos">86</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">87</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">87</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;</span><span class="na">,</span>
 <span class="linenos">88</span><span class="na">ts_num_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">10</span>
 <span class="linenos">89</span><span class="na">figstr</span><span class="o">=</span><span class="s">coupled_v2rc3e</span>
 <span class="linenos">90</span><span class="na">moc_file</span><span class="o">=</span><span class="s">mocTimeSeries_0051-0070.nc</span>
 <span class="linenos">91</span><span class="na">experiment_name</span><span class="o">=</span><span class="s">20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis</span>
-<span class="linenos">92</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;,</span>
-<span class="linenos">93</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="s">&quot;51-70&quot;,</span>
+<span class="linenos">92</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;51-70&quot;</span><span class="na">,</span>
+<span class="linenos">93</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="s">&quot;51-70&quot;</span><span class="na">,</span>
 </pre></div>
 </div>
 <p>5. We can now test out <code class="docutils literal notranslate"><span class="pre">zppy</span></code> by running <code class="docutils literal notranslate"><span class="pre">zppy</span> <span class="pre">-c</span> <span class="pre">e3sm_unified_test_simulation.cfg</span></code>.

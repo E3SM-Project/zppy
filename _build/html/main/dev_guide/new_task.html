@@ -155,16 +155,16 @@ exit 0
 <p>Create <code class="docutils literal notranslate"><span class="pre">zppy/&lt;task-name&gt;.py</span></code>. The basic outline of the file should be similar to the
 below example, adapted from <code class="docutils literal notranslate"><span class="pre">zppy/e3sm_diags.py</span></code>.</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">pprint</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pprint</span>
 
-<span class="kn">import</span> <span class="nn">jinja2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jinja2</span>
 
-<span class="kn">from</span> <span class="nn">zppy.utils</span> <span class="kn">import</span> <span class="n">checkStatus</span><span class="p">,</span> <span class="n">getTasks</span><span class="p">,</span> <span class="n">getYears</span><span class="p">,</span> <span class="n">submitScript</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">zppy.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">checkStatus</span><span class="p">,</span> <span class="n">getTasks</span><span class="p">,</span> <span class="n">getYears</span><span class="p">,</span> <span class="n">submitScript</span>
 
 
 <span class="c1"># -----------------------------------------------------------------------------</span>
-<span class="k">def</span> <span class="o">&lt;</span><span class="n">task</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">scriptDir</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="o">&lt;</span><span class="n">task</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">scriptDir</span><span class="p">):</span>
 
     <span class="c1"># Initialize jinja2 template engine</span>
     <span class="n">templateLoader</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">FileSystemLoader</span><span class="p">(</span>
@@ -240,7 +240,7 @@ below example, adapted from <code class="docutils literal notranslate"><span cla
 <h2>The main file<a class="headerlink" href="#the-main-file" title="Permalink to this heading"></a></h2>
 <p>Add the task to <code class="docutils literal notranslate"><span class="pre">zppy/__main__.py</span></code>:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="o">&lt;</span><span class="n">task_name</span><span class="o">&gt;</span> <span class="kn">import</span> <span class="o">&lt;</span><span class="n">task_name</span><span class="o">&gt;</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="o">&lt;</span><span class="n">task_name</span><span class="o">&gt;</span> <span class="kn">import</span><span class="w"> </span><span class="o">&lt;</span><span class="n">task_name</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># &lt;task-name&gt; tasks</span>
