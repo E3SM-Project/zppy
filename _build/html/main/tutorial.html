@@ -168,53 +168,52 @@ must be changed for use on other machines. These include the paths for
 <span class="linenos"> 74</span><span class="k">[tc_analysis]</span>
 <span class="linenos"> 75</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">boolean(default=True)</span>
 <span class="linenos"> 76</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1:100:20&quot;</span><span class="na">, &quot;1</span><span class="o">:</span><span class="s">100:50&quot;,</span>
-<span class="linenos"> 77</span><span class="na">scratch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&lt;scratch directory&gt;</span>
-<span class="linenos"> 78</span>
-<span class="linenos"> 79</span><span class="c1"># E3SM Diags every 20 and 50 years</span>
-<span class="linenos"> 80</span><span class="k">[e3sm_diags]</span>
-<span class="linenos"> 81</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos"> 82</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1:100:20&quot;</span><span class="na">, &quot;1</span><span class="o">:</span><span class="s">100:50&quot;,</span>
-<span class="linenos"> 83</span><span class="na">ts_num_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">10</span>
-<span class="linenos"> 84</span>
-<span class="linenos"> 85</span><span class="w">  </span><span class="c1"># Monthly diagnostics</span>
-<span class="linenos"> 86</span><span class="w">  </span><span class="k">[[ atm_monthly_180x360_aave ]]</span>
-<span class="linenos"> 87</span><span class="w">  </span><span class="na">short_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;20210122.v2_test01.piControl.ne30pg2_EC30to60E2r2-1900_ICG.chrysalis&#39;</span>
-<span class="linenos"> 88</span><span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;180x360_aave&#39;</span>
-<span class="linenos"> 89</span><span class="w">  </span><span class="na">reference_data_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/climatology&#39;</span>
-<span class="linenos"> 90</span><span class="w">  </span><span class="c1"># These two lines need to be included if sets requiring time series files are being run.</span>
-<span class="linenos"> 91</span><span class="w">  </span><span class="na">obs_ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/time-series&#39;</span>
-<span class="linenos"> 92</span><span class="w">  </span><span class="na">ref_start_yr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1979</span>
-<span class="linenos"> 93</span><span class="w">  </span><span class="c1"># This needs to be set for QBO Diags</span>
-<span class="linenos"> 94</span><span class="w">  </span><span class="na">ref_final_yr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">2016</span>
-<span class="linenos"> 95</span><span class="w">  </span><span class="c1"># This needs to be set for streamflow diags</span>
-<span class="linenos"> 96</span><span class="w">  </span><span class="na">streamflow_obs_ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/time-series/&#39;</span>
-<span class="linenos"> 97</span><span class="w">  </span><span class="c1"># These three lines need to be included if diurnal cycle diagnostics are being run.</span>
-<span class="linenos"> 98</span><span class="w">  </span><span class="na">dc_obs_climo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/climatology&#39;</span>
-<span class="linenos"> 99</span><span class="w">  </span><span class="na">climo_diurnal_subsection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;atm_monthly_diurnal_8xdaily_180x360_aave&quot;</span>
-<span class="linenos">100</span><span class="w">  </span><span class="na">climo_diurnal_frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;diurnal_8xdaily&quot;</span>
-<span class="linenos">101</span><span class="w">  </span><span class="c1"># This is for tropical cyclone diags</span>
-<span class="linenos">102</span><span class="w">  </span><span class="na">tc_obs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/tc-analysis/&#39;</span>
-<span class="linenos">103</span>
-<span class="linenos">104</span><span class="c1"># MPAS-Analysis</span>
-<span class="linenos">105</span><span class="k">[mpas_analysis]</span>
-<span class="linenos">106</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">107</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;24:00:00&quot;</span>
-<span class="linenos">108</span><span class="na">parallelTaskCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">6</span>
-<span class="linenos">109</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1-50&quot;</span><span class="na">, &quot;1-100&quot;,</span>
-<span class="linenos">110</span><span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;11-50&quot;</span><span class="na">, &quot;11-100&quot;,</span>
-<span class="linenos">111</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;21-50&quot;</span><span class="na">, &quot;51-100&quot;,</span>
-<span class="linenos">112</span><span class="na">mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;EC30to60E2r2&quot;</span>
-<span class="linenos">113</span>
-<span class="linenos">114</span><span class="c1"># Global time series plots</span>
-<span class="linenos">115</span><span class="k">[global_time_series]</span>
-<span class="linenos">116</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">117</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1-100&quot;</span><span class="na">,</span>
-<span class="linenos">118</span><span class="na">ts_num_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">10</span>
-<span class="linenos">119</span><span class="na">figstr</span><span class="o">=</span><span class="s">coupled_v2_test01</span>
-<span class="linenos">120</span><span class="na">moc_file</span><span class="o">=</span><span class="s">mocTimeSeries_0001-0100.nc</span>
-<span class="linenos">121</span><span class="na">experiment_name</span><span class="o">=</span><span class="s">20210122.v2_test01.piControl.chrysalis</span>
-<span class="linenos">122</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1-50&quot;</span><span class="na">, &quot;1-100&quot;,</span>
-<span class="linenos">123</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;21-50&quot;</span><span class="na">, &quot;51-100&quot;,</span>
+<span class="linenos"> 77</span>
+<span class="linenos"> 78</span><span class="c1"># E3SM Diags every 20 and 50 years</span>
+<span class="linenos"> 79</span><span class="k">[e3sm_diags]</span>
+<span class="linenos"> 80</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="linenos"> 81</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1:100:20&quot;</span><span class="na">, &quot;1</span><span class="o">:</span><span class="s">100:50&quot;,</span>
+<span class="linenos"> 82</span><span class="na">ts_num_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">10</span>
+<span class="linenos"> 83</span>
+<span class="linenos"> 84</span><span class="w">  </span><span class="c1"># Monthly diagnostics</span>
+<span class="linenos"> 85</span><span class="w">  </span><span class="k">[[ atm_monthly_180x360_aave ]]</span>
+<span class="linenos"> 86</span><span class="w">  </span><span class="na">short_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;20210122.v2_test01.piControl.ne30pg2_EC30to60E2r2-1900_ICG.chrysalis&#39;</span>
+<span class="linenos"> 87</span><span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;180x360_aave&#39;</span>
+<span class="linenos"> 88</span><span class="w">  </span><span class="na">reference_data_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/climatology&#39;</span>
+<span class="linenos"> 89</span><span class="w">  </span><span class="c1"># These two lines need to be included if sets requiring time series files are being run.</span>
+<span class="linenos"> 90</span><span class="w">  </span><span class="na">obs_ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/time-series&#39;</span>
+<span class="linenos"> 91</span><span class="w">  </span><span class="na">ref_start_yr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1979</span>
+<span class="linenos"> 92</span><span class="w">  </span><span class="c1"># This needs to be set for QBO Diags</span>
+<span class="linenos"> 93</span><span class="w">  </span><span class="na">ref_final_yr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">2016</span>
+<span class="linenos"> 94</span><span class="w">  </span><span class="c1"># This needs to be set for streamflow diags</span>
+<span class="linenos"> 95</span><span class="w">  </span><span class="na">streamflow_obs_ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/time-series/&#39;</span>
+<span class="linenos"> 96</span><span class="w">  </span><span class="c1"># These three lines need to be included if diurnal cycle diagnostics are being run.</span>
+<span class="linenos"> 97</span><span class="w">  </span><span class="na">dc_obs_climo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/climatology&#39;</span>
+<span class="linenos"> 98</span><span class="w">  </span><span class="na">climo_diurnal_subsection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;atm_monthly_diurnal_8xdaily_180x360_aave&quot;</span>
+<span class="linenos"> 99</span><span class="w">  </span><span class="na">climo_diurnal_frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;diurnal_8xdaily&quot;</span>
+<span class="linenos">100</span><span class="w">  </span><span class="c1"># This is for tropical cyclone diags</span>
+<span class="linenos">101</span><span class="w">  </span><span class="na">tc_obs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/tc-analysis/&#39;</span>
+<span class="linenos">102</span>
+<span class="linenos">103</span><span class="c1"># MPAS-Analysis</span>
+<span class="linenos">104</span><span class="k">[mpas_analysis]</span>
+<span class="linenos">105</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="linenos">106</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;24:00:00&quot;</span>
+<span class="linenos">107</span><span class="na">parallelTaskCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">6</span>
+<span class="linenos">108</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1-50&quot;</span><span class="na">, &quot;1-100&quot;,</span>
+<span class="linenos">109</span><span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;11-50&quot;</span><span class="na">, &quot;11-100&quot;,</span>
+<span class="linenos">110</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;21-50&quot;</span><span class="na">, &quot;51-100&quot;,</span>
+<span class="linenos">111</span><span class="na">mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;EC30to60E2r2&quot;</span>
+<span class="linenos">112</span>
+<span class="linenos">113</span><span class="c1"># Global time series plots</span>
+<span class="linenos">114</span><span class="k">[global_time_series]</span>
+<span class="linenos">115</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="linenos">116</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1-100&quot;</span><span class="na">,</span>
+<span class="linenos">117</span><span class="na">ts_num_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">10</span>
+<span class="linenos">118</span><span class="na">figstr</span><span class="o">=</span><span class="s">coupled_v2_test01</span>
+<span class="linenos">119</span><span class="na">moc_file</span><span class="o">=</span><span class="s">mocTimeSeries_0001-0100.nc</span>
+<span class="linenos">120</span><span class="na">experiment_name</span><span class="o">=</span><span class="s">20210122.v2_test01.piControl.chrysalis</span>
+<span class="linenos">121</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1-50&quot;</span><span class="na">, &quot;1-100&quot;,</span>
+<span class="linenos">122</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;21-50&quot;</span><span class="na">, &quot;51-100&quot;,</span>
 </pre></div>
 </div>
 <p>Now we can run <code class="docutils literal notranslate"><span class="pre">zppy</span> <span class="pre">-c</span> <span class="pre">post.mysimulation.cfg</span></code>.</p>
