@@ -960,7 +960,12 @@ else:
    time.sleep(5)
 
 #orgnize diagnostic output
-collect_movs_diags(var_modes,'{{figure_format}}',input_template,out_path)
+collect_movs_diags(
+   var_modes,
+   '{{figure_format}}',
+   input_template,
+   out_path
+)
 
 {%- endif %}
 
