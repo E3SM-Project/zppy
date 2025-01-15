@@ -333,13 +333,14 @@ altobs_dic = { "pr"      : "PRECT",
 
 obs_dic = json.load(open('reference_alias.json'))
 
-#loop each variable and process the data
-for i,var in enumerate(variables):
-  if "_" in var or "-" in var:
-    varin = re.split("_|-", var)[0]
+########################################
+#first loop: link data to work directory
+########################################
+for i,vv in enumerate(variables):
+  if "_" in vv or "-" in vv:
+    varin = re.split("_|-", vv)[0]
   else:
-    varin = var
-
+    varin = vv
   if len(obs_sets) > 1 and len(obs_sets) == len(variables):
     obsid = obs_sets[i]
   else:
@@ -352,38 +353,52 @@ for i,var in enumerate(variables):
     obsstr = obsname
 
   fpaths = sorted(glob.glob(os.path.join(ts_dir_ref_source,obsstr,varin+"_*.nc")))
-  if (len(fpaths) < 1) and (varin in altobs_dic.keys()):
-    #these variables were not included as cmip type
-    varin = altobs_dic[varin]
-    fpaths = sorted(glob.glob(os.path.join(ts_dir_ref_source,obsstr,varin+"_*.nc")))
-
   if (len(fpaths) > 0) and (os.path.exists(fpaths[0])):
-    template = fpaths[0].split("/")[-1]
-    yms = template.split("_")[-2][0:6]
-    yme = template.split("_")[-1][0:6]
-    obs = obsname.replace(".","_")
-    out = os.path.join('${obstmp_dir}',
-                       '{}.{}.{}-{}.nc'.format(
-	                model_name.replace('%(model)',obs),
-                        varin,yms,yme))
-    #rename variable if needed then save file
-    if (varin != var) and ("_" not in var ) and ("-" not in var):
-      ds = xcdat_open(fpaths[0])
-      ds = ds.rename(name_dict={varin:var})
-      ds.to_netcdf(out)
-    elif not os.path.exists(out):
-      os.symlink(fpaths[0],out)
+     template = fpaths[0].split("/")[-1]
+     yms = template.split("_")[-2][0:6]
+     yme = template.split("_")[-1][0:6]
+     obs = obsname.replace(".","_")
+     out = os.path.join(
+          '${obstmp_dir}',
+          '{}.{}.{}-{}.nc'.format(
+           model_name.replace('%(model)',obs),
+           varin,yms,yme)
+     )
+     if not os.path.exists(out):
+        os.symlink(fpaths[0],out)
+  elif varin in altobs_dic.keys():
+    varin1 = altobs_dic[varin]
+    fpaths = sorted(glob.glob(
+        os.path.join(ts_dir_ref_source,obsstr,varin1+"_*.nc"))
+    )
+    if (len(fpaths) > 0) and (os.path.exists(fpaths[0])):
+       template = fpaths[0].split("/")[-1]
+       yms = template.split("_")[-2][0:6]
+       yme = template.split("_")[-1][0:6]
+       obs = obsname.replace(".","_")
+       out = os.path.join(
+          '${obstmp_dir}',
+          '{}.{}.{}-{}.nc'.format(
+           model_name.replace('%(model)',obs),
+           varin,yms,yme)
+       )
+       ds = xcdat_open(fpaths[0])
+       ds = ds.rename(name_dict={varin1:varin})
+       ds.to_netcdf(out)
 
-  #####################################################################
-  #check and process derived quantities
-  #note: these quantities are possibly not included as default in cmip
-  if varin in ['rltcre','rstcre']:
-    fpaths = sorted(glob.glob(os.path.join('${obstmp_dir}',"*"+varin+"_*.nc")))
-    if len(fpaths) < 1:
-      if varin == 'rstcre':
-        derive_var('${obstmp_dir}',varin,{'rsutcs':1,'rsut':-1},model_name)
-      elif varin == 'rltcre':
-        derive_var('${obstmp_dir}',varin,{'rlutcs':1,'rlut':-1},model_name)
+#####################################################################
+#second loop: check and process derived quantities
+#note: these quantities are possibly not included as default in cmip
+#####################################################################
+for vv in enumerate(variables):
+    if vv in ['rltcre','rstcre']:
+       fpaths = sorted(glob.glob(
+          os.path.join('${obstmp_dir}',"*"+vv+"_*.nc"))
+       )
+       if (len(fpaths) < 1) and (vv == 'rstcre'):
+          derive_var('${obstmp_dir}',vv,{'rsutcs':1,'rsut':-1},model_name)
+       elif (len(fpaths) < 1) and (vv == 'rltcre'):
+          derive_var('${obstmp_dir}',vv,{'rlutcs':1,'rlut':-1},model_name)
 
 EOF
 ###################
@@ -870,7 +885,7 @@ if return_code != 0:
 else:
    print("successfully finish all jobs....")
    #time delay to ensure process completely finished
-   time.sleep(60)
+   time.sleep(5)
 
 #orgnize diagnostic output
 collect_clim_diags(
@@ -902,30 +917,30 @@ reftyre = int(str(obs_dic[varOBS][refname]['yymme'])[0:4])
 
 lstcmd = []
 for var_mode in var_modes:
-   if var_mode in ["NPO", "NPGO", "PSA1"]:
+    if var_mode in ["NPO", "NPGO", "PSA1"]:
       eofn_obs = "2"
       eofn_mod = "2"
-   elif var_mode in ["PSA2"]:
+    elif var_mode in ["PSA2"]:
       eofn_obs = "3"
       eofn_mod = "3"
-   else:
+    else:
       eofn_obs = "1"
       eofn_mod = "1"
-   ##############################################
-   cmd = (" ".join([
-            'variability_modes_driver.py',
-            '-p parameterfile.py'        ,
-            '--variability_mode'         , '{}'.format(var_mode),
-            '--eofn_mod'                 , '{}'.format(eofn_mod),
-            '--eofn_obs'                 , '{}'.format(eofn_obs),
-            '--varOBS'                   , '{}'.format(varOBS),
-            '--osyear'                   , '{}'.format(reftyrs),
-            '--oeyear'                   , '{}'.format(reftyre),
-            '--reference_data_name'      , '{}'.format(refname),
-            '--reference_data_path'      , '{}'.format(refpath),
-            '--case_id'                  , '{}'.format('${case_id}')
-            ]))
-   lstcmd.append(cmd); del(cmd)
+    ##############################################
+    lstcmd.append(
+        " ".join([
+           'variability_modes_driver.py', ' -p parameterfile.py',
+           '--variability_mode'         , '{}'.format(var_mode),
+           '--eofn_mod'                 , '{}'.format(eofn_mod),
+           '--eofn_obs'                 , '{}'.format(eofn_obs),
+           '--varOBS'                   , '{}'.format(varOBS),
+           '--osyear'                   , '{}'.format(reftyrs),
+           '--oeyear'                   , '{}'.format(reftyre),
+           '--reference_data_name'      , '{}'.format(refname),
+           '--reference_data_path'      , '{}'.format(refpath),
+           '--case_id'                  , '{}'.format('${case_id}')
+        ])
+    )
 
 if (len(lstcmd) > 0 ) and multiprocessing:
    print("Parallel computing with {} jobs".format(str(len(lstcmd))))
@@ -965,13 +980,13 @@ print("calculate enso metrics")
 enso_groups = '{{ enso_groups }}'.split(",")
 lstcmd = []
 for metricsCollection in enso_groups:
-    cmd = (" ".join([
-             'enso_driver.py     ',
-             '-p parameterfile.py',
-             '--metricsCollection', '{}'.format(metricsCollection),
-             '--case_id'          , '{}'.format('${case_id}')
-          ]))
-    lstcmd.append(cmd); del(cmd)
+    lstcmd.append(
+        " ".join([
+           'enso_driver.py     ', ' -p parameterfile.py',
+           '--metricsCollection', '{}'.format(metricsCollection),
+           '--case_id'          , '{}'.format('${case_id}')
+        ])
+    )
 
 if (len(lstcmd) > 0 ) and multiprocessing:
    print("Parallel computing with {} jobs".format(str(len(lstcmd))))
@@ -993,8 +1008,10 @@ else:
 #organize diagnostic output
 obs_dict = json.load(open('obs_catalogue.json'))
 obs_name = list(obs_dict.keys())[0]
-collect_enso_diags(enso_groups,'{{figure_format}}',
-                   obs_name,input_template,out_path)
+collect_enso_diags(
+     enso_groups,'{{figure_format}}',
+     obs_name,input_template,out_path
+)
 
 {%- endif %}
 
