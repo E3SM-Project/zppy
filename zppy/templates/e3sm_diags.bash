@@ -67,48 +67,6 @@ create_links_climo_diurnal()
   cd ..
 }
 
-create_links_ts()
-{
-  ts_dir_source=$1
-  ts_dir_destination=$2
-  begin_year=$3
-  end_year=$4
-  error_num=$5
-  # Create xml files for time series variables
-  mkdir -p ${ts_dir_destination}
-  cd ${ts_dir_destination}
-  # https://stackoverflow.com/questions/27702452/loop-through-a-comma-separated-shell-variable
-  variables="{{ vars }}"
-  for v in ${variables//,/ }
-  do
-    # Go through the time series files for between year1 and year2, using a step size equal to the number of years per time series file
-    for year in `seq ${begin_year} {{ ts_num_years }} ${end_year}`;
-    do
-      YYYY=`printf "%04d" ${year}`
-      for file in ${ts_dir_source}/${v}_${YYYY}*.nc
-      do
-        cp ${file} ${ts_dir_destination}/${v}_${YYYY}*.nc
-      done
-    done
-  done
-  cd ..
-}
-
-create_links_ts_rof()
-{
-  ts_rof_dir_source=$1
-  ts_rof_dir_destination=$2
-  begin_year=$3
-  end_year=$4
-  error_num=$5
-  mkdir -p ${ts_rof_dir_destination}
-  cd ${ts_rof_dir_destination}
-  v="RIVER_DISCHARGE_OVER_LAND_LIQ"
-  cp ${ts_rof_dir_source}/${v}_*.nc ${v}_*.nc
-  cd ..
-}
-
-
 {%- if ("lat_lon_land" in sets) %}
 {% if run_type == "model_vs_obs" %}
 climo_dir_primary_land=climo_land
@@ -162,18 +120,10 @@ create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_ref} 
 {%- endif %}
 
 {%- if ("enso_diags" in sets) or ("qbo" in sets) or ("area_mean_time_series" in sets) %}
-{% if run_type == "model_vs_obs" %}
-ts_dir_primary=ts
-{% elif run_type == "model_vs_model" %}
-ts_dir_primary=ts_test
-{%- endif %}
 # Create xml files for time series variables
-ts_dir_source={{ output }}/post/atm/{{ grid }}/ts/monthly/{{ '%dyr' % (ts_num_years) }}
-create_links_ts ${ts_dir_source} ${ts_dir_primary} ${Y1} ${Y2} 5
+ts_dir_primary={{ output }}/post/atm/{{ grid }}/ts/monthly/{{ '%dyr' % (ts_num_years) }}
 {% if run_type == "model_vs_model" %}
-ts_dir_source={{ reference_data_path_ts }}/{{ ts_num_years_ref }}yr
-ts_dir_ref=ts_ref
-create_links_ts ${ts_dir_source} ${ts_dir_ref} ${ref_Y1} ${ref_Y2} 6
+ts_dir_ref={{ reference_data_path_ts }}/{{ ts_num_years_ref }}yr
 {%- endif %}
 {%- endif %}
 
@@ -185,17 +135,9 @@ ts_daily_dir_ref={{ reference_data_path_ts_daily }}/{{ ts_num_years_ref }}yr
 {%- endif %}
 
 {%- if "streamflow" in sets %}
-{% if run_type == "model_vs_obs" %}
-ts_rof_dir_primary=rof
-{% elif run_type == "model_vs_model" %}
-ts_rof_dir_primary=rof_test
-{%- endif %}
-ts_rof_dir_source="{{ output }}/post/rof/native/ts/monthly/{{ ts_num_years }}yr"
-create_links_ts_rof ${ts_rof_dir_source} ${ts_rof_dir_primary} ${Y1} ${Y2} 7
+ts_rof_dir_primary="{{ output }}/post/rof/native/ts/monthly/{{ ts_num_years }}yr"
 {% if run_type == "model_vs_model" %}
-ts_rof_dir_source={{ reference_data_path_ts_rof }}/{{ ts_num_years_ref }}yr
-ts_rof_dir_ref=ts_rof_ref
-create_links_ts_rof ${ts_rof_dir_source} ${ts_rof_dir_ref} ${ref_Y1} ${ref_Y2} 8
+ts_rof_dir_ref={{ reference_data_path_ts_rof }}/{{ ts_num_years_ref }}yr
 {%- endif %}
 {%- endif %}
 
