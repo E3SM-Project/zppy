@@ -1,5 +1,6 @@
 {% set name = "zppy" %}
 {% set version = "3.0.0rc1" %}
+{% set python_min = "3.9" %}
 
 package:
   name: {{ name|lower }}
@@ -11,17 +12,16 @@ source:
 
 build:
   number: 0
-  script: "{{ PYTHON }} -m pip install . --no-deps -vv"
+  script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
   noarch: python
-  entry_points:
-    - zppy = zppy.__main__:main
 
 requirements:
   host:
-    - python >=3.9
+    - python {{ python_min }}
     - pip
+    - setuptools
   run:
-    - python >=3.9
+    - python >={{ python_min }}
     - configobj >=5.0.0,<6.0.0
     - jinja2 >=2.0.0
     - mache >=1.3.2
@@ -29,6 +29,7 @@ requirements:
 
 test:
   requires:
+    - python {{ python_min }}
     - pip
   imports:
     - zppy
