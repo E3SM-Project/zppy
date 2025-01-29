@@ -174,7 +174,8 @@ def get_chyrsalis_expansions(config):
         "partition_short": "debug",
         "qos_long": "regular",
         "qos_short": "regular",
-        "user_input": "/lcrc/group/e3sm/ac.forsyth2/",
+        "user_input_v2": "/lcrc/group/e3sm/ac.forsyth2/",
+        "user_input_v3": "/lcrc/group/e3sm2/ac.wlin/",
         "user_output": f"/lcrc/group/e3sm/{username}/",
         "user_www": f"{web_base_path}/{username}/",
     }
@@ -202,7 +203,8 @@ def get_compy_expansions(config):
         "partition_short": "short",
         "qos_long": "regular",
         "qos_short": "regular",
-        "user_input": "/compyfs/fors729/",
+        "user_input_v2": "/compyfs/fors729/",
+        "user_input_v3": "/compyfs/fors729/",
         "user_output": f"/compyfs/{username}/",
         "user_www": f"{web_base_path}/{username}/",
     }
@@ -231,7 +233,8 @@ def get_perlmutter_expansions(config):
         "qos_long": "regular",
         "qos_short": "regular",  # debug walltime too short?
         # Use CFS for large datasets
-        "user_input": "/global/cfs/cdirs/e3sm/forsyth/",
+        "user_input_v2": "/global/cfs/cdirs/e3sm/forsyth/",
+        "user_input_v3": "/global/cfs/cdirs/e3sm/forsyth/",
         "user_output": f"/global/cfs/cdirs/e3sm/{username}/",
         "user_www": f"{web_base_path}/{username}/",
     }
@@ -280,7 +283,13 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     )
     expansions = get_expansions()
     if unified_testing:
+        expansions["diags_environment_commands"] = expansions[
+            "environment_commands_test"
+        ]
         expansions["environment_commands"] = expansions["environment_commands_test"]
+        expansions["global_time_series_environment_commands"] = expansions[
+            "environment_commands_test"
+        ]
     else:
         # The cfg doesn't need this line,
         # but it would be difficult to only write environment_commands in the unified_testing case.
