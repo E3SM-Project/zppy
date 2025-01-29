@@ -1,5 +1,5 @@
 {% set name = "zppy" %}
-{% set version = "3.0.0rc1" %}
+{% set version = "3.0.0rc2" %}
 {% set python_min = "3.9" %}
 
 package:
