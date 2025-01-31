@@ -287,8 +287,8 @@ params.append(enso_param)
 trop_param = TropicalSubseasonalParameter()
 trop_param.test_data_path = '${ts_daily_dir}'
 trop_param.test_name = short_name
-trop_param.test_start_yr = f'{start_yr:04}'
-trop_param.test_end_yr = f'{end_yr:04}'
+trop_param.test_start_yr = start_yr
+trop_param.test_end_yr = end_yr
 {% if run_type == "model_vs_obs" %}
 # Obs
 trop_param.reference_data_path = '{{ obs_ts }}'
@@ -298,10 +298,8 @@ trop_param.ref_end_yr = 2010
 trop_param.reference_data_path = '${ts_daily_dir_ref}'
 trop_param.ref_name = '${ref_name}'
 trop_param.short_ref_name = '{{ short_ref_name }}'
-ref_start_yr = {{ ref_start_yr }}
-ref_end_yr = {{ ref_end_yr }}
-trop_param.ref_start_yr = f'{ref_start_yr:04}'
-trop_param.ref_end_yr = f'{ref_end_yr:04}'
+trop_param.ref_start_yr = '{{ ref_start_yr }}'
+trop_param.ref_end_yr = '{{ ref_final_yr }}'
 # Optionally, swap test and reference model
 if {{ swap_test_ref }}:
    trop_param.test_data_path, trop_param.reference_data_path = trop_param.reference_data_path, trop_param.test_data_path
