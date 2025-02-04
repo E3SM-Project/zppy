@@ -74,13 +74,13 @@ climo_dir_primary_land=climo_land
 climo_dir_primary_land=climo_test_land
 {%- endif %}
 # Create local links to input climo files
-climo_dir_source={{ output }}/post/lnd/{{ grid }}/clim/{{ '%dyr' % (year2-year1+1) }}
-create_links_climo ${climo_dir_source} ${climo_dir_primary_land} ${case} ${Y1} ${Y2} 1
+climo_dir_source_lnd_obs={{ output }}/post/lnd/{{ grid }}/clim/{{ '%dyr' % (year2-year1+1) }}
+create_links_climo ${climo_dir_source_lnd_obs} ${climo_dir_primary_land} ${case} ${Y1} ${Y2} 1
 {% if run_type == "model_vs_model" %}
 # Create local links to input climo files (ref model)
-climo_dir_source={{ reference_data_path }}/{{ '%dyr' % (ref_year2-ref_year1+1) }}
+climo_dir_source_lnd_ref={{ reference_data_path }}/{{ '%dyr' % (ref_year2-ref_year1+1) }}
 climo_dir_ref_land=climo_ref_land
-create_links_climo ${climo_dir_source} ${climo_dir_ref_land} {{ ref_name }} ${ref_Y1} ${ref_Y2} 2
+create_links_climo ${climo_dir_source_lnd_ref} ${climo_dir_ref_land} {{ ref_name }} ${ref_Y1} ${ref_Y2} 2
 {%- endif %}
 {%- endif %}
 
@@ -91,13 +91,13 @@ climo_dir_primary=climo
 climo_dir_primary=climo_test
 {%- endif %}
 # Create local links to input climo files
-climo_dir_source={{ output }}/post/atm/{{ grid }}/clim/{{ '%dyr' % (year2-year1+1) }}
-create_links_climo ${climo_dir_source} ${climo_dir_primary} ${case} ${Y1} ${Y2} 1
+climo_dir_source_atm_obs={{ output }}/post/atm/{{ grid }}/clim/{{ '%dyr' % (year2-year1+1) }}
+create_links_climo ${climo_dir_source_atm_obs} ${climo_dir_primary} ${case} ${Y1} ${Y2} 1
 {% if run_type == "model_vs_model" %}
 # Create local links to input climo files (ref model)
-climo_dir_source={{ reference_data_path }}/{{ '%dyr' % (ref_year2-ref_year1+1) }}
+climo_dir_source_atm_ref={{ reference_data_path }}/{{ '%dyr' % (ref_year2-ref_year1+1) }}
 climo_dir_ref=climo_ref
-create_links_climo ${climo_dir_source} ${climo_dir_ref} {{ ref_name }} ${ref_Y1} ${ref_Y2} 2
+create_links_climo ${climo_dir_source_atm_ref} ${climo_dir_ref} {{ ref_name }} ${ref_Y1} ${ref_Y2} 2
 {%- endif %}
 {%- endif %}
 
@@ -109,13 +109,13 @@ climo_diurnal_dir_primary=climo_{{ climo_diurnal_frequency }}
 climo_diurnal_dir_primary=climo_{{ climo_diurnal_frequency }}_test
 {%- endif %}
 # Create local links to input diurnal cycle climo files
-climo_diurnal_dir_source={{ output }}/post/atm/{{ grid }}/clim_{{ climo_diurnal_frequency }}/{{ '%dyr' % (year2-year1+1) }}
-create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_primary} ${case} ${Y1} ${Y2} 3
+climo_diurnal_dir_source_obs={{ output }}/post/atm/{{ grid }}/clim_{{ climo_diurnal_frequency }}/{{ '%dyr' % (year2-year1+1) }}
+create_links_climo_diurnal ${climo_diurnal_dir_source_obs} ${climo_diurnal_dir_primary} ${case} ${Y1} ${Y2} 3
 {% if run_type == "model_vs_model" %}
 # Create local links to input climo files (ref model)
-climo_diurnal_dir_source={{ reference_data_path_climo_diurnal }}/{{ '%dyr' % (ref_year2-ref_year1+1) }}
+climo_diurnal_dir_source_ref={{ reference_data_path_climo_diurnal }}/{{ '%dyr' % (ref_year2-ref_year1+1) }}
 climo_diurnal_dir_ref=climo_diurnal_ref
-create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_ref} {{ ref_name }} ${ref_Y1} ${ref_Y2} 4
+create_links_climo_diurnal ${climo_diurnal_dir_source_ref} ${climo_diurnal_dir_ref} {{ ref_name }} ${ref_Y1} ${ref_Y2} 4
 {%- endif %}
 {%- endif %}
 
@@ -155,6 +155,15 @@ echo
 
 # Prepare configuration file
 cat > e3sm.py << EOF
+# Path information:
+# For climo, data is copied from these directories to a local directory
+# climo_dir_source_lnd_obs = ${climo_dir_source_lnd_obs}
+# climo_dir_source_lnd_ref = ${climo_dir_source_lnd_ref}
+# climo_dir_source_atm_obs = ${climo_dir_source_atm_obs}
+# climo_dir_source_atm_ref = ${climo_dir_source_atm_ref}
+# climo_diurnal_dir_source_obs = ${climo_diurnal_dir_source_obs}
+# climo_diurnal_dir_source_ref = ${climo_diurnal_dir_source_ref}
+# For ts, data is used directly from original directories
 import os
 import numpy
 {%- if "area_mean_time_series" in sets %}
