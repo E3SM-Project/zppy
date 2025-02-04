@@ -283,13 +283,16 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     )
     expansions = get_expansions()
     if unified_testing:
-        expansions["diags_environment_commands"] = expansions[
-            "environment_commands_test"
-        ]
         expansions["environment_commands"] = expansions["environment_commands_test"]
-        expansions["global_time_series_environment_commands"] = expansions[
-            "environment_commands_test"
-        ]
+        # Use Unified for e3sm_diags and global_time_series unless we specify otherwise
+        if expansions["diags_environment_commands"] == "":
+            expansions["diags_environment_commands"] = expansions[
+                "environment_commands_test"
+            ]
+        if expansions["global_time_series_environment_commands"] == "":
+            expansions["global_time_series_environment_commands"] = expansions[
+                "environment_commands_test"
+            ]
     else:
         # The cfg doesn't need this line,
         # but it would be difficult to only write environment_commands in the unified_testing case.
