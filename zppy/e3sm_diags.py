@@ -110,9 +110,9 @@ def check_parameters_for_bash(c: Dict[str, Any]) -> None:
 
 def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
     # Check mvm-specific parameters that aren't used until e3sm_diags.bash is run.
-    check_parameter_defined(c, "diff_title")
-    check_parameter_defined(c, "ref_name")
-    check_parameter_defined(c, "short_ref_name")
+    check_parameter_defined(c, "diff_title", "mvm requires it.")
+    check_parameter_defined(c, "ref_name", "mvm requires it.")
+    check_parameter_defined(c, "short_ref_name", "mvm requires it.")
 
     check_required_parameters(
         c,
@@ -258,7 +258,9 @@ def add_climo_dependencies(
             os.path.join(script_dir, f"climo_{climo_sub}{status_suffix}"),
         )
     if "diurnal_cycle" in c["sets"]:
-        check_parameter_defined(c, "climo_diurnal_subsection")
+        check_parameter_defined(
+            c, "climo_diurnal_subsection", "the set `diurnal_cycle` requires it."
+        )
         dependencies.append(
             os.path.join(
                 script_dir, f"climo_{c['climo_diurnal_subsection']}{status_suffix}"
