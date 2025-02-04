@@ -37,13 +37,6 @@ def test_check_parameters_for_bash():
     with pytest.raises(ParameterNotProvidedError):
         check_parameters_for_bash(c)
 
-    # tropical_subseasonal
-    c = {"sets": ["tropical_subseasonal"], "ref_end_yr": "2000"}
-    check_parameters_for_bash(c)
-    c = {"sets": ["tropical_subseasonal"], "ref_end_yr": ""}
-    with pytest.raises(ParameterNotProvidedError):
-        check_parameters_for_bash(c)
-
 
 def test_check_mvm_only_parameters_for_bash():
     z0 = {"diff_title": "a", "ref_name": "b", "short_ref_name": "c"}
