@@ -103,7 +103,6 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
 
 def check_parameters_for_bash(c: Dict[str, Any]) -> None:
     # Check parameters that aren't used until e3sm_diags.bash is run
-    check_required_parameters(c, set(["tropical_subseasonal"]), "ref_end_yr")
     check_required_parameters(c, set(["qbo"]), "ref_final_yr")
     check_required_parameters(c, set(["enso_diags", "qbo"]), "ref_start_yr")
     check_required_parameters(c, set(["diurnal_cycle"]), "climo_diurnal_frequency")
