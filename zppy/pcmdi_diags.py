@@ -34,7 +34,11 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
     # --- Generate and submit pcmdi_diags scripts ---
     for c in tasks:
         dependencies: List[str] = []
+        c["sub"] = define_or_guess(
+            c, "subsection", "sub", ParameterGuessType.SECTION_GUESS
+        )
         check_parameters_for_bash(c)
+
         c["scriptDir"] = script_dir
         if "ts_num_years" in c.keys():
             c["ts_num_years"] = int(c["ts_num_years"])
@@ -53,7 +57,8 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
             ref_year_sets = get_years(c["ref_years"])
         else:
             ref_year_sets = year_sets
-        for s, rs in zip(year_sets, ref_year_sets):
+
+        for i, (s, rs) in enumerate(zip(year_sets, ref_year_sets)):
             c["year1"] = s[0]
             c["year2"] = s[1]
             if ("last_year" in c.keys()) and (c["year2"] > c["last_year"]):
@@ -62,7 +67,11 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
             c["ref_year1"] = rs[0]
             c["ref_year2"] = rs[1]
 
-            check_and_define_parameters(c)
+            if c["sub"] != "synthetic_plots":
+                check_and_define_parameters(c)
+            else:
+                c["prefix"] = f"pcmdi_diags_{c['sub']}_{c['tag']}"
+
             bash_file, settings_file, status_file = get_file_names(
                 script_dir, c["prefix"]
             )
@@ -81,10 +90,14 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
                 for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
                     add_ts_dependencies(c, dependencies, script_dir, yr)
 
-            add_pcmdi_dependencies(c, dependencies, script_dir)
+            if c["sub"] == "synthetic_plots":
+                add_pcmdi_dependencies(c, dependencies, script_dir)
+                if i < len(year_sets) - 1:
+                    continue
 
             c["dependencies"] = dependencies
             write_settings_file(settings_file, c, s)
+
             export = "ALL"
             existing_bundles = handle_bundles(
                 c,
@@ -106,7 +119,6 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
                     )
                 else:
                     print(f"...adding to bundle {c['bundle']}")
-
             print(f"   environment_commands={c['environment_commands']}")
             print_url(c, "pcmdi_diags")
 
@@ -114,22 +126,33 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
 
 def check_parameters_for_bash(c: Dict[str, Any]) -> None:
-    check_required_parameters(
-        c,
-        set(["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]),
-        "ref_final_yr",
-    )
-    check_required_parameters(
-        c, set(["variability_mode_cpl", "variability_mode_atm", "enso"]), "ref_start_yr"
-    )
-    check_required_parameters(
-        c, set(["variability_mode_cpl", "variability_mode_atm", "enso"]), "ref_end_yr"
-    )
+    if c["sub"] != "synthetic_plots":
+        check_required_parameters(
+            c,
+            set(
+                ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
+            ),
+            "ref_final_yr",
+        )
+        check_required_parameters(
+            c,
+            set(
+                ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
+            ),
+            "ref_start_yr",
+        )
+        check_required_parameters(
+            c,
+            set(
+                ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
+            ),
+            "ref_end_yr",
+        )
 
 
 def check_parameters_for_pcmdi(c: Dict[str, Any]) -> None:
     # check and set up the external data needed by pcmdi
-    if set(["synthetic_plots"]) & set(c["sets"]):
+    if c["sub"] == "synthetic_plots":
         define_or_guess2(
             c,
             "cmip_enso_dir",
@@ -154,28 +177,27 @@ def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
     check_parameter_defined(c, "diff_title")
     check_parameter_defined(c, "ref_name")
     check_parameter_defined(c, "short_ref_name")
-
-    check_required_parameters(
-        c,
-        set(["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]),
-        "ref_start_yr",
-    )
-    ts_sets = set(
-        [
-            "mean_climate",
-            "variability_mode_cpl",
-            "variability_mode_atm",
-            "enso",
-        ]
-    )
-    check_required_parameters(c, ts_sets, "ts_num_years_ref")
-    check_required_parameters(c, ts_sets, "ts_subsection")
+    if c["sub"] != "synthetic_plots":
+        check_required_parameters(
+            c,
+            set(
+                ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
+            ),
+            "ref_start_yr",
+        )
+        ts_sets = set(
+            [
+                "mean_climate",
+                "variability_mode_cpl",
+                "variability_mode_atm",
+                "enso",
+            ]
+        )
+        check_required_parameters(c, ts_sets, "ts_num_years_ref")
+        check_required_parameters(c, ts_sets, "ts_subsection")
 
 
 def check_and_define_parameters(c: Dict[str, Any]) -> None:
-    c["sub"] = define_or_guess(
-        c, "subsection", "grid", ParameterGuessType.SECTION_GUESS
-    )
     # TODO: do this based on sets, rather than by relying on the user setting ts_num_years
     if "ts_num_years" in c.keys():
         define_or_guess2(
@@ -187,7 +209,6 @@ def check_and_define_parameters(c: Dict[str, Any]) -> None:
     prefix: str
     if c["run_type"] == "model_vs_obs":
         prefix = f"pcmdi_diags_{c['sub']}_{c['tag']}_{c['year1']:04d}-{c['year2']:04d}"
-
     elif c["run_type"] == "model_vs_model":
         check_mvm_only_parameters_for_bash(c)
         prefix = f"pcmdi_diags_{c['sub']}_{c['tag']}_{c['year1']:04d}-{c['year2']:04d}_vs_{c['ref_year1']:04d}-{c['ref_year2']:04d}"
@@ -230,36 +251,35 @@ def add_ts_dependencies(
 def add_pcmdi_dependencies(
     c: Dict[str, Any], dependencies: List[str], script_dir: str
 ) -> None:
-    pcmdi_sub = define_or_guess(
-        c, "pcmdi_diags", "sub", ParameterGuessType.SECTION_GUESS
-    )
-    status_suffix: str = f"_{c['year1']:04d}-{c['year2']:04d}.status"
-    if "synthetic_plots" in pcmdi_sub:
-        check_parameter_defined(c, "run_type")
-        if "mean_climate" in c["sets"]:
-            dependencies.append(
-                os.path.join(
-                    script_dir,
-                    f"pcmdi_diags_mean_climate_{c['run_type']}{status_suffix}",
-                )
-            )
-        if "variability_mode_cpl" in c["sets"]:
-            dependencies.append(
-                os.path.join(
-                    script_dir,
-                    f"pcmdi_diags_variability_mode_cpl_{c['run_type']}{status_suffix}",
-                )
-            )
-        if "variability_mode_atm" in c["sets"]:
-            dependencies.append(
-                os.path.join(
-                    script_dir,
-                    f"pcmdi_diags_variability_mode_atm_{c['run_type']}{status_suffix}",
-                )
-            )
-        if "enso" in c["sets"]:
-            dependencies.append(
-                os.path.join(
-                    script_dir, f"pcmdi_diags_enso_{c['run_type']}{status_suffix}"
-                )
-            )
+    check_parameter_defined(c, "run_type")
+    if c["run_type"] == "model_vs_obs":
+        status_suffix = f"_{c['year1']:04d}-{c['year2']:04d}"
+    elif c["run_type"] == "model_vs_model":
+        status_suffix = f"_{c['year1']:04d}-{c['year2']:04d}_vs_{c['ref_year1']:04d}-{c['ref_year2']:04d}"
+    if "mean_climate" in c["sets"]:
+        status_file = os.path.join(
+            script_dir,
+            f"pcmdi_diags_mean_climate_{c['run_type']}{status_suffix}.status",
+        )
+        if os.path.exists(status_file):
+            dependencies.append(status_file)
+    if "variability_modes_cpl" in c["sets"]:
+        status_file = os.path.join(
+            script_dir,
+            f"pcmdi_diags_variability_modes_cpl_{c['run_type']}{status_suffix}.status",
+        )
+        if os.path.exists(status_file):
+            dependencies.append(status_file)
+    if "variability_modes_atm" in c["sets"]:
+        status_file = os.path.join(
+            script_dir,
+            f"pcmdi_diags_variability_modes_atm_{c['run_type']}{status_suffix}.status",
+        )
+        if os.path.exists(status_file):
+            dependencies.append(status_file)
+    if "enso" in c["sets"]:
+        status_file = os.path.join(
+            script_dir, f"pcmdi_diags_enso_{c['run_type']}{status_suffix}.status"
+        )
+        if os.path.exists(status_file):
+            dependencies.append(status_file)

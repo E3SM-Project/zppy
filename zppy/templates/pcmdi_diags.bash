@@ -28,6 +28,7 @@ echo "RUNNING ${id}" > {{ prefix }}.status
 # Basic definitions
 case="{{ case }}"
 www="{{ www }}"
+{% if "synthetic_plots" not in subsection %}
 y1={{ year1 }}
 y2={{ year2 }}
 Y1="{{ '%04d' % (year1) }}"
@@ -36,10 +37,11 @@ Y2="{{ '%04d' % (year2) }}"
 ref_Y1="{{ '%04d' % (ref_year1) }}"
 ref_Y2="{{ '%04d' % (ref_year2) }}"
 {%- endif %}
+{%- endif %}
 run_type="{{ run_type }}"
 tag="{{ tag }}"
 
-results_dir=${tag}_${Y1}-${Y2}
+results_dir=${tag} #_${Y1}-${Y2}
 
 ref_name={{ ref_name }}
 
@@ -231,8 +233,8 @@ create_links_ts_obs()
   do
     fname=`basename $file`
     PREFIX=${fname: :-17}
-    YYYYS=${fname: -16:-10}
-    YYYYE=${fname: -9:-3}
+    YYYYS=${fname: -16:-12}
+    YYYYE=${fname: -9:-5}
     if [[ ${YYYYS} < ${begin_year} ]];then
       YYYYS=${begin_year}
     fi
@@ -742,17 +744,18 @@ from pcmdi_zppy_util import(
     variability_modes_plot_driver,
 )
 
-##############################
-start_yr = int('${Y1}')
-end_yr = int('${Y2}')
-num_years = end_yr - start_yr + 1
-
 #parallel calculation
 num_workers = {{ num_workers }}
 if num_workers < 2:
   multiprocessing = False
 else:
   multiprocessing = {{multiprocessing}}
+
+{%- if "synthetic_plots" not in subsection %}
+##############################
+start_yr = int('${Y1}')
+end_yr = int('${Y2}')
+num_years = end_yr - start_yr + 1
 
 # DATA LOCATION: Reference
 {%- if "mean_climate" in subsection %}
@@ -770,7 +773,6 @@ reference_data_set = '{{ obs_sets }}'.split(",")
 reference_data_set = ['${model_name_ref}'.split(".")[1]]
 {%- endif %}
 
-{%- if "synthetic_plots" not in subsection %}
 variables = '{{ vars }}'.split(",")
 ###############################################################
 #check and process derived quantities, these quantities are
@@ -834,18 +836,17 @@ input_template = os.path.join(
     '%(metric_type)',
     '${model_name}'.split(".")[0],
     '${model_name}'.split(".")[1],
-    '${case_id}')
+    '${case_id}'
+)
 
 out_path = os.path.join(
     '${results_dir}',
-    '%(group_type)')
+    '%(group_type)'
+)
 
 {%- endif %}
 
 {%- if "mean_climate" in subsection %}
-####################################################
-# call pcmdi mean climate diagnostics
-####################################################
 regions = '{{regions}}'.split(",")
 
 #assiagn region to each variable
@@ -870,6 +871,9 @@ for var in variables:
                    ])
       )
 
+####################################################
+# call pcmdi mean climate diagnostics
+####################################################
 if (len(lstcmd) > 0 ) and multiprocessing:
    print("Parallel computing with {} jobs".format(str(len(lstcmd))))
    stdout,stderr,return_code = parallel_jobs(lstcmd,num_workers)
@@ -889,8 +893,12 @@ else:
 
 #orgnize diagnostic output
 collect_clim_diags(
-   regions,variables,'{{figure_format}}',
-   input_template,out_path
+   regions,variables,
+   '{{figure_format}}',
+   '${model_name}',
+   '${case_id}',
+   input_template,
+   out_path
 )
 
 {%- endif %}
@@ -963,6 +971,8 @@ else:
 collect_movs_diags(
    var_modes,
    '{{figure_format}}',
+   '${model_name}',
+   '${case_id}',
    input_template,
    out_path
 )
@@ -1014,8 +1024,13 @@ else:
 obs_dict = json.load(open('obs_catalogue.json'))
 obs_name = list(obs_dict.keys())[0]
 collect_enso_diags(
-     enso_groups,'{{figure_format}}',
-     obs_name,input_template,out_path
+     enso_groups,
+     '{{figure_format}}',
+     obs_name,
+     '${model_name}',
+     '${case_id}',
+     input_template,
+     out_path
 )
 
 {%- endif %}
