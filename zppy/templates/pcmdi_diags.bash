@@ -895,7 +895,10 @@ else:
 collect_clim_diags(
    regions,variables,
    '{{figure_format}}',
-   '${model_name}',
+   '${model_name}'.split(".")[0],
+   '${model_name}'.split(".")[1],
+   '${model_name}'.split(".")[2],
+   '${model_name}'.split(".")[3],
    '${case_id}',
    input_template,
    out_path
@@ -971,7 +974,10 @@ else:
 collect_movs_diags(
    var_modes,
    '{{figure_format}}',
-   '${model_name}',
+   '${model_name}'.split(".")[0],
+   '${model_name}'.split(".")[1],
+   '${model_name}'.split(".")[2],
+   '${model_name}'.split(".")[3],
    '${case_id}',
    input_template,
    out_path
@@ -1024,13 +1030,16 @@ else:
 obs_dict = json.load(open('obs_catalogue.json'))
 obs_name = list(obs_dict.keys())[0]
 collect_enso_diags(
-     enso_groups,
-     '{{figure_format}}',
-     obs_name,
-     '${model_name}',
-     '${case_id}',
-     input_template,
-     out_path
+    enso_groups,
+   '{{figure_format}}',
+    obs_name,
+   '${model_name}'.split(".")[0],
+   '${model_name}'.split(".")[1],
+   '${model_name}'.split(".")[2],
+   '${model_name}'.split(".")[3],
+   '${case_id}',
+    input_template,
+    out_path
 )
 
 {%- endif %}

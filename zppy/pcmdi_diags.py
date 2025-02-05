@@ -70,7 +70,9 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
             if c["sub"] != "synthetic_plots":
                 check_and_define_parameters(c)
             else:
-                c["prefix"] = f"pcmdi_diags_{c['sub']}_{c['tag']}"
+                prefix = f"pcmdi_diags_{c['sub']}_{c['tag']}"
+                print(prefix)
+                c["prefix"] = prefix
 
             bash_file, settings_file, status_file = get_file_names(
                 script_dir, c["prefix"]
