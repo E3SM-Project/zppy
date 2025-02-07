@@ -233,6 +233,10 @@ def add_climo_dependencies(
     depend_on_climo: Set[str] = set(
         [
             "lat_lon",
+            # Note: often `lat_lon_land` will require a different climo_subsection
+            # than the other sets (e.g., a climo subsection that includes land).
+            # That means this set will often need to be run as a separate subtask.
+            "lat_lon_land",
             "zonal_mean_xy",
             "zonal_mean_2d",
             "polar",
@@ -258,13 +262,6 @@ def add_climo_dependencies(
         dependencies.append(
             os.path.join(
                 script_dir, f"climo_{c['climo_diurnal_subsection']}{status_suffix}"
-            )
-        )
-    if "lat_lon_land" in c["sets"]:
-        check_parameter_defined(c, "climo_land_subsection")
-        dependencies.append(
-            os.path.join(
-                script_dir, f"climo_{c['climo_land_subsection']}{status_suffix}"
             )
         )
     if "tc_analysis" in c["sets"]:

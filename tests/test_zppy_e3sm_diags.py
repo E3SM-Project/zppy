@@ -483,6 +483,7 @@ def test_add_climo_dependencies():
     base: Dict[str, Any] = {"year1": 1980, "year2": 1990}
     sets = [
         "lat_lon",
+        "lat_lon_land",
         "zonal_mean_xy",
         "zonal_mean_2d",
         "polar",
@@ -504,17 +505,6 @@ def test_add_climo_dependencies():
     add_climo_dependencies(c, dependencies, "script_dir")
     assert dependencies == ["script_dir/climo_cdsub_1980-1990.status"]
     c = {"sets": ["diurnal_cycle"]}
-    c.update(base)
-    dependencies = []
-    with pytest.raises(ParameterNotProvidedError):
-        add_climo_dependencies(c, dependencies, "script_dir")
-
-    c = {"sets": ["lat_lon_land"], "climo_land_subsection": "lndsub"}
-    c.update(base)
-    dependencies = []
-    add_climo_dependencies(c, dependencies, "script_dir")
-    assert dependencies == ["script_dir/climo_lndsub_1980-1990.status"]
-    c = {"sets": ["lat_lon_land"]}
     c.update(base)
     dependencies = []
     with pytest.raises(ParameterNotProvidedError):
