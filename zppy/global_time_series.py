@@ -5,6 +5,7 @@ from zppy.bundle import handle_bundles
 from zppy.logger import _setup_custom_logger
 from zppy.utils import (
     add_dependencies,
+    check_for_deprecated_parameters,
     check_status,
     get_file_names,
     get_tasks,
@@ -31,6 +32,13 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
 
     # --- Generate and submit global_time_series scripts ---
     for c in tasks:
+        deprecated_parameters = [
+            # Removed in https://github.com/E3SM-Project/zppy/pull/654
+            "atmosphere_only",
+            "plot_names",
+        ]
+        check_for_deprecated_parameters(c, deprecated_parameters)
+
         c["ts_num_years"] = int(c["ts_num_years"])
         # Loop over year sets
         year_sets = get_years(c["years"])

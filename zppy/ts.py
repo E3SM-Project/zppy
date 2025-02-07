@@ -5,6 +5,7 @@ from configobj import ConfigObj
 from zppy.bundle import handle_bundles
 from zppy.utils import (
     ParameterGuessType,
+    check_for_deprecated_parameters,
     check_status,
     define_or_guess,
     get_file_names,
@@ -32,6 +33,12 @@ def ts(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
 
     # --- Generate and submit ts scripts ---
     for c in tasks:
+        deprecated_parameters = [
+            # Removed in https://github.com/E3SM-Project/zppy/pull/650
+            "e3sm_to_cmip_environment_commands",
+            "ts_fmt",
+        ]
+        check_for_deprecated_parameters(c, deprecated_parameters)
         set_mapping_file(c)
         set_grid(c)
         set_component_and_prc_typ(c)

@@ -4,6 +4,7 @@ from configobj import ConfigObj
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
+    check_for_deprecated_parameters,
     check_status,
     get_file_names,
     get_tasks,
@@ -27,6 +28,11 @@ def tc_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fi
 
     # --- Generate and submit <task-name> scripts ---
     for c in tasks:
+        deprecated_parameters = [
+            # Removed in https://github.com/E3SM-Project/zppy/pull/654
+            "scratch",
+        ]
+        check_for_deprecated_parameters(c, deprecated_parameters)
 
         dependencies: List[str] = []
 
