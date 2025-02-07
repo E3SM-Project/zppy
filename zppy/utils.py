@@ -233,12 +233,15 @@ def check_required_parameters(
     c: Dict[str, Any], sets_with_requirement: Set[str], relevant_parameter: str
 ) -> None:
     requested_sets = set(c["sets"])
+    intersection = sets_with_requirement & requested_sets
     if (
-        (sets_with_requirement & requested_sets)
+        intersection
         and (relevant_parameter in c.keys())
         and (c[relevant_parameter] == "")
     ):
-        raise ParameterNotProvidedError(relevant_parameter)
+        raise ParameterNotProvidedError(
+            f"{relevant_parameter} is required because the sets {intersection} were requested."
+        )
 
 
 # Return all year sets from a configuration given by a list of strings
@@ -297,7 +300,9 @@ def define_or_guess(
         # so let's make a guess for the value.
         value = c[second_choice_parameter]
     else:
-        raise ParameterNotProvidedError(first_choice_parameter)
+        raise ParameterNotProvidedError(
+            f"{first_choice_parameter} was not provided, and guessing is turned off. Turn on guessing by setting {guess_type_parameter} to True."
+        )
     return value
 
 
@@ -315,12 +320,20 @@ def define_or_guess2(
         if c[guess_type_parameter]:
             c[parameter] = backup_option
         else:
-            raise ParameterNotProvidedError(parameter)
+            raise ParameterNotProvidedError(
+                f"{parameter} was not provided, and guessing is turned off. Turn on guessing by setting {guess_type_parameter} to True."
+            )
 
 
-def check_parameter_defined(c: Dict[str, Any], relevant_parameter: str) -> None:
+def check_parameter_defined(
+    c: Dict[str, Any], relevant_parameter: str, explanation: str = ""
+) -> None:
     if (relevant_parameter not in c.keys()) or (c[relevant_parameter] == ""):
-        raise ParameterNotProvidedError(relevant_parameter)
+        if explanation:
+            message = f"{relevant_parameter} is needed because {explanation}"
+        else:
+            message = f"{relevant_parameter} is not defined."
+        raise ParameterNotProvidedError(message)
 
 
 def get_file_names(script_dir: str, prefix: str):
