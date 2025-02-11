@@ -4,18 +4,19 @@ from configobj import ConfigObj
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
-    ParameterGuessType,
+    ParameterInferenceType,
     ParameterNotProvidedError,
     add_dependencies,
     check_status,
-    define_or_guess,
     get_file_names,
-    get_guess_type_parameter,
+    get_inference_type_parameter,
     get_tasks,
+    get_value_from_parameter,
     get_years,
     initialize_template,
     make_executable,
     set_component_and_prc_typ,
+    set_value_of_parameter_if_undefined,
     submit_script,
     write_settings_file,
 )
@@ -48,8 +49,8 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
             c["scriptDir"] = script_dir
             if "ts_num_years" in c.keys():
                 c["ts_num_years"] = int(c["ts_num_years"])
-            sub: str = define_or_guess(
-                c, "subsection", "grid", ParameterGuessType.SECTION_GUESS
+            sub: str = get_value_from_parameter(
+                c, "subsection", "grid", ParameterInferenceType.SECTION_INFERENCE
             )
             # Run default variables if none are specified
             if c["cmip_vars"] == "":
@@ -72,7 +73,10 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
             with open(bash_file, "w") as f:
                 f.write(template.render(**c))
             make_executable(bash_file)
-            check_and_define_parameters(c, sub)
+            # Default to the name of this task if ts_subsection is not defined
+            set_value_of_parameter_if_undefined(
+                c, "ts_subsection", sub, ParameterInferenceType.SECTION_INFERENCE
+            )
             add_dependencies(
                 dependencies,
                 script_dir,
@@ -139,10 +143,10 @@ def check_parameters_for_bash(c: Dict[str, Any]) -> None:
 def check_and_define_parameters(c: Dict[str, Any], sub: str) -> None:
     parameter = "ts_subsection"
     if (parameter not in c.keys()) or (c[parameter] == ""):
-        guess_type_parameter: str = get_guess_type_parameter(
-            ParameterGuessType.SECTION_GUESS
+        inference_type_parameter: str = get_inference_type_parameter(
+            ParameterInferenceType.SECTION_INFERENCE
         )
-        if c[guess_type_parameter]:
+        if c[inference_type_parameter]:
             if "component" in c.keys():
                 if (
                     (c["component"] == "atm")

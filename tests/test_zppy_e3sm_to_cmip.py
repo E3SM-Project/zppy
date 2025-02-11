@@ -53,14 +53,14 @@ def test_check_parameters_for_bash():
 def test_check_and_define_parameters():
     sub = "name_of_this_subsection"
 
-    # Guess the subsection ####################################################
+    # Infer the subsection ####################################################
     # 1. ts_subsection is set explictily
-    c = {"ts_subsection": "subsection", "guess_section_parameters": True}
+    c = {"ts_subsection": "subsection", "infer_section_parameters": True}
     check_and_define_parameters(c, sub)
     assert c["ts_subsection"] == "subsection"
 
     # 2. ts_subsection is set via sub because it is initially set to the empty string
-    c = {"ts_subsection": "", "guess_section_parameters": True}
+    c = {"ts_subsection": "", "infer_section_parameters": True}
     check_and_define_parameters(c, sub)
     assert c["ts_subsection"] == "name_of_this_subsection"
 
@@ -68,7 +68,7 @@ def test_check_and_define_parameters():
     c = {
         "component": "atm",
         "ts_atm_subsection": "atm_subsection",
-        "guess_section_parameters": True,
+        "infer_section_parameters": True,
     }
     check_and_define_parameters(c, sub)
     assert c["ts_subsection"] == "atm_subsection"
@@ -76,7 +76,7 @@ def test_check_and_define_parameters():
     c = {
         "component": "lnd",
         "ts_land_subsection": "land_subsection",
-        "guess_section_parameters": True,
+        "infer_section_parameters": True,
     }
     check_and_define_parameters(c, sub)
     assert c["ts_subsection"] == "land_subsection"
@@ -85,7 +85,7 @@ def test_check_and_define_parameters():
     c = {
         "component": "atm",
         "ts_land_subsection": "land_subsection",
-        "guess_section_parameters": True,
+        "infer_section_parameters": True,
     }
     check_and_define_parameters(c, sub)
     assert c["ts_subsection"] == "name_of_this_subsection"
@@ -93,45 +93,45 @@ def test_check_and_define_parameters():
     c = {
         "component": "lnd",
         "ts_atm_subsection": "atm_subsection",
-        "guess_section_parameters": True,
+        "infer_section_parameters": True,
     }
     check_and_define_parameters(c, sub)
     assert c["ts_subsection"] == "name_of_this_subsection"
 
     # 7. ts_subsection can't be set via ts_atm_subsection since component isn't specified
-    c = {"ts_atm_subsection": "atm_subsection", "guess_section_parameters": True}
+    c = {"ts_atm_subsection": "atm_subsection", "infer_section_parameters": True}
     check_and_define_parameters(c, sub)
     assert c["ts_subsection"] == "name_of_this_subsection"
     # 8. ts_subsection can't be set via ts_atm_subsection since component isn't specified
-    c = {"ts_land_subsection": "land_subsection", "guess_section_parameters": True}
+    c = {"ts_land_subsection": "land_subsection", "infer_section_parameters": True}
     check_and_define_parameters(c, sub)
     assert c["ts_subsection"] == "name_of_this_subsection"
 
     # 9. ts_subsection is set via sub because it is initially not provided
-    c = {"guess_section_parameters": True}
+    c = {"infer_section_parameters": True}
     check_and_define_parameters(c, sub)
     assert c["ts_subsection"] == "name_of_this_subsection"
 
     # 10. ts_subsection is set via sub because it is initially not provided and component isn't specified (required to use ts_atm_subsection)
-    c = {"ts_atm_subsection": "", "guess_section_parameters": True}
+    c = {"ts_atm_subsection": "", "infer_section_parameters": True}
     check_and_define_parameters(c, sub)
     assert c["ts_subsection"] == "name_of_this_subsection"
 
     # 11. ts_subsection is set via sub because it is initially not provided and component isn't specified (required to use ts_land_subsection)
-    c = {"ts_land_subsection": "", "guess_section_parameters": True}
+    c = {"ts_land_subsection": "", "infer_section_parameters": True}
     check_and_define_parameters(c, sub)
     assert c["ts_subsection"] == "name_of_this_subsection"
 
-    # Don't guess the subsection ##############################################
-    # Repeat above cases, but with guess_section_parameters set to False
+    # Don't infer the subsection ##############################################
+    # Repeat above cases, but with infer_section_parameters set to False
 
     # 1
-    c = {"ts_subsection": "subsection", "guess_section_parameters": False}
+    c = {"ts_subsection": "subsection", "infer_section_parameters": False}
     check_and_define_parameters(c, sub)
     assert c["ts_subsection"] == "subsection"
 
     # 2
-    c = {"ts_subsection": "", "guess_section_parameters": False}
+    c = {"ts_subsection": "", "infer_section_parameters": False}
     with pytest.raises(ParameterNotProvidedError):
         check_and_define_parameters(c, sub)
 
@@ -139,7 +139,7 @@ def test_check_and_define_parameters():
     c = {
         "component": "atm",
         "ts_atm_subsection": "atm_subsection",
-        "guess_section_parameters": False,
+        "infer_section_parameters": False,
     }
     with pytest.raises(ParameterNotProvidedError):
         check_and_define_parameters(c, sub)
@@ -147,7 +147,7 @@ def test_check_and_define_parameters():
     c = {
         "component": "lnd",
         "ts_land_subsection": "land_subsection",
-        "guess_section_parameters": False,
+        "infer_section_parameters": False,
     }
     with pytest.raises(ParameterNotProvidedError):
         check_and_define_parameters(c, sub)
@@ -156,7 +156,7 @@ def test_check_and_define_parameters():
     c = {
         "component": "atm",
         "ts_land_subsection": "land_subsection",
-        "guess_section_parameters": False,
+        "infer_section_parameters": False,
     }
     with pytest.raises(ParameterNotProvidedError):
         check_and_define_parameters(c, sub)
@@ -164,31 +164,31 @@ def test_check_and_define_parameters():
     c = {
         "component": "lnd",
         "ts_atm_subsection": "atm_subsection",
-        "guess_section_parameters": False,
+        "infer_section_parameters": False,
     }
     with pytest.raises(ParameterNotProvidedError):
         check_and_define_parameters(c, sub)
 
     # 7
-    c = {"ts_atm_subsection": "atm_subsection", "guess_section_parameters": False}
+    c = {"ts_atm_subsection": "atm_subsection", "infer_section_parameters": False}
     with pytest.raises(ParameterNotProvidedError):
         check_and_define_parameters(c, sub)
     # 8
-    c = {"ts_land_subsection": "land_subsection", "guess_section_parameters": False}
+    c = {"ts_land_subsection": "land_subsection", "infer_section_parameters": False}
     with pytest.raises(ParameterNotProvidedError):
         check_and_define_parameters(c, sub)
 
     # 9
-    c = {"guess_section_parameters": False}
+    c = {"infer_section_parameters": False}
     with pytest.raises(ParameterNotProvidedError):
         check_and_define_parameters(c, sub)
 
     # 10
-    c = {"ts_atm_subsection": "", "guess_section_parameters": False}
+    c = {"ts_atm_subsection": "", "infer_section_parameters": False}
     with pytest.raises(ParameterNotProvidedError):
         check_and_define_parameters(c, sub)
 
     # 11
-    c = {"ts_land_subsection": "", "guess_section_parameters": False}
+    c = {"ts_land_subsection": "", "infer_section_parameters": False}
     with pytest.raises(ParameterNotProvidedError):
         check_and_define_parameters(c, sub)

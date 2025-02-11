@@ -4,11 +4,11 @@ from configobj import ConfigObj
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
-    ParameterGuessType,
+    ParameterInferenceType,
     check_status,
-    define_or_guess,
     get_file_names,
     get_tasks,
+    get_value_from_parameter,
     get_years,
     initialize_template,
     make_executable,
@@ -43,8 +43,8 @@ def climo(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
             if ("last_year" in c.keys()) and (c["yr_end"] > c["last_year"]):
                 continue  # Skip this year set
             c["scriptDir"] = script_dir
-            sub: str = define_or_guess(
-                c, "subsection", "grid", ParameterGuessType.SECTION_GUESS
+            sub: str = get_value_from_parameter(
+                c, "subsection", "grid", ParameterInferenceType.SECTION_INFERENCE
             )
             prefix: str = f"climo_{sub}_{c['yr_start']:04d}-{c['yr_end']:04d}"
             print(prefix)
