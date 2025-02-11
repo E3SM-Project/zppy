@@ -3,21 +3,19 @@ from typing import List
 import pytest
 
 from zppy.utils import (
-    ParameterGuessType,
+    ParameterInferenceType,
     ParameterNotProvidedError,
     add_dependencies,
-    check_parameter_defined,
-    check_required_parameters,
-    define_or_guess,
-    define_or_guess2,
     get_active_status,
     get_file_names,
-    get_guess_type_parameter,
+    get_inference_type_parameter,
     get_url_message,
+    get_value_from_parameter,
     get_years,
     set_component_and_prc_typ,
     set_grid,
     set_mapping_file,
+    set_value_of_parameter_if_undefined,
 )
 
 
@@ -45,14 +43,14 @@ def test_get_active_status():
         get_active_status(task)
 
 
-def test_get_guess_type_parameter():
+def test_get_inference_type_parameter():
     assert (
-        get_guess_type_parameter(ParameterGuessType.SECTION_GUESS)
-        == "guess_section_parameters"
+        get_inference_type_parameter(ParameterInferenceType.SECTION_INFERENCE)
+        == "infer_section_parameters"
     )
     assert (
-        get_guess_type_parameter(ParameterGuessType.PATH_GUESS)
-        == "guess_path_parameters"
+        get_inference_type_parameter(ParameterInferenceType.PATH_INFERENCE)
+        == "infer_path_parameters"
     )
 
 
@@ -189,24 +187,6 @@ def test_set_component_and_prc_typ():
         set_component_and_prc_typ(c)
 
 
-def test_check_required_parameters():
-    # Parameter is required
-    # a, b need parameter p, and we want sets a, b, c
-    c = {"sets": ["a", "b", "c"], "p": "exists"}
-    check_required_parameters(c, set(["a", "b"]), "p")
-
-    # Parameter isn't required based on the sets we want
-    # z needs parameter p, but we only want sets a, b, c
-    c = {"sets": ["a", "b", "c"], "p": ""}
-    check_required_parameters(c, set(["z"]), "p")
-
-    # Parameter is required
-    # a, b need parameter p, and we want sets a, b, c
-    c = {"sets": ["a", "b", "c"], "p": ""}
-    with pytest.raises(ParameterNotProvidedError):
-        check_required_parameters(c, set(["a", "b"]), "p")
-
-
 def test_get_years():
     assert get_years("1980:1990:05") == [(1980, 1984), (1985, 1989)]
     assert get_years("1980-1990") == [(1980, 1990)]
@@ -245,23 +225,23 @@ def test_get_years():
         get_years("1980-1990:05:03")
 
 
-def test_define_or_guess():
+def test_get_value_from_parameter():
     # First choice is defined
     c = {
         "first_choice": "a",
         "second_choice": "b",
-        "guess_path_parameters": True,
-        "guess_section_parameters": True,
+        "infer_path_parameters": True,
+        "infer_section_parameters": True,
     }
     assert (
-        define_or_guess(
-            c, "first_choice", "second_choice", ParameterGuessType.PATH_GUESS
+        get_value_from_parameter(
+            c, "first_choice", "second_choice", ParameterInferenceType.PATH_INFERENCE
         )
         == "a"
     )
     assert (
-        define_or_guess(
-            c, "first_choice", "second_choice", ParameterGuessType.SECTION_GUESS
+        get_value_from_parameter(
+            c, "first_choice", "second_choice", ParameterInferenceType.SECTION_INFERENCE
         )
         == "a"
     )
@@ -269,18 +249,18 @@ def test_define_or_guess():
     c = {
         "first_choice": "a",
         "second_choice": "b",
-        "guess_path_parameters": True,
-        "guess_section_parameters": False,
+        "infer_path_parameters": True,
+        "infer_section_parameters": False,
     }
     assert (
-        define_or_guess(
-            c, "first_choice", "second_choice", ParameterGuessType.PATH_GUESS
+        get_value_from_parameter(
+            c, "first_choice", "second_choice", ParameterInferenceType.PATH_INFERENCE
         )
         == "a"
     )
     assert (
-        define_or_guess(
-            c, "first_choice", "second_choice", ParameterGuessType.SECTION_GUESS
+        get_value_from_parameter(
+            c, "first_choice", "second_choice", ParameterInferenceType.SECTION_INFERENCE
         )
         == "a"
     )
@@ -288,18 +268,18 @@ def test_define_or_guess():
     c = {
         "first_choice": "a",
         "second_choice": "b",
-        "guess_path_parameters": False,
-        "guess_section_parameters": True,
+        "infer_path_parameters": False,
+        "infer_section_parameters": True,
     }
     assert (
-        define_or_guess(
-            c, "first_choice", "second_choice", ParameterGuessType.PATH_GUESS
+        get_value_from_parameter(
+            c, "first_choice", "second_choice", ParameterInferenceType.PATH_INFERENCE
         )
         == "a"
     )
     assert (
-        define_or_guess(
-            c, "first_choice", "second_choice", ParameterGuessType.SECTION_GUESS
+        get_value_from_parameter(
+            c, "first_choice", "second_choice", ParameterInferenceType.SECTION_INFERENCE
         )
         == "a"
     )
@@ -308,18 +288,18 @@ def test_define_or_guess():
     c = {
         "first_choice": "",
         "second_choice": "b",
-        "guess_path_parameters": True,
-        "guess_section_parameters": True,
+        "infer_path_parameters": True,
+        "infer_section_parameters": True,
     }
     assert (
-        define_or_guess(
-            c, "first_choice", "second_choice", ParameterGuessType.PATH_GUESS
+        get_value_from_parameter(
+            c, "first_choice", "second_choice", ParameterInferenceType.PATH_INFERENCE
         )
         == "b"
     )
     assert (
-        define_or_guess(
-            c, "first_choice", "second_choice", ParameterGuessType.SECTION_GUESS
+        get_value_from_parameter(
+            c, "first_choice", "second_choice", ParameterInferenceType.SECTION_INFERENCE
         )
         == "b"
     )
@@ -327,163 +307,175 @@ def test_define_or_guess():
     c = {
         "first_choice": "",
         "second_choice": "b",
-        "guess_path_parameters": True,
-        "guess_section_parameters": False,
+        "infer_path_parameters": True,
+        "infer_section_parameters": False,
     }
     assert (
-        define_or_guess(
-            c, "first_choice", "second_choice", ParameterGuessType.PATH_GUESS
+        get_value_from_parameter(
+            c, "first_choice", "second_choice", ParameterInferenceType.PATH_INFERENCE
         )
         == "b"
     )
     with pytest.raises(ParameterNotProvidedError):
-        define_or_guess(
-            c, "first_choice", "second_choice", ParameterGuessType.SECTION_GUESS
+        get_value_from_parameter(
+            c, "first_choice", "second_choice", ParameterInferenceType.SECTION_INFERENCE
         )
 
     c = {
         "first_choice": "",
         "second_choice": "b",
-        "guess_path_parameters": False,
-        "guess_section_parameters": True,
+        "infer_path_parameters": False,
+        "infer_section_parameters": True,
     }
     with pytest.raises(ParameterNotProvidedError):
-        define_or_guess(
-            c, "first_choice", "second_choice", ParameterGuessType.PATH_GUESS
+        get_value_from_parameter(
+            c, "first_choice", "second_choice", ParameterInferenceType.PATH_INFERENCE
         )
     assert (
-        define_or_guess(
-            c, "first_choice", "second_choice", ParameterGuessType.SECTION_GUESS
+        get_value_from_parameter(
+            c, "first_choice", "second_choice", ParameterInferenceType.SECTION_INFERENCE
         )
         == "b"
     )
 
 
-def test_define_or_guess2():
+def test_set_value_of_parameter_if_undefined():
     # The required parameter has a value
     c = {
         "required_parameter": "a",
-        "guess_path_parameters": True,
-        "guess_section_parameters": True,
+        "infer_path_parameters": True,
+        "infer_section_parameters": True,
     }
-    define_or_guess2(
-        c, "required_parameter", "backup_option", ParameterGuessType.PATH_GUESS
+    set_value_of_parameter_if_undefined(
+        c, "required_parameter", "backup_option", ParameterInferenceType.PATH_INFERENCE
     )
     assert c["required_parameter"] == "a"
     c = {
         "required_parameter": "a",
-        "guess_path_parameters": True,
-        "guess_section_parameters": True,
+        "infer_path_parameters": True,
+        "infer_section_parameters": True,
     }
-    define_or_guess2(
-        c, "required_parameter", "backup_option", ParameterGuessType.SECTION_GUESS
-    )
-    assert c["required_parameter"] == "a"
-
-    c = {
-        "required_parameter": "a",
-        "guess_path_parameters": True,
-        "guess_section_parameters": False,
-    }
-    define_or_guess2(
-        c, "required_parameter", "backup_option", ParameterGuessType.PATH_GUESS
-    )
-    assert c["required_parameter"] == "a"
-    c = {
-        "required_parameter": "a",
-        "guess_path_parameters": True,
-        "guess_section_parameters": False,
-    }
-    define_or_guess2(
-        c, "required_parameter", "backup_option", ParameterGuessType.SECTION_GUESS
+    set_value_of_parameter_if_undefined(
+        c,
+        "required_parameter",
+        "backup_option",
+        ParameterInferenceType.SECTION_INFERENCE,
     )
     assert c["required_parameter"] == "a"
 
     c = {
         "required_parameter": "a",
-        "guess_path_parameters": False,
-        "guess_section_parameters": True,
+        "infer_path_parameters": True,
+        "infer_section_parameters": False,
     }
-    define_or_guess2(
-        c, "required_parameter", "backup_option", ParameterGuessType.PATH_GUESS
+    set_value_of_parameter_if_undefined(
+        c, "required_parameter", "backup_option", ParameterInferenceType.PATH_INFERENCE
     )
     assert c["required_parameter"] == "a"
     c = {
         "required_parameter": "a",
-        "guess_path_parameters": False,
-        "guess_section_parameters": True,
+        "infer_path_parameters": True,
+        "infer_section_parameters": False,
     }
-    define_or_guess2(
-        c, "required_parameter", "backup_option", ParameterGuessType.SECTION_GUESS
+    set_value_of_parameter_if_undefined(
+        c,
+        "required_parameter",
+        "backup_option",
+        ParameterInferenceType.SECTION_INFERENCE,
+    )
+    assert c["required_parameter"] == "a"
+
+    c = {
+        "required_parameter": "a",
+        "infer_path_parameters": False,
+        "infer_section_parameters": True,
+    }
+    set_value_of_parameter_if_undefined(
+        c, "required_parameter", "backup_option", ParameterInferenceType.PATH_INFERENCE
+    )
+    assert c["required_parameter"] == "a"
+    c = {
+        "required_parameter": "a",
+        "infer_path_parameters": False,
+        "infer_section_parameters": True,
+    }
+    set_value_of_parameter_if_undefined(
+        c,
+        "required_parameter",
+        "backup_option",
+        ParameterInferenceType.SECTION_INFERENCE,
     )
     assert c["required_parameter"] == "a"
 
     # The required parameter is undefined
     c = {
         "required_parameter": "",
-        "guess_path_parameters": True,
-        "guess_section_parameters": True,
+        "infer_path_parameters": True,
+        "infer_section_parameters": True,
     }
-    define_or_guess2(
-        c, "required_parameter", "backup_option", ParameterGuessType.PATH_GUESS
+    set_value_of_parameter_if_undefined(
+        c, "required_parameter", "backup_option", ParameterInferenceType.PATH_INFERENCE
     )
     assert c["required_parameter"] == "backup_option"
     c = {
         "required_parameter": "",
-        "guess_path_parameters": True,
-        "guess_section_parameters": True,
+        "infer_path_parameters": True,
+        "infer_section_parameters": True,
     }
-    define_or_guess2(
-        c, "required_parameter", "backup_option", ParameterGuessType.SECTION_GUESS
+    set_value_of_parameter_if_undefined(
+        c,
+        "required_parameter",
+        "backup_option",
+        ParameterInferenceType.SECTION_INFERENCE,
     )
     assert c["required_parameter"] == "backup_option"
 
     c = {
         "required_parameter": "",
-        "guess_path_parameters": True,
-        "guess_section_parameters": False,
+        "infer_path_parameters": True,
+        "infer_section_parameters": False,
     }
-    define_or_guess2(
-        c, "required_parameter", "backup_option", ParameterGuessType.PATH_GUESS
+    set_value_of_parameter_if_undefined(
+        c, "required_parameter", "backup_option", ParameterInferenceType.PATH_INFERENCE
     )
     assert c["required_parameter"] == "backup_option"
     c = {
         "required_parameter": "",
-        "guess_path_parameters": True,
-        "guess_section_parameters": False,
+        "infer_path_parameters": True,
+        "infer_section_parameters": False,
     }
     with pytest.raises(ParameterNotProvidedError):
-        define_or_guess2(
-            c, "required_parameter", "backup_option", ParameterGuessType.SECTION_GUESS
+        set_value_of_parameter_if_undefined(
+            c,
+            "required_parameter",
+            "backup_option",
+            ParameterInferenceType.SECTION_INFERENCE,
         )
 
     c = {
         "required_parameter": "",
-        "guess_path_parameters": False,
-        "guess_section_parameters": True,
+        "infer_path_parameters": False,
+        "infer_section_parameters": True,
     }
     with pytest.raises(ParameterNotProvidedError):
-        define_or_guess2(
-            c, "required_parameter", "backup_option", ParameterGuessType.PATH_GUESS
+        set_value_of_parameter_if_undefined(
+            c,
+            "required_parameter",
+            "backup_option",
+            ParameterInferenceType.PATH_INFERENCE,
         )
     c = {
         "required_parameter": "",
-        "guess_path_parameters": False,
-        "guess_section_parameters": True,
+        "infer_path_parameters": False,
+        "infer_section_parameters": True,
     }
-    define_or_guess2(
-        c, "required_parameter", "backup_option", ParameterGuessType.SECTION_GUESS
+    set_value_of_parameter_if_undefined(
+        c,
+        "required_parameter",
+        "backup_option",
+        ParameterInferenceType.SECTION_INFERENCE,
     )
     assert c["required_parameter"] == "backup_option"
-
-
-def test_check_parameter_defined():
-    c = {"a": 1, "b": 2, "c": ""}
-    check_parameter_defined(c, "a")
-    with pytest.raises(ParameterNotProvidedError):
-        check_parameter_defined(c, "c")
-    with pytest.raises(ParameterNotProvidedError):
-        check_parameter_defined(c, "d")
 
 
 def test_get_file_names():

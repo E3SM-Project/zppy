@@ -4,17 +4,17 @@ from configobj import ConfigObj
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
-    ParameterGuessType,
+    ParameterInferenceType,
     add_dependencies,
     check_status,
-    define_or_guess,
-    define_or_guess2,
     get_file_names,
     get_tasks,
+    get_value_from_parameter,
     get_years,
     initialize_template,
     make_executable,
     set_component_and_prc_typ,
+    set_value_of_parameter_if_undefined,
     submit_script,
     write_settings_file,
 )
@@ -46,8 +46,8 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
             c["scriptDir"] = script_dir
             if "ts_num_years" in c.keys():
                 c["ts_num_years"] = int(c["ts_num_years"])
-            sub: str = define_or_guess(
-                c, "subsection", "grid", ParameterGuessType.SECTION_GUESS
+            sub: str = get_value_from_parameter(
+                c, "subsection", "grid", ParameterInferenceType.SECTION_INFERENCE
             )
             # Run default variables if none are specified
             if c["cmip_vars"] == "":
@@ -69,7 +69,9 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
                 f.write(template.render(**c))
             make_executable(bash_file)
             # Default to the name of this task if ts_subsection is not defined
-            define_or_guess2(c, "ts_subsection", sub, ParameterGuessType.SECTION_GUESS)
+            set_value_of_parameter_if_undefined(
+                c, "ts_subsection", sub, ParameterInferenceType.SECTION_INFERENCE
+            )
             add_dependencies(
                 dependencies,
                 script_dir,
