@@ -6,7 +6,7 @@ V3_CASE_NAME = "v3.LR.historical_0051"
 V2_CASE_NAME = "v2.LR.historical_0201"
 
 
-def check_images(test_name, case_name):
+def check_images(test_name, case_name, subdir):
     # See docs/source/dev_guide/testing.rst for steps to run before running this test.
     expansions = get_expansions()
     expected_dir = expansions["expected_dir"]
@@ -23,17 +23,12 @@ def check_images(test_name, case_name):
     # The directory to place differences in.
     diff_dir = f"{actual_images_dir}image_check_failures_{test_name}"
 
-    # To run a subset of the image-check test:
-    # 1) comment out sections you don't want to run in the `cfg`
-    # 2) set `subdirs_to_check` to the subset of tasks you want to run
-    subdirs_to_check = ["mpas_analysis", "e3sm_diags", "global_time_series", "ilamb"]
-
     check_mismatched_images(
         actual_images_dir,
         expected_images_file,
         expected_images_dir,
         diff_dir,
-        subdirs_to_check,
+        [subdir],
     )
 
 
@@ -43,18 +38,63 @@ def check_images(test_name, case_name):
 
 
 # @pytest.mark.skip(reason="Not testing")
-def test_comprehensive_v2_images():
-    check_images("comprehensive_v2", V2_CASE_NAME)
+def test_comprehensive_v2_e3sm_diags_images():
+    check_images("comprehensive_v2", V2_CASE_NAME, "e3sm_diags")
 
 
 # @pytest.mark.skip(reason="Not testing")
-def test_comprehensive_v3_images():
-    check_images("comprehensive_v3", V3_CASE_NAME)
+def test_comprehensive_v2_mpas_analysis_images():
+    check_images("comprehensive_v2", V2_CASE_NAME, "mpas_analysis")
 
 
 # @pytest.mark.skip(reason="Not testing")
-def test_bundles_images():
-    check_images("bundles", V3_CASE_NAME)
+def test_comprehensive_v2_global_time_series_images():
+    check_images("comprehensive_v2", V2_CASE_NAME, "global_time_series")
+
+
+# @pytest.mark.skip(reason="Not testing")
+def test_comprehensive_v2_ilamb_images():
+    check_images("comprehensive_v2", V2_CASE_NAME, "ilamb")
+
+
+# @pytest.mark.skip(reason="Not testing")
+def test_comprehensive_v3_e3sm_diags_images():
+    check_images("comprehensive_v3", V3_CASE_NAME, "e3sm_diags")
+
+
+# @pytest.mark.skip(reason="Not testing")
+def test_comprehensive_v3_mpas_analysis_images():
+    check_images("comprehensive_v3", V3_CASE_NAME, "mpas_analysis")
+
+
+# @pytest.mark.skip(reason="Not testing")
+def test_comprehensive_v3_global_time_series_images():
+    check_images("comprehensive_v3", V3_CASE_NAME, "global_time_series")
+
+
+# @pytest.mark.skip(reason="Not testing")
+def test_comprehensive_v3_ilamb_images():
+    check_images("comprehensive_v3", V3_CASE_NAME, "ilamb")
+
+
+# @pytest.mark.skip(reason="Not testing")
+def test_bundles_e3sm_diags_images():
+    check_images("bundles", V3_CASE_NAME, "e3sm_diags")
+
+
+# @pytest.mark.skip(reason="Not testing")
+def test_bundles_mpas_analysis_images():
+    check_images("bundles", V3_CASE_NAME, "mpas_analysis")
+
+
+# @pytest.mark.skip(reason="Not testing")
+def test_bundles_global_time_series_images():
+    check_images("bundles", V3_CASE_NAME, "global_time_series")
+
+
+# @pytest.mark.skip(reason="Not testing")
+def test_bundles_ilamb_images():
+    check_images("bundles", V3_CASE_NAME, "ilamb")
 
 
 # @pytest.mark.skip(reason="Not testing")

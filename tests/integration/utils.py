@@ -125,16 +125,23 @@ def check_mismatched_images(
                     path_to_expected_png,
                     diff_dir,
                 )
-    print(f"Total number of images checked: {counter}")
 
     if missing_images:
-        print(f"Missing images: {len(missing_images)}")
+        print("Missing images:")
         for i in missing_images:
             print(i)
     if mismatched_images:
-        print(f"Mismatched images: {len(mismatched_images)}")
+        print("Mismatched images:")
         for i in mismatched_images:
             print(i)
+
+    # Count summary
+    print(f"Total: {counter}")
+    print(f"Number of missing images: {len(missing_images)}")
+    print(f"Number of mismatched images: {len(mismatched_images)}")
+    print(
+        f"Number of correct images: {counter - len(missing_images) - len(mismatched_images)}"
+    )
 
     # Make diff_dir readable
     if os.path.exists(diff_dir):
