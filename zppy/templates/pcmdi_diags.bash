@@ -664,7 +664,7 @@ obs_catalogue = 'obs_catalogue.json'
 reference_data_lf_path = json.load(open('obs_landmask.json'))
 
 # METRICS COLLECTION (set in namelist, and main driver)
-# metricsCollection = ENSO_perf  # ENSO_perf, ENSO_tel, ENSO_proc
+# metricsCollection = ENSO_perf, ENSO_tel, ENSO_proc
 
 # OUTPUT
 results_dir = os.path.join(
@@ -742,6 +742,7 @@ from pcmdi_zppy_util import(
     variable_region,
     mean_climate_plot_driver,
     variability_modes_plot_driver,
+    enso_plot_driver
 )
 
 #parallel calculation
@@ -1053,19 +1054,24 @@ metric_sets = '{{sub_sets}}'.split(",")
 figure_sets = '{{synthetic_sets}}'.split(",")
 figure_format = '{{figure_format}}'
 test_input_path = os.path.join(
-    '${www}','${case}','pcmdi_diags','${results_dir}',
-    'metrics_data','%(group_type)'
+    '${www}',
+    '${case}',
+    'pcmdi_diags',
+    '${results_dir}',
+    'metrics_data',
+    '%(group_type)'
 )
 
 metric_dict = json.load(open('synthetic_metrics_list.json'))
 
 parameter = OrderedDict()
 parameter['save_data'] = True
-parameter['case_id'] = '${case_id}'
 parameter['out_dir'] = os.path.join('${results_dir}','ERROR_metric')
 parameter['test_name'] = '{{model_name}}'
-parameter['tableID'] = '{{model_tableID}}'
-parameter['model_name'] = '-'.join('{{model_name}}'.split(".")[2:])
+
+parameter['model_name'] = [ '-'.join('{{model_name}}'.split(".")[2:]) ]
+parameter['tableID'] = [ '{{model_tableID}}' ]
+parameter['case_id'] = [ '${case_id}' ]
 
 for metric in metric_sets:
     parameter['test_path'] = test_input_path.replace('%(group_type)',metric)
@@ -1079,14 +1085,13 @@ for metric in metric_sets:
        parameter['cmip_name'] = '{{cmip_movs_set}}'
        parameter['movs_mode'] = '{{ atm_modes }}'.split(",") + '{{ cpl_modes }}'.split(",")
        merge_lib,mode_season_list = collect_movs_metrics(parameter)
-    elif metric == 'enso':
+    elif metric == 'enso_metric':
        parameter['cmip_path'] = '{{cmip_enso_dir}}'
        parameter['cmip_name'] = '{{cmip_enso_set}}'
-       merge_lib = collect_enso_metrics(parameter)
 
-    for stat in metric_dict[metric].keys():
-        if metric == "mean_climate":
-           mean_climate_plot_driver(
+    if metric == "mean_climate":
+       for stat in metric_dict[metric].keys():
+	       mean_climate_plot_driver(
                      metric, stat,
                      merge_lib.regions,
                      parameter['model_name'],
@@ -1095,16 +1100,25 @@ for metric in metric_sets:
                      merge_lib.var_list,
                      merge_lib.var_unit_list,
                      parameter['save_data'],
-                     parameter['out_dir'])
-        elif metric == "variability_modes":
-           variability_modes_plot_driver(
+                     parameter['out_dir'],
+		     figure_format)
+    elif metric == "variability_modes":
+       for stat in metric_dict[metric].keys():
+	       variability_modes_plot_driver(
                      metric, stat,
                      parameter['model_name'],
                      parameter['diag_vars'][stat],
                      merge_lib[stat],
                      mode_season_list,
                      parameter['save_data'],
-                     parameter['out_dir'])
+                     parameter['out_dir'],
+		     figure_format)
+    elif metric == "enso_metric":
+       for stat in metric_dict[metric].keys():
+	       enso_plot_driver(
+                     metric,stat,
+                     parameter,
+                     figure_format)
 
 {%- endif %}
 
