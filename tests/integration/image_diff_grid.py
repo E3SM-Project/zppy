@@ -71,7 +71,26 @@ def make_image_diff_grid(directory, pdf_name="image_diff_grid.pdf", rows_per_pag
     print(f"Reminder:\n{web_portal_base_url}/{subdir}/{pdf_name}")
 
 
+def make_all_grids(username, unique_id):
+    # username -- username of who generated the results
+    # unique_id -- unique id of the test
+
+    machine_info = MachineInfo(machine=os.environ["E3SMU_MACHINE"])
+    web_portal_base_path = machine_info.config.get("web_portal", "base_path")
+    v2_path = f"{web_portal_base_path}/{username}/zppy_weekly_comprehensive_v2_www/{unique_id}/v2.LR.historical_0201/image_check_failures_comprehensive_v2"
+    v3_path = f"{web_portal_base_path}/{username}/zppy_weekly_comprehensive_v3_www/{unique_id}/v3.LR.historical_0051/image_check_failures_comprehensive_v3"
+    bundles_path = f"{web_portal_base_path}/{username}/zppy_weekly_bundles_www/{unique_id}/v3.LR.historical_0051/image_check_failures_bundles"
+    paths = [v2_path, v3_path, bundles_path]
+    tasks = ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]
+    for path in paths:
+        for task in tasks:
+            full_path = f"{path}/{task}"
+            if os.path.isdir(full_path):
+                make_image_diff_grid(
+                    full_path, pdf_name="image_diff_grid_2rows.pdf", rows_per_page=2
+                )
+
+
 if __name__ == "__main__":
-    # path = <web_portal_base_path>/<username>/zppy_weekly_<test_name>_www/<UNIQUE_ID>/<test_case>/image_check_failures_<test_name>/<task_name>
-    path = ""
-    make_image_diff_grid(path)
+    make_all_grids("ac.forsyth2", "test_unified_rc10_20250220")  # Only 12m15.823s
+    # Run with `time python image_diff_grid.py`
