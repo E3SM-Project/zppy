@@ -85,6 +85,14 @@ def test_check_and_define_parameters():
     check_and_define_parameters(c, sub)
     assert c["ts_subsection"] == "name_of_this_subsection"
 
+    c = {"ts_atm_subsection": "", "guess_section_parameters": True}
+    check_and_define_parameters(c, sub)
+    assert c["ts_subsection"] == "name_of_this_subsection"
+
+    c = {"ts_land_subsection": "", "guess_section_parameters": True}
+    check_and_define_parameters(c, sub)
+    assert c["ts_subsection"] == "name_of_this_subsection"
+
     # Don't guess the subsection
     c = {"ts_subsection": "subsection", "guess_section_parameters": False}
     check_and_define_parameters(c, sub)
@@ -132,5 +140,13 @@ def test_check_and_define_parameters():
         check_and_define_parameters(c, sub)
 
     c = {"guess_section_parameters": False}
+    with pytest.raises(ParameterNotProvidedError):
+        check_and_define_parameters(c, sub)
+
+    c = {"ts_atm_subsection": "", "guess_section_parameters": False}
+    with pytest.raises(ParameterNotProvidedError):
+        check_and_define_parameters(c, sub)
+
+    c = {"ts_land_subsection": "", "guess_section_parameters": False}
     with pytest.raises(ParameterNotProvidedError):
         check_and_define_parameters(c, sub)

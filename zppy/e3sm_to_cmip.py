@@ -132,9 +132,17 @@ def check_and_define_parameters(c: Dict[str, Any], sub: str) -> None:
         )
         if c[guess_type_parameter]:
             if "component" in c.keys():
-                if (c["component"] == "atm") and ("ts_atm_subsection" in c.keys()):
+                if (
+                    (c["component"] == "atm")
+                    and ("ts_atm_subsection" in c.keys())
+                    and (c["ts_atm_subsection"] != "")
+                ):
                     c[parameter] = c["ts_atm_subsection"]
-                elif (c["component"] == "lnd") and ("ts_land_subsection" in c.keys()):
+                elif (
+                    (c["component"] == "lnd")
+                    and ("ts_land_subsection" in c.keys())
+                    and (c["ts_land_subsection"] != "")
+                ):
                     c[parameter] = c["ts_land_subsection"]
                 else:
                     c[parameter] = sub
