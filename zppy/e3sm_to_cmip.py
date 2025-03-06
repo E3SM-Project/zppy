@@ -5,11 +5,12 @@ from configobj import ConfigObj
 from zppy.bundle import handle_bundles
 from zppy.utils import (
     ParameterGuessType,
+    ParameterNotProvidedError,
     add_dependencies,
     check_status,
     define_or_guess,
-    define_or_guess2,
     get_file_names,
+    get_guess_type_parameter,
     get_tasks,
     get_years,
     initialize_template,
@@ -34,6 +35,7 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
     for c in tasks:
         dependencies: List[str] = []
         set_component_and_prc_typ(c)
+        check_parameters_for_bash(c)
         c["cmor_tables_prefix"] = c["diagnostics_base_path"]
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
         # Loop over year sets
@@ -52,7 +54,9 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
             # Run default variables if none are specified
             if c["cmip_vars"] == "":
                 if c["component"] == "atm":
-                    c["cmip_vars"] = "pr, tas, rsds, rlds, rsus"
+                    c["cmip_vars"] = (
+                        "tas, ts, psl, ps, sfcWind, huss, pr, prc, prsn, evspsbl, tauu, tauv, hfls, clt, rlds, rlus, rsds, rsus, hfss, clivi, clwvi, prw, rldscs, rlut, rlutcs, rsdt, rsuscs, rsut, rsutcs, rtmt, abs550aer, od550aer, rsdscs, tasmax, tasmin"
+                    )
                 elif c["component"] == "lnd":
                     c["cmip_vars"] = (
                         "mrsos, mrso, mrfso, mrros, mrro, prveg, evspsblveg, evspsblsoi, tran, tsl, lai, cLitter, cProduct, cSoilFast, cSoilMedium, cSoilSlow, fFire, fHarvest, cVeg, nbp, gpp, ra, rh"
@@ -68,8 +72,7 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
             with open(bash_file, "w") as f:
                 f.write(template.render(**c))
             make_executable(bash_file)
-            # Default to the name of this task if ts_subsection is not defined
-            define_or_guess2(c, "ts_subsection", sub, ParameterGuessType.SECTION_GUESS)
+            check_and_define_parameters(c, sub)
             add_dependencies(
                 dependencies,
                 script_dir,
@@ -106,3 +109,56 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
             print(f"   environment_commands={c['environment_commands']}")
 
     return existing_bundles
+
+
+def check_parameters_for_bash(c: Dict[str, Any]) -> None:
+    # Check parameters that aren't used until e3sm_diags.bash is run
+    parameter = "ts_grid"
+    if (parameter not in c.keys()) or (c[parameter] == ""):
+        if "component" in c.keys():
+            # NOTE: unlike ts_subsection, ts_grid (and its component equivalents)
+            # are not defaulted to an empty string.
+            if (
+                (c["component"] == "atm")
+                and ("ts_atm_grid" in c.keys())
+                and (c["ts_atm_grid"] != "")
+            ):
+                c[parameter] = c["ts_atm_grid"]
+            elif (
+                (c["component"] == "lnd")
+                and ("ts_land_grid" in c.keys())
+                and (c["ts_land_grid"] != "")
+            ):
+                c[parameter] = c["ts_land_grid"]
+            else:
+                raise ParameterNotProvidedError(parameter)
+        else:
+            raise ParameterNotProvidedError(parameter)
+
+
+def check_and_define_parameters(c: Dict[str, Any], sub: str) -> None:
+    parameter = "ts_subsection"
+    if (parameter not in c.keys()) or (c[parameter] == ""):
+        guess_type_parameter: str = get_guess_type_parameter(
+            ParameterGuessType.SECTION_GUESS
+        )
+        if c[guess_type_parameter]:
+            if "component" in c.keys():
+                if (
+                    (c["component"] == "atm")
+                    and ("ts_atm_subsection" in c.keys())
+                    and (c["ts_atm_subsection"] != "")
+                ):
+                    c[parameter] = c["ts_atm_subsection"]
+                elif (
+                    (c["component"] == "lnd")
+                    and ("ts_land_subsection" in c.keys())
+                    and (c["ts_land_subsection"] != "")
+                ):
+                    c[parameter] = c["ts_land_subsection"]
+                else:
+                    c[parameter] = sub
+            else:
+                c[parameter] = sub
+        else:
+            raise ParameterNotProvidedError(parameter)
