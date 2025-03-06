@@ -22,7 +22,7 @@ def test_determine_and_add_dependencies():
     ]
     assert dependencies == expected
 
-    # Have zppy guess the subsection names
+    # Have zppy infer the subsection names
     c = {
         "e3sm_to_cmip_atm_subsection": "",
         "e3sm_to_cmip_land_subsection": "",
@@ -32,8 +32,8 @@ def test_determine_and_add_dependencies():
         "year1": 1980,
         "year2": 1990,
         "ts_num_years": 5,
-        "guess_path_parameters": True,
-        "guess_section_parameters": True,
+        "infer_path_parameters": True,
+        "infer_section_parameters": True,
     }
     dependencies = []
     determine_and_add_dependencies(c, dependencies, "script_dir")

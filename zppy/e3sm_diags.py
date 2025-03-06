@@ -5,19 +5,18 @@ from configobj import ConfigObj
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
-    ParameterGuessType,
+    ParameterInferenceType,
+    ParameterNotProvidedError,
     add_dependencies,
-    check_parameter_defined,
-    check_required_parameters,
     check_status,
-    define_or_guess,
-    define_or_guess2,
     get_file_names,
     get_tasks,
+    get_value_from_parameter,
     get_years,
     initialize_template,
     make_executable,
     print_url,
+    set_value_of_parameter_if_undefined,
     submit_script,
     write_settings_file,
 )
@@ -101,11 +100,37 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
     return existing_bundles
 
 
+def check_parameter_defined(
+    c: Dict[str, Any], relevant_parameter: str, explanation: str = ""
+) -> None:
+    if (relevant_parameter not in c.keys()) or (c[relevant_parameter] == ""):
+        if explanation:
+            message = f"{relevant_parameter} is needed because {explanation}"
+        else:
+            message = f"{relevant_parameter} is not defined."
+        raise ParameterNotProvidedError(message)
+
+
+def check_set_specific_parameter(
+    c: Dict[str, Any], sets_with_requirement: Set[str], relevant_parameter: str
+) -> None:
+    requested_sets = set(c["sets"])
+    intersection = sets_with_requirement & requested_sets
+    if (
+        intersection
+        and (relevant_parameter in c.keys())
+        and (c[relevant_parameter] == "")
+    ):
+        raise ParameterNotProvidedError(
+            f"{relevant_parameter} is required because the sets {intersection} were requested."
+        )
+
+
 def check_parameters_for_bash(c: Dict[str, Any]) -> None:
     # Check parameters that aren't used until e3sm_diags.bash is run
-    check_required_parameters(c, set(["qbo"]), "ref_final_yr")
-    check_required_parameters(c, set(["enso_diags", "qbo"]), "ref_start_yr")
-    check_required_parameters(c, set(["diurnal_cycle"]), "climo_diurnal_frequency")
+    check_set_specific_parameter(c, set(["qbo"]), "ref_final_yr")
+    check_set_specific_parameter(c, set(["enso_diags", "qbo"]), "ref_start_yr")
+    check_set_specific_parameter(c, set(["diurnal_cycle"]), "climo_diurnal_frequency")
 
 
 def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
@@ -114,12 +139,12 @@ def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
     check_parameter_defined(c, "ref_name", "mvm requires it.")
     check_parameter_defined(c, "short_ref_name", "mvm requires it.")
 
-    check_required_parameters(
+    check_set_specific_parameter(
         c,
         set(["enso_diags", "tropical_subseasonal", "streamflow", "tc_analysis"]),
         "ref_final_yr",
     )
-    check_required_parameters(
+    check_set_specific_parameter(
         c, set(["tropical_subseasonal", "streamflow", "tc_analysis"]), "ref_start_yr"
     )
     ts_sets = set(
@@ -131,95 +156,98 @@ def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
             "streamflow",
         ]
     )
-    check_required_parameters(c, ts_sets, "ts_num_years_ref")
-    check_required_parameters(c, ts_sets, "ts_subsection")
+    check_set_specific_parameter(c, ts_sets, "ts_num_years_ref")
+    check_set_specific_parameter(c, ts_sets, "ts_subsection")
 
 
 def check_and_define_parameters(c: Dict[str, Any]) -> None:
-    c["sub"] = define_or_guess(
-        c, "subsection", "grid", ParameterGuessType.SECTION_GUESS
+    c["sub"] = get_value_from_parameter(
+        c, "subsection", "grid", ParameterInferenceType.SECTION_INFERENCE
     )
-    define_or_guess2(
+    set_value_of_parameter_if_undefined(
         c,
         "reference_data_path",
         f"{c['diagnostics_base_path']}/observations/Atm/climatology/",
-        ParameterGuessType.PATH_GUESS,
+        ParameterInferenceType.PATH_INFERENCE,
     )
     if "tc_analysis" in c["sets"]:
-        define_or_guess2(
+        set_value_of_parameter_if_undefined(
             c,
             "tc_obs",
             f"{c['diagnostics_base_path']}/observations/Atm/tc-analysis/",
-            ParameterGuessType.PATH_GUESS,
+            ParameterInferenceType.PATH_INFERENCE,
         )
     # TODO: do this based on sets, rather than by relying on the user setting ts_num_years
     if "ts_num_years" in c.keys():
-        define_or_guess2(
+        set_value_of_parameter_if_undefined(
             c,
             "obs_ts",
             f"{c['diagnostics_base_path']}/observations/Atm/time-series/",
-            ParameterGuessType.PATH_GUESS,
+            ParameterInferenceType.PATH_INFERENCE,
         )
     prefix: str
     if c["run_type"] == "model_vs_obs":
         prefix = f"e3sm_diags_{c['sub']}_{c['tag']}_{c['year1']:04d}-{c['year2']:04d}"
         if "diurnal_cycle" in c["sets"]:
-            define_or_guess2(
+            set_value_of_parameter_if_undefined(
                 c,
                 "dc_obs_climo",
                 c["reference_data_path"],
-                ParameterGuessType.PATH_GUESS,
+                ParameterInferenceType.PATH_INFERENCE,
             )
         if "streamflow" in c["sets"]:
-            define_or_guess2(
-                c, "streamflow_obs_ts", c["obs_ts"], ParameterGuessType.PATH_GUESS
+            set_value_of_parameter_if_undefined(
+                c,
+                "streamflow_obs_ts",
+                c["obs_ts"],
+                ParameterInferenceType.PATH_INFERENCE,
             )
     elif c["run_type"] == "model_vs_model":
         check_mvm_only_parameters_for_bash(c)
         prefix = f"e3sm_diags_{c['sub']}_{c['tag']}_{c['year1']:04d}-{c['year2']:04d}_vs_{c['ref_year1']:04d}-{c['ref_year2']:04d}"
         reference_data_path = c["reference_data_path"].split("/post")[0] + "/post"
         if "diurnal_cycle" in c["sets"]:
-            define_or_guess2(
+            set_value_of_parameter_if_undefined(
                 c,
                 "reference_data_path_climo_diurnal",
                 f"{reference_data_path}/atm/{c['grid']}/clim_diurnal_8xdaily",
-                ParameterGuessType.PATH_GUESS,
+                ParameterInferenceType.PATH_INFERENCE,
             )
         if ("tc_analysis" in c["sets"]) and (c["reference_data_path_tc"] == ""):
-            # We have to guess parameters here,
+            # We have to infer parameters here,
             # because multiple year sets are defined in a single subtask.
             c["reference_data_path_tc"] = (
                 f"{reference_data_path}/atm/tc-analysis_{c['ref_year1']}_{c['ref_year2']}"
             )
         if set(["enso_diags", "qbo", "area_mean_time_series"]) & set(c["sets"]):
-            define_or_guess2(
+            set_value_of_parameter_if_undefined(
                 c,
                 "reference_data_path_ts",
                 f"{reference_data_path}/atm/{c['grid']}/ts/monthly",
-                ParameterGuessType.PATH_GUESS,
+                ParameterInferenceType.PATH_INFERENCE,
             )
         if "tropical_subseasonal" in c["sets"]:
-            define_or_guess2(
+            set_value_of_parameter_if_undefined(
                 c,
                 "reference_data_path_ts_daily",
                 f"{reference_data_path}/atm/{c['grid']}/ts/daily",
-                ParameterGuessType.PATH_GUESS,
+                ParameterInferenceType.PATH_INFERENCE,
             )
         if "streamflow" in c["sets"]:
-            define_or_guess2(
+            set_value_of_parameter_if_undefined(
                 c,
                 "reference_data_path_ts_rof",
                 f"{reference_data_path}/rof/native/ts/monthly",
-                ParameterGuessType.PATH_GUESS,
+                ParameterInferenceType.PATH_INFERENCE,
             )
-            define_or_guess2(
+            set_value_of_parameter_if_undefined(
                 c,
                 "gauges_path",
                 os.path.join(
                     c["diagnostics_base_path"],
                     "observations/Atm/time-series/GSIM/GSIM_catchment_characteristics_all_1km2.csv",
                 ),
-                ParameterGuessType.PATH_GUESS,
+                ParameterInferenceType.PATH_INFERENCE,
             )
     else:
         raise ValueError(f"Invalid run_type={c['run_type']}")
@@ -251,8 +279,8 @@ def add_climo_dependencies(
     # Check if any requested sets depend on climo:
     status_suffix: str = f"_{c['year1']:04d}-{c['year2']:04d}.status"
     if depend_on_climo & set(c["sets"]):
-        climo_sub = define_or_guess(
-            c, "climo_subsection", "sub", ParameterGuessType.SECTION_GUESS
+        climo_sub = get_value_from_parameter(
+            c, "climo_subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
         )
         dependencies.append(
             os.path.join(script_dir, f"climo_{climo_sub}{status_suffix}"),
@@ -275,11 +303,11 @@ def add_ts_dependencies(
 ):
     start_yr = yr
     end_yr = yr + c["ts_num_years"] - 1
-    ts_sub = define_or_guess(
-        c, "ts_subsection", "sub", ParameterGuessType.SECTION_GUESS
+    ts_sub = get_value_from_parameter(
+        c, "ts_subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
     )
-    ts_daily_sub = define_or_guess(
-        c, "ts_daily_subsection", "sub", ParameterGuessType.SECTION_GUESS
+    ts_daily_sub = get_value_from_parameter(
+        c, "ts_daily_subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
     )
     depend_on_ts: Set[str] = set(["enso_diags", "qbo", "area_mean_time_series"])
     if depend_on_ts & set(c["sets"]):

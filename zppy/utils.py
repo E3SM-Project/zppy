@@ -7,7 +7,7 @@ import stat
 import time
 from enum import Enum
 from subprocess import PIPE, Popen
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Tuple
 
 import jinja2
 from configobj import ConfigObj
@@ -18,9 +18,9 @@ logger = _setup_custom_logger(__name__)
 
 
 # Classes #####################################################################
-class ParameterGuessType(Enum):
-    PATH_GUESS = 1
-    SECTION_GUESS = 2
+class ParameterInferenceType(Enum):
+    PATH_INFERENCE = 1
+    SECTION_INFERENCE = 2
 
 
 class ParameterNotProvidedError(RuntimeError):
@@ -48,15 +48,15 @@ def get_active_status(task: Dict[str, Any]) -> bool:
     raise TypeError(f"Invalid type {type(active)} for 'active'")
 
 
-def get_guess_type_parameter(guess_type: ParameterGuessType) -> str:
-    guess_type_parameter: str
-    if guess_type == ParameterGuessType.PATH_GUESS:
-        guess_type_parameter = "guess_path_parameters"
-    elif guess_type == ParameterGuessType.SECTION_GUESS:
-        guess_type_parameter = "guess_section_parameters"
+def get_inference_type_parameter(inference_type: ParameterInferenceType) -> str:
+    inference_type_parameter: str
+    if inference_type == ParameterInferenceType.PATH_INFERENCE:
+        inference_type_parameter = "infer_path_parameters"
+    elif inference_type == ParameterInferenceType.SECTION_INFERENCE:
+        inference_type_parameter = "infer_section_parameters"
     else:
-        raise ValueError(f"Invalid guess_type: {guess_type}")
-    return guess_type_parameter
+        raise ValueError(f"Invalid inference_type: {inference_type}")
+    return inference_type_parameter
 
 
 def get_url_message(c: Dict[str, Any], task: str) -> str:
@@ -229,21 +229,6 @@ def set_component_and_prc_typ(c: Dict[str, Any]) -> None:
     c["prc_typ"] = prc_typ
 
 
-def check_required_parameters(
-    c: Dict[str, Any], sets_with_requirement: Set[str], relevant_parameter: str
-) -> None:
-    requested_sets = set(c["sets"])
-    intersection = sets_with_requirement & requested_sets
-    if (
-        intersection
-        and (relevant_parameter in c.keys())
-        and (c[relevant_parameter] == "")
-    ):
-        raise ParameterNotProvidedError(
-            f"{relevant_parameter} is required because the sets {intersection} were requested."
-        )
-
-
 # Return all year sets from a configuration given by a list of strings
 # "year_begin:year_end:year_freq"
 # "year_begin-year_end"
@@ -283,57 +268,46 @@ def get_years(years_input) -> List[Tuple[int, int]]:
 
 
 # This returns a value
-def define_or_guess(
+def get_value_from_parameter(
     c: Dict[str, Any],
     first_choice_parameter: str,
     second_choice_parameter: str,
-    guess_type: ParameterGuessType,
+    inference_type: ParameterInferenceType,
 ) -> Any:
-    # Determine which type of guess to use.
-    guess_type_parameter: str = get_guess_type_parameter(guess_type)
+    # Determine which type of inference to use.
+    inference_type_parameter: str = get_inference_type_parameter(inference_type)
     # Define a value, if possible.
     value: Any
     if (first_choice_parameter in c.keys()) and c[first_choice_parameter]:
         value = c[first_choice_parameter]
-    elif c[guess_type_parameter]:
+    elif c[inference_type_parameter]:
         # first_choice_parameter isn't defined,
-        # so let's make a guess for the value.
+        # so let's make an inference for the value.
         value = c[second_choice_parameter]
     else:
         raise ParameterNotProvidedError(
-            f"{first_choice_parameter} was not provided, and guessing is turned off. Turn on guessing by setting {guess_type_parameter} to True."
+            f"{first_choice_parameter} was not provided, and inferring is turned off. Turn on inferring by setting {inference_type_parameter} to True."
         )
     return value
 
 
 # This updates the dict c
-def define_or_guess2(
+def set_value_of_parameter_if_undefined(
     c: Dict[str, Any],
     parameter: str,
     backup_option: str,
-    guess_type: ParameterGuessType,
+    inference_type: ParameterInferenceType,
 ) -> None:
-    # Determine which type of guess to use.
-    guess_type_parameter: str = get_guess_type_parameter(guess_type)
+    # Determine which type of inference to use.
+    inference_type_parameter: str = get_inference_type_parameter(inference_type)
     # Define a value, if possible.
     if (parameter in c.keys()) and (c[parameter] == ""):
-        if c[guess_type_parameter]:
+        if c[inference_type_parameter]:
             c[parameter] = backup_option
         else:
             raise ParameterNotProvidedError(
-                f"{parameter} was not provided, and guessing is turned off. Turn on guessing by setting {guess_type_parameter} to True."
+                f"{parameter} was not provided, and inferring is turned off. Turn on inferring by setting {inference_type_parameter} to True."
             )
-
-
-def check_parameter_defined(
-    c: Dict[str, Any], relevant_parameter: str, explanation: str = ""
-) -> None:
-    if (relevant_parameter not in c.keys()) or (c[relevant_parameter] == ""):
-        if explanation:
-            message = f"{relevant_parameter} is needed because {explanation}"
-        else:
-            message = f"{relevant_parameter} is not defined."
-        raise ParameterNotProvidedError(message)
 
 
 def get_file_names(script_dir: str, prefix: str):

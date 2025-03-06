@@ -7,9 +7,38 @@ from zppy.e3sm_diags import (
     add_ts_dependencies,
     check_and_define_parameters,
     check_mvm_only_parameters_for_bash,
+    check_parameter_defined,
     check_parameters_for_bash,
+    check_set_specific_parameter,
 )
 from zppy.utils import ParameterNotProvidedError
+
+
+def test_check_parameter_defined():
+    c = {"a": 1, "b": 2, "c": ""}
+    check_parameter_defined(c, "a")
+    with pytest.raises(ParameterNotProvidedError):
+        check_parameter_defined(c, "c")
+    with pytest.raises(ParameterNotProvidedError):
+        check_parameter_defined(c, "d")
+
+
+def test_check_set_specific_parameter():
+    # Parameter is required
+    # a, b need parameter p, and we want sets a, b, c
+    c = {"sets": ["a", "b", "c"], "p": "exists"}
+    check_set_specific_parameter(c, set(["a", "b"]), "p")
+
+    # Parameter isn't required based on the sets we want
+    # z needs parameter p, but we only want sets a, b, c
+    c = {"sets": ["a", "b", "c"], "p": ""}
+    check_set_specific_parameter(c, set(["z"]), "p")
+
+    # Parameter is required
+    # a, b need parameter p, and we want sets a, b, c
+    c = {"sets": ["a", "b", "c"], "p": ""}
+    with pytest.raises(ParameterNotProvidedError):
+        check_set_specific_parameter(c, set(["a", "b"]), "p")
 
 
 def test_check_parameters_for_bash():
@@ -191,9 +220,9 @@ def test_check_mvm_only_parameters_for_bash():
 
 
 def test_check_and_define_parameters():
-    # test_zppy_utils.py tests the guessing functionality turned off.
+    # test_zppy_utils.py tests the inference functionality turned off.
     # So, we'll only test it turned on here.
-    guesses = {"guess_path_parameters": True, "guess_section_parameters": True}
+    inferences = {"infer_path_parameters": True, "infer_section_parameters": True}
     prefix_requirements = {
         "subsection": "sub",
         "tag": "tag",
@@ -203,7 +232,7 @@ def test_check_and_define_parameters():
         "ref_year2": 1990,
     }
     base: Dict[str, Any] = {"diagnostics_base_path": "diags/post"}
-    base.update(guesses)
+    base.update(inferences)
     base.update(prefix_requirements)
 
     mvm_base = dict()

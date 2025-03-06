@@ -5,16 +5,16 @@ from configobj import ConfigObj
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
-    ParameterGuessType,
+    ParameterInferenceType,
     add_dependencies,
     check_status,
-    define_or_guess2,
     get_file_names,
     get_tasks,
     get_years,
     initialize_template,
     make_executable,
     print_url,
+    set_value_of_parameter_if_undefined,
     submit_script,
     write_settings_file,
 )
@@ -43,11 +43,11 @@ def ilamb(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
             c["year1"] = s[0]
             c["year2"] = s[1]
             c["scriptDir"] = script_dir
-            define_or_guess2(
+            set_value_of_parameter_if_undefined(
                 c,
                 "ilamb_obs",
                 os.path.join(c["diagnostics_base_path"], "ilamb_data"),
-                ParameterGuessType.PATH_GUESS,
+                ParameterInferenceType.PATH_INFERENCE,
             )
             # List of dependencies
             determine_and_add_dependencies(c, dependencies, script_dir)
@@ -97,8 +97,11 @@ def ilamb(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
 def determine_and_add_dependencies(
     c: Dict[str, Any], dependencies: List[str], script_dir: str
 ) -> None:
-    define_or_guess2(
-        c, "ts_land_subsection", "land_monthly", ParameterGuessType.SECTION_GUESS
+    set_value_of_parameter_if_undefined(
+        c,
+        "ts_land_subsection",
+        "land_monthly",
+        ParameterInferenceType.SECTION_INFERENCE,
     )
     add_dependencies(
         dependencies,
@@ -109,11 +112,11 @@ def determine_and_add_dependencies(
         c["year2"],
         c["ts_num_years"],
     )
-    define_or_guess2(
+    set_value_of_parameter_if_undefined(
         c,
         "e3sm_to_cmip_land_subsection",
         "land_monthly",
-        ParameterGuessType.SECTION_GUESS,
+        ParameterInferenceType.SECTION_INFERENCE,
     )
     add_dependencies(
         dependencies,
@@ -125,11 +128,11 @@ def determine_and_add_dependencies(
         c["ts_num_years"],
     )
     if not c["land_only"]:
-        define_or_guess2(
+        set_value_of_parameter_if_undefined(
             c,
             "ts_atm_subsection",
             "atm_monthly_180x360_aave",
-            ParameterGuessType.SECTION_GUESS,
+            ParameterInferenceType.SECTION_INFERENCE,
         )
         add_dependencies(
             dependencies,
@@ -140,11 +143,11 @@ def determine_and_add_dependencies(
             c["year2"],
             c["ts_num_years"],
         )
-        define_or_guess2(
+        set_value_of_parameter_if_undefined(
             c,
             "e3sm_to_cmip_atm_subsection",
             "atm_monthly_180x360_aave",
-            ParameterGuessType.SECTION_GUESS,
+            ParameterInferenceType.SECTION_INFERENCE,
         )
         add_dependencies(
             dependencies,
