@@ -23,7 +23,7 @@ data_files = package_files(
 
 setup(
     name="zppy",
-    version="3.0.0rc3",
+    version="3.0.0rc4",
     author="Ryan Forsyth, Chris Golaz",
     author_email="forsyth2@llnl.gov, golaz1@llnl.gov",
     description="Post-processing software for E3SM",
