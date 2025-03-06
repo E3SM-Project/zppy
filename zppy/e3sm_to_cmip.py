@@ -54,7 +54,9 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
             # Run default variables if none are specified
             if c["cmip_vars"] == "":
                 if c["component"] == "atm":
-                    c["cmip_vars"] = "pr, tas, rsds, rlds, rsus"
+                    c["cmip_vars"] = (
+                        "tas, ts, psl, ps, sfcWind, huss, pr, prc, prsn, evspsbl, tauu, tauv, hfls, clt, rlds, rlus, rsds, rsus, hfss, clivi, clwvi, prw, rldscs, rlut, rlutcs, rsdt, rsuscs, rsut, rsutcs, rtmt, abs550aer, od550aer, rsdscs, tasmax, tasmin"
+                    )
                 elif c["component"] == "lnd":
                     c["cmip_vars"] = (
                         "mrsos, mrso, mrfso, mrros, mrro, prveg, evspsblveg, evspsblsoi, tran, tsl, lai, cLitter, cProduct, cSoilFast, cSoilMedium, cSoilSlow, fFire, fHarvest, cVeg, nbp, gpp, ra, rh"
