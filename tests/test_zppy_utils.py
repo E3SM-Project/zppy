@@ -3,9 +3,11 @@ from typing import List
 import pytest
 
 from zppy.utils import (
+    DeprecatedParameterError,
     ParameterGuessType,
     ParameterNotProvidedError,
     add_dependencies,
+    check_for_deprecated_parameters,
     check_parameter_defined,
     check_required_parameters,
     define_or_guess,
@@ -484,6 +486,21 @@ def test_check_parameter_defined():
         check_parameter_defined(c, "c")
     with pytest.raises(ParameterNotProvidedError):
         check_parameter_defined(c, "d")
+
+
+def test_check_for_deprecated_parameters():
+    deprecated_parameters = [
+        # Removed in https://github.com/E3SM-Project/zppy/pull/650
+        "e3sm_to_cmip_environment_commands",
+        "ts_fmt",
+        # Removed in https://github.com/E3SM-Project/zppy/pull/654
+        "scratch",
+        "atmosphere_only",
+        "plot_names",
+    ]
+    c = {"scratch": "xyz", "plot_names": "a,b,c"}
+    with pytest.raises(DeprecatedParameterError):
+        check_for_deprecated_parameters(c, deprecated_parameters)
 
 
 def test_get_file_names():

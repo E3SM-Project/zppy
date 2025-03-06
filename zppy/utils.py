@@ -31,6 +31,10 @@ class DependencySkipError(RuntimeError):
     pass
 
 
+class DeprecatedParameterError(RuntimeError):
+    pass
+
+
 # Utitlities for this file ####################################################
 
 
@@ -334,6 +338,17 @@ def check_parameter_defined(
         else:
             message = f"{relevant_parameter} is not defined."
         raise ParameterNotProvidedError(message)
+
+
+def check_for_deprecated_parameters(
+    c: Dict[str, Any], deprecated_parameters: List[str]
+) -> None:
+    present_parameters = []
+    for parameter in deprecated_parameters:
+        if parameter in c.keys():
+            present_parameters.append(parameter)
+    if present_parameters:
+        raise DeprecatedParameterError(present_parameters)
 
 
 def get_file_names(script_dir: str, prefix: str):
