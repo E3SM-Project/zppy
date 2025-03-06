@@ -116,9 +116,19 @@ def check_parameters_for_bash(c: Dict[str, Any]) -> None:
     parameter = "ts_grid"
     if (parameter not in c.keys()) or (c[parameter] == ""):
         if "component" in c.keys():
-            if (c["component"] == "atm") and ("ts_atm_grid" in c.keys()):
+            # NOTE: unlike ts_subsection, ts_grid (and its component equivalents)
+            # are not defaulted to an empty string.
+            if (
+                (c["component"] == "atm")
+                and ("ts_atm_grid" in c.keys())
+                and (c["ts_atm_grid"] != "")
+            ):
                 c[parameter] = c["ts_atm_grid"]
-            elif (c["component"] == "lnd") and ("ts_land_grid" in c.keys()):
+            elif (
+                (c["component"] == "lnd")
+                and ("ts_land_grid" in c.keys())
+                and (c["ts_land_grid"] != "")
+            ):
                 c[parameter] = c["ts_land_grid"]
             else:
                 raise ParameterNotProvidedError(parameter)
