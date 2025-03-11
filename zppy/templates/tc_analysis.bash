@@ -25,18 +25,26 @@ atm_name={{ atm_name }}
 
 # Determine res and pg2
 first_file=`echo $(ls ${drc_in}/${caseid}.{{ input_files }}.*.nc | head -n 1)`
+echo "first_file=${first_file}"
 topography_file=`echo $(ncks --trd -M -m ${first_file} | grep -E -i "^global attribute [0-9]+: topography_file" | cut -f 11- -d ' ' | sort)`
-res=""
+echo "topography_file=${topography_file}"
+res={{ res }}
 pg2=false
-if [[ $topography_file =~ /.*_(.*)_.*nc ]]; then
+if [[ $topography_file =~ /[^_]*_([^_]*)_.*nc ]]; then
     grid=${BASH_REMATCH[1]}
-    if [[ $grid =~ ne([0-9]*) ]]; then
-	res=${BASH_REMATCH[1]}
+    echo "grid=${grid}"
+    if [[ -z "${res}" ]]; then
+        echo "Inferring res from grid"
+        if [[ $grid =~ ne([0-9]*) ]]; then
+            res=${BASH_REMATCH[1]}
+        fi
     fi
     if [[ $grid =~ pg2 ]]; then
 	pg2=true
     fi
 fi
+echo "res=${res}"
+echo "pg2=${pg2}"
 
 mkdir -p $result_dir
 file_name=${caseid}_${start}_${end}
