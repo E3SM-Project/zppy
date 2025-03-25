@@ -66,6 +66,8 @@ cat input.txt | ncclimo \
 -c {{ case }} \
 {%- if vars != '' %}
 -v ${vars} \
+{%- else %}
+--xcl_var -v PCT_LANDUNIT_tmp,TLAKE_tmp,LAKEICEFRAC_tmp,SOILLIQ_ICE_tmp,W_SCALAR_tmp,T_SCALAR_tmp,SOILICE_ICE_tmp,SOILPSI_tmp,O_SCALAR_tmp,H2OSOI_tmp \
 {%- endif %}
 --split \
 {%- if extra_vars != '' %}
