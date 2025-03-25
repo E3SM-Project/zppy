@@ -7,9 +7,20 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "unique_id"
+UNIQUE_ID = "test_unified_rc13_20250313"
 
 # Image checking ##########################################################
+
+class TestResults(object):
+    def __init__(self, diff_dir: str, image_count_total: int, image_count_missing: int, image_count_mismatched: int, file_list_missing: List[str], file_list_mismatched: List[str]):
+        self.diff_dir = diff_dir
+        self.image_count_total = image_count_total
+        self.image_count_missing = image_count_missing
+        self.image_count_mismatched = image_count_mismatched
+        self.file_list_missing = sorted(file_list_missing)
+        self.file_list_mismatched = sorted(file_list_mismatched)
+
+        self.image_count_correct = image_count_total - image_count_missing - image_count_mismatched
 
 
 # Copied from E3SM Diags
@@ -143,6 +154,13 @@ def check_mismatched_images(
         f"Number of correct images: {counter - len(missing_images) - len(mismatched_images)}"
     )
 
+    # TODO: print list of missing and mismatched images to files, one each per test
+    # TODO: How do we append this to a list of test results, one for each test?
+    # Use pytest fixtures?
+    # TODO: How can we make a markdown/HTML table of of the image counts
+    # (cols = total, missing, mismatched; rows = test names)
+    TestResults(diff_dir, counter, len(missing_images), len(mismatched_images), missing_images, mismatched_images)
+
     # Make diff_dir readable
     if os.path.exists(diff_dir):
         os.system(f"chmod -R 755 {diff_dir}")
@@ -171,11 +189,11 @@ def get_chyrsalis_expansions(config):
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         # To use default environment_commands, set to ""
-        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+        "diags_environment_commands": "",
         "diags_walltime": "5:00:00",
-        "environment_commands_test": "",
+        "environment_commands_test": "source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.11.0rc13_chrysalis.sh",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
-        "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+        "global_time_series_environment_commands": "",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
         "partition_short": "debug",
@@ -398,4 +416,4 @@ def generate_cfgs(unified_testing=False, dry_run=False):
 
 
 if __name__ == "__main__":
-    generate_cfgs(unified_testing=False, dry_run=False)
+    generate_cfgs(unified_testing=True, dry_run=False)
