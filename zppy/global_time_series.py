@@ -31,6 +31,9 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
 
     # --- Generate and submit global_time_series scripts ---
     for c in tasks:
+        if c["make_viewer"]:
+            c["nrows"] = 1
+            c["ncols"] = 1
         c["ts_num_years"] = int(c["ts_num_years"])
         # Loop over year sets
         year_sets = get_years(c["years"])

@@ -7,7 +7,7 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "unique_id"
+UNIQUE_ID = "test_pr697_20250327_try10"
 
 # Image checking ##########################################################
 
@@ -171,11 +171,11 @@ def get_chyrsalis_expansions(config):
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         # To use default environment_commands, set to ""
-        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+        "diags_environment_commands": "",
         "diags_walltime": "5:00:00",
-        "environment_commands_test": "",
+        "environment_commands_test": "source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.11.0rc13_chrysalis.sh",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
-        "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+        "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi_plots_lnd_20250326",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
         "partition_short": "debug",
@@ -349,8 +349,14 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "min_case_e3sm_diags_tropical_subseasonal",
         "min_case_global_time_series_comprehensive_v3_setup_only",
         "min_case_global_time_series_custom",
+        "min_case_global_time_series_original_8_missing_ocn",
         "min_case_global_time_series_original_8_no_ocn",
         "min_case_global_time_series_original_8",
+        "min_case_global_time_series_viewers",
+        "min_case_global_time_series_viewers_all_land_variables",
+        "min_case_global_time_series_viewers_original_8",
+        "min_case_global_time_series_viewers_original_atm_plus_land",
+        "min_case_global_time_series_viewers_undefined_variables",
         "min_case_ilamb_diff_years",
         "min_case_ilamb_land_only",
         "min_case_ilamb",
@@ -398,4 +404,4 @@ def generate_cfgs(unified_testing=False, dry_run=False):
 
 
 if __name__ == "__main__":
-    generate_cfgs(unified_testing=False, dry_run=False)
+    generate_cfgs(unified_testing=True, dry_run=False)
