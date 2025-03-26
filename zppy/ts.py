@@ -33,6 +33,9 @@ def ts(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
     # --- Generate and submit ts scripts ---
     for c in tasks:
         set_mapping_file(c)
+        # if c["mapping_file"] == "glb":
+        #     variables_3d = ["U","PCT_LANDUNIT_tmp","TLAKE_tmp,LAKEICEFRAC_tmp","SOILLIQ_ICE_tmp","W_SCALAR_tmp","T_SCALAR_tmp","SOILICE_ICE_tmp","SOILPSI_tmp","O_SCALAR_tmp","H2OSOI_tmp"]
+        #     var_list = c["vars"]
         set_grid(c)
         set_component_and_prc_typ(c)
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
