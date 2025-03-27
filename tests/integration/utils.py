@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from typing import List
 
 from mache import MachineInfo
@@ -282,7 +283,12 @@ def substitute_expansions(expansions, file_in, file_out):
                 file_write.write(line)
 
 
-def generate_cfgs(unified_testing=False, dry_run=False):
+def generate_cfgs(
+    unified_testing=False,
+    diags_environment_commands=None,
+    global_time_series_environment_commands=None,
+    dry_run=False,
+):
     git_top_level = (
         subprocess.check_output("git rev-parse --show-toplevel".split())
         .strip()
@@ -304,6 +310,14 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         # The cfg doesn't need this line,
         # but it would be difficult to only write environment_commands in the unified_testing case.
         expansions["environment_commands"] = ""
+
+    if diags_environment_commands:
+        expansions["diags_environment_commands"] = diags_environment_commands
+    if global_time_series_environment_commands:
+        expansions["global_time_series_environment_commands"] = (
+            global_time_series_environment_commands
+        )
+
     machine = expansions["machine"]
 
     if dry_run:
@@ -398,4 +412,12 @@ def generate_cfgs(unified_testing=False, dry_run=False):
 
 
 if __name__ == "__main__":
-    generate_cfgs(unified_testing=False, dry_run=False)
+    if len(sys.argv) <= 2:
+        generate_cfgs(unified_testing=False, dry_run=False)
+    else:
+        generate_cfgs(
+            unified_testing=sys.argv[2] == "True",
+            diags_environment_commands=sys.argv[3],
+            global_time_series_environment_commands=sys.argv[4],
+            dry_run=False,
+        )
