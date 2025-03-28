@@ -7,7 +7,7 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "test_pr697_20250328_try2"
+UNIQUE_ID = "unique_id"
 
 # Image checking ##########################################################
 
@@ -171,11 +171,11 @@ def get_chyrsalis_expansions(config):
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
         # To use default environment_commands, set to ""
-        "diags_environment_commands": "",
+        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "5:00:00",
-        "environment_commands_test": "source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.11.0rc13_chrysalis.sh",
+        "environment_commands_test": "",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
-        "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi_plots_lnd_20250326",
+        "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
         "partition_short": "debug",
@@ -404,4 +404,4 @@ def generate_cfgs(unified_testing=False, dry_run=False):
 
 
 if __name__ == "__main__":
-    generate_cfgs(unified_testing=True, dry_run=False)
+    generate_cfgs(unified_testing=False, dry_run=False)
