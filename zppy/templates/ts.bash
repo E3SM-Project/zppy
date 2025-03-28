@@ -66,6 +66,8 @@ cat input.txt | ncclimo \
 -c {{ case }} \
 {%- if vars != '' %}
 -v ${vars} \
+{%- elif 'elm' in input_files %}
+--xcl_var -v {{ vars_exclude }} \
 {%- endif %}
 --split \
 {%- if extra_vars != '' %}
