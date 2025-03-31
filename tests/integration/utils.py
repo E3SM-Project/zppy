@@ -12,6 +12,26 @@ UNIQUE_ID = "unique_id"
 # Image checking ##########################################################
 
 
+# Originally in https://github.com/E3SM-Project/zppy/pull/695
+class TestResults(object):
+    def __init__(
+        self,
+        diff_dir: str,
+        image_count_total: int,
+        file_list_missing: List[str],
+        file_list_mismatched: List[str],
+    ):
+        self.diff_dir = diff_dir
+        self.image_count_total = image_count_total
+        self.image_count_missing = len(file_list_missing)
+        self.image_count_mismatched = len(file_list_mismatched)
+        self.image_count_correct = (
+            image_count_total - len(file_list_missing) - len(file_list_mismatched)
+        )
+        self.file_list_missing = sorted(file_list_missing)
+        self.file_list_mismatched = sorted(file_list_mismatched)
+
+
 # Copied from E3SM Diags
 def compare_images(
     missing_images,
@@ -92,12 +112,12 @@ def compare_images(
 
 
 def check_mismatched_images(
-    actual_images_dir,
-    expected_images_file,
-    expected_images_dir,
-    diff_dir,
-    subdirs_to_check,
-):
+    actual_images_dir: str,
+    expected_images_file: str,
+    expected_images_dir: str,
+    diff_dir: str,
+    subdirs_to_check: List[str],
+) -> TestResults:
     missing_images: List[str] = []
     mismatched_images: List[str] = []
 
@@ -142,6 +162,7 @@ def check_mismatched_images(
     print(
         f"Number of correct images: {counter - len(missing_images) - len(mismatched_images)}"
     )
+    test_results = TestResults(diff_dir, counter, missing_images, mismatched_images)
 
     # Make diff_dir readable
     if os.path.exists(diff_dir):
@@ -151,8 +172,7 @@ def check_mismatched_images(
         # That is, if we're in this case, we expect the following:
         assert len(missing_images) == counter
 
-    assert missing_images == []
-    assert mismatched_images == []
+    return test_results
 
 
 # Multi-machine testing ##########################################################
@@ -175,6 +195,7 @@ def get_chyrsalis_expansions(config):
         "diags_walltime": "5:00:00",
         "environment_commands_test": "",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
+        "expected_dir_min_case": "/lcrc/group/e3sm/ac.forsyth2/zppy_min_case_resources/",
         "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
@@ -204,6 +225,7 @@ def get_compy_expansions(config):
         "diags_walltime": "03:00:00",
         "environment_commands_test": "",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
+        "expected_dir_min_case": "",
         "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "slurm",
@@ -233,6 +255,7 @@ def get_perlmutter_expansions(config):
         "diags_walltime": "6:00:00",
         "environment_commands_test": "",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
+        "expected_dir_min_case": "",
         "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "mpas_analysis_walltime": "01:00:00",
         "partition_long": "",
@@ -276,6 +299,15 @@ def substitute_expansions(expansions, file_in, file_out):
                 while match_object is not None:
                     expansion_indicator = match_object.group(0)
                     expansion_name = match_object.group(1)
+                    # TODO: add these prefixes and suffixes to ALL min case cfg's
+                    if expansion_name == "output_prefix":
+                        expansion = f"{expansions['user_output']}zppy_test_results/{expansions['unique_id']}/zppy_"
+                    elif expansion_name == "output_suffix":
+                        expansion = f"_output/{expansions['case_name']}"
+                    elif expansion_name == "www_prefix":
+                        expansion = f"{expansions['user_www']}zppy_test_results/{expansions['unique_id']}/zppy_"
+                    else:
+                        expansion = "_www/"  # No case_name here
                     expansion = expansions[expansion_name]
                     line = line.replace(expansion_indicator, expansion)
                     match_object = re.search("#expand ([^#]*)#", line)
