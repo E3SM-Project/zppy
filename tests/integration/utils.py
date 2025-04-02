@@ -409,7 +409,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "bash_generation",
         "campaign",
         "defaults",
-        "weekly",
+        "weekly",  # for both test_bundles and test_images
     ]
     for script_name in script_names:
         script_template = f"{git_top_level}/tests/integration/template_update_{script_name}_expected_files.sh"

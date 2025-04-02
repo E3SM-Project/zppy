@@ -1,4 +1,4 @@
-# Run this script to update expected files for test_weekly.py
+# Run this script to update expected files used by both test_bundles.py & test_images.py.
 # Run from the top level of the zppy repo
 # Run as `./tests/integration/generated/update_weekly_expected_files_#expand machine#.sh`
 
@@ -27,4 +27,5 @@ do
 done
 
 # Rerun test
-pytest tests/integration/test_weekly.py
+pytest tests/integration/test_bundles.py
+pytest tests/integration/test_images.py

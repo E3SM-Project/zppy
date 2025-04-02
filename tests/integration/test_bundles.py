@@ -1,100 +1,16 @@
 import os
 
-from tests.integration.utils import check_mismatched_images, get_expansions
+from tests.integration.utils import get_expansions
 
 V3_CASE_NAME = "v3.LR.historical_0051"
-V2_CASE_NAME = "v2.LR.historical_0201"
-
-
-def check_images(test_name, case_name, subdir):
-    # See docs/source/dev_guide/testing.rst for steps to run before running this test.
-    expansions = get_expansions()
-    expected_dir = expansions["expected_dir"]
-    user_www = expansions["user_www"]
-    unique_id = expansions["unique_id"]
-    actual_images_dir = (
-        f"{user_www}zppy_weekly_{test_name}_www/{unique_id}/{case_name}/"
-    )
-
-    # The expected_images_file lists all images we expect to compare.
-    expected_images_file = f"{expected_dir}image_list_expected_{test_name}.txt"
-    expected_images_dir = f"{expected_dir}expected_{test_name}"
-
-    # The directory to place differences in.
-    diff_dir = f"{actual_images_dir}image_check_failures_{test_name}"
-
-    check_mismatched_images(
-        actual_images_dir,
-        expected_images_file,
-        expected_images_dir,
-        diff_dir,
-        subdir,
-    )
-
 
 # Run with:
-# pytest tests/integration/test_weekly.py
+# pytest tests/integration/test_bundles.py
 # Comment/uncomment `skip` declarations to run specific tests.
 
-
-# @pytest.mark.skip(reason="Not testing")
-def test_comprehensive_v2_e3sm_diags_images():
-    check_images("comprehensive_v2", V2_CASE_NAME, "e3sm_diags")
-
-
-# @pytest.mark.skip(reason="Not testing")
-def test_comprehensive_v2_mpas_analysis_images():
-    check_images("comprehensive_v2", V2_CASE_NAME, "mpas_analysis")
-
-
-# @pytest.mark.skip(reason="Not testing")
-def test_comprehensive_v2_global_time_series_images():
-    check_images("comprehensive_v2", V2_CASE_NAME, "global_time_series")
-
-
-# @pytest.mark.skip(reason="Not testing")
-def test_comprehensive_v2_ilamb_images():
-    check_images("comprehensive_v2", V2_CASE_NAME, "ilamb")
-
-
-# @pytest.mark.skip(reason="Not testing")
-def test_comprehensive_v3_e3sm_diags_images():
-    check_images("comprehensive_v3", V3_CASE_NAME, "e3sm_diags")
-
-
-# @pytest.mark.skip(reason="Not testing")
-def test_comprehensive_v3_mpas_analysis_images():
-    check_images("comprehensive_v3", V3_CASE_NAME, "mpas_analysis")
-
-
-# @pytest.mark.skip(reason="Not testing")
-def test_comprehensive_v3_global_time_series_images():
-    check_images("comprehensive_v3", V3_CASE_NAME, "global_time_series")
-
-
-# @pytest.mark.skip(reason="Not testing")
-def test_comprehensive_v3_ilamb_images():
-    check_images("comprehensive_v3", V3_CASE_NAME, "ilamb")
-
-
-# @pytest.mark.skip(reason="Not testing")
-def test_bundles_e3sm_diags_images():
-    check_images("bundles", V3_CASE_NAME, "e3sm_diags")
-
-
-# @pytest.mark.skip(reason="Not testing")
-def test_bundles_mpas_analysis_images():
-    check_images("bundles", V3_CASE_NAME, "mpas_analysis")
-
-
-# @pytest.mark.skip(reason="Not testing")
-def test_bundles_global_time_series_images():
-    check_images("bundles", V3_CASE_NAME, "global_time_series")
-
-
-# @pytest.mark.skip(reason="Not testing")
-def test_bundles_ilamb_images():
-    check_images("bundles", V3_CASE_NAME, "ilamb")
+# Image check tests should also be run weekly. Run:
+# pytest tests/integration/test_images.py
+# The bundles tests in this file use the same output as the bundles image tests!
 
 
 # @pytest.mark.skip(reason="Not testing")
