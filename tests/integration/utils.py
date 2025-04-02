@@ -12,6 +12,31 @@ UNIQUE_ID = "unique_id"
 # Image checking ##########################################################
 
 
+# Originally in https://github.com/E3SM-Project/zppy/pull/695
+# And https://github.com/E3SM-Project/zppy/pull/698
+class Results(object):
+    def __init__(
+        self,
+        diff_dir: str,
+        task: str,
+        image_count_total: int,
+        file_list_missing: List[str],
+        file_list_mismatched: List[str],
+    ):
+        if image_count_total == 0:
+            raise ValueError(f"No images found for task {task} in {diff_dir}")
+        self.diff_dir = diff_dir
+        self.task = task
+        self.image_count_total = image_count_total
+        self.image_count_missing = len(file_list_missing)
+        self.image_count_mismatched = len(file_list_mismatched)
+        self.image_count_correct = (
+            image_count_total - len(file_list_missing) - len(file_list_mismatched)
+        )
+        self.file_list_missing = sorted(file_list_missing)
+        self.file_list_mismatched = sorted(file_list_mismatched)
+
+
 # Copied from E3SM Diags
 def compare_images(
     missing_images,
@@ -92,24 +117,24 @@ def compare_images(
 
 
 def check_mismatched_images(
-    actual_images_dir,
-    expected_images_file,
-    expected_images_dir,
-    diff_dir,
-    subdirs_to_check,
-):
+    actual_images_dir: str,
+    expected_images_file: str,
+    expected_images_dir: str,
+    diff_dir: str,
+    task: str,
+) -> Results:
     missing_images: List[str] = []
     mismatched_images: List[str] = []
 
     counter = 0
+    print(f"Opening expected images file {expected_images_file}")
     with open(expected_images_file) as f:
+        print(f"Reading expected images file {expected_images_file}")
         for line in f:
             image_name = line.strip("./").strip("\n")
             proceed = False
-            for subdir in subdirs_to_check:
-                if image_name.startswith(subdir):
-                    proceed = True
-                    break
+            if image_name.startswith(task):
+                proceed = True
             if proceed:
                 counter += 1
                 if counter % 250 == 0:
@@ -142,6 +167,7 @@ def check_mismatched_images(
     print(
         f"Number of correct images: {counter - len(missing_images) - len(mismatched_images)}"
     )
+    test_results = Results(diff_dir, task, counter, missing_images, mismatched_images)
 
     # Make diff_dir readable
     if os.path.exists(diff_dir):
@@ -151,8 +177,7 @@ def check_mismatched_images(
         # That is, if we're in this case, we expect the following:
         assert len(missing_images) == counter
 
-    assert missing_images == []
-    assert mismatched_images == []
+    return test_results
 
 
 # Multi-machine testing ##########################################################

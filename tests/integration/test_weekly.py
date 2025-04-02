@@ -28,7 +28,7 @@ def check_images(test_name, case_name, subdir):
         expected_images_file,
         expected_images_dir,
         diff_dir,
-        [subdir],
+        subdir,
     )
 
 
