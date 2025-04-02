@@ -40,10 +40,12 @@ lnd_ts_for_ilamb={{ output }}/post/lnd/{{ ts_land_grid }}/cmip_ts/monthly/
 atm_ts_for_ilamb={{ output }}/post/atm/{{ ts_atm_grid }}/cmip_ts/monthly/
 # Go through the time series files for between year1 and year2,
 # using a step size equal to the number of years per time series file
-for year in `seq ${Y1} {{ ts_num_years }} ${Y2}`;
+start_year=$(echo $Y1 | sed 's/^0*//')
+end_year=$(echo $Y2 | sed 's/^0*//')
+for year in `seq $start_year {{ ts_num_years }} $end_year`;
 do
-  start_year=`printf "%04d" ${year}`
   end_year_int=$((${start_year} + {{ ts_num_years }} - 1))
+  start_year=`printf "%04d" ${year}`
   end_year=`printf "%04d" ${end_year_int}`
   echo "Copying files for ${start_year} to ${end_year}"
   cp -s ${lnd_ts_for_ilamb}/*_*_*_*_*_*_${start_year}??-${end_year}??.nc .
