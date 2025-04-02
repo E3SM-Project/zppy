@@ -11,6 +11,5 @@ test_*_output
 tests/*.cfg.txt
 tests/integration/image_check_failures*
 
-
 # Sphinx documentation
 docs/_build/

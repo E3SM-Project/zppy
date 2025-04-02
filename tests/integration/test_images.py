@@ -144,9 +144,10 @@ def construct_markdown_summary_table(
 
 def test_images():
     # To test a different branch, set this to True, and manually set the expansions.
-    TEST_DIFFERENT_EXPANSIONS = True
+    TEST_DIFFERENT_EXPANSIONS = False
     if TEST_DIFFERENT_EXPANSIONS:
         expansions = dict()
+        # Example settings:
         expansions["expected_dir"] = "/lcrc/group/e3sm/public_html/zppy_test_resources/"
         expansions["user_www"] = (
             "/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/"
