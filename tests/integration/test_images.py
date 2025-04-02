@@ -105,21 +105,24 @@ def check_images(expansions, cfg_specifier, case_name, task, diff_dir_suffix="")
         task,
     )
     diff_subdir = f"{diff_dir}/{task}"
-    # Write missing and mismatched images to files
-    missing_images_file = f"{diff_subdir}/missing_images.txt"
-    if os.path.exists(missing_images_file):
-        os.remove(missing_images_file)
-    for missing_image in test_results.file_list_missing:
-        with open(missing_images_file, "a") as f:
-            f.write(f"{missing_image}\n")
-    mismatched_images_file = f"{diff_subdir}/mismatched_images.txt"
-    if os.path.exists(mismatched_images_file):
-        os.remove(mismatched_images_file)
-    for mismatched_image in test_results.file_list_mismatched:
-        with open(mismatched_images_file, "a") as f:
-            f.write(f"{mismatched_image}\n")
-    # Create image diff grid
-    # make_image_diff_grid(diff_subdir)
+    if os.path.exists(diff_subdir):
+        # Write missing and mismatched images to files
+        missing_images_file = f"{diff_subdir}/missing_images.txt"
+        if os.path.exists(missing_images_file):
+            os.remove(missing_images_file)
+        for missing_image in test_results.file_list_missing:
+            with open(missing_images_file, "a") as f:
+                f.write(f"{missing_image}\n")
+        mismatched_images_file = f"{diff_subdir}/mismatched_images.txt"
+        if os.path.exists(mismatched_images_file):
+            os.remove(mismatched_images_file)
+        for mismatched_image in test_results.file_list_mismatched:
+            with open(mismatched_images_file, "a") as f:
+                f.write(f"{mismatched_image}\n")
+        # Create image diff grid
+        # make_image_diff_grid(diff_subdir)
+    else:
+        print(f"Diff subdir {diff_subdir} does not exist.")
     return test_results
 
 
@@ -158,34 +161,43 @@ def test_images():
         expansions = get_expansions()
         diff_dir_suffix = ""
     test_results_dict: Dict[str, Results] = dict()
-    for task in ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]:
-        test_results = check_images(
-            expansions,
-            "comprehensive_v2",
-            V2_CASE_NAME,
-            task,
-            diff_dir_suffix=diff_dir_suffix,
+    try:
+        print("Image checking comprehensive_v2")
+        for task in ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]:
+            test_results = check_images(
+                expansions,
+                "comprehensive_v2",
+                V2_CASE_NAME,
+                task,
+                diff_dir_suffix=diff_dir_suffix,
+            )
+            test_results_dict[f"comprehensive_v2_{task}"] = test_results
+        print("Image checking comprehensive_v3")
+        for task in ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]:
+            test_results = check_images(
+                expansions,
+                "comprehensive_v3",
+                V3_CASE_NAME,
+                task,
+                diff_dir_suffix=diff_dir_suffix,
+            )
+            test_results_dict[f"comprehensive_v3_{task}"] = test_results
+        print("Image checking bundles")
+        for task in ["e3sm_diags", "global_time_series", "ilamb"]:  # No mpas_analysis
+            test_results = check_images(
+                expansions,
+                "bundles",
+                V3_CASE_NAME,
+                task,
+                diff_dir_suffix=diff_dir_suffix,
+            )
+            test_results_dict[f"bundles_{task}"] = test_results
+    except Exception as e:
+        construct_markdown_summary_table(
+            test_results_dict, "early_test_images_summary.md"
         )
-        test_results_dict[f"comprehensive_v2_{task}"] = test_results
-    for task in ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]:
-        test_results = check_images(
-            expansions,
-            "comprehensive_v3",
-            V3_CASE_NAME,
-            task,
-            diff_dir_suffix=diff_dir_suffix,
-        )
-        test_results_dict[f"comprehensive_v3_{task}"] = test_results
-    for task in ["e3sm_diags", "global_time_series", "ilamb"]:  # No mpas_analysis
-        test_results = check_images(
-            expansions,
-            "bundles",
-            V3_CASE_NAME,
-            task,
-            diff_dir_suffix=diff_dir_suffix,
-        )
-        test_results_dict[f"bundles_{task}"] = test_results
-    md_path = "min_case_summary.md"
+        raise e
+    md_path = "test_images_summary.md"
     construct_markdown_summary_table(test_results_dict, md_path)
     print(f"Copy output of {md_path} to a PR comment.")
     for tr in test_results_dict.values():
