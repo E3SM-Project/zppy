@@ -6,6 +6,7 @@ zppy.egg-info/
 \#*
 
 examples/example_compy.cfg
+min_case_summary.md
 test_*_output
 tests/*.cfg.txt
 tests/integration/image_check_failures*
