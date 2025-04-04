@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to Prepare a Release &mdash; zppy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Testing zppy for E3SM Unified release" href="tutorial_testing_e3sm_unified.html" />
+    <link rel="prev" title="Testing directions for making a release" href="release_testing.html" />
+    <link href="../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Zppy documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../campaigns.html">Campaigns</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="project-standards.html">Project Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ci.html">Understanding CI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release_testing.html">Testing directions for making a release</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">How to Prepare a Release</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#preparing-the-documentation">Preparing the Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bumping-the-version">Bumping the Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#releasing-on-github-release-candidates">Releasing on GitHub: release candidates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#releasing-on-github-production-releases">Releasing on GitHub: production releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#releasing-on-conda-forge-release-candidates">Releasing on conda-forge: release candidates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#releasing-on-conda-forge-production-releases">Releasing on conda-forge: production releases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-new-version-of-the-documentation">Creating a New Version of the Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#extra-resources">Extra Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_testing_e3sm_unified.html">Testing zppy for E3SM Unified release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_diags_set.html">Adding a new set to the E3SM Diagnostics task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_glb_plot.html">Adding a new plot to Global Time Series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_task.html">Adding a new task</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to This Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Developer Guide</a> &raquo;</li>
+      <li>How to Prepare a Release</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/dev_guide/release.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="how-to-prepare-a-release">
+<h1>How to Prepare a Release<a class="headerlink" href="#how-to-prepare-a-release" title="Permalink to this heading"></a></h1>
+<p>In this guide, we’ll cover:</p>
+<ul class="simple">
+<li><p>Preparing the Documentation</p></li>
+<li><p>Bumping the Version</p></li>
+<li><p>Releasing On GitHub</p></li>
+<li><p>Releasing The Software On Anaconda</p></li>
+<li><p>Creating a New Version of the Documentation</p></li>
+</ul>
+<div class="section" id="preparing-the-documentation">
+<h2>Preparing the Documentation<a class="headerlink" href="#preparing-the-documentation" title="Permalink to this heading"></a></h2>
+<p>This step is only required for production releases, not release candidates.</p>
+<ol class="arabic">
+<li><p>Checkout a branch</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">fetch</span> <span class="n">upstream</span> <span class="n">main</span>
+<span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="n">versioned</span><span class="o">-</span><span class="n">docs</span> <span class="n">upstream</span><span class="o">/</span><span class="n">main</span>
+</pre></div>
+</div>
+</li>
+<li><p>Edit <code class="docutils literal notranslate"><span class="pre">docs/source/parameters.rst</span></code>: in <code class="docutils literal notranslate"><span class="pre">https://github.com/E3SM-Project/zppy/blob/main/zppy/templates/default.ini</span></code>, replace <code class="docutils literal notranslate"><span class="pre">main</span></code> with the hash of the latest commit.</p></li>
+<li><p>Create a pull request to the main repo and merge it. Now, when the next version of the documentation is created (see last part of this page), it will point to the relevant defaults. Mark yourself as the assignee, and mark “Documentation” as the label.</p></li>
+</ol>
+</div>
+<div class="section" id="bumping-the-version">
+<h2>Bumping the Version<a class="headerlink" href="#bumping-the-version" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Checkout a branch with the name of the version.</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">fetch</span> <span class="n">upstream</span> <span class="n">main</span>
+<span class="c1"># Prepend &quot;v&quot; to &lt;version&gt;</span>
+<span class="c1"># For release candidates, append &quot;rc&quot; to &lt;version&gt;</span>
+<span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="n">v</span><span class="o">&lt;</span><span class="n">version</span><span class="o">&gt;</span> <span class="n">upstream</span><span class="o">/</span><span class="n">main</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Bump version using tbump. Example, bumping to v1.1.0:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Exclude &quot;v&quot; and &lt;version&gt; should match the above step.
+# --no-tag is required since tagging is handled in &quot;Releasing on GitHub&quot;
+$ tbump &lt;version&gt; --no-tag
+
+:: Bumping from 1.0.0 to 1.1.0
+=&gt; Would patch these files
+- setup.py:26 version=&quot;1.0.0&quot;,
++ setup.py:26 version=&quot;1.1.0&quot;,
+- zppy/__init__.py:1 __version__ = &quot;v1.0.0&quot;
++ zppy/__init__.py:1 __version__ = &quot;v1.1.0&quot;
+- conda/meta.yaml:2 {% set version = &quot;1.0.0&quot; %}
++ conda/meta.yaml:2 {% set version = &quot;1.1.0&quot; %}
+- tbump.toml:5 current = &quot;1.0.0&quot;
++ tbump.toml:5 current = &quot;1.1.0&quot;
+=&gt; Would run these git commands
+$ git add --update
+$ git commit --message Bump to 1.1.0
+$ git push origin v1.1.0
+:: Looking good? (y/N)
+&gt;
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>If you encounter <code class="docutils literal notranslate"><span class="pre">Error:</span> <span class="pre">Command</span> <span class="pre">`git</span> <span class="pre">push</span> <span class="pre">upstream</span> <span class="pre">main`</span> <span class="pre">failed</span></code>, as in <a class="reference external" href="https://github.com/E3SM-Project/zppy/issues/470">issue 470</a>, you can run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">upstream</span> <span class="pre">&lt;branch&gt;</span></code> yourself.</p></li>
+<li><p>Create a pull request to the main repo and merge it. Mark yourself as the assignee, and mark “Update version” as the label.</p></li>
+</ol>
+</div>
+<div class="section" id="releasing-on-github-release-candidates">
+<span id="github-release"></span><h2>Releasing on GitHub: release candidates<a class="headerlink" href="#releasing-on-github-release-candidates" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Create a tag for the release candidate at <a class="reference external" href="https://github.com/E3SM-Project/zppy/tags">https://github.com/E3SM-Project/zppy/tags</a>. Example, bumping to v1.1.0rc1:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git checkout main
+$ git fetch upstream
+$ git reset --hard upstream/main
+$ git tag -a v1.1.0rc1 -m &quot;v1.1.0rc1&quot;
+# Delete the branch from the tbump step. Otherwise, the push command won&#39;t work.
+$ git branch -D v1.1.0rc1
+$ git push upstream v1.1.0rc1
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="releasing-on-github-production-releases">
+<h2>Releasing on GitHub: production releases<a class="headerlink" href="#releasing-on-github-production-releases" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Draft a new release <a class="reference external" href="https://github.com/E3SM-Project/zppy/releases">here</a>. You can save this and come back to it later, if need be.</p></li>
+<li><p>Set <cite>Tag version</cite> to <code class="docutils literal notranslate"><span class="pre">v&lt;version&gt;</span></code>, <strong>including the “v”</strong>. <cite>&#64;Target</cite> should be <code class="docutils literal notranslate"><span class="pre">main</span></code>.</p></li>
+<li><p>Set <cite>Release title</cite> to <code class="docutils literal notranslate"><span class="pre">v&lt;version&gt;</span></code>, <strong>including the “v”</strong>.</p></li>
+<li><p>Use <cite>Describe this release</cite> to summarize the changelog.</p>
+<ul class="simple">
+<li><p>You can scroll through <a class="reference external" href="https://github.com/E3SM-Project/zppy/commits/main">zppy commits</a> for a list of changes.</p></li>
+<li><p>You can look at the last release to get an idea of how to format the description.</p></li>
+</ul>
+</li>
+<li><p>Click <cite>Publish release</cite>.</p></li>
+<li><p>CI/CD release workflow is automatically triggered.</p></li>
+</ol>
+</div>
+<div class="section" id="releasing-on-conda-forge-release-candidates">
+<h2>Releasing on conda-forge: release candidates<a class="headerlink" href="#releasing-on-conda-forge-release-candidates" title="Permalink to this heading"></a></h2>
+<ol class="arabic">
+<li><p>If you don’t have a local version of the conda-forge repo, run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">git</span><span class="nd">@github</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="o">/</span><span class="n">zppy</span><span class="o">-</span><span class="n">feedstock</span><span class="o">.</span><span class="n">git</span>
+<span class="n">git</span> <span class="n">remote</span> <span class="n">add</span> <span class="n">upstream</span> <span class="n">git</span><span class="nd">@github</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="n">conda</span><span class="o">-</span><span class="n">forge</span><span class="o">/</span><span class="n">zppy</span><span class="o">-</span><span class="n">feedstock</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+</li>
+<li><p>If you don’t have a fork of the conda-forge repo, on <a class="reference external" href="https://github.com/conda-forge/zppy-feedstock/">conda-forge</a>, click the “Fork” button in the upper right hand corner. Then, on your fork, click the green “Code” button, and copy the SSH path. Run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">remote</span> <span class="n">add</span> <span class="o">&lt;</span><span class="n">your</span> <span class="n">fork</span> <span class="n">name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">SSH</span> <span class="n">path</span> <span class="k">for</span> <span class="n">your</span> <span class="n">fork</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Get the sha256 of the tag you made in “Releasing on GitHub: release candidates”:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">curl</span> <span class="o">-</span><span class="n">sL</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">E3SM</span><span class="o">-</span><span class="n">Project</span><span class="o">/</span><span class="n">zppy</span><span class="o">/</span><span class="n">archive</span><span class="o">/</span><span class="n">v1</span><span class="mf">.1.0</span><span class="n">rc1</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span> <span class="o">|</span> <span class="n">openssl</span> <span class="n">sha256</span>
+</pre></div>
+</div>
+</li>
+<li><p>Make changes on a local branch. Example, bumping to v1.1.0rc1:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git fetch upstream dev
+$ git checkout -b v1.1.0rc1 upstream/dev # You can name the branch anything you want
+# In `recipe/meta.yaml`, update the version and sha256 (and the build number if needed):
+{% set version = &quot;1.1.0rc1&quot; %} # Set to your version
+sha256: ... # The sha256 from the previous step
+number: 0 # build &gt; number should always be 0
+$ git add -A
+$ git commit -m &quot;v1.1.0rc1&quot;
+$ git push &lt;your fork name&gt; v1.1.0rc1
+</pre></div>
+</div>
+</li>
+<li><p>Note that the conda-forge bot does not work for release candidates. So, make a PR manually from your fork of the feedstock to the <code class="docutils literal notranslate"><span class="pre">dev</span></code> branch of <a class="reference external" href="https://github.com/conda-forge/zppy-feedstock/">conda-forge</a>. Then, the package build on conda-forge will end up with the <code class="docutils literal notranslate"><span class="pre">zppy_dev</span></code> label. You can add the “automerge” label to have the PR automatically merge once CI checks pass.</p></li>
+<li><p>After merging, CI runs again (in a slightly different way). Then, check the <a class="reference external" href="https://anaconda.org/conda-forge/zppy">https://anaconda.org/conda-forge/zppy</a> page to view the newly updated package. Release candidates are assigned the <code class="docutils literal notranslate"><span class="pre">zppy_dev</span></code> label. Note that it takes about 15 minutes for the files to propagate across conda-forge’s mirroring services, which must happen before you can use the files.</p></li>
+</ol>
+</div>
+<div class="section" id="releasing-on-conda-forge-production-releases">
+<h2>Releasing on conda-forge: production releases<a class="headerlink" href="#releasing-on-conda-forge-production-releases" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Be sure to have already completed <a class="reference internal" href="#github-release"><span class="std std-ref">Releasing On GitHub</span></a>. This triggers the CI/CD workflow that handles Anaconda releases.</p></li>
+<li><p>Wait for a bot PR to come up automatically on conda-forge after the GitHub release. This can happen anywhere from 1 hour to 1 day later.</p></li>
+<li><p>Re-render the PR (see <a class="reference external" href="https://conda-forge.org/docs/maintainer/updating_pkgs.html#rerendering-feedstocks">docs</a>).</p></li>
+<li><p>Merge the PR on conda-forge.</p></li>
+<li><p>Check the <a class="reference external" href="https://anaconda.org/conda-forge/zppy">https://anaconda.org/conda-forge/zppy</a> page to view the newly updated package. Production releases are assigned the <code class="docutils literal notranslate"><span class="pre">main</span></code> label.</p></li>
+<li><p>Notify the maintainers of the unified E3SM environment about the new release on the <a class="reference external" href="https://acme-climate.atlassian.net/wiki/spaces/WORKFLOW/pages/129732419/E3SM+Unified+Anaconda+Environment">E3SM Confluence site</a>.</p>
+<ul class="simple">
+<li><p>Be sure to only update the <code class="docutils literal notranslate"><span class="pre">zppy</span></code> version number in the correct version(s) of the E3SM Unified environment.</p></li>
+<li><p>This is almost certainly one of the E3SM Unified versions listed under “Next versions”. If you are uncertain of which to update, leave a comment on the page asking.</p></li>
+</ul>
+</li>
+</ol>
+</div>
+<div class="section" id="creating-a-new-version-of-the-documentation">
+<h2>Creating a New Version of the Documentation<a class="headerlink" href="#creating-a-new-version-of-the-documentation" title="Permalink to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Be sure to have already completed <a class="reference internal" href="#github-release"><span class="std std-ref">Releasing On GitHub</span></a>. This triggers the CI/CD workflow that handles publishing documentation versions.</p></li>
+<li><p>Wait until the CI/CD build is successful. You can view all workflows at <a class="reference external" href="https://github.com/E3SM-Project/zppy/actions">All Workflows</a>.</p></li>
+<li><p>Changes will be available on the <a class="reference external" href="https://e3sm-project.github.io/zppy/">zppy documentation page</a>. You can check if it really is the latest version, by going to <a class="reference external" href="https://e3sm-project.github.io/zppy/_build/html/main/parameters.html">https://e3sm-project.github.io/zppy/_build/html/main/parameters.html</a>, then checking if the “paramter defaults” link includes the proper hash. It should match the commit before “Update defaults in docs” on <a class="reference external" href="https://github.com/E3SM-Project/zppy/commits/main">https://github.com/E3SM-Project/zppy/commits/main</a>.</p></li>
+</ol>
+</div>
+<div class="section" id="extra-resources">
+<h2>Extra Resources<a class="headerlink" href="#extra-resources" title="Permalink to this heading"></a></h2>
+<p>Conda-forge:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://conda-forge.org/docs/user/introduction.html#why-conda-forge">https://conda-forge.org/docs/user/introduction.html#why-conda-forge</a></p></li>
+<li><p><a class="reference external" href="https://conda-forge.org/docs/maintainer/infrastructure.html#admin-web-services">https://conda-forge.org/docs/maintainer/infrastructure.html#admin-web-services</a></p></li>
+<li><p><a class="reference external" href="https://acme-climate.atlassian.net/wiki/spaces/IPD/pages/3616735236/Releasing+E3SM+Software+on+Anaconda+conda-forge+channel">https://acme-climate.atlassian.net/wiki/spaces/IPD/pages/3616735236/Releasing+E3SM+Software+on+Anaconda+conda-forge+channel</a></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="release_testing.html" class="btn btn-neutral float-left" title="Testing directions for making a release" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tutorial_testing_e3sm_unified.html" class="btn btn-neutral float-right" title="Testing zppy for E3SM Unified release" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v3.0.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../v1.0.0/dev_guide/release.html">v1.0.0</a></dd>
+      <dd><a href="../../v1.1.0/dev_guide/release.html">v1.1.0</a></dd>
+      <dd><a href="../../v2.0.0/dev_guide/release.html">v2.0.0</a></dd>
+      <dd><a href="../../v2.1.0/dev_guide/release.html">v2.1.0</a></dd>
+      <dd><a href="../../v2.2.0/dev_guide/release.html">v2.2.0</a></dd>
+      <dd><a href="../../v2.3.0/dev_guide/release.html">v2.3.0</a></dd>
+      <dd><a href="../../v2.3.1/dev_guide/release.html">v2.3.1</a></dd>
+      <dd><a href="../../v2.4.0/dev_guide/release.html">v2.4.0</a></dd>
+      <dd><a href="../../v2.5.0/dev_guide/release.html">v2.5.0</a></dd>
+      <dd><a href="release.html">v3.0.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../main/dev_guide/release.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

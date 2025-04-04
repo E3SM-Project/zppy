@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testing directions for making a release &mdash; zppy  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="How to Prepare a Release" href="release.html" />
+    <link rel="prev" title="Testing zppy" href="testing.html" />
+    <link href="../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Zppy documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../campaigns.html">Campaigns</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="project-standards.html">Project Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ci.html">Understanding CI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing zppy</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Testing directions for making a release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html">How to Prepare a Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_testing_e3sm_unified.html">Testing zppy for E3SM Unified release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_diags_set.html">Adding a new set to the E3SM Diagnostics task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_glb_plot.html">Adding a new plot to Global Time Series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_task.html">Adding a new task</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to This Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Developer Guide</a> &raquo;</li>
+      <li>Testing directions for making a release</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/dev_guide/release_testing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="testing-directions-for-making-a-release">
+<h1>Testing directions for making a release<a class="headerlink" href="#testing-directions-for-making-a-release" title="Permalink to this heading"></a></h1>
+<ol class="arabic">
+<li><p>Have three shells open: one on Chrysalis, one on Compy, and one on Perlmutter. Do the following steps on each machine.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cd</span></code> to the <code class="docutils literal notranslate"><span class="pre">zppy</span></code> directory.</p></li>
+<li><p>Check out a branch to test on.</p>
+<blockquote>
+<div><ol class="loweralpha">
+<li><p>test dev (run before making a new zppy RC)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">fetch</span> <span class="n">upstream</span> <span class="n">main</span>
+<span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="n">test_zppy_pre_</span><span class="c1">#.#.#rc#_&lt;machine_name&gt; upstream/main</span>
+<span class="n">git</span> <span class="n">log</span> <span class="c1"># check the commits match https://github.com/E3SM-Project/zppy/commits/main</span>
+</pre></div>
+</div>
+</li>
+<li><p>test new Unified RC</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">fetch</span> <span class="n">upstream</span> <span class="n">main</span>
+<span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="n">test_unified_</span><span class="c1">#.#.#rc#_&lt;machine_name&gt; upstream/main</span>
+<span class="n">git</span> <span class="n">log</span> <span class="c1"># check the commits match https://github.com/E3SM-Project/zppy/commits/main</span>
+</pre></div>
+</div>
+</li>
+<li><p>test final Unified</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">fetch</span> <span class="n">upstream</span> <span class="n">main</span>
+<span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="n">test_unified_</span><span class="c1">#.#.#rc#_&lt;machine_name&gt; upstream/main</span>
+<span class="n">git</span> <span class="n">log</span> <span class="c1"># check the commits match https://github.com/E3SM-Project/zppy/commits/main</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Set up a dev environment for E3SM Diags. This is used for the <code class="docutils literal notranslate"><span class="pre">diags_environment_commands</span></code> parameter. Normally, this is only used for checking <code class="docutils literal notranslate"><span class="pre">environment_commands</span></code> works properly. However, by modifying the test templates, it’s possible to run other E3SM Diags subtasks in a different environment. This can be useful if a bug fix in E3SM Diags hasn’t been incorporated into the latest Unified RC yet.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># `cd` to e3sm_diags directory
+$ git checkout main
+$ git fetch upstream
+$ git reset --hard upstream/main
+$ git log # Should match https://github.com/E3SM-Project/e3sm_diags/commits/main
+$ mamba clean --all
+$ mamba env create -f conda-env/dev.yml -n e3sm_diags_&lt;date&gt;
+$ conda activate e3sm_diags_&lt;date&gt;
+$ pip install .
+$ `cd` back to zppy directory
+</pre></div>
+</div>
+</li>
+<li><p>Make sure you’re using the latest packages. In <code class="docutils literal notranslate"><span class="pre">tests/integration/utils.py</span></code>, do the following:</p>
+<blockquote>
+<div><ol class="loweralpha">
+<li><p>test dev (run before making a new zppy RC):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If it’s the first zppy RC (i.e., a Unified RC hasn’t been made yet): Change the last line <code class="docutils literal notranslate"><span class="pre">generate_cfgs()</span></code> to <code class="docutils literal notranslate"><span class="pre">generate_cfgs(unified_testing=False)</span></code>. We want to use the latest officially released E3SM Unified environment.</p></li>
+<li><p>Otherwise: follow the (b: test new Unified RC) directions for this step.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>test new Unified RC</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Change the last line <code class="docutils literal notranslate"><span class="pre">generate_cfgs()</span></code> to <code class="docutils literal notranslate"><span class="pre">generate_cfgs(unified_testing=True)</span></code>. We <strong>don’t</strong> want to use the latest officially released E3SM Unified environment.</p></li>
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">environment_commands_test</span></code> for the machine you’re currently working on. If this is not done, then <code class="docutils literal notranslate"><span class="pre">zppy</span></code> will use the existing value, which is likely an old E3SM Unified RC launch script that doesn’t even exist anymore. This parameter should be set to source the latest E3SM Unified RC launch script, since E3SM Unified is the only environment that all <code class="docutils literal notranslate"><span class="pre">zppy</span></code> tasks can run from. For instance, <code class="docutils literal notranslate"><span class="pre">ncclimo</span></code> isn’t in the <code class="docutils literal notranslate"><span class="pre">zppy</span></code> dev environment.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>test final Unified</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Change the last line <code class="docutils literal notranslate"><span class="pre">generate_cfgs()</span></code> to <code class="docutils literal notranslate"><span class="pre">generate_cfgs(unified_testing=False)</span></code>. We want to use the latest officially released E3SM Unified environment.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+<p>For a, b, and c, always:</p>
+<ul class="simple">
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">diags_environment_commands</span></code> for the machine you’re currently working on to use the environment created in the above step. If this is not done, the <code class="docutils literal notranslate"><span class="pre">atm_monthly_180x360_aave_environment_commands</span></code> subtask will use an older dev environment for E3SM Diags than we want.</p></li>
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">UNIQUE_ID</span></code> to be a short description of what you’re testing.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Set up your environment.</p>
+<blockquote>
+<div><ol class="loweralpha">
+<li><p>test dev (run before making a new zppy RC): Set up a new development environment. This ensures that testing will use the latest conda changes. Note that you will need to run <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">remove</span> <span class="pre">-n</span> <span class="pre">zppy_dev_pre_zppy_#.#.#rc#</span> <span class="pre">--all</span></code> first if you have previously done this step.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mamba</span> <span class="n">clean</span> <span class="o">--</span><span class="nb">all</span>
+<span class="n">mamba</span> <span class="n">env</span> <span class="n">create</span> <span class="o">-</span><span class="n">f</span> <span class="n">conda</span><span class="o">/</span><span class="n">dev</span><span class="o">.</span><span class="n">yml</span> <span class="o">-</span><span class="n">n</span> <span class="n">zppy_dev_pre_</span><span class="c1">#.#.#rc#</span>
+<span class="n">conda</span> <span class="n">activate</span> <span class="n">zppy_dev_pre_</span><span class="c1">#.#.#rc#</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
+</pre></div>
+</div>
+</li>
+<li><p>test new Unified RC: Launch the E3SM Unified environment for the machine you’re on. Change out the version numbers below.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Chrysalis: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/lcrc/soft/climate/e3sm-unified/test_e3sm_unified_#.#.#rc#_chrysalis.sh</span></code></p></li>
+<li><p>Compy: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/share/apps/E3SM/conda_envs/test_e3sm_unified_#.#.#rc#_compy.sh</span></code></p></li>
+<li><p>Perlmutter: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/global/common/software/e3sm/anaconda_envs/test_e3sm_unified_#.#.#rc#_pm-cpu.sh</span></code></p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>test final Unified: Launch the latest E3SM Unified environment for the machine you’re on.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Chrysalis: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh</span></code></p></li>
+<li><p>Compy: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/share/apps/E3SM/conda_envs/load_latest_e3sm_unified_compy.sh</span></code></p></li>
+<li><p>Perlmutter: <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_pm-cpu.sh</span></code></p></li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Run the unit tests with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">tests/test_*.py</span></code>.</p>
+<blockquote>
+<div><ol class="loweralpha">
+<li><p>test dev (run before making a new zppy RC):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If there are any failures, fix the code (or tests). If you make any conda changes, go back to step 6a. If you otherwise change zppy source code, run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">.</span></code> and then redo step 7. If you only make changes to tests, you can immediately redo step 7.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>test new Unified RC:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If there are any failures, fix the code and go back to step 1, following the (a: test dev (run before making a new zppy RC)) directions.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>test final Unified:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>There should be no failures. If there are, a patch release of E3SM Unified may be required.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+<p>For a, b, and c:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If there are no failures, proceed to the next step.</p></li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+</li>
+<li><p>Run the “Commands to run before running integration tests” for the current machine. To ensure you don’t encounter issues from running <code class="docutils literal notranslate"><span class="pre">zppy</span></code> commands simultaneously, wait for all the automatically launched jobs from one run to finish before running <code class="docutils literal notranslate"><span class="pre">zppy</span></code> again.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference external" href="https://github.com/E3SM-Project/zppy/blob/main/tests/integration/generated/directions_chrysalis.md">Chrysalis</a></p></li>
+<li><p><a class="reference external" href="https://github.com/E3SM-Project/zppy/blob/main/tests/integration/generated/directions_compy.md">Compy</a></p></li>
+<li><p><a class="reference external" href="https://github.com/E3SM-Project/zppy/blob/main/tests/integration/generated/directions_pm-cpu.md">Perlmutter</a></p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Run the integration tests with <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">tests/integration/test_*.py</span></code>. Note that <code class="docutils literal notranslate"><span class="pre">test_complete_run.py</span></code> takes approximately 75 minutes to run on Compy.</p>
+<blockquote>
+<div><ol class="loweralpha">
+<li><p>test dev (run before making a new zppy RC):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If there are any unexpected failures, fix the code (or tests). If you make any conda changes, go back to step 6a. If you otherwise change zppy source code, run <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">.</span></code> and then go back to step 7. If you only make changes to tests, you can immediately redo step 9.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>test new Unified RC:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If there are any unexpected failures, fix the code and go back to step 1, following the (a: test dev (run before making a new zppy RC)) directions.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>test final Unified:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>There should be no unexpected failures. If there are, a patch release of E3SM Unified may be required.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+<p>For a, b, and c:</p>
+<ul class="simple">
+<li><p>If there are only expected failures, then update the expected files. Use the “Commands to run to replace outdated expected files” from the links on step 8. Then repeat step 9.</p></li>
+<li><p>If there are no failures at all, proceed to the next step.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">diff</span></code>. All of your changes should be from editing <code class="docutils literal notranslate"><span class="pre">tests/integration/utils.py</span></code> in step 5, and running it in step 8.</p>
+<ul class="simple">
+<li><p>If this is the case, you can delete this testing branch.</p></li>
+<li><p>If not, you have probably made code changes to get the tests to pass. Make a pull request to merge the changes. Add the “semver: bug” label.</p></li>
+</ul>
+</li>
+<li><p>Wrap up release testing:</p>
+<ol class="loweralpha">
+<li><p>test dev (run before making a new zppy RC): Create the next zppy RC by following the “release candidates” directions at <a class="reference external" href="https://e3sm-project.github.io/zppy/_build/html/main/dev_guide/release.html">https://e3sm-project.github.io/zppy/_build/html/main/dev_guide/release.html</a>.</p></li>
+<li><p>test new Unified RC: Create the next zppy release following the “production releases” directions at <a class="reference external" href="https://e3sm-project.github.io/zppy/_build/html/main/dev_guide/release.html">https://e3sm-project.github.io/zppy/_build/html/main/dev_guide/release.html</a>.</p></li>
+<li><p>test final Unified: Run the “Commands to generate official expected results for a release” from step 8. This will create a baseline of expected files for the release. You can now safely remove old branches and environments. At <a class="reference external" href="https://github.com/E3SM-Project/zppy/branches">https://github.com/E3SM-Project/zppy/branches</a>, delete any branches that are no longer needed. Also, run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Branches
+$ cd &lt;zppy directory&gt;
+$ git branch # Look at all branch names
+$ git branch -D &lt;list branches you want to delete&gt;
+
+# Environments
+$ conda env list
+# For each environment you want to delete, run:
+$ conda remove -n &lt;environment_name&gt; --all
+</pre></div>
+</div>
+</li>
+</ol>
+</li>
+</ol>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="testing.html" class="btn btn-neutral float-left" title="Testing zppy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="release.html" class="btn btn-neutral float-right" title="How to Prepare a Release" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v3.0.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../../v2.0.0/index.html">v2.0.0</a></dd>
+      <dd><a href="../../v2.1.0/index.html">v2.1.0</a></dd>
+      <dd><a href="../../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../../v2.3.0/index.html">v2.3.0</a></dd>
+      <dd><a href="../../v2.3.1/dev_guide/release_testing.html">v2.3.1</a></dd>
+      <dd><a href="../../v2.4.0/dev_guide/release_testing.html">v2.4.0</a></dd>
+      <dd><a href="../../v2.5.0/dev_guide/release_testing.html">v2.5.0</a></dd>
+      <dd><a href="release_testing.html">v3.0.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../main/dev_guide/release_testing.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
