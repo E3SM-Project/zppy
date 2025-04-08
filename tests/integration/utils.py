@@ -7,8 +7,6 @@ from typing import List
 from mache import MachineInfo
 from PIL import Image, ImageChops, ImageDraw
 
-UNIQUE_ID = "unique_id"
-
 # Image checking ##########################################################
 
 
@@ -194,13 +192,8 @@ def get_chyrsalis_expansions(config):
         "case_name": "v3.LR.historical_0051",
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
-        # To run this test, replace conda environment with your e3sm_diags dev environment
-        # To use default environment_commands, set to ""
-        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "5:00:00",
-        "environment_commands_test": "",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
-        "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
         "partition_short": "debug",
@@ -223,13 +216,8 @@ def get_compy_expansions(config):
         "case_name": "v3.LR.historical_0051",
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
-        # To run this test, replace conda environment with your e3sm_diags dev environment
-        # To use default environment_commands, set to ""
-        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "03:00:00",
-        "environment_commands_test": "",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
-        "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "mpas_analysis_walltime": "02:00:00",
         "partition_long": "slurm",
         "partition_short": "short",
@@ -252,13 +240,8 @@ def get_perlmutter_expansions(config):
         "case_name": "v3.LR.historical_0051",
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "cpu",
-        # To run this test, replace conda environment with your e3sm_diags dev environment
-        # To use default environment_commands, set to ""
-        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "6:00:00",
-        "environment_commands_test": "",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
-        "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "mpas_analysis_walltime": "03:00:00",
         "partition_long": "",
         "partition_short": "",
@@ -273,7 +256,7 @@ def get_perlmutter_expansions(config):
     return d
 
 
-def get_expansions():
+def get_expansions(unique_id: str):
     machine_info = MachineInfo()
     config = machine_info.config
     machine = machine_info.machine
@@ -287,7 +270,7 @@ def get_expansions():
         raise ValueError(f"Unsupported machine={machine}")
     expansions["diagnostics_base_path"] = config.get("diagnostics", "base_path")
     expansions["machine"] = machine
-    expansions["unique_id"] = UNIQUE_ID
+    expansions["unique_id"] = unique_id
     return expansions
 
 
@@ -307,28 +290,22 @@ def substitute_expansions(expansions, file_in, file_out):
                 file_write.write(line)
 
 
-def generate_cfgs(unified_testing=False, dry_run=False):
+def generate_cfgs(
+    unique_id: str,
+    e3sm_diags_env_cmds: str,
+    zi_env_cmds: str,
+    unified_env_cmds: str,
+    dry_run=False,
+):
     git_top_level = (
         subprocess.check_output("git rev-parse --show-toplevel".split())
         .strip()
         .decode("utf-8")
     )
-    expansions = get_expansions()
-    if unified_testing:
-        expansions["environment_commands"] = expansions["environment_commands_test"]
-        # Use Unified for e3sm_diags and global_time_series unless we specify otherwise
-        if expansions["diags_environment_commands"] == "":
-            expansions["diags_environment_commands"] = expansions[
-                "environment_commands_test"
-            ]
-        if expansions["global_time_series_environment_commands"] == "":
-            expansions["global_time_series_environment_commands"] = expansions[
-                "environment_commands_test"
-            ]
-    else:
-        # The cfg doesn't need this line,
-        # but it would be difficult to only write environment_commands in the unified_testing case.
-        expansions["environment_commands"] = ""
+    expansions = get_expansions(unique_id)
+    expansions["diags_environment_commands"] = e3sm_diags_env_cmds
+    expansions["global_time_series_environment_commands"] = zi_env_cmds
+    expansions["environment_commands"] = unified_env_cmds
     machine = expansions["machine"]
 
     if dry_run:
@@ -416,8 +393,7 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         script_generated = f"{git_top_level}/tests/integration/generated/update_{script_name}_expected_files_{machine}.sh"
         substitute_expansions(expansions, script_template, script_generated)
     print("CFG FILES HAVE BEEN GENERATED FROM TEMPLATES WITH THESE SETTINGS:")
-    print(f"UNIQUE_ID={UNIQUE_ID}")
-    print(f"unified_testing={unified_testing}")
+    print(f"UNIQUE_ID={unique_id}")
     print(f"diags_environment_commands={expansions['diags_environment_commands']}")
     print(
         f"global_time_series_environment_commands={expansions['global_time_series_environment_commands']}"
@@ -429,4 +405,28 @@ def generate_cfgs(unified_testing=False, dry_run=False):
 
 
 if __name__ == "__main__":
-    generate_cfgs(unified_testing=False, dry_run=False)
+    import sys
+
+    if len(sys.argv) == 6:
+        unique_id = sys.argv[1]
+        e3sm_diags_env_cmds = sys.argv[2]
+        zi_env_cmds = sys.argv[3]
+        unified_env_cmds = sys.argv[4]
+    else:
+        # Set manually:
+        unique_id = "unique_id"
+        # For e3sm_diags_env and zi_env, use the following format:
+        # source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>
+        # Default "" will use the latest E3SM Unified environment
+        e3sm_diags_env_cmds = ""
+        zi_env_cmds = ""
+        unified_env_cmds = ""
+    if e3sm_diags_env_cmds == "None":
+        e3sm_diags_env_cmds = ""  # Should pick up the latest E3SM Unified environment
+    if zi_env_cmds == "None":
+        zi_env_cmds = ""  # Should pick up the latest E3SM Unified environment
+    if re.match("load_latest_e3sm_unified", unified_env_cmds):
+        unified_env_cmds = ""  # Should pick up the latest E3SM Unified environment
+    generate_cfgs(
+        unique_id, e3sm_diags_env_cmds, zi_env_cmds, unified_env_cmds, dry_run=False
+    )
