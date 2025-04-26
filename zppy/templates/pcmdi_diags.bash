@@ -1147,6 +1147,7 @@ model_name = "{{model_name}}"
 table_id = "{{model_tableID}}"
 
 # ts_years is assumed to be a list via string_list(default=list(""))
+ts_years = {{ts_years}}
 ts_periods = ts_years if isinstance(ts_years, list) else []
 
 # Validate and unpack periods
@@ -1238,12 +1239,14 @@ done
 ############################################
 # Copy files
 #rsync -a --delete ${results_dir} ${web_dir}/
+{% if "synthetic_plots" not in subsection %}
 rsync -a ${results_dir} ${web_dir}/
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (14)' > {{ prefix }}.status
   exit 14
 fi
+{% endif %}
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
 # For NERSC, change permissions of new files
