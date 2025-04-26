@@ -36,17 +36,20 @@ Y2="{{ '%04d' % (year2) }}"
 {% if run_type == "model_vs_model" %}
 ref_Y1="{{ '%04d' % (ref_year1) }}"
 ref_Y2="{{ '%04d' % (ref_year2) }}"
-{%- endif %}
-{%- endif %}
-run_type="{{ run_type }}"
-tag="{{ tag }}"
+{% endif %}
+{% endif %}
 
-results_dir=${tag} #_${Y1}-${Y2}
+run_type="{{ run_type }}"
+
+results_dir="{{ tag }}"
 
 ref_name={{ ref_name }}
 
+# Top-level directory
+web_dir=${www}/${case}/pcmdi_diags
+
 ##################################################
-#info to construct pcmdi-preferred data convension
+# info to construct pcmdi-preferred data convention
 ##################################################
 model_name='{{ model_name }}'
 tableID='{{ model_tableID }}'
@@ -75,357 +78,404 @@ cp -r '{{pcmdi_external_prefix}}/{{reference_alias}}'   .
 # file for list of variables for synthetic_metrics metric plots
 cp -r '{{pcmdi_external_prefix}}/{{synthetic_metrics}}' .
 
-{%- if ("mean_climate" in subsection) %}
-#further simplification could be done in future
-create_links_acyc_climo()
-{
-  ts_dir_source=$1
-  ts_dir_destination=$2
-  begin_year=$3
-  end_year=$4
-  name_key=$5
-  error_num=$6
-  # Create netcdf files for time series variables
-  mkdir -p ${ts_dir_destination}
-  cd ${ts_dir_destination}
-  # https://stackoverflow.com/questions/27702452/loop-through-a-comma-separated-shell-variable
-  variables="{{ cmip_vars }}"
-  for v in ${variables//,/ }
-  do
-    # Go through the time series files for between year1 and year2, using a step size equal to the number of years per time series file
-    for year in `seq ${begin_year} {{ ts_num_years }} ${end_year}`;
-    do
-      YYYY=`printf "%04d" ${year}`
-      for file in ${ts_dir_source}/${v}_*_${YYYY}*.nc
-      do
-        # Add this time series file to the list of files for cdscan to use
-        echo ${file} >> ${v}_files.txt
+# utility file for pcmdi-zppy viewer
+cp -r '{{pcmdi_external_prefix}}/{{pcmdi_viewer_util}}' .
+
+{% if "mean_climate" in subsection %}
+create_links_acyc_climo() {
+  local ts_dir_source="$1"
+  local ts_dir_destination="$2"
+  local begin_year="$3"
+  local end_year="$4"
+  local name_key="$5"
+  local error_num="$6"
+
+  mkdir -p "${ts_dir_destination}"
+  cd "${ts_dir_destination}" || exit
+
+  local variables="{{ cmip_vars }}"
+  local script_dir="{{ scriptDir }}"
+  local prefix="{{ prefix }}"
+  local ts_step="{{ ts_num_years }}"
+  local dofm=(15.5 45 74.5 105 125.5 166 196.5 227.5 258 288.5 319 349.5)
+
+  for v in ${variables//,/ }; do
+    > "${v}_files.txt"  # Start fresh
+
+    shopt -s nullglob
+    for year in $(seq "${begin_year}" "${ts_step}" "${end_year}"); do
+      local YYYY
+      YYYY=$(printf "%04d" "${year}")
+      for file in ${ts_dir_source}/${v}_*_${YYYY}*.nc; do
+        [[ -f "${file}" ]] && echo "${file}" >> "${v}_files.txt"
       done
     done
-    #derive annual cycle climate mean
-    dofm=(15 46 74 105 125 166 196 227 258 288 319 349) #middle day of month
-    for month in `seq 1 1 12`;
-    do
-      MM=`printf "%02d" ${month}`
-      MDAY=dofm[${month}-1]
-      cat ${v}_files.txt | ncra -O -h -F -d "time,${month},,12" ${v}_clm_${MM}.nc
+    shopt -u nullglob
+
+    # Derive monthly climatology files
+    for month in $(seq 1 12); do
+      local MM
+      MM=$(printf "%02d" "${month}")
+      ncra -O -h -F -d time,"${month}",,12 $(< "${v}_files.txt") "${v}_clm_${MM}.nc"
     done
-    #Concatenate files to form the annual cycle monthly climatology file
-    combined_name="${name_key}.${v}.${begin_year}01-${end_year}12.AC.${case_id}.nc"
-    ncrcat -O -d time,0, ${v}_clm_*.nc ${combined_name}
-    #modify time to avoid issues in pcmdi calculation
-    ncap2 -O -h -s 'time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5};time_bnds[time,bnds]={0, 31, 31, 59, 59, 90, 90, 120, 120, 151, 151, 181, 181, 212, 212, 243, 243, 273, 273, 304, 304, 334, 334, 365.};time@units="days since 1850-01-01 00:00:00";time@calendar="noleap";time@bounds="time_bnds"' ${combined_name} ${combined_name}
-    rm -rvf ${v}_clm_*.nc
-    if [ $? != 0 ]; then
-      cd {{ scriptDir }}
-      echo "ERROR (${error_num})" > {{ prefix }}.status
-      exit ${error_num}
+
+    # Combine to form full annual cycle file
+    local combined_name="${name_key}.${v}.${begin_year}01-${end_year}12.AC.${case_id}.nc"
+    ncrcat -O -d time,0, "${v}_clm_"*.nc "${combined_name}"
+
+    # Adjust time metadata for PCMDI diagnostics
+    local cmdfix1='time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5}'
+    local cmdfix2='time_bnds[time,bnds]={0,31,31,59,59,90,90,120,120,151,151,181,181,212,212,243,243,273,273,304,304,334,334,365.}'
+    local cmdfix3='time@units="days since 1850-01-01 00:00:00"'
+    local cmdfix4='time@calendar="noleap"'
+    local cmdfix5='time@bounds="time_bnds"'
+    ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
+
+    rm -vf "${v}_clm_"*.nc
+
+    if [[ $? -ne 0 ]]; then
+      cd "${script_dir}" || exit
+      echo "ERROR (${error_num})" > "${prefix}.status"
+      exit "${error_num}"
     fi
   done
+
   cd ..
 }
 
 {% if run_type == "model_vs_obs" %}
-create_links_acyc_climo_obs()
-{
-  ts_dir_source=$1
-  ts_dir_destination=$2
-  begin_year=$3
-  end_year=$4
-  error_num=$5
-  # Create netcdf files for time series variables
-  mkdir -p ${ts_dir_destination}
-  cd ${ts_dir_destination}
-  for file in ${ts_dir_source}/*.nc
-  do
-    fname=`basename $file`
-    PREFIX=${fname: :-17}
-    YYYYS=${fname: -16:-10}
-    YYYYE=${fname: -9:-3}
-    if [[ ${YYYYS} < ${begin_year} ]];then
-      YYYYS=${begin_year}
+create_links_acyc_climo_obs() {
+  local ts_dir_source="$1"
+  local ts_dir_destination="$2"
+  local begin_year="$3"
+  local end_year="$4"
+  local error_num="$5"
+
+  local script_dir="{{ scriptDir }}"
+  local prefix="{{ prefix }}"
+  local dofm=(15.5 45 74.5 105 125.5 166 196.5 227.5 258 288.5 319 349.5)
+
+  mkdir -p "${ts_dir_destination}"
+  cd "${ts_dir_destination}" || exit
+
+  for file in ${ts_dir_source}/*.nc; do
+    local fname
+    local YYYYS YYYYE
+    local PREFIX
+    local ttag tmp_file MM combined_name
+
+    fname=$(basename "${file}")
+
+    # Match two date patterns (YYYYMM or YYYYMMDD) separated by _ or -
+    if [[ ${fname} =~ ([0-9]{6,8})[_-]([0-9]{6,8}) ]]; then
+      YYYYS="${BASH_REMATCH[1]}"
+      YYYYE="${BASH_REMATCH[2]}"
+    else
+      echo "Warning: Could not extract dates from ${fname}"
+      continue
     fi
-    if [[ ${YYYYE} > ${end_year} ]];then
-      YYYYE=${end_year}
-    fi
-    ttag=`printf "%04d" ${YYYYS}`01-`printf "%04d" ${YYYYE}`12
-    # select the interest period
+
+    # Clip to specified year range
+    if [[ ${YYYYS} -lt ${begin_year} ]]; then YYYYS=${begin_year}; fi
+    if [[ ${YYYYE} -gt ${end_year} ]]; then YYYYE=${end_year}; fi
+
+    # Extract prefix before the date range (removes from .${YYYYS} or -${YYYYS})
+    PREFIX="${fname%%[._-]${YYYYS}*}"
+
+    ttag="$(printf "%04d" "${YYYYS}")01-$(printf "%04d" "${YYYYE}")12"
     tmp_file="tmp_combine_${ttag}.nc"
-    ncrcat -d time,"${YYYYS}-01-01,${YYYYE}-12-31" ${file} ${tmp_file}
-    # Go through the time serie file, and derive annual cycle climate mean
-    dofm=(15 46 74 105 125 166 196 227 258 288 319 349) #middle day of month
-    for month in `seq 1 1 12`;
-    do
-      MM=`printf "%02d" ${month}`
-      MDAY=dofm[${month}-1]
-      ncra -O -h -F -d "time,${month},,12"  ${tmp_file} tmp_clm_${MM}.nc
+
+    ncrcat -O -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${tmp_file}"
+
+    # Derive monthly climatology
+    for month in $(seq 1 12); do
+      MM=$(printf "%02d" ${month})
+      ncra -O -h -F -d time,"${month}",,12 "${tmp_file}" "tmp_clm_${MM}.nc"
     done
-    #Concatenate files to form the annual cycle monthly climatology file
+
     combined_name="${PREFIX}.${ttag}.AC.${case_id}.nc"
-    ncrcat -O -d time,0, tmp_clm_*.nc ${combined_name}
-    #modify time to avoid issues in pcmdi calculation
-    ncap2 -O -h -s 'time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5};time@units="days since 1850-01-01 00:00:00";time@calendar="noleap";' ${combined_name} ${combined_name}
-    ncap2 -O -h -s 'defdim("bnds",2);time_bnds=make_bounds(time,$bnds,"time_bnds");time_bnds@units=time@units;time_bnds@calendar=time@calendar' ${combined_name} ${combined_name}
-    rm -rvf tmp_*.nc
-    if [ $? != 0 ]; then
-      cd {{ scriptDir }}
-      echo "ERROR (${error_num})" > {{ prefix }}.status
-      exit ${error_num}
+    ncrcat -O tmp_clm_*.nc "${combined_name}"
+
+    # Adjust time metadata
+    local cmdfix1='time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5}'
+    local cmdfix2='time@units="days since 1850-01-01 00:00:00"'
+    local cmdfix3='time@calendar="noleap"'
+    ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3}" "${combined_name}" "${combined_name}"
+
+    local cmdfix4='defdim("bnds",2)'
+    local cmdfix5='time_bnds=make_bounds(time,$bnds,"time_bnds")'
+    local cmdfix6='time_bnds@units=time@units'
+    local cmdfix7='time_bnds@calendar=time@calendar'
+    ncap2 -O -h -s "${cmdfix4};${cmdfix5};${cmdfix6};${cmdfix7}" "${combined_name}" "${combined_name}"
+
+    rm -vf tmp_*.nc
+
+    if [[ $? -ne 0 ]]; then
+      cd "${script_dir}" || exit
+      echo "ERROR (${error_num})" > "${prefix}.status"
+      exit "${error_num}"
     fi
   done
+
   cd ..
 }
-{%- endif %}
-{%- endif %}
+{% endif %}
+{% endif %}
 
-{%- if ("variability_modes_cpl" in subsection) or ("variability_modes_atm" in subsection) or ("enso" in subsection) %}
-create_links_ts()
-{
-  ts_dir_source=$1
-  ts_dir_destination=$2
-  begin_year=$3
-  end_year=$4
-  subname=$5
-  error_num=$6
-  # Create netcdf files for time series variables
-  mkdir -p ${ts_dir_destination}
-  cd ${ts_dir_destination}
-  # https://stackoverflow.com/questions/27702452/loop-through-a-comma-separated-shell-variable
-  variables="{{ vars }}"
-  for v in ${variables//,/ }
-  do
-    # Go through the time series files for between year1 and year2, using a step size equal to the number of years per time series file
-    for year in `seq ${begin_year} {{ ts_num_years }} ${end_year}`;
-    do
-      YYYY=`printf "%04d" ${year}`
-      for file in ${ts_dir_source}/${v}_*_${YYYY}*.nc
-      do
-        # Add this time series file to the list of files for cdscan to use
-        echo ${file} >> ${v}_files.txt
+{% if "variability_modes_cpl" in subsection
+   or "variability_modes_atm" in subsection
+   or "enso" in subsection %}
+create_links_ts() {
+  local ts_dir_source="$1"
+  local ts_dir_destination="$2"
+  local begin_year="$3"
+  local end_year="$4"
+  local subname="$5"
+  local error_num="$6"
+
+  local script_dir="{{ scriptDir }}"
+  local prefix="{{ prefix }}"
+  local vars="{{ vars }}"
+  local ts_step="{{ ts_num_years }}"
+
+  mkdir -p "${ts_dir_destination}"
+  cd "${ts_dir_destination}" || exit
+
+  local v file YYYY combined_name
+
+  # Convert comma-separated list to array
+  IFS=',' read -ra var_array <<< "${vars}"
+  for v in "${var_array[@]}"; do
+    > "${v}_files.txt"  # Reset file list
+
+    shopt -s nullglob
+    for year in $(seq "${begin_year}" "${ts_step}" "${end_year}"); do
+      YYYY=$(printf "%04d" "${year}")
+      for file in ${ts_dir_source}/${v}_*_${YYYY}*.nc; do
+        [[ -f "${file}" ]] && echo "${file}" >> "${v}_files.txt"
       done
-done
-    # netcdf file will be combined to cover the whole period from year1 to year2
+    done
+    shopt -u nullglob
+
     combined_name="${subname}.${v}.${begin_year}01-${end_year}12.nc"
-    cat ${v}_files.txt | ncrcat -v ${v} -d "time,${begin_year}-01-01,${end_year}-12-31" ${combined_name}
-    #modify time to avoid issues in pcmdi calculation
-    ncap2 -O -h -s 'defdim("bnds",2);time_bnds=make_bounds(time,$bnds,"time_bnds");time_bnds@units=time@units;time_bnds@calendar=time@calendar' ${combined_name} ${combined_name}
-    if [ $? != 0 ]; then
-      cd {{ scriptDir }}
-      echo "ERROR (${error_num})" > {{ prefix }}.status
-      exit ${error_num}
+    if [[ -s "${v}_files.txt" ]]; then
+      ncrcat -O -v "${v}" -d time,"${begin_year}-01-01","${end_year}-12-31" $(< "${v}_files.txt") "${combined_name}"
+
+      # Add calendar attribute if missing
+      if ! ncks -m "${combined_name}" | grep -q "calendar"; then
+        echo "Adding missing calendar attribute to time..."
+        ncatted -a calendar,time,o,c,"standard" "${combined_name}"
+      fi
+
+      # Add time bounds
+      local cmdfix1='defdim("bnds",2)'
+      local cmdfix2='time_bnds=make_bounds(time,$bnds,"time_bnds")'
+      local cmdfix3='time_bnds@units=time@units'
+      local cmdfix4='time_bnds@calendar=time@calendar'
+      ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4}" "${combined_name}" "${combined_name}"
+
+      if [[ $? -ne 0 ]]; then
+        cd "${script_dir}" || exit
+        echo "ERROR (${error_num})" > "${prefix}.status"
+        exit "${error_num}"
+      fi
+    else
+      echo "Warning: No input files found for variable ${v}. Skipping."
     fi
   done
+
   cd ..
 }
 
 {% if run_type == "model_vs_obs" %}
-create_links_ts_obs()
-{
-  ts_dir_source=$1
-  ts_dir_destination=$2
-  begin_year=$3
-  end_year=$4
-  error_num=$5
-  # Create netcdf files for time series variables
-  mkdir -p ${ts_dir_destination}
-  cd ${ts_dir_destination}
-  for file in ${ts_dir_source}/*.nc
-  do
-    fname=`basename $file`
-    PREFIX=${fname: :-17}
-    YYYYS=${fname: -16:-12}
-    YYYYE=${fname: -9:-5}
-    if [[ ${YYYYS} < ${begin_year} ]];then
-      YYYYS=${begin_year}
+create_links_ts_obs() {
+  local ts_dir_source="$1"
+  local ts_dir_destination="$2"
+  local begin_year="$3"
+  local end_year="$4"
+  local error_num="$5"
+
+  local script_dir="{{ scriptDir }}"
+  local prefix="{{ prefix }}"
+
+  mkdir -p "${ts_dir_destination}"
+  cd "${ts_dir_destination}" || exit
+
+  local file fname PREFIX YYYYS YYYYE ttag combined_name
+
+  for file in ${ts_dir_source}/*.nc; do
+    fname=$(basename "$file")
+    # Match two time patterns (YYYYMM or YYYYMMDD) separated by _ or -
+    if [[ ${fname} =~ ([0-9]{6,8})[_-]([0-9]{6,8}) ]]; then
+      YYYYS="${BASH_REMATCH[1]}"
+      YYYYE="${BASH_REMATCH[2]}"
+    else
+      echo "Warning: Could not extract dates from ${fname}"
+      continue
     fi
-    if [[ ${YYYYE} > ${end_year} ]];then
-      YYYYE=${end_year}
+
+    # Optional: clip years if needed
+    if [[ ${YYYYS} -lt ${begin_year} ]]; then
+      YYYYS="${begin_year}"
     fi
-    ttag=`printf "%04d" ${YYYYS}`01-`printf "%04d" ${YYYYE}`12
-    # Go through the time series files and extract analysis period
-    combined_name=${PREFIX}.${ttag}.nc
-    ncrcat -d time,${YYYYS}-01-01,${YYYYE}-12-31 ${file} ${combined_name}
-    #modify time to avoid issues in pcmdi calculation
-    ncap2 -O -h -s 'defdim("bnds",2);time_bnds=make_bounds(time,$bnds,"time_bnds");time_bnds@units=time@units;time_bnds@calendar=time@calendar' ${combined_name} ${combined_name}
-    if [ $? != 0 ]; then
-      cd {{ scriptDir }}
-      echo "ERROR (${error_num})" > {{ prefix }}.status
-      exit ${error_num}
+
+    if [[ ${YYYYE} -gt ${end_year} ]]; then
+      YYYYE="${end_year}"
+    fi
+
+    # Extract prefix (before the date range, ignoring separator)
+    PREFIX="${fname%%[._-]${YYYYS}*}"
+
+    ttag="$(printf "%04d" "${YYYYS}")01-$(printf "%04d" "${YYYYE}")12"
+    combined_name="${PREFIX}.${ttag}.nc"
+
+    # Extract subset of time series
+    ncrcat -O -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${combined_name}"
+
+    # Ensure time has calendar attribute
+    if ! ncks -m "${combined_name}" | grep -q "calendar"; then
+      echo "Adding missing calendar attribute to time..."
+      ncatted -a calendar,time,o,c,"standard" "${combined_name}"
+    fi
+
+    # Add time bounds
+    local cmdfix1='defdim("bnds",2)'
+    local cmdfix2='time_bnds=make_bounds(time,$bnds,"time_bnds")'
+    local cmdfix3='time_bnds@units=time@units'
+    local cmdfix4='time_bnds@calendar=time@calendar'
+    ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4}" "${combined_name}" "${combined_name}"
+
+    if [[ $? -ne 0 ]]; then
+      cd "${script_dir}" || exit
+      echo "ERROR (${error_num})" > "${prefix}.status"
+      exit "${error_num}"
     fi
   done
+
   cd ..
 }
-{%- endif %}
-{%- endif %}
+{% endif %}
+{% endif %}
 
 ########################
-#prepare the model data
+# Prepare the model data
 ########################
-{%- if ("mean_climate" in subsection) %}
-climo_dir_primary=climo
-# Create local links to input climo files
-climo_dir_source={{ output }}/post/atm/{{ grid }}/cmip_ts/monthly
-create_links_acyc_climo ${climo_dir_source} ${climo_dir_primary} ${Y1} ${Y2} ${model_name}.${tableID} 1
+{% if "mean_climate" in subsection %}
+# Define output directory for climatology files
+climo_dir_primary="climo"
+# Path to model's monthly climatology files
+climo_dir_source="{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly"
+# Link and process primary model climo data
+create_links_acyc_climo "${climo_dir_source}" "${climo_dir_primary}" "${Y1}" "${Y2}" "${model_name}.${tableID}" 1
 {% if run_type == "model_vs_model" %}
-# Create local links to input climo files (ref model)
-climo_dir_source_ref={{ reference_data_path }}
-climo_dir_ref=climo_ref
-create_links_acyc_climo ${climo_dir_source_ref} ${climo_dir_ref} ${ref_Y1} ${ref_Y2} ${model_name_ref}.${tableID_ref} 2
-{%- endif %}
-{%- endif %}
+# Path to reference model's climatology files
+climo_dir_source_ref="{{ reference_data_path }}"
+climo_dir_ref="climo_ref"
+# Link and process reference model climo data
+create_links_acyc_climo "${climo_dir_source_ref}" "${climo_dir_ref}" "${ref_Y1}" "${ref_Y2}" "${model_name_ref}.${tableID_ref}" 2
+{% endif %}
+{% endif %}
 
-{%- if ("variability_modes_cpl" in subsection) or ("variability_modes_atm" in subsection) or ("enso" in subsection) %}
-#all diags will be run with ts data
-ts_dir_primary=ts
-# Create netcdf files for time series variables
-ts_dir_source={{ output }}/post/atm/{{ grid }}/cmip_ts/monthly
-create_links_ts ${ts_dir_source} ${ts_dir_primary} ${Y1} ${Y2} ${model_name}.${tableID} 3
+{% if "variability_modes_cpl" in subsection or "variability_modes_atm" in subsection or "enso" in subsection %}
+# All diagnostics in this subsection use time series (ts) data
+# Define output directory for primary model time series
+ts_dir_primary="ts"
+ts_dir_source="{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly"
+# Create local links and combine time series NetCDF files for the primary model
+create_links_ts "${ts_dir_source}" "${ts_dir_primary}" "${Y1}" "${Y2}" "${model_name}.${tableID}" 3
 {% if run_type == "model_vs_model" %}
-ts_dir_source_ref={{ reference_data_path_ts }}/{{ ts_num_years_ref }}yr
-ts_dir_ref=ts_ref
-create_links_ts ${ts_dir_source_ref} ${ts_dir_ref} ${ref_Y1} ${ref_Y2} ${model_name_ref}.${tableID_ref} 4
-{%- endif %}
-{%- endif %}
+# Define time series path for reference model (adjust for different year spans)
+ts_dir_source_ref="{{ reference_data_path_ts }}/{{ ts_num_years_ref }}yr"
+ts_dir_ref="ts_ref"
+# Create local links and combine ts files for the reference model
+create_links_ts "${ts_dir_source_ref}" "${ts_dir_ref}" "${ref_Y1}" "${ref_Y2}" "${model_name_ref}.${tableID_ref}" 4
+{% endif %}
+{% endif %}
 
-{% if (run_type == "model_vs_obs") and ("synthetic_plots" not in subsection) %}
-#########################################################
-#prepare the observation data. As observation are often
-#depends on the source available for analysis, therefore,
-#we use external files to help collect the information
-#for pcmdi diagnostics.
-#########################################################
-# Create netcdf files for time series variables
+{% if run_type == "model_vs_obs" and "synthetic_plots" not in subsection %}
+###########################################################################
+# Prepare the observation data
+# Observation datasets vary by diagnostic, so we use an external
+# Python utility to handle linking and remapping to standard names.
+###########################################################################
 obstmp_dir="obs_link"
-mkdir -p ${obstmp_dir}
-#create a python module to link observation data
+mkdir -p "${obstmp_dir}"
+echo "Linking observational data into ${obstmp_dir}..."
+
 cat > link_observation.py << EOF
 import os
 import re
 import glob
 import json
-import time
-import datetime
-import xcdat as xc
-import numpy as np
-import shutil
 
-import pcmdi_metrics
-from pcmdi_metrics.io import (
-        xcdat_open
+try:
+    from pcmdi_zppy_util import ObservationLinker
+except ImportError as e:
+    raise ImportError("Module 'pcmdi_zppy_util' not found. Make sure it's installed and accessible.") from e
+
+# Inputs populated via templating
+MODEL_NAME = '${model_name_ref}.${tableID_ref}'
+VARIABLES = '{{ vars }}'.split(",")
+OBS_SETS = '{{ obs_sets }}'.split(",")
+OBS_TS_DIR = '{{ obs_ts }}'
+OBS_TMP_DIR = '${obstmp_dir}'
+OBS_ALIAS_FILE = "reference_alias.json"
+
+# Mapping from observational variable names to CMIP-standard
+ALT_OBS_MAP = {
+    "pr":      "PRECT",
+    "sst":     "ts",
+    "sfcWind": "si10",
+    "taux":    "tauu",
+    "tauy":    "tauv",
+    "rltcre":  "toa_cre_lw_mon",
+    "rstcre":  "toa_cre_sw_mon",
+    "rtmt":    "toa_net_all_mon"
+}
+
+linker = ObservationLinker(
+    model_name=MODEL_NAME,
+    variables=VARIABLES,
+    obs_sets=OBS_SETS,
+    ts_dir_ref_source=OBS_TS_DIR,
+    obstmp_dir=OBS_TMP_DIR,
+    altobs_dic=ALT_OBS_MAP,
+    obs_alias_file=OBS_ALIAS_FILE
 )
 
-from pcmdi_zppy_util import(
-    derive_var,
-)
-
-model_name = '${model_name_ref}.${tableID_ref}'
-variables = '{{ vars }}'.split(",")
-obs_sets = '{{ obs_sets }}'.split(",")
-ts_dir_ref_source = '{{ obs_ts }}'
-
-# variable map from observation to cmip
-altobs_dic = { "pr"      : "PRECT",
-               "sst"     : "ts",
-               "sfcWind" : "si10",
-               "taux"    : "tauu",
-               "tauy"    : "tauv",
-               "rltcre"  : "toa_cre_lw_mon",
-               "rstcre"  : "toa_cre_sw_mon",
-               "rtmt"    : "toa_net_all_mon"}
-
-obs_dic = json.load(open('reference_alias.json'))
-
-########################################
-#first loop: link data to work directory
-########################################
-for i,vv in enumerate(variables):
-  if "_" in vv or "-" in vv:
-    varin = re.split("_|-", vv)[0]
-  else:
-    varin = vv
-  if len(obs_sets) > 1 and len(obs_sets) == len(variables):
-    obsid = obs_sets[i]
-  else:
-    obsid = obs_sets[0]
-
-  obsname = obs_dic[varin][obsid]
-  if "ceres_ebaf" in obsname:
-    obsstr = obsname.replace("_","*").replace("-","*")
-  else:
-    obsstr = obsname
-
-  fpaths = sorted(glob.glob(os.path.join(ts_dir_ref_source,obsstr,varin+"_*.nc")))
-  if (len(fpaths) > 0) and (os.path.exists(fpaths[0])):
-     template = fpaths[0].split("/")[-1]
-     yms = template.split("_")[-2][0:6]
-     yme = template.split("_")[-1][0:6]
-     obs = obsname.replace(".","_")
-     out = os.path.join(
-          '${obstmp_dir}',
-          '{}.{}.{}-{}.nc'.format(
-           model_name.replace('%(model)',obs),
-           varin,yms,yme)
-     )
-     if not os.path.exists(out):
-        os.symlink(fpaths[0],out)
-  elif varin in altobs_dic.keys():
-    varin1 = altobs_dic[varin]
-    fpaths = sorted(glob.glob(
-        os.path.join(ts_dir_ref_source,obsstr,varin1+"_*.nc"))
-    )
-    if (len(fpaths) > 0) and (os.path.exists(fpaths[0])):
-       template = fpaths[0].split("/")[-1]
-       yms = template.split("_")[-2][0:6]
-       yme = template.split("_")[-1][0:6]
-       obs = obsname.replace(".","_")
-       out = os.path.join(
-          '${obstmp_dir}',
-          '{}.{}.{}-{}.nc'.format(
-           model_name.replace('%(model)',obs),
-           varin,yms,yme)
-       )
-       ds = xcdat_open(fpaths[0])
-       ds = ds.rename(name_dict={varin1:varin})
-       ds.to_netcdf(out)
-
-#####################################################################
-#second loop: check and process derived quantities
-#note: these quantities are possibly not included as default in cmip
-#####################################################################
-for vv in enumerate(variables):
-    if vv in ['rltcre','rstcre']:
-       fpaths = sorted(glob.glob(
-          os.path.join('${obstmp_dir}',"*"+vv+"_*.nc"))
-       )
-       if (len(fpaths) < 1) and (vv == 'rstcre'):
-          derive_var('${obstmp_dir}',vv,{'rsutcs':1,'rsut':-1},model_name)
-       elif (len(fpaths) < 1) and (vv == 'rltcre'):
-          derive_var('${obstmp_dir}',vv,{'rlutcs':1,'rlut':-1},model_name)
-
+linker.link_obs_data()
+linker.process_derived_variables()
 EOF
+
 ###################
-# run process jobs
+# Run process job
 ###################
+echo "Linking observational data using SLURM..."
+
 command="srun -N 1 python -u link_observation.py"
-time ${command}
-if [ $? != 0 ]; then
+echo "Running: ${command}"
+time eval "${command}"
+
+if [ $? -ne 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (6)' > {{ prefix }}.status
+  echo "ERROR (6)" > {{ prefix }}.status
   exit 6
 fi
+
 #######################################################
-#now create obs climo and timeseries for pcmdi diags
-#use same period as test model when possible
+# Now create obs climo and time series for PCMDI diags
+# Use same period as test model when possible
 #######################################################
 ts_dir_ref_source="{{ scriptDir }}/${workdir}/${obstmp_dir}"
-{%- if ("mean_climate" in subsection) %}
+{% if "mean_climate" in subsection %}
 climo_dir_ref=climo_ref
-create_links_acyc_climo_obs ${ts_dir_ref_source} ${climo_dir_ref} ${Y1} ${Y2} 7
-{%- elif ("variability_modes_cpl" in subsection) or ("variability_modes_atm" in subsection) or ("enso" in subsection) %}
+create_links_acyc_climo_obs "${ts_dir_ref_source}" "${climo_dir_ref}" ${Y1} ${Y2} 7
+{% elif "variability_modes_cpl" in subsection or "variability_modes_atm" in subsection or "enso" in subsection %}
 ts_dir_ref=ts_ref
-create_links_ts_obs ${ts_dir_ref_source} ${ts_dir_ref} ${Y1} ${Y2} 8
-{%- endif %}
-{%- endif %}
+create_links_ts_obs "${ts_dir_ref_source}" "${ts_dir_ref}" ${Y1} ${Y2} 8
+{% endif %}
+
+{% endif %}
 
 {% if "synthetic_plots" not in subsection %}
 ########################################################
@@ -435,203 +485,209 @@ cat > parameterfile.py << EOF
 import os
 import sys
 import json
+#####################
+# Basic Information
+#####################
 
-#####################
-#basic information
-#####################
 start_yr = int('${Y1}')
 end_yr = int('${Y2}')
 num_years = end_yr - start_yr + 1
-period = "{:04d}{:02d}-{:04d}{:02d}".format(start_yr,1,end_yr,12)
+period = f"{start_yr:04d}01-{end_yr:04d}12"
 
-mip = '${model_name}'.split(".")[0]
-exp = '${model_name}'.split(".")[1]
-product = '${model_name}'.split(".")[2]
-realm = '${model_name}'.split(".")[3]
+model_parts = '${model_name}'.split('.')
+mip, exp, product, realm = model_parts[:4]
 
 ##############################################
-#Configuration shared with pcmdi diagnostics
+# Configuration Shared with PCMDI Diagnostics
 ##############################################
-# Record NetCDF output
+
+# Whether to generate NetCDF outputs for observations and model results
 nc_out_obs = {{ mov_nc_out_obs }}
 nc_out_model = {{ mov_nc_out_model }}
-if nc_out_model or nc_out_obs:
-  ext = ".nc"
-else:
-  ext = ".xml"
+
+# Output file extension: use .nc if either output is enabled,
+# otherwise default to .xml
+ext = ".nc" if nc_out_model or nc_out_obs else ".xml"
+
+# User annotation and debug flag
 user_notes = 'Provenance and results'
 debug = {{ pcmdi_debug }}
 
-# Generate plots
+# Enable plot generation for model and observation
 plot_model = {{ mov_plot_model }}
-plot_obs = {{ mov_plot_obs }} # optional
+plot_obs = {{ mov_plot_obs }}  # optional
 
-# Additional settings
+# Execution mode and output format
 run_type = '{{ run_type }}'
 figure_format = '{{ figure_format }}'
 
-# Save interpolated model climatology ?
+# Save interpolated model climatologies?
 save_test_clims = {{ save_test_clims }}
 
-# Save Metrics Results in Single File ?
-# option: 'y' or 'n', set to 'n' as we
-# run pcmdi for each variable separately
+# Save all metrics results in a single file?
+# Set to 'n' as metrics are computed per variable
 metrics_in_single_file = 'n'
 
-# customize land/sea mask values
-regions_values = {"land":100.,"ocean":0.}
+# Custom values for land/sea masking
+regions_values = {
+    "land": 100.0,
+    "ocean": 0.0
+}
 
-#setup template for land/sea mask (fixed)
+# Template path for land/sea mask file (fixed input)
 modpath_lf = os.path.join(
     'fixed',
     'sftlf.%(model).nc'
 )
 
+{% if "mean_climate" in subsection %}
+
 ############################################
-#setup specific for mean climate metrics
-{%- if ("mean_climate" in subsection) %}
-
-#case id
+# Setup Specific for Mean Climate Metrics
+############################################
 modver = "${case_id}"
-
-#always turn off
 parallel = False
-
-#land/sea mask file (already generated)
 generate_sftlf = False
 sftlf_filename_template = modpath_lf
 
-# INTERPOLATION OPTIONS
-# OPTIONS: '2.5x2.5' or an actual cdms2 grid object
+# Target grid: can be '2.5x2.5' or a CDMS2 grid object string
 target_grid = '{{ target_grid }}'
-targetGrid = target_grid
+targetGrid = target_grid  # for backward compatibility
 target_grid_string = '{{ target_grid_string }}'
-# OPTIONS: 'regrid2','esmf'
-regrid_tool = '{{ regrid_tool }}'
-# OPTIONS: 'linear','conservative', only if tool is esmf
-regrid_method = '{{ regrid_method }}'
-# OPTIONS: "regrid2","esmf"
-regrid_tool_ocn = '{{ regrid_tool_ocn }}'
-# OPTIONS: 'linear','conservative', only if tool is esmf
-regrid_method_ocn = ( '{{ regrid_method_ocn }}' )
 
-#######################################
-# DATA LOCATION: MODELS
-# ---------------------------------------------
+# Regridding tool and method (general use)
+# OPTIONS: 'regrid2' or 'esmf'
+regrid_tool = '{{ regrid_tool }}'
+# OPTIONS: 'linear' or 'conservative' (only for 'esmf')
+regrid_method = '{{ regrid_method }}'
+
+# Regridding tool and method for ocean diagnostics
+regrid_tool_ocn = '{{ regrid_tool_ocn }}'  # 'regrid2' or 'esmf'
+regrid_method_ocn = ('{{ regrid_method_ocn }}')  # 'linear' or 'conservative'
+
+# Model realization(s) to consider
 realization = "*"
-test_data_set = [ product ]
+
+# Model product name from input
+test_data_set = [product]
+
+# Path to model climatology files
 test_data_path = '${climo_dir_primary}'
-# Templates for model climatology files
+
+# Template for model climatology filenames
 filename_template = '.'.join([
-  mip,
-  exp,
-  '%(model)',
-  '%(realization)',
-  '${tableID}',
-  '%(variable)',
-  period,
-  'AC',
-  '${case_id}',
-  'nc'
+    mip,
+    exp,
+    '%(model)',
+    '%(realization)',
+    '${tableID}',
+    '%(variable)',
+    period,
+    'AC',
+    '${case_id}',
+    'nc'
 ])
 
-#observation info
+# Path to reference climatology files
 reference_data_path = '${climo_dir_ref}'
-custom_observations = os.path.join(
-   'pcmdi_diags',
-   '{}_{}_catalogue.json'.format(
-   '${climo_dir_ref}',
-   '{{subsection}}'))
 
-#load caclulated regions for each variable
+# Observation catalogue file (dynamic by subsection)
+custom_observations = os.path.join(
+    'pcmdi_diags',
+    '{}_{}_catalogue.json'.format(
+        '${climo_dir_ref}',
+        '{{subsection}}'
+    )
+)
+
+# Load variable-specific region definitions
 regions = json.load(open('regions.json'))
 
-#load predefined region information
+# Load predefined region specifications and normalize domain lat/lon as tuples
 regions_specs = json.load(open('regions_specs.json'))
-for key in regions_specs.keys():
-  if "domain" in regions_specs[key].keys():
-    if "latitude" in regions_specs[key]['domain'].keys():
-      regions_specs[key]['domain']['latitude'] = tuple(
-             regions_specs[key]['domain']['latitude']
-      )
-    if "longitude" in regions_specs[key]['domain'].keys():
-      regions_specs[key]['domain']['longitude'] = tuple(
-             regions_specs[key]['domain']['longitude']
-      )
+for key in regions_specs:
+    domain = regions_specs[key].get('domain', {})
+    if 'latitude' in domain:
+        domain['latitude'] = tuple(domain['latitude'])
+        regions_specs[key]['domain']['latitude'] = domain['latitude']
+    if 'longitude' in domain:
+        domain['longitude'] = tuple(domain['longitude'])
+        regions_specs[key]['domain']['longitude'] = domain['longitude']
 
-#######################################
-# DATA LOCATION: METRICS OUTPUT
+# METRICS OUTPUT
 metrics_output_path = os.path.join(
     'pcmdi_diags',
     'metrics_results',
     'mean_climate',
-     mip,
-     exp,
+    mip,
+    exp,
     '%(case_id)'
 )
 
-############################################################
-# DATA LOCATION: INTERPOLATED MODELS' CLIMATOLOGIES
-diagnostics_output_path= os.path.join(
+#INTERPOLATED MODELS' CLIMATOLOGIES
+diagnostics_output_path = os.path.join(
     'pcmdi_diags',
     'diagnostic_results',
     'mean_climate',
-     mip,
-     exp,
+    mip,
+    exp,
     '%(case_id)'
 )
+
 test_clims_interpolated_output = diagnostics_output_path
 
-{%- endif %}
+{% endif %}
 
-{%- if ("variability_modes" in subsection)  %}
-########################################
-#setup for mode variability diagnostics
-########################################
-seasons   = '{{ seasons }}'.split(",")
-frequency = '{{ frequency }}'
-
-#from configuration file
-varModel = '{{vars}}'
-
-#unit conversion (namelist)
-ModUnitsAdjust = {{ ModUnitsAdjust }}
-ObsUnitsAdjust = {{ ObsUnitsAdjust }}
-
-# If True, maskout land region thus consider only over ocean
-landmask = {{ landmask }}
-
-#template for model file
-modnames = [ product ]
-realization = "*"
-modpath = os.path.join(
-  '${ts_dir_primary}',
-  '{}.{}.%(model).%(realization).{}.%(variable).{}.nc'.format(mip,exp,'${tableID}',period)
-)
-
-#start and end year for analysis
+{% if "variability_modes" in subsection %}
+# Setup for Mode Variability Diagnostics
 msyear = int(start_yr)
 meyear = int(end_yr)
 
-# If True, remove Domain Mean of each time step
+# Seasons to analyze (comma-separated string to list)
+seasons = '{{ seasons }}'.split(",")
+
+# Data frequency (e.g., monthly, seasonal)
+frequency = '{{ frequency }}'
+
+# Variables to analyze (comma-separated string or space-separated)
+varModel = '{{ vars }}'
+
+# Unit conversion flags for model and observations
+ModUnitsAdjust = {{ ModUnitsAdjust }}
+ObsUnitsAdjust = {{ ObsUnitsAdjust }}
+
+# Mask out land regions (consider ocean-only if True)
+landmask = {{ landmask }}
+
+# If True, remove domain mean from each time step
 RmDomainMean = {{ RmDomainMean }}
 
-# If True, consider EOF with unit variance
+# If True, normalize EOFs to unit variance
 EofScaling = {{ EofScaling }}
 
-# Conduct CBF analysis
+# Conduct Combined EOF/CBF analysis (if True)
 CBF = {{ CBF }}
 
-# Conduct conventional EOF analysis
+# Conduct Conventional EOF analysis (if True)
 ConvEOF = {{ ConvEOF }}
 
-# Generate CMEC compliant json
+# Skip CMEC output (hardcoded for now)
 cmec = False
 
-# Update diagnostic file if exist
+# Whether to overwrite existing diagnostic output
 update_json = False
 
-#results directory structure.
+# Template for model input file paths
+modnames = [product]
+realization = "*"
+modpath = os.path.join(
+    '${ts_dir_primary}',
+    '{}.{}.%(model).%(realization).{}.%(variable).{}.nc'.format(
+        mip, exp, '${tableID}', period
+    )
+)
+
+# Output results directory
 results_dir = os.path.join(
     'pcmdi_diags',
     '%(output_type)',
@@ -642,31 +698,32 @@ results_dir = os.path.join(
     '%(variability_mode)',
     '%(reference_data_name)',
 )
-{%- endif %}
+{% endif %}
 
-{%- if ("enso" in subsection) %}
-###########################################
-#parameter setup specific for enso metrics
-###########################################
-modnames = [ product ]
+{% if "enso" in subsection %}
+# Parameter Setup for ENSO Metrics
+modnames = [product]
 realization = realm
+
 modpath = os.path.join(
-  '${ts_dir_primary}',
-  '{}.{}.%(model).%(realization).{}.%(variable).{}.nc'.format(mip,exp,'${tableID}',period)
+    '${ts_dir_primary}',
+    '{}.{}.%(model).%(realization).{}.%(variable).{}.nc'.format(
+        mip, exp, '${tableID}', period
+    )
 )
 
-#observation/reference file catalogue
+# Observation/Reference settings
 obs_cmor = True
 obs_cmor_path = '${ts_dir_ref}'
 obs_catalogue = 'obs_catalogue.json'
 
-#land/sea mask for obs/reference model
+# Land/Sea mask for reference data
 reference_data_lf_path = json.load(open('obs_landmask.json'))
 
-# METRICS COLLECTION (set in namelist, and main driver)
-# metricsCollection = ENSO_perf, ENSO_tel, ENSO_proc
+# Metrics collection type (e.g., ENSO_perf, ENSO_tel, ENSO_proc)
+# Defined externally via metricsCollection
 
-# OUTPUT
+# Output directory structure
 results_dir = os.path.join(
     'pcmdi_diags',
     '%(output_type)',
@@ -677,14 +734,15 @@ results_dir = os.path.join(
     '%(metricsCollection)',
 )
 
+# Output filenames for JSON and NetCDF
 json_name = "%(mip)_%(exp)_%(metricsCollection)_${case_id}_%(model)_%(realization)"
 
 netcdf_name = json_name
 
-{%- endif %}
+{% endif %}
 
 EOF
-{%- endif %}
+{% endif %}
 
 ################################################################
 # Run PCMDI Diags
@@ -702,6 +760,7 @@ import datetime
 import xcdat as xc
 import numpy as np
 import pandas as pd
+import shutil
 
 import collections
 from collections import OrderedDict
@@ -718,119 +777,121 @@ from pcmdi_metrics.graphics import (
 )
 
 from pcmdi_zppy_util import(
-    archive_data,
-    check_regions,
-    check_references,
-    check_units,
-    childCount,
-    collect_data_info,
-    collect_clim_diags,
-    collect_movs_diags,
-    collect_enso_diags,
-    collect_clim_metrics,
-    collect_movs_metrics,
-    create_data_lmask,
-    derive_var,
-    enso_obsvar_dict,
-    enso_obsvar_lmsk,
+    count_child_processes,
+    run_serial_jobs,
+    run_parallel_jobs,
+    derive_missing_variable,
+    save_variable_regions,
+    generate_mean_clim_cmds,
+    generate_varmode_cmds,
+    build_enso_obsvar_catalog,
+    build_enso_obsvar_landmask,
+    generate_enso_cmds,
     shift_row_to_bottom,
-    merge_data,
-    parallel_jobs,
+    check_badvals,
+    archive_data,
+    drop_vars,
+    enso_plot_driver,
+    variability_modes_plot_driver,
+    mean_climate_plot_driver,
     parcoord_metric_plot,
     portrait_metric_plot,
-    serial_jobs,
-    variable_region,
-    mean_climate_plot_driver,
-    variability_modes_plot_driver,
-    enso_plot_driver
+    ObservationLinker,
+    DataCatalogueBuilder,
+    LandSeaMaskGenerator,
+    ClimMetricsReader,
+    ClimMetricsMerger,
+    MeanClimateMetricsCollector,
+    VariabilityMetricsCollector,
+    EnsoDiagnosticsCollector,
+    SyntheticMetricsPlotter
 )
 
-#parallel calculation
-num_workers = {{ num_workers }}
-if num_workers < 2:
-  multiprocessing = False
-else:
-  multiprocessing = {{multiprocessing}}
+from pcmdi_viewer_util import(
+        collect_config,
+        setup_jinja_env,
+        create_section,
+        add_section,
+        generate_methodology_html,
+        generate_data_html,
+        generate_viewer_html
+)
 
-{%- if "synthetic_plots" not in subsection %}
-##############################
+# Determine multiprocessing usage
+num_workers = {{ num_workers }}
+multiprocessing = {{ multiprocessing }} if num_workers >= 2 else False
+
+{% if "synthetic_plots" not in subsection %}
+
+# Time range
 start_yr = int('${Y1}')
 end_yr = int('${Y2}')
 num_years = end_yr - start_yr + 1
 
-# DATA LOCATION: Reference
-{%- if "mean_climate" in subsection %}
+# Set data paths based on diagnostic type
+{% if "mean_climate" in subsection %}
 test_data_path = '${climo_dir_primary}'
 reference_data_path = '${climo_dir_ref}'
-{%- elif ("variability_modes" in subsection) or ("enso" in subsection) %}
+{% elif "variability_modes" in subsection or "enso" in subsection %}
 test_data_path = '${ts_dir_primary}'
 reference_data_path = '${ts_dir_ref}'
-{%- endif %}
+{% endif %}
 
+# Dataset identifiers
 test_data_set = ['${model_name}'.split(".")[1]]
 {% if run_type == "model_vs_obs" %}
 reference_data_set = '{{ obs_sets }}'.split(",")
 {% elif run_type == "model_vs_model" %}
 reference_data_set = ['${model_name_ref}'.split(".")[1]]
-{%- endif %}
+{% endif %}
 
 variables = '{{ vars }}'.split(",")
+
 ###############################################################
 #check and process derived quantities, these quantities are
 #likely not included as default in e3sm_to_cmip module
 ###############################################################
-for i,var in enumerate(variables):
-  if "_" in var or "-" in var:
-    varin = re.split("_|-", var)[0]
-  else:
-    varin = var
-  fpaths = sorted(glob.glob(os.path.join(test_data_path,"*."+var+".*.nc")))
-  if len(fpaths) < 1 and varin == 'rstcre':
-     derive_var(test_data_path,
-                varin,{'rsutcs':1,'rsut':-1},
-                '${model_name}.${tableID}')
+for var in variables:
+    varin = re.split(r"[_-]", var)[0] if "_" in var or "-" in var else var
+
+    test_fpaths = sorted(glob.glob(os.path.join(test_data_path, f"*.{var}.*.nc")))
+    if not test_fpaths:
+        derive_missing_variable(varin, test_data_path, '${model_name}.${tableID}')
+
 {% if run_type == "model_vs_model" %}
-     derive_var(reference_data_path,
-                varin,{'rsutcs':1,'rsut':-1},
-                '${model_name_ref}.${tableID_ref}')
-{%- endif %}
-  elif len(fpaths) < 1 and varin == 'rltcre':
-     derive_var(test_data_path,
-                varin,{'rlutcs':1,'rlut':-1},
-                '${model_name}.${tableID}')
-{% if run_type == "model_vs_model" %}
-     derive_var(reference_data_path,
-                varin,{'rlutcs':1,'rlut':-1},
-                '${model_name_ref}.${tableID_ref}')
-{%- endif %}
+        ref_fpaths = sorted(glob.glob(os.path.join(reference_data_path, f"*.{var}.*.nc")))
+        if not ref_fpaths:
+            derive_missing_variable(varin, reference_data_path, '${model_name_ref}.${tableID_ref}')
+{% endif %}
 
 #######################################################
 #collect and document data info in a dictionary
 # for convenience of pcmdi processing
 #######################################################
-test_dic, obs_dic = collect_data_info(
-              test_data_path,test_data_set,
-              reference_data_path,reference_data_set,
-              variables,'{{subsection}}','pcmdi_diags')
+builder = DataCatalogueBuilder(
+    test_data_path, test_data_set,
+    reference_data_path, reference_data_set,
+    variables, '{{subsection}}', 'pcmdi_diags'
+)
+test_dic, obs_dic = builder.build_catalogues()
 
 ##########################################################
 # land/sea mask is needed in PCMDI diagnostics, check and
 # generate it here as these data are not always available
 # for model or observations
 ##########################################################
-if {{ generate_sftlf }} in ['true', 'y', True]:
-  generate_sftlf = True
-else:
-  generate_sftlf = False
+# Whether to generate the land/sea mask
+generate_flag = {{ generate_sftlf }}
+# Instantiate and run
+mask_generator = LandSeaMaskGenerator(
+    test_path=test_data_path,
+    ref_path=reference_data_path,
+    subsection='{{subsection}}',
+    fixed_dir='fixed'
+)
+mask_generator.run(generate_flag)
 
-if generate_sftlf:
-   create_data_lmask(
-     test_data_path,
-     reference_data_path,
-     '{{subsection}}',
-     'fixed')
-
-#info to collect diagnostic output
+# Diagnostic input file templates
 input_template = os.path.join(
     'pcmdi_diags',
     '%(output_type)',
@@ -840,84 +901,80 @@ input_template = os.path.join(
     '${case_id}'
 )
 
-out_path = os.path.join(
-    '${results_dir}',
-    '%(group_type)'
-)
 
-{%- endif %}
+# Diagnostic output path templates
+out_path = os.path.join('${results_dir}', '%(group_type)')
 
-{%- if "mean_climate" in subsection %}
+{% endif %}
+
+{% if "mean_climate" in subsection %}
 regions = '{{regions}}'.split(",")
 
 #assiagn region to each variable
-variable_region(regions,variables)
+save_variable_regions(variables, regions)
 
-###################################################
-# generate the command list for each reference and
-# each variable (will execuate in parallel later)
-lstcmd = []
-for var in variables:
-   if "_" in var or "-" in var:
-      varin = re.split("_|-", var)[0]
-   else:
-      varin = var
-   if varin in obs_dic.keys():
-      refset = obs_dic[varin]['set']
-      lstcmd.append(
-          " ".join(['mean_climate_driver.py', ' -p  parameterfile.py',
-                    '--vars'                , '{}'.format(var),
-                    '-r'                    , '{}'.format(refset),
-                    '--case_id'             , '{}'.format('${case_id}')
-                   ])
-      )
+# generate the command list
+lstcmd = generate_mean_clim_cmds(
+    variables=variables,
+    obs_dic=obs_dic,
+    case_id='${case_id}'
+)
 
 ####################################################
 # call pcmdi mean climate diagnostics
 ####################################################
 if (len(lstcmd) > 0 ) and multiprocessing:
-   print("Parallel computing with {} jobs".format(str(len(lstcmd))))
-   stdout,stderr,return_code = parallel_jobs(lstcmd,num_workers)
+    try:
+        results = run_parallel_jobs(lstcmd, num_workers)
+        for i, (stdout, stderr, return_code) in enumerate(results):
+            print(f"\nCommand {i+1} finished:")
+            print(f"STDOUT: {stdout}")
+            print(f"STDERR: {stderr}")
+            print(f"Return code: {return_code}")
+    except RuntimeError as e:
+        print(f"Execution failed: {e}")
 elif (len(lstcmd) > 0 ):
-   print("Serial computing with {} jobs".format(str(len(lstcmd))))
-   stdout,stderr,return_code = serial_jobs(lstcmd,num_workers)
+    try:
+        results = run_serial_jobs(lstcmd)
+        for i, (stdout, stderr, return_code) in enumerate(results):
+            print(f"\nCommand {i+1} finished:")
+            print(f"STDOUT: {stdout}")
+            print(f"STDERR: {stderr}")
+            print(f"Return code: {return_code}")
+    except RuntimeError as e:
+        print(f"Execution failed: {e}")
 else:
-   print("no jobs to run...")
-   return_code = 0
+    print("no jobs to run,continue....")
 
-if return_code != 0:
-   exit("ERROR: {} jobs failed".format('{{subsection}}'))
-else:
-   print("successfully finish all jobs....")
-   #time delay to ensure process completely finished
-   time.sleep(5)
+print("successfully finish all jobs....")
+#time delay to ensure process completely finished
+time.sleep(5)
 
 #orgnize diagnostic output
-collect_clim_diags(
-   regions,variables,
-   '{{figure_format}}',
-   '${model_name}'.split(".")[0],
-   '${model_name}'.split(".")[1],
-   '${model_name}'.split(".")[2],
-   '${model_name}'.split(".")[3],
-   '${case_id}',
-   input_template,
-   out_path
+collector = MeanClimateMetricsCollector(
+    regions=regions,
+    variables=variables,
+    fig_format='{{figure_format}}',
+    model_info=tuple('${model_name}'.split(".")),  # (mip, exp, model, relm)
+    case_id='${case_id}',
+    input_template=input_template,
+    output_dir=out_path
 )
+collector.collect()
 
-{%- endif %}
+{% endif %}
 
-{%- if "variability_modes" in subsection %}
+{% if "variability_modes" in subsection %}
 ##########################################
 # call pcmdi mode variability diagnostics
 ##########################################
 print("calculate mode variability metrics")
 
-{%- if subsection == "variability_modes_atm" %}
+{% if subsection == "variability_modes_atm" %}
 var_modes = '{{ atm_modes }}'.split(",")
 {% elif subsection == "variability_modes_cpl" %}
 var_modes = '{{ cpl_modes }}'.split(",")
-{%- endif %}
+{% endif %}
 
 #from configuration file
 varOBS  = '{{vars}}'
@@ -927,125 +984,116 @@ refpath = obs_dic[varOBS][refname]['file_path']
 reftyrs = int(str(obs_dic[varOBS][refname]['yymms'])[0:4])
 reftyre = int(str(obs_dic[varOBS][refname]['yymme'])[0:4])
 
-lstcmd = []
-for var_mode in var_modes:
-    if var_mode in ["NPO", "NPGO", "PSA1"]:
-      eofn_obs = "2"
-      eofn_mod = "2"
-    elif var_mode in ["PSA2"]:
-      eofn_obs = "3"
-      eofn_mod = "3"
-    else:
-      eofn_obs = "1"
-      eofn_mod = "1"
-    ##############################################
-    lstcmd.append(
-        " ".join([
-           'variability_modes_driver.py', ' -p parameterfile.py',
-           '--variability_mode'         , '{}'.format(var_mode),
-           '--eofn_mod'                 , '{}'.format(eofn_mod),
-           '--eofn_obs'                 , '{}'.format(eofn_obs),
-           '--varOBS'                   , '{}'.format(varOBS),
-           '--osyear'                   , '{}'.format(reftyrs),
-           '--oeyear'                   , '{}'.format(reftyre),
-           '--reference_data_name'      , '{}'.format(refname),
-           '--reference_data_path'      , '{}'.format(refpath),
-           '--case_id'                  , '{}'.format('${case_id}')
-        ])
-    )
-
-if (len(lstcmd) > 0 ) and multiprocessing:
-   print("Parallel computing with {} jobs".format(str(len(lstcmd))))
-   stdout,stderr,return_code = parallel_jobs(lstcmd,num_workers)
-elif (len(lstcmd) > 0 ):
-   print("Serial computing with {} jobs".format(str(len(lstcmd))))
-   stdout,stderr,return_code = serial_jobs(lstcmd,num_workers)
-else:
-   print("no jobs to run...")
-   return_code = 0
-
-if return_code != 0:
-   exit("ERROR: {} jobs failed".format('{{subsection}}'))
-else:
-   print("successfully finish all jobs....")
-   #time delay to ensure process completely finished
-   time.sleep(5)
-
-#orgnize diagnostic output
-collect_movs_diags(
-   var_modes,
-   '{{figure_format}}',
-   '${model_name}'.split(".")[0],
-   '${model_name}'.split(".")[1],
-   '${model_name}'.split(".")[2],
-   '${model_name}'.split(".")[3],
-   '${case_id}',
-   input_template,
-   out_path
+# Call the function
+lstcmd = generate_varmode_cmds(
+    modes=var_modes,
+    varOBS=varOBS,
+    reftyrs=reftyrs,
+    reftyre=reftyre,
+    refname=refname,
+    refpath=refpath,
+    case_id='${case_id}'
 )
 
-{%- endif %}
+if (len(lstcmd) > 0 ) and multiprocessing:
+    try:
+        results = run_parallel_jobs(lstcmd, num_workers)
+        for i, (stdout, stderr, return_code) in enumerate(results):
+            print(f"\nCommand {i+1} finished:")
+            print(f"STDOUT: {stdout}")
+            print(f"STDERR: {stderr}")
+            print(f"Return code: {return_code}")
+    except RuntimeError as e:
+        print(f"Execution failed: {e}")
+elif (len(lstcmd) > 0 ):
+    try:
+        results = run_serial_jobs(lstcmd)
+        for i, (stdout, stderr, return_code) in enumerate(results):
+            print(f"\nCommand {i+1} finished:")
+            print(f"STDOUT: {stdout}")
+            print(f"STDERR: {stderr}")
+            print(f"Return code: {return_code}")
+    except RuntimeError as e:
+        print(f"Execution failed: {e}")
+else:
+   print("no jobs to run,continue...")
 
-{%- if "enso" in subsection %}
+print("successfully finish all jobs....")
+#time delay to ensure process completely finished
+time.sleep(5)
+
+# Create the collector instance
+collector = VariabilityMetricsCollector(
+    modes=var_modes,
+    fig_format='{{figure_format}}',
+    mip='${model_name}'.split(".")[0],
+    exp='${model_name}'.split(".")[1],
+    model='${model_name}'.split(".")[2],
+    relm='${model_name}'.split(".")[3],
+    case_id='${case_id}',
+    input_dir=input_template,
+    output_dir=out_path
+)
+
+# Run the collection process
+collector.collect()
+
+{% endif %}
+
+{% if "enso" in subsection %}
 #############################################
 # call enso_driver.py to process diagnostics
 #############################################
-
-#orgnize observation var list
-enso_obsvar_dict(obs_dic,variables)
-
-#orgnize observation landmask
-enso_obsvar_lmsk(obs_dic,variables)
+build_enso_obsvar_catalog(obs_dic, variables)
+build_enso_obsvar_landmask(obs_dic, variables)
 
 #now start enso driver
-print("calculate enso metrics")
-enso_groups = '{{ enso_groups }}'.split(",")
-lstcmd = []
-for metricsCollection in enso_groups:
-    lstcmd.append(
-        " ".join([
-           'enso_driver.py     ', ' -p parameterfile.py',
-           '--metricsCollection', '{}'.format(metricsCollection),
-           '--case_id'          , '{}'.format('${case_id}')
-        ])
-    )
-
+lstcmd = generate_enso_cmds('{{ enso_groups }}', '${case_id}')
 if (len(lstcmd) > 0 ) and multiprocessing:
-   print("Parallel computing with {} jobs".format(str(len(lstcmd))))
-   stdout,stderr,return_code = parallel_jobs(lstcmd,num_workers)
-elif (len(lstcmd) > 0 ):
-   print("Serial computing with {} jobs".format(str(len(lstcmd))))
-   stdout,stderr,return_code = serial_jobs(lstcmd,num_workers)
+    try:
+        results = run_parallel_jobs(lstcmd, num_workers)
+        for i, (stdout, stderr, return_code) in enumerate(results):
+            print(f"\nCommand {i+1} finished:")
+            print(f"STDOUT: {stdout}")
+            print(f"STDERR: {stderr}")
+            print(f"Return code: {return_code}")
+    except RuntimeError as e:
+        print(f"Execution failed: {e}")
+elif (len(lstcmd) > 0 ) and not multiprocessing:
+    try:
+        results = run_serial_jobs(lstcmd)
+        for i, (stdout, stderr, return_code) in enumerate(results):
+            print(f"\nCommand {i+1} finished:")
+            print(f"STDOUT: {stdout}")
+            print(f"STDERR: {stderr}")
+            print(f"Return code: {return_code}")
+    except RuntimeError as e:
+        print(f"Execution failed: {e}")
 else:
-   print("no jobs to run...")
-   return_code = 0
+    print("no jobs to run...")
 
-if return_code != 0:
-   exit("ERROR: {} jobs failed".format('{{subsection}}'))
-else:
-   print("successfully finish all jobs....")
-   #time delay to ensure process completely finished
-   time.sleep(5)
+print("successfully finish all jobs....")
+#time delay to ensure process completely finished
+time.sleep(5)
 
-#organize diagnostic output
+# Initialize and run collector
 obs_dict = json.load(open('obs_catalogue.json'))
 obs_name = list(obs_dict.keys())[0]
-collect_enso_diags(
-    enso_groups,
-   '{{figure_format}}',
-    obs_name,
-   '${model_name}'.split(".")[0],
-   '${model_name}'.split(".")[1],
-   '${model_name}'.split(".")[2],
-   '${model_name}'.split(".")[3],
-   '${case_id}',
-    input_template,
-    out_path
+collector = EnsoDiagnosticsCollector(
+    fig_format='{{figure_format}}',
+    refname=obs_name,
+    model_name_parts='${model_name}'.split("."),
+    case_id='${case_id}',
+    input_dir=input_template,
+    output_dir=out_path
 )
 
-{%- endif %}
+enso_groups = '{{ enso_groups }}'.split(",")
+collector.run(enso_groups)
 
-{%- if "synthetic_plots" in subsection %}
+{% endif %}
+
+{% if "synthetic_plots" in subsection %}
 #########################################
 #plot synthetic figures for pcmdi metrics
 #########################################
@@ -1055,7 +1103,7 @@ figure_sets = '{{synthetic_sets}}'.split(",")
 figure_format = '{{figure_format}}'
 test_input_path = os.path.join(
     '${www}',
-    '${case}',
+    '%(model_name)',
     'pcmdi_diags',
     '${results_dir}',
     'metrics_data',
@@ -1064,63 +1112,87 @@ test_input_path = os.path.join(
 
 metric_dict = json.load(open('synthetic_metrics_list.json'))
 
-parameter = OrderedDict()
-parameter['save_data'] = True
-parameter['out_dir'] = os.path.join('${results_dir}','ERROR_metric')
-parameter['test_name'] = '{{model_name}}'
+plotter = SyntheticMetricsPlotter(
+    test_name='{{model_name}}',
+    table_id='{{model_tableID}}',
+    figure_format=figure_format,
+    figure_sets=figure_sets,
+    metric_dict=metric_dict,
+    save_data=True,
+    base_test_input_path=test_input_path,
+    results_dir='${web_dir}/${results_dir}',
+    cmip_clim_dir='{{cmip_clim_dir}}',
+    cmip_clim_set='{{cmip_clim_set}}',
+    cmip_movs_dir='{{cmip_movs_dir}}',
+    cmip_movs_set='{{cmip_movs_set}}',
+    atm_modes='{{ atm_modes }}',
+    cpl_modes='{{ cpl_modes }}',
+    cmip_enso_dir='{{cmip_enso_dir}}',
+    cmip_enso_set='{{cmip_enso_set}}'
+)
 
-parameter['model_name'] = [ '-'.join('{{model_name}}'.split(".")[2:]) ]
-parameter['tableID'] = [ '{{model_tableID}}' ]
-parameter['case_id'] = [ '${case_id}' ]
+# Generate Summary Metrics plots
+# e.g., "climatology,enso,variability"
+groups = '{{sub_sets}}'.split(',')
+plotter.generate(groups)
 
-for metric in metric_sets:
-    parameter['test_path'] = test_input_path.replace('%(group_type)',metric)
-    parameter['diag_vars'] = metric_dict[metric]
-    if metric == "mean_climate":
-       parameter['cmip_path'] = '{{cmip_clim_dir}}'
-       parameter['cmip_name'] = '{{cmip_clim_set}}'
-       merge_lib = collect_clim_metrics(parameter)
-    elif metric == "variability_modes":
-       parameter['cmip_path'] = '{{cmip_movs_dir}}'
-       parameter['cmip_name'] = '{{cmip_movs_set}}'
-       parameter['movs_mode'] = '{{ atm_modes }}'.split(",") + '{{ cpl_modes }}'.split(",")
-       merge_lib,mode_season_list = collect_movs_metrics(parameter)
-    elif metric == 'enso_metric':
-       parameter['cmip_path'] = '{{cmip_enso_dir}}'
-       parameter['cmip_name'] = '{{cmip_enso_set}}'
+print("Generating viewer page for diagnostics...")
 
-    if metric == "mean_climate":
-       for stat in metric_dict[metric].keys():
-	       mean_climate_plot_driver(
-                     metric, stat,
-                     merge_lib.regions,
-                     parameter['model_name'],
-                     parameter['diag_vars'][stat],
-                     merge_lib.df_dict[stat],
-                     merge_lib.var_list,
-                     merge_lib.var_unit_list,
-                     parameter['save_data'],
-                     parameter['out_dir'],
-		     figure_format)
-    elif metric == "variability_modes":
-       for stat in metric_dict[metric].keys():
-	       variability_modes_plot_driver(
-                     metric, stat,
-                     parameter['model_name'],
-                     parameter['diag_vars'][stat],
-                     merge_lib[stat],
-                     mode_season_list,
-                     parameter['save_data'],
-                     parameter['out_dir'],
-		     figure_format)
-    elif metric == "enso_metric":
-       for stat in metric_dict[metric].keys():
-	       enso_plot_driver(
-                     metric,stat,
-                     parameter,
-                     figure_format)
+# Extract template values (assumes substitution happens before execution)
+title = "{{pcmdi_webtitle}}"
+version = "{{pcmdi_version}}"
+subtitle = "${run_type}".replace('_', ' ').capitalize()
+case_id = "${case}"
+model_name = "{{model_name}}"
+table_id = "{{model_tableID}}"
 
-{%- endif %}
+# ts_years is assumed to be a list via string_list(default=list(""))
+ts_periods = ts_years if isinstance(ts_years, list) else []
+
+# Validate and unpack periods
+if len(ts_periods) == 3:
+    clim_period, emov_period, enso_period = [p.strip() for p in ts_periods]
+else:
+    raise ValueError(
+        f"Expected 3 periods (climatology, EMoV, ENSO), "
+        f"but got {len(ts_periods)}: {ts_periods}"
+    )
+
+# Set up paths
+obs_dir = os.path.join('{{pcmdi_external_prefix}}', 'observations', 'Atm', 'time-series')
+pmp_dir = os.path.join('{{pcmdi_external_prefix}}', 'pcmdi_data')
+web_dir = os.path.join("${web_dir}", "viewer")
+os.makedirs(web_dir, exist_ok=True)
+
+# Copy logo
+web_logo_src = os.path.join(
+    '{{pcmdi_external_prefix}}',
+    '{{pcmdi_viewer_template}}',
+    'e3sm_pmp_logo.png'
+)
+web_logo_dst = os.path.join(web_dir, 'e3sm_pmp_logo.png')
+shutil.copy(web_logo_src, web_logo_dst)
+
+# Build config
+config = collect_config(
+    title=title,
+    subtitle=subtitle,
+    version=version,
+    case_id=case_id,
+    diag_dir="${web_dir}",
+    obs_dir=obs_dir,
+    pmp_dir=pmp_dir,
+    clim_period=clim_period,
+    emov_period=emov_period,
+    enso_period=enso_period
+)
+
+# Render viewer
+generate_methodology_html(config)
+generate_data_html(config)
+generate_viewer_html(config)
+
+{% endif %}
 
 EOF
 ################################
@@ -1142,7 +1214,6 @@ echo ===== COPY FILES TO WEB SERVER =====
 echo
 
 # Create top-level directory
-web_dir=${www}/${case}/pcmdi_diags
 mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
