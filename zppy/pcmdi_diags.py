@@ -70,7 +70,7 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
             if c["sub"] != "synthetic_plots":
                 check_and_define_parameters(c)
             else:
-                prefix = f"pcmdi_diags_{c['sub']}_{c['tag']}"
+                prefix = f"pcmdi_diags_{c['sub']}_{c['run_type']}"
                 print(prefix)
                 c["prefix"] = prefix
 
@@ -176,9 +176,9 @@ def check_parameters_for_pcmdi(c: Dict[str, Any]) -> None:
 
 
 def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
-    check_parameter_defined(c, "diff_title")
-    check_parameter_defined(c, "ref_name")
-    check_parameter_defined(c, "short_ref_name")
+    check_parameter_defined(c, "reference_data_path_ts")
+    check_parameter_defined(c, "model_name_ref")
+    check_parameter_defined(c, "model_tableID_ref")
     if c["sub"] != "synthetic_plots":
         check_required_parameters(
             c,
@@ -210,10 +210,12 @@ def check_and_define_parameters(c: Dict[str, Any]) -> None:
         )
     prefix: str
     if c["run_type"] == "model_vs_obs":
-        prefix = f"pcmdi_diags_{c['sub']}_{c['tag']}_{c['year1']:04d}-{c['year2']:04d}"
+        prefix = (
+            f"pcmdi_diags_{c['sub']}_{c['run_type']}_{c['year1']:04d}-{c['year2']:04d}"
+        )
     elif c["run_type"] == "model_vs_model":
         check_mvm_only_parameters_for_bash(c)
-        prefix = f"pcmdi_diags_{c['sub']}_{c['tag']}_{c['year1']:04d}-{c['year2']:04d}_vs_{c['ref_year1']:04d}-{c['ref_year2']:04d}"
+        prefix = f"pcmdi_diags_{c['sub']}_{c['run_type']}_{c['year1']:04d}-{c['year2']:04d}_vs_{c['ref_year1']:04d}-{c['ref_year2']:04d}"
         reference_data_path = c["reference_data_path"].split("/post")[0] + "/post"
         if set(
             ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]

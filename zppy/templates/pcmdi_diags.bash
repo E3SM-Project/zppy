@@ -28,22 +28,45 @@ echo "RUNNING ${id}" > {{ prefix }}.status
 # Basic definitions
 case="{{ case }}"
 www="{{ www }}"
+run_type="{{ run_type }}"
+results_dir="{{ run_type }}"
+ref_name={{ ref_name }}
 {% if "synthetic_plots" not in subsection %}
+
+# Input variables
 y1={{ year1 }}
 y2={{ year2 }}
-Y1="{{ '%04d' % (year1) }}"
-Y2="{{ '%04d' % (year2) }}"
-{% if run_type == "model_vs_model" %}
-ref_Y1="{{ '%04d' % (ref_year1) }}"
-ref_Y2="{{ '%04d' % (ref_year2) }}"
+ref_y1={{ ref_year1 }}
+ref_y2={{ ref_year2 }}
+ref_start_yr={{ ref_start_yr }}
+ref_final_yr={{ ref_final_yr }}
+
+# Formatted versions
+Y1="$(printf "%04d" ${y1})"
+Y2="$(printf "%04d" ${y2})"
+ref_Y1="$(printf "%04d" ${ref_y1})"
+ref_Y2="$(printf "%04d" ${ref_y2})"
+
+# Refine reference range
+if [[ ${ref_y1} -lt ${ref_start_yr} ]]; then
+    ref_y1=${ref_start_yr}
+    ref_Y1="$(printf "%04d" ${ref_y1})"
+fi
+
+num_years=$((y2 - y1 + 1))
+ref_end_yr=$((ref_y1 + num_years - 1))
+
+if [[ ${ref_y2} -gt ${ref_end_yr} ]]; then
+    ref_y2=${ref_end_yr}
+    ref_Y2="$(printf "%04d" ${ref_y2})"
+fi
+
+if [[ ${ref_y2} -gt ${ref_final_yr} ]]; then
+    ref_y2=${ref_final_yr}
+    ref_Y2="$(printf "%04d" ${ref_y2})"
+fi
+
 {% endif %}
-{% endif %}
-
-run_type="{{ run_type }}"
-
-results_dir="{{ tag }}"
-
-ref_name={{ ref_name }}
 
 # Top-level directory
 web_dir=${www}/${case}/pcmdi_diags
@@ -369,7 +392,7 @@ climo_dir_source="{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly"
 create_links_acyc_climo "${climo_dir_source}" "${climo_dir_primary}" "${Y1}" "${Y2}" "${model_name}.${tableID}" 1
 {% if run_type == "model_vs_model" %}
 # Path to reference model's climatology files
-climo_dir_source_ref="{{ reference_data_path }}"
+climo_dir_source_ref="{{ reference_data_path_ts }}"
 climo_dir_ref="climo_ref"
 # Link and process reference model climo data
 create_links_acyc_climo "${climo_dir_source_ref}" "${climo_dir_ref}" "${ref_Y1}" "${ref_Y2}" "${model_name_ref}.${tableID_ref}" 2
@@ -385,7 +408,7 @@ ts_dir_source="{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly"
 create_links_ts "${ts_dir_source}" "${ts_dir_primary}" "${Y1}" "${Y2}" "${model_name}.${tableID}" 3
 {% if run_type == "model_vs_model" %}
 # Define time series path for reference model (adjust for different year spans)
-ts_dir_source_ref="{{ reference_data_path_ts }}/{{ ts_num_years_ref }}yr"
+ts_dir_source_ref="{{ reference_data_path_ts }}"
 ts_dir_ref="ts_ref"
 # Create local links and combine ts files for the reference model
 create_links_ts "${ts_dir_source_ref}" "${ts_dir_ref}" "${ref_Y1}" "${ref_Y2}" "${model_name_ref}.${tableID_ref}" 4
@@ -467,12 +490,13 @@ fi
 # Use same period as test model when possible
 #######################################################
 ts_dir_ref_source="{{ scriptDir }}/${workdir}/${obstmp_dir}"
+
 {% if "mean_climate" in subsection %}
 climo_dir_ref=climo_ref
-create_links_acyc_climo_obs "${ts_dir_ref_source}" "${climo_dir_ref}" ${Y1} ${Y2} 7
+create_links_acyc_climo_obs "${ts_dir_ref_source}" "${climo_dir_ref}" ${ref_Y1} ${ref_Y2} 7
 {% elif "variability_modes_cpl" in subsection or "variability_modes_atm" in subsection or "enso" in subsection %}
 ts_dir_ref=ts_ref
-create_links_ts_obs "${ts_dir_ref_source}" "${ts_dir_ref}" ${Y1} ${Y2} 8
+create_links_ts_obs "${ts_dir_ref_source}" "${ts_dir_ref}" ${ref_Y1} ${ref_Y2} 8
 {% endif %}
 
 {% endif %}
@@ -1113,6 +1137,7 @@ test_input_path = os.path.join(
 metric_dict = json.load(open('synthetic_metrics_list.json'))
 
 plotter = SyntheticMetricsPlotter(
+    case_name='{{case}}',
     test_name='{{model_name}}',
     table_id='{{model_tableID}}',
     figure_format=figure_format,
@@ -1162,8 +1187,8 @@ else:
 # Set up paths
 obs_dir = os.path.join('{{pcmdi_external_prefix}}', 'observations', 'Atm', 'time-series')
 pmp_dir = os.path.join('{{pcmdi_external_prefix}}', 'pcmdi_data')
-web_dir = os.path.join("${web_dir}", "viewer")
-os.makedirs(web_dir, exist_ok=True)
+out_dir = os.path.join("${web_dir}", "${results_dir}", "viewer")
+os.makedirs(out_dir, exist_ok=True)
 
 # Copy logo
 web_logo_src = os.path.join(
@@ -1171,7 +1196,7 @@ web_logo_src = os.path.join(
     '{{pcmdi_viewer_template}}',
     'e3sm_pmp_logo.png'
 )
-web_logo_dst = os.path.join(web_dir, 'e3sm_pmp_logo.png')
+web_logo_dst = os.path.join(out_dir, 'e3sm_pmp_logo.png')
 shutil.copy(web_logo_src, web_logo_dst)
 
 # Build config
@@ -1183,6 +1208,7 @@ config = collect_config(
     diag_dir="${web_dir}",
     obs_dir=obs_dir,
     pmp_dir=pmp_dir,
+    out_dir=out_dir,
     clim_period=clim_period,
     emov_period=emov_period,
     enso_period=enso_period
