@@ -3,6 +3,8 @@ import errno
 import importlib
 import io
 import os
+import shutil
+from datetime import datetime, timezone
 from typing import Any, List, Tuple
 
 from configobj import ConfigObj
@@ -48,8 +50,11 @@ def main():
     output = output.replace("$USER", username)
     script_dir = os.path.join(output, "post/scripts")
     job_ids_file = os.path.join(script_dir, "jobids.txt")
+    ts_utc = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+    provenance = os.path.join(script_dir, f"provenance.{ts_utc}.cfg")
     try:
         os.makedirs(script_dir)
+        shutil.copy(args.config, provenance)
     except OSError as exc:
         if exc.errno != errno.EEXIST:
             raise OSError("Cannot create script directory")
