@@ -62,12 +62,10 @@ if grep -q "*" input.txt; then
 fi
 # Generate time series files
 # If the user-defined parameter "vars" is "", then ${vars}, defined above, will be too.
-cat input.txt | ncclimo \
+cat input.txt | /home/ac.zender/bin_chrysalis/ncclimo --npo \
 -c {{ case }} \
 {%- if vars != '' %}
 -v ${vars} \
-{%- elif 'elm' in input_files %}
---xcl_var -v {{ vars_exclude }} \
 {%- endif %}
 --split \
 {%- if extra_vars != '' %}
