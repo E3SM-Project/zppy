@@ -1,5 +1,5 @@
 exclude: "docs|node_modules|migrations|.git|.tox"
-default_stages: [pre-commit]
+default_stages: [commit]
 fail_fast: true
 
 repos:
