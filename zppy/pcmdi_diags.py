@@ -3,19 +3,19 @@ from typing import Any, Dict, List, Set, Tuple
 
 from zppy.bundle import handle_bundles
 from zppy.utils import (
-    ParameterGuessType,
+    ParameterInferenceType,
     add_dependencies,
     check_parameter_defined,
-    check_required_parameters,
+    check_set_specific_parameter,
     check_status,
-    define_or_guess,
-    define_or_guess2,
     get_file_names,
     get_tasks,
+    get_value_from_parameter,
     get_years,
     initialize_template,
     make_executable,
     print_url,
+    set_value_of_parameter_if_undefined,
     submit_script,
     write_settings_file,
 )
@@ -34,8 +34,8 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
     # --- Generate and submit pcmdi_diags scripts ---
     for c in tasks:
         dependencies: List[str] = []
-        c["sub"] = define_or_guess(
-            c, "subsection", "sub", ParameterGuessType.SECTION_GUESS
+        c["sub"] = get_value_from_parameter(
+            c, "subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
         )
         check_parameters_for_bash(c)
 
@@ -91,6 +91,21 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
             if "ts_num_years" in c.keys():
                 for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
                     add_ts_dependencies(c, dependencies, script_dir, yr)
+                    set_value_of_parameter_if_undefined(
+                        c,
+                        "e3sm_to_cmip_atm_subsection",
+                        "atm_monthly_180x360_aave",
+                        ParameterInferenceType.SECTION_INFERENCE,
+                    )
+                    add_dependencies(
+                        dependencies,
+                        script_dir,
+                        "e3sm_to_cmip",
+                        c["e3sm_to_cmip_atm_subsection"],
+                        c["year1"],
+                        c["year2"],
+                        c["ts_num_years"],
+                    )
 
             if c["sub"] == "synthetic_plots":
                 add_pcmdi_dependencies(c, dependencies, script_dir)
@@ -129,21 +144,21 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
 def check_parameters_for_bash(c: Dict[str, Any]) -> None:
     if c["sub"] != "synthetic_plots":
-        check_required_parameters(
+        check_set_specific_parameter(
             c,
             set(
                 ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
             ),
             "ref_final_yr",
         )
-        check_required_parameters(
+        check_set_specific_parameter(
             c,
             set(
                 ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
             ),
             "ref_start_yr",
         )
-        check_required_parameters(
+        check_set_specific_parameter(
             c,
             set(
                 ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
@@ -155,23 +170,23 @@ def check_parameters_for_bash(c: Dict[str, Any]) -> None:
 def check_parameters_for_pcmdi(c: Dict[str, Any]) -> None:
     # check and set up the external data needed by pcmdi
     if c["sub"] == "synthetic_plots":
-        define_or_guess2(
+        set_value_of_parameter_if_undefined(
             c,
             "cmip_enso_dir",
             f"{c['diagnostics_base_path']}/pcmdi_data/metrics_data/enso_metric",
-            ParameterGuessType.PATH_GUESS,
+            ParameterInferenceType.PATH_INFERENCE,
         )
-        define_or_guess2(
+        set_value_of_parameter_if_undefined(
             c,
             "cmip_clim_dir",
             f"{c['diagnostics_base_path']}/pcmdi_data/metrics_data/mean_climate",
-            ParameterGuessType.PATH_GUESS,
+            ParameterInferenceType.PATH_INFERENCE,
         )
-        define_or_guess2(
+        set_value_of_parameter_if_undefined(
             c,
             "cmip_movs_dir",
             f"{c['diagnostics_base_path']}/pcmdi_data/metrics_data/variability_modes",
-            ParameterGuessType.PATH_GUESS,
+            ParameterInferenceType.PATH_INFERENCE,
         )
 
 
@@ -180,7 +195,7 @@ def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
     check_parameter_defined(c, "model_name_ref")
     check_parameter_defined(c, "model_tableID_ref")
     if c["sub"] != "synthetic_plots":
-        check_required_parameters(
+        check_set_specific_parameter(
             c,
             set(
                 ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
@@ -195,18 +210,18 @@ def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
                 "enso",
             ]
         )
-        check_required_parameters(c, ts_sets, "ts_num_years_ref")
-        check_required_parameters(c, ts_sets, "ts_subsection")
+        check_set_specific_parameter(c, ts_sets, "ts_num_years_ref")
+        check_set_specific_parameter(c, ts_sets, "ts_subsection")
 
 
 def check_and_define_parameters(c: Dict[str, Any]) -> None:
     # TODO: do this based on sets, rather than by relying on the user setting ts_num_years
     if "ts_num_years" in c.keys():
-        define_or_guess2(
+        set_value_of_parameter_if_undefined(
             c,
             "obs_ts",
             f"{c['diagnostics_base_path']}/observations/Atm/time-series/",
-            ParameterGuessType.PATH_GUESS,
+            ParameterInferenceType.PATH_INFERENCE,
         )
     prefix: str
     if c["run_type"] == "model_vs_obs":
@@ -220,11 +235,11 @@ def check_and_define_parameters(c: Dict[str, Any]) -> None:
         if set(
             ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
         ) & set(c["sets"]):
-            define_or_guess2(
+            set_value_of_parameter_if_undefined(
                 c,
                 "reference_data_path_ts",
                 f"{reference_data_path}/atm/{c['grid']}/cmip_ts/monthly",
-                ParameterGuessType.PATH_GUESS,
+                ParameterInferenceType.PATH_INFERENCE,
             )
     else:
         raise ValueError(f"Invalid run_type={c['run_type']}")
