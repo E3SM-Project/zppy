@@ -44,13 +44,15 @@ def main():
     _validate_config(config)
     # Add templateDir to config
     config["default"]["templateDir"] = template_dir
+    # Get timestamp for provenance
+    # Provenance cfg will be placed in both `output` and `www`
+    ts_utc = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     # Output script directory
     output = config["default"]["output"]
     username = os.environ.get("USER")
     output = output.replace("$USER", username)
     script_dir = os.path.join(output, "post/scripts")
     job_ids_file = os.path.join(script_dir, "jobids.txt")
-    ts_utc = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     provenance = os.path.join(script_dir, f"provenance.{ts_utc}.cfg")
     try:
         os.makedirs(script_dir)
@@ -58,6 +60,19 @@ def main():
     except OSError as exc:
         if exc.errno != errno.EEXIST:
             raise OSError("Cannot create script directory")
+        pass
+    # Web output directory
+    www = config["default"]["www"]
+    username = os.environ.get("USER")
+    www = www.replace("$USER", username)
+    www_case_dir = os.path.join(www, config["default"]["case"])
+    provenance = os.path.join(www_case_dir, f"provenance.{ts_utc}.cfg")
+    try:
+        os.makedirs(www_case_dir)
+        shutil.copy(args.config, provenance)
+    except OSError as exc:
+        if exc.errno != errno.EEXIST:
+            raise OSError("Cannot create www case directory")
         pass
     machine_info = _get_machine_info(config)
     config = _determine_parameters(machine_info, config)
