@@ -91,6 +91,21 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
             if "ts_num_years" in c.keys():
                 for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
                     add_ts_dependencies(c, dependencies, script_dir, yr)
+                    set_value_of_parameter_if_undefined(
+                        c,
+                        "e3sm_to_cmip_atm_subsection",
+                        "atm_monthly_180x360_aave",
+                        ParameterInferenceType.SECTION_INFERENCE,
+                    )
+                    add_dependencies(
+                        dependencies,
+                        script_dir,
+                        "e3sm_to_cmip",
+                        c["e3sm_to_cmip_atm_subsection"],
+                        c["year1"],
+                        c["year2"],
+                        c["ts_num_years"],
+                    )
 
             if c["sub"] == "synthetic_plots":
                 add_pcmdi_dependencies(c, dependencies, script_dir)
