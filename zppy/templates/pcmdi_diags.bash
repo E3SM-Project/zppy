@@ -303,7 +303,7 @@ create_links_ts() {
         exit "${error_num}"
       fi
     else
-      echo "Warning: No input files found for variable ${v}. Skipping."
+      echo "Warning: No input files found for variable ${v} in ${ts_dir_source}. Skipping."
     fi
   done
 
@@ -387,6 +387,7 @@ create_links_ts_obs() {
 # Define output directory for climatology files
 climo_dir_primary="climo"
 # Path to model's monthly climatology files
+# TODO: how do we have cmip_ts under climo??
 climo_dir_source="{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly"
 # Link and process primary model climo data
 create_links_acyc_climo "${climo_dir_source}" "${climo_dir_primary}" "${Y1}" "${Y2}" "${model_name}.${tableID}" 1
@@ -403,7 +404,7 @@ create_links_acyc_climo "${climo_dir_source_ref}" "${climo_dir_ref}" "${ref_Y1}"
 # All diagnostics in this subsection use time series (ts) data
 # Define output directory for primary model time series
 ts_dir_primary="ts"
-ts_dir_source="{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly"
+ts_dir_source="{{ output }}/post/atm/{{ ts_grid }}/cmip_ts/monthly"
 # Create local links and combine time series NetCDF files for the primary model
 create_links_ts "${ts_dir_source}" "${ts_dir_primary}" "${Y1}" "${Y2}" "${model_name}.${tableID}" 3
 {% if run_type == "model_vs_model" %}
@@ -432,7 +433,10 @@ echo "Linking observational data using SLURM..."
 
 command="srun -N 1 zi-pcmdi-link-observation --model_name_ref ${model_name_ref} --tableID_ref ${tableID_ref} --vars={{ vars }} --obs_sets {{ obs_sets }} --obs_ts {{ obs_ts }} --obstmp_dir ${obstmp_dir}"
 echo "Running: ${command}"
+
+source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-20250529
 time eval "${command}"
+source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh
 
 if [ $? -ne 0 ]; then
   cd {{ scriptDir }}
@@ -765,12 +769,14 @@ command="srun -N 1 zi-pcmdi-synthetic-plots --figure_format {{ figure_format }} 
 {% endif %}
 
 # Run diagnostics
+source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-20250529
 time ${command}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (11)' > {{ prefix }}.status
   exit 11
 fi
+source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh
 
 #################################
 # Copy output to web server
