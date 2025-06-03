@@ -3,6 +3,12 @@ import subprocess
 
 from mache import MachineInfo
 
+# To run:
+# `pip install .` latest code into conda env
+# Update UNIQUE_ID and any necessary environments below
+# python tests/integration/utils.py
+# zppy -c <generated cfg>
+
 UNIQUE_ID = "unique_id"
 
 # Example testing workflow ####################################################
@@ -96,7 +102,7 @@ def get_chyrsalis_expansions(config):
         "diags_walltime": "5:00:00",
         "environment_commands_test": "",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
-        "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+        "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-gts-split-20250603",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
         "partition_short": "debug",

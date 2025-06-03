@@ -61,6 +61,9 @@ def set_up_and_run_image_checker(
         "diff_dir": f"{actual_images_dir}image_check_failures_{cfg_specifier}{diff_dir_suffix}",
         "expected_images_list": f"{expansions['expected_dir']}image_list_expected_{cfg_specifier}.txt",
     }
+    print("Image checking dict:")
+    for key in d:
+        print(f"{key}: {d[key]}")
     parameters: Parameters = Parameters(d)
     for task in task_list:
         test_results = check_images(parameters, task)

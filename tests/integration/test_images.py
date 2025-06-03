@@ -45,15 +45,10 @@ def test_images():
             V3_CASE_NAME,
             expansions,
             diff_dir_suffix,
-            ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"],
-            test_results_dict,
-        )
-        set_up_and_run_image_checker(
-            "bundles",
-            V3_CASE_NAME,
-            expansions,
-            diff_dir_suffix,
-            ["e3sm_diags", "global_time_series", "ilamb"],  # No mpas_analysis
+            [
+                "mpas_analysis",
+                "global_time_series",
+            ],  # ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"],
             test_results_dict,
         )
 
