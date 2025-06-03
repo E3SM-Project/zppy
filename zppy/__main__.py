@@ -3,6 +3,7 @@ import errno
 import importlib
 import io
 import os
+import pprint
 import shutil
 from datetime import datetime, timezone
 from typing import Any, List, Tuple
@@ -156,6 +157,8 @@ def _validate_config(config):
 
     result = config.validate(validator)
     if result is not True:
+        pp = pprint.PrettyPrinter(indent=2, width=10)
+        pp.pprint(result)
         logger.critical("Validation results={}".format(result))
         raise ValueError(
             "Configuration file validation failed. Parameters listed as false in the validation results have invalid values."
