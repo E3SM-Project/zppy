@@ -5,9 +5,16 @@
 
 # Generate global time series plots
 ################################################################################
-results_dir={{ prefix }}_results
+{% if subsection != None %}
+subsection={{ subsection }}
+{%- else %}
+subsection="no_subsection"
+{%- endif %}
 
-zi-global-time-series --use_ocn {{ use_ocn }} --input {{ input }} --input_subdir {{ input_subdir }} --moc_file {{ moc_file }} --case_dir {{ output }} --experiment_name {{ experiment_name }} --figstr {{ figstr }} --color {{ color }} --ts_num_years {{ ts_num_years }} --plots_original {{ plots_original }} --plots_atm {{ plots_atm }} --plots_ice {{ plots_ice }} --plots_lnd {{ plots_lnd }} --plots_ocn {{ plots_ocn }} --nrows {{ nrows }} --ncols {{ ncols }} --results_dir ${results_dir} --regions {{ regions }} --make_viewer {{ make_viewer }} --start_yr {{ year1 }} --end_yr {{ year2 }}
+results_dir={{ prefix }}_results
+zi-global-time-series --subsection ${subsection} --use_ocn {{ use_ocn }} --input {{ input }} --input_subdir {{ input_subdir }} --moc_file {{ moc_file }} --case_dir {{ output }} --experiment_name {{ experiment_name }} --figstr {{ figstr }} --color {{ color }} --ts_num_years {{ ts_num_years }} --plots_original {{ plots_original }} --plots_atm {{ plots_atm }} --plots_ice {{ plots_ice }} --plots_lnd {{ plots_lnd }} --plots_ocn {{ plots_ocn }} --nrows {{ nrows }} --ncols {{ ncols }} --results_dir ${results_dir} --regions {{ regions }} --make_viewer {{ make_viewer }} --start_yr {{ year1 }} --end_yr {{ year2 }}
+
+
 
 results_dir_absolute_path={{ scriptDir }}/${results_dir}
 # We are already in scriptDir so we don't have to copy files over to results_dir_absolute_path
@@ -22,8 +29,9 @@ echo ===== COPY FILES TO WEB SERVER =====
 echo
 
 # Create top-level directory
-f=${www}/${case}/global_time_series
-mkdir -p ${f}
+top_level=${www}/${case}/global_time_series/
+results_level=${top_level}/${results_dir}
+mkdir -p ${results_level}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (7)' > {{ prefix }}.status
@@ -32,7 +40,7 @@ fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
 # For NERSC, make sure it is world readable
-f=`realpath ${f}`
+f=`realpath ${results_level}`
 while [[ $f != "/" ]]
 do
   owner=`stat --format '%U' $f`
@@ -45,7 +53,7 @@ done
 {% endif %}
 
 # Copy files
-rsync -a --delete ${results_dir_absolute_path} ${www}/${case}/global_time_series
+rsync -a --delete ${results_dir_absolute_path} ${top_level}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (8)' > {{ prefix }}.status
@@ -54,7 +62,7 @@ fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
 # For NERSC, change permissions of new files
-pushd ${www}/${case}/global_time_series
+pushd ${top_level}
 chgrp -R e3sm ${results_dir}
 chmod -R go+rX,go-w ${results_dir}
 popd
@@ -62,7 +70,7 @@ popd
 
 {% if machine in ['anvil', 'chrysalis'] %}
 # For LCRC, change permissions of new files
-pushd ${www}/${case}/global_time_series
+pushd ${top_level}
 chmod -R go+rX,go-w ${results_dir}
 popd
 {% endif %}

@@ -40,7 +40,11 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
             if ("last_year" in c.keys()) and (c["year2"] > c["last_year"]):
                 continue  # Skip this year set
             c["scriptDir"] = script_dir
-            prefix: str = f"global_time_series_{c['year1']:04d}-{c['year2']:04d}"
+            prefix: str
+            if c["subsection"]:
+                prefix = f"global_time_series_{c['subsection']}_{c['year1']:04d}-{c['year2']:04d}"
+            else:
+                prefix = f"global_time_series_{c['year1']:04d}-{c['year2']:04d}"
             print(prefix)
             c["prefix"] = prefix
             bash_file, settings_file, status_file = get_file_names(script_dir, prefix)

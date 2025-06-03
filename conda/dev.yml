@@ -1,3 +1,9 @@
+# Conda development environment for testing local source code changes to zppy before merging them to production (main branch).
+# To set up:
+# conda clean --all --y
+# conda env create -f conda/dev.yml -n env_name
+# pre-commit run --all-files
+# pip install .
 name: zppy_dev
 channels:
   - conda-forge
