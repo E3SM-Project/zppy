@@ -5,6 +5,72 @@ from mache import MachineInfo
 
 UNIQUE_ID = "unique_id"
 
+# Example testing workflow ####################################################
+"""
+# Example on Chrysalis
+
+# 1. Set up environments
+lcrc_conda # Function to set up conda locally
+
+cd ~/ez/e3sm_diags
+git fetch upstream main
+git checkout main
+git reset --hard upstream/main
+git log
+# Check that latest commit matches https://github.com/E3SM-Project/e3sm_diags/commits/main
+conda clean --all --y
+conda env create -f conda-env/dev.yml -n e3sm-diags-main-<date>
+conda activate e3sm-diags-main-<date>
+pip install .
+
+cd ~/ez/zppy-interfaces
+git fetch upstream main
+git checkout main
+git reset --hard upstream/main
+git log
+# Check that latest commit matches https://github.com/E3SM-Project/zppy-interfaces/commits/main
+conda clean --all --y
+conda env create -f conda/dev.yml -n zi-main-<date>
+conda activate zi-main-<date>
+pip install .
+
+cd ~/ez/zppy
+conda clean --all --y
+conda env create -f conda/dev.yml -n zppy-<branch>-<date>
+conda activate zppy-<branch>-<date>
+pre-commit run --all-files
+pip install .
+
+# 2. Run unit tests
+pytest tests/test_*.py
+
+# 3. Launch zppy jobs to produce actual images for image checker test
+# Edit tests/integration/utils.py:
+# UNIQUE_ID = "custom_name"
+#        "diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate e3sm-diags-main-<date>",
+#        "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-main-<date>",
+python tests/integration/utils.py
+
+zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v3_chrysalis.cfg
+zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v2_chrysalis.cfg
+zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_bundles_chrysalis.cfg # Runs 1st part of bundles cfg
+
+zppy -c tests/integration/generated/test_weekly_comprehensive_v3_chrysalis.cfg
+zppy -c tests/integration/generated/test_weekly_comprehensive_v2_chrysalis.cfg
+zppy -c tests/integration/generated/test_weekly_bundles_chrysalis.cfg # Runs 1st part of bundles cfg
+
+# Wait
+
+zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_bundles_chrysalis.cfg # Runs 2nd part of bundles cfg
+zppy -c tests/integration/generated/test_weekly_bundles_chrysalis.cfg # Runs 2nd part of bundles cfg
+
+# Wait
+
+ls tests/integration/test_*.py # to see what tests are available to run
+pytest tests/integration/test_images.py
+# 1 passed in 2910.93s (0:48:30)
+"""
+
 # Multi-machine testing #########################################################
 # Inspired by https://github.com/E3SM-Project/e3sm_diags/blob/master/docs/source/quickguides/generate_quick_guides.py
 
@@ -19,7 +85,13 @@ def get_chyrsalis_expansions(config):
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
-        # To use default environment_commands, set to ""
+        # Or the Unified environment
+        # (The same for `global_time_series_environment_commands`)
+        # Never set this to "" because it will print the line
+        # `environment_commands = ""` for the [e3sm_diags] task, overriding zppy's
+        # default of using Unified. That is, there will be no environment set.
+        # `environment_commands = ""` only redirects to Unified if specified under the
+        # [default] task
         "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "5:00:00",
         "environment_commands_test": "",
@@ -39,7 +111,6 @@ def get_chyrsalis_expansions(config):
 
 
 def get_compy_expansions(config):
-    # Note: `os.environ.get("USER")` also works. Here we're already using mache but not os, so using mache.
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
     d = {
@@ -47,8 +118,6 @@ def get_compy_expansions(config):
         "case_name": "v3.LR.historical_0051",
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
-        # To run this test, replace conda environment with your e3sm_diags dev environment
-        # To use default environment_commands, set to ""
         "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "03:00:00",
         "environment_commands_test": "",
@@ -68,7 +137,6 @@ def get_compy_expansions(config):
 
 
 def get_perlmutter_expansions(config):
-    # Note: `os.environ.get("USER")` also works. Here we're already using mache but not os, so using mache.
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
     d = {
@@ -76,8 +144,6 @@ def get_perlmutter_expansions(config):
         "case_name": "v3.LR.historical_0051",
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "cpu",
-        # To run this test, replace conda environment with your e3sm_diags dev environment
-        # To use default environment_commands, set to ""
         "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "6:00:00",
         "environment_commands_test": "",
@@ -214,6 +280,9 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "weekly_bundles",
         "weekly_comprehensive_v2",
         "weekly_comprehensive_v3",
+        "weekly_legacy_3.0.0_bundles",
+        "weekly_legacy_3.0.0_comprehensive_v2",
+        "weekly_legacy_3.0.0_comprehensive_v3",
     ]
     for cfg_name in cfg_names:
         cfg_template = f"{git_top_level}/tests/integration/template_{cfg_name}.cfg"

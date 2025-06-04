@@ -155,14 +155,16 @@ def _check_mismatched_images(
                     parameters.diff_dir,
                 )
 
-    if missing_images:
-        print("Missing images:")
-        for i in missing_images:
-            print(i)
-    if mismatched_images:
-        print("Mismatched images:")
-        for i in mismatched_images:
-            print(i)
+    verbose: bool = False
+    if verbose:
+        if missing_images:
+            print("Missing images:")
+            for i in missing_images:
+                print(i)
+        if mismatched_images:
+            print("Mismatched images:")
+            for i in mismatched_images:
+                print(i)
 
     # Count summary
     print(f"Total: {counter}")
