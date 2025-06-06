@@ -9,7 +9,7 @@ from mache import MachineInfo
 # python tests/integration/utils.py
 # zppy -c <generated cfg>
 
-UNIQUE_ID = "unique_id"
+UNIQUE_ID = "test-zppy-gts-split-20250605-try4"
 
 # Example testing workflow ####################################################
 """
@@ -98,7 +98,7 @@ def get_chyrsalis_expansions(config):
         # default of using Unified. That is, there will be no environment set.
         # `environment_commands = ""` only redirects to Unified if specified under the
         # [default] task
-        "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+        "diags_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
         "diags_walltime": "5:00:00",
         "environment_commands_test": "",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
