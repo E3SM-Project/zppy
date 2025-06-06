@@ -27,8 +27,9 @@ echo ===== COPY FILES TO WEB SERVER =====
 echo
 
 # Create top-level directory
-f=${www}/${case}/global_time_series
-mkdir -p ${f}
+top_level=${www}/${case}/global_time_series/ #{{ subsection }}/
+results_level=${top_level}/${results_dir}
+mkdir -p ${results_level}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (7)' > {{ prefix }}.status
@@ -37,7 +38,7 @@ fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
 # For NERSC, make sure it is world readable
-f=`realpath ${f}`
+f=`realpath ${results_level}`
 while [[ $f != "/" ]]
 do
   owner=`stat --format '%U' $f`
@@ -50,7 +51,10 @@ done
 {% endif %}
 
 # Copy files
-rsync -a --delete ${results_dir_absolute_path} ${www}/${case}/global_time_series
+# TODO: Fix web paths
+# With top_level as dst: classic_original_8_no_ocn/global_time_series_classic_original_8_no_ocn_1985-1995_results/ -- this shows up empty
+# With results_level as dst: classic_original_8_no_ocn/global_time_series_classic_original_8_no_ocn_1985-1995_results/global_time_series_classic_original_8_no_ocn_1985-1995_results/ -- this path works, but has a repeat
+rsync -a --delete ${results_dir_absolute_path} ${results_level}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (8)' > {{ prefix }}.status
@@ -59,7 +63,7 @@ fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
 # For NERSC, change permissions of new files
-pushd ${www}/${case}/global_time_series
+pushd ${top_level}
 chgrp -R e3sm ${results_dir}
 chmod -R go+rX,go-w ${results_dir}
 popd
@@ -67,7 +71,7 @@ popd
 
 {% if machine in ['anvil', 'chrysalis'] %}
 # For LCRC, change permissions of new files
-pushd ${www}/${case}/global_time_series
+pushd ${top_level}
 chmod -R go+rX,go-w ${results_dir}
 popd
 {% endif %}
