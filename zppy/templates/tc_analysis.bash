@@ -30,7 +30,7 @@ topography_file=`echo $(ncks --trd -M -m ${first_file} | grep -E -i "^global att
 echo "topography_file=${topography_file}"
 res={{ res }}
 pg2=false
-if [[ $topography_file =~ /[^_]*_([^_]*)_.*nc ]]; then
+if [[ ${topography_file##*/} =~ [^_]*_([^_]*)_.*nc ]]; then
     grid=${BASH_REMATCH[1]}
     echo "grid=${grid}"
     if [[ -z "${res}" ]]; then
