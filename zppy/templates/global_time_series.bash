@@ -29,7 +29,7 @@ echo ===== COPY FILES TO WEB SERVER =====
 echo
 
 # Create top-level directory
-top_level=${www}/${case}/global_time_series/ #{{ subsection }}/
+top_level=${www}/${case}/global_time_series/
 results_level=${top_level}/${results_dir}
 mkdir -p ${results_level}
 if [ $? != 0 ]; then

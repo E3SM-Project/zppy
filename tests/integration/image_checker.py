@@ -78,24 +78,23 @@ def set_up_and_run_image_checker(
 def check_images(parameters: Parameters, prefix: str):
     test_results = _check_mismatched_images(parameters, prefix)
     diff_subdir = f"{parameters.diff_dir}/{prefix}"
-    if os.path.exists(diff_subdir):
-        # Write missing and mismatched images to files
-        missing_images_file = f"{diff_subdir}/missing_images.txt"
-        if os.path.exists(missing_images_file):
-            os.remove(missing_images_file)
-        for missing_image in test_results.file_list_missing:
-            with open(missing_images_file, "a") as f:
-                f.write(f"{missing_image}\n")
-        mismatched_images_file = f"{diff_subdir}/mismatched_images.txt"
-        if os.path.exists(mismatched_images_file):
-            os.remove(mismatched_images_file)
-        for mismatched_image in test_results.file_list_mismatched:
-            with open(mismatched_images_file, "a") as f:
-                f.write(f"{mismatched_image}\n")
-        # Create image diff grid
-        _make_image_diff_grid(diff_subdir)
-    else:
-        print(f"Diff subdir {diff_subdir} does not exist.")
+    if not os.path.exists(diff_subdir):
+        os.makedirs(diff_subdir, exist_ok=True)
+    # Write missing and mismatched images to files
+    missing_images_file = f"{diff_subdir}/missing_images.txt"
+    if os.path.exists(missing_images_file):
+        os.remove(missing_images_file)
+    for missing_image in test_results.file_list_missing:
+        with open(missing_images_file, "a") as f:
+            f.write(f"{missing_image}\n")
+    mismatched_images_file = f"{diff_subdir}/mismatched_images.txt"
+    if os.path.exists(mismatched_images_file):
+        os.remove(mismatched_images_file)
+    for mismatched_image in test_results.file_list_mismatched:
+        with open(mismatched_images_file, "a") as f:
+            f.write(f"{mismatched_image}\n")
+    # Create image diff grid
+    _make_image_diff_grid(diff_subdir)
     return test_results
 
 
