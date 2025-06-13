@@ -77,7 +77,9 @@ web_dir=${www}/${case}/pcmdi_diags
 model_name='{{ model_name }}'
 tableID='{{ model_tableID }}'
 {% if run_type == "model_vs_obs" %}
-model_name_ref='obs.historical.%(model).00'
+# The put_model_here gets replaced is passed into Python as a string literal
+# And then replaced inside the Python code.
+model_name_ref='obs.historical.put_model_here.00'
 tableID_ref=${tableID}
 {% elif run_type == "model_vs_model" %}
 model_name_ref='{{ model_name_ref }}'
@@ -88,6 +90,10 @@ case_id=v$(date '+%Y%m%d')
 # Create temporary workdir
 workdir=`mktemp -d tmp.${id}.XXXX`
 cd ${workdir}
+
+
+# TODO: Move anything in {{pcmdi_external_prefix}} == /lcrc/group/e3sm/diagnostics/ to the inclusions subdir
+# or to zppy-interfaces
 
 # utility file for pcmdi-zppy workflow
 cp -r '{{pcmdi_external_prefix}}/{{pcmdi_zppy_util}}'   .
@@ -112,6 +118,8 @@ create_links_acyc_climo() {
   local end_year="$4"
   local name_key="$5"
   local error_num="$6"
+
+  echo "create_links_acyc_climo: linking from ${ts_dir_source} to ${ts_dir_destination}"
 
   mkdir -p "${ts_dir_destination}"
   cd "${ts_dir_destination}" || exit
@@ -163,6 +171,10 @@ create_links_acyc_climo() {
     fi
   done
 
+  if [ -z "$( ls . )" ]; then
+    echo "create_links_acyc_climo: ${ts_dir_destination} was not updated!"
+  fi
+
   cd ..
 }
 
@@ -178,23 +190,29 @@ create_links_acyc_climo_obs() {
   local prefix="{{ prefix }}"
   local dofm=(15.5 45 74.5 105 125.5 166 196.5 227.5 258 288.5 319 349.5)
 
+  echo "create_links_acyc_climo_obs: linking from ${ts_dir_source} to ${ts_dir_destination}"
+
   mkdir -p "${ts_dir_destination}"
   cd "${ts_dir_destination}" || exit
 
-  for file in ${ts_dir_source}/*.nc; do
+  for file in ${ts_dir_source}/*; do
     local fname
     local YYYYS YYYYE
     local PREFIX
     local ttag tmp_file MM combined_name
 
     fname=$(basename "${file}")
+    if [[ ! ${fname} =~ "*.nc" ]]; then
+      # Skip non-.nc files
+      continue
+    fi
 
     # Match two date patterns (YYYYMM or YYYYMMDD) separated by _ or -
     if [[ ${fname} =~ ([0-9]{6,8})[_-]([0-9]{6,8}) ]]; then
       YYYYS="${BASH_REMATCH[1]}"
       YYYYE="${BASH_REMATCH[2]}"
     else
-      echo "Warning: Could not extract dates from ${fname}"
+      echo "Warning: Could not extract dates from ${fname}, basename of ${file}"
       continue
     fi
 
@@ -240,6 +258,10 @@ create_links_acyc_climo_obs() {
     fi
   done
 
+  if [ -z "$( ls . )" ]; then
+    echo "create_links_acyc_climo_obs: ${ts_dir_destination} was not updated!"
+  fi
+
   cd ..
 }
 {% endif %}
@@ -260,6 +282,8 @@ create_links_ts() {
   local prefix="{{ prefix }}"
   local vars="{{ vars }}"
   local ts_step="{{ ts_num_years }}"
+
+  echo "create_links_ts: linking from ${ts_dir_source} to ${ts_dir_destination}"
 
   mkdir -p "${ts_dir_destination}"
   cd "${ts_dir_destination}" || exit
@@ -307,6 +331,10 @@ create_links_ts() {
     fi
   done
 
+  if [ -z "$( ls . )" ]; then
+    echo "create_links_ts: ${ts_dir_destination} was not updated!"
+  fi
+
   cd ..
 }
 
@@ -321,19 +349,26 @@ create_links_ts_obs() {
   local script_dir="{{ scriptDir }}"
   local prefix="{{ prefix }}"
 
+  echo "create_links_ts_obs: linking from ${ts_dir_source} to ${ts_dir_destination}"
+
   mkdir -p "${ts_dir_destination}"
   cd "${ts_dir_destination}" || exit
 
   local file fname PREFIX YYYYS YYYYE ttag combined_name
 
-  for file in ${ts_dir_source}/*.nc; do
+  for file in ${ts_dir_source}/*; do
     fname=$(basename "$file")
+    if [[ ! ${fname} =~ "*.nc" ]]; then
+      # Skip non-.nc files
+      continue
+    fi
+    echo "create_links_ts_obs: processing ${file}"
     # Match two time patterns (YYYYMM or YYYYMMDD) separated by _ or -
     if [[ ${fname} =~ ([0-9]{6,8})[_-]([0-9]{6,8}) ]]; then
       YYYYS="${BASH_REMATCH[1]}"
       YYYYE="${BASH_REMATCH[2]}"
     else
-      echo "Warning: Could not extract dates from ${fname}"
+      echo "Warning: Could not extract dates from ${fname}, basename of ${file}"
       continue
     fi
 
@@ -374,6 +409,10 @@ create_links_ts_obs() {
       exit "${error_num}"
     fi
   done
+
+  if [ -z "$( ls . )" ]; then
+    echo "create_links_ts_obs: ${ts_dir_destination} was not updated!"
+  fi
 
   cd ..
 }
@@ -464,6 +503,9 @@ create_links_ts_obs "${ts_dir_ref_source}" "${ts_dir_ref}" ${ref_Y1} ${ref_Y2} 8
 ########################################################
 # generate basic parameter file for pcmdi metrics driver
 ########################################################
+echo "About to create parameterfile.py, which will be passed in with -p"
+echo "The current directory is: $PWD" # This will be of the form .../post/scripts/tmpDir
+
 cat > parameterfile.py << EOF
 import os
 import sys
@@ -520,7 +562,7 @@ regions_values = {
 # Template path for land/sea mask file (fixed input)
 modpath_lf = os.path.join(
     'fixed',
-    'sftlf.%(model).nc'
+    'sftlf.put_model_here.nc'
 )
 
 {% if "mean_climate" in subsection %}
@@ -561,7 +603,7 @@ test_data_path = '${climo_dir_primary}'
 filename_template = '.'.join([
     mip,
     exp,
-    '%(model)',
+    'put_model_here',
     '%(realization)',
     '${tableID}',
     '%(variable)',
@@ -665,7 +707,7 @@ modnames = [product]
 realization = "*"
 modpath = os.path.join(
     '${ts_dir_primary}',
-    '{}.{}.%(model).%(realization).{}.%(variable).{}.nc'.format(
+    '{}.{}.put_model_here.%(realization).{}.%(variable).{}.nc'.format(
         mip, exp, '${tableID}', period
     )
 )
@@ -690,7 +732,7 @@ realization = realm
 
 modpath = os.path.join(
     '${ts_dir_primary}',
-    '{}.{}.%(model).%(realization).{}.%(variable).{}.nc'.format(
+    '{}.{}.put_model_here.%(realization).{}.%(variable).{}.nc'.format(
         mip, exp, '${tableID}', period
     )
 )
@@ -718,13 +760,14 @@ results_dir = os.path.join(
 )
 
 # Output filenames for JSON and NetCDF
-json_name = "%(mip)_%(exp)_%(metricsCollection)_${case_id}_%(model)_%(realization)"
+json_name = "%(mip)_%(exp)_%(metricsCollection)_${case_id}_put_model_here_%(realization)"
 
 netcdf_name = json_name
 
 {% endif %}
 
 EOF
+
 {% endif %}
 
 ################################################################
@@ -733,6 +776,10 @@ echo
 echo ===== RUN PCMDI DIAGS =====
 echo
 ################################
+
+echo "About to set up a zi-pcmdi command"
+echo "The current directory is: $PWD" # This will be of the form .../post/scripts/tmpDir
+
 # Run diagnostics
 mkdir -p pcmdi_diags
 
@@ -746,7 +793,7 @@ source_dirs="--climo_ts_dir_primary ${ts_dir_primary} --climo_ts_dir_ref ${ts_di
 # So, it's a good idea to make sure they can't be (or at least are unlikely to be) empty.
 # run_type == "model_vs_obs" only: obs_sets (default value is NOT "")
 # run_type == "model_vs_model" only: model_name_ref, tableID_ref (default values are NOT "")
-core_parameters="--num_workers {{ num_workers }} --multiprocessing {{ multiprocessing }} --subsection {{ subsection }} ${source_dirs} --model_name ${model_name} --run_type {{ run_type }} --obs_sets {{ obs_sets }} --model_name_ref ${model_name_ref} --vars {{ vars }} --tableID_ref ${tableID_ref} --generate_sftlf {{ generate_sftlf }} --case_id ${case_id} --results_dir ${results_dir}"
+core_parameters="--num_workers {{ num_workers }} --multiprocessing {{ multiprocessing }} --subsection {{ subsection }} ${source_dirs} --model_name ${model_name} --model_tableID {{model_tableID }} --figure_format {{ figure_format }}  --run_type {{ run_type }} --obs_sets {{ obs_sets }} --model_name_ref ${model_name_ref} --vars {{ vars }} --tableID_ref ${tableID_ref} --generate_sftlf {{ generate_sftlf }} --case_id ${case_id} --results_dir ${results_dir}"
 {% endif %}
 
 {% if "mean_climate" in subsection %}
@@ -758,10 +805,10 @@ var_modes={{ atm_modes }}
 {% elif subsection == "variability_modes_cpl" %}
 var_modes={{ cpl_modes }}
 {% endif %}
-command="srun -N 1 zi-pcmdi-variability-modes ${core_parameters} --var_modes ${var_modes} --figure_format {{ figure_format }}"
+command="srun -N 1 zi-pcmdi-variability-modes ${core_parameters} --var_modes ${var_modes}"
 {% endif %}
 {% if "enso" in subsection %}
-command="srun -N 1 zi-pcmdi-enso ${core_parameters}  --enso_groups {{ enso_groups }} --figure_format {{ figure_format }}"
+command="srun -N 1 zi-pcmdi-enso ${core_parameters}  --enso_groups {{ enso_groups }}"
 {% endif %}
 {% if "synthetic_plots" in subsection %}
 # Note: ts_years may be List[str]
@@ -770,6 +817,8 @@ command="srun -N 1 zi-pcmdi-synthetic-plots --figure_format {{ figure_format }} 
 
 # Run diagnostics
 source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-20250529
+echo "About to run a zi-pcmdi command"
+echo "The current directory is: $PWD" # This will be of the form .../post/scripts/tmpDir
 time ${command}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
