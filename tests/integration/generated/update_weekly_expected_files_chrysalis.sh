@@ -2,6 +2,9 @@
 # Run from the top level of the zppy repo
 # Run as `./tests/integration/generated/update_weekly_expected_files_chrysalis.sh`
 
+
+# NOTE: in `tests` below, do *not* include the `zppy_weekly_` prefix, as that is added later.
+
 # Update all
 tests=("comprehensive_v2" "comprehensive_v3" "bundles" "legacy_3.0.0_comprehensive_v2" "legacy_3.0.0_comprehensive_v3" "legacy_3.0.0_bundles")
 
@@ -13,6 +16,18 @@ tests=("comprehensive_v2" "comprehensive_v3" "bundles" "legacy_3.0.0_comprehensi
 
 for test_name in "${tests[@]}"
 do
+    # Example for Chrysalis:
+    #
+    # expected_dir = /lcrc/group/e3sm/public_html/zppy_test_resources/
+    #
+    # There are 6 subdirectories relevant to image checking:
+    # 1-3. expected_bundles, expected_comprehensive_v2, expected_comprehensive_v3
+    # 4-6. expected_legacy_3.0.0_bundles, expected_legacy_3.0.0_comprehensive_v2, expected_legacy_3.0.0_comprehensive_v3
+    # Notice the subdirectories do *not* include the `zppy_weekly` prefix.
+    #
+    # Each of those subdirectories has a corresponding image list of the form:
+    # `image_list_<subdir_name>.txt`
+
     # Remove old expected files.
     rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_${test_name}
 
