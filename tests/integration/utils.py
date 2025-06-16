@@ -3,6 +3,12 @@ import subprocess
 
 from mache import MachineInfo
 
+# To run:
+# `pip install .` latest code into conda env
+# Update UNIQUE_ID and any necessary environments below
+# python tests/integration/utils.py
+# zppy -c <generated cfg>
+
 UNIQUE_ID = "unique_id"
 
 # Example testing workflow ####################################################
