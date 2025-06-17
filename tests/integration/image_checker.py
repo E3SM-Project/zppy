@@ -61,6 +61,16 @@ def set_up_and_run_image_checker(
         "diff_dir": f"{actual_images_dir}image_check_failures_{cfg_specifier}{diff_dir_suffix}",
         "expected_images_list": f"{expansions['expected_dir']}image_list_expected_{cfg_specifier}.txt",
     }
+    print(f"Removing diff_dir={d['diff_dir']} to produce new results")
+    if os.path.exists(d["diff_dir"]):
+        try:
+            shutil.rmtree(d["diff_dir"])
+        except PermissionError:
+            print(
+                f"{d['diff_dir']} cannot be removed. Execute permissions are needed to remove files. Adding execute permission and trying again."
+            )
+            _chmod_recursive(d["diff_dir"], 0o744)
+            shutil.rmtree(d["diff_dir"])
     print("Image checking dict:")
     for key in d:
         print(f"{key}: {d[key]}")
@@ -181,7 +191,11 @@ def _check_mismatched_images(
 
     # Make diff_dir readable
     if os.path.exists(parameters.diff_dir):
-        os.system(f"chmod -R 755 {parameters.diff_dir}")
+        # Execute permission for user is needed to remove diff_dir if we're re-running the image checks.
+        # Execute permission for others is needed to make diff_dir visible on the web server.
+        # 7 - rwx for user
+        # 5 - r-x for group, others
+        _chmod_recursive(parameters.diff_dir, 0o755)
     else:
         # diff_dir won't exist if all the expected images are missing
         # That is, if we're in this case, we expect the following:
@@ -276,6 +290,21 @@ def _draw_box(image, diff, output_path: str):
     )  # We specifically want the diff's bounding box
     draw.rectangle(((left, upper), (right, lower)), outline="red")
     image.save(output_path, "PNG")
+
+
+def _chmod_recursive(path: str, mode):
+    root: str
+    dirs: List[str]
+    files: List[str]
+    for root, dirs, files in os.walk(path):
+        for name in dirs:
+            dir_path: str = os.path.join(root, name)
+            os.chmod(dir_path, mode)
+        for name in files:
+            file_path: str = os.path.join(root, name)
+            os.chmod(file_path, mode)
+    # Also chmod the root directory itself
+    os.chmod(path, mode)
 
 
 # TODO: fix issue where blank plots generate after so many pages in the PDF
