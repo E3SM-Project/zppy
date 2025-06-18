@@ -1,187 +1,83 @@
-import os
 import re
-import shutil
 import subprocess
-from typing import List
 
 from mache import MachineInfo
-from PIL import Image, ImageChops, ImageDraw
+
+# To run:
+# `pip install .` latest code into conda env
+# Update UNIQUE_ID and any necessary environments below
+# python tests/integration/utils.py
+# zppy -c <generated cfg>
 
 UNIQUE_ID = "unique_id"
 
-# Image checking ##########################################################
+# Example testing workflow ####################################################
+"""
+# Example on Chrysalis
 
+# 1. Set up environments
+lcrc_conda # Function to set up conda locally
 
-# Originally in https://github.com/E3SM-Project/zppy/pull/695
-# And https://github.com/E3SM-Project/zppy/pull/698
-class Results(object):
-    def __init__(
-        self,
-        diff_dir: str,
-        task: str,
-        image_count_total: int,
-        file_list_missing: List[str],
-        file_list_mismatched: List[str],
-    ):
-        if image_count_total == 0:
-            raise ValueError(f"No images found for task {task} in {diff_dir}")
-        self.diff_dir = diff_dir
-        self.task = task
-        self.image_count_total = image_count_total
-        self.image_count_missing = len(file_list_missing)
-        self.image_count_mismatched = len(file_list_mismatched)
-        self.image_count_correct = (
-            image_count_total - len(file_list_missing) - len(file_list_mismatched)
-        )
-        self.file_list_missing = sorted(file_list_missing)
-        self.file_list_mismatched = sorted(file_list_mismatched)
+cd ~/ez/e3sm_diags
+git fetch upstream main
+git checkout main
+git reset --hard upstream/main
+git log
+# Check that latest commit matches https://github.com/E3SM-Project/e3sm_diags/commits/main
+conda clean --all --y
+conda env create -f conda-env/dev.yml -n e3sm-diags-main-<date>
+conda activate e3sm-diags-main-<date>
+pip install .
 
+cd ~/ez/zppy-interfaces
+git fetch upstream main
+git checkout main
+git reset --hard upstream/main
+git log
+# Check that latest commit matches https://github.com/E3SM-Project/zppy-interfaces/commits/main
+conda clean --all --y
+conda env create -f conda/dev.yml -n zi-main-<date>
+conda activate zi-main-<date>
+pip install .
 
-# Copied from E3SM Diags
-def compare_images(
-    missing_images,
-    mismatched_images,
-    image_name,
-    path_to_actual_png,
-    path_to_expected_png,
-    diff_dir,
-):
-    # https://stackoverflow.com/questions/35176639/compare-images-python-pil
-    try:
-        actual_png = Image.open(path_to_actual_png).convert("RGB")
-    except FileNotFoundError:
-        missing_images.append(image_name)
-        return
-    expected_png = Image.open(path_to_expected_png).convert("RGB")
-    diff = ImageChops.difference(actual_png, expected_png)
+cd ~/ez/zppy
+conda clean --all --y
+conda env create -f conda/dev.yml -n zppy-<branch>-<date>
+conda activate zppy-<branch>-<date>
+pre-commit run --all-files
+pip install .
 
-    if not os.path.isdir(diff_dir):
-        os.mkdir(diff_dir)
+# 2. Run unit tests
+pytest tests/test_*.py
 
-    bbox = diff.getbbox()
-    if not bbox:
-        # If `diff.getbbox()` is None, then the images are in theory equal
-        assert diff.getbbox() is None
-    else:
-        # Sometimes, a few pixels will differ, but the two images appear identical.
-        # https://codereview.stackexchange.com/questions/55902/fastest-way-to-count-non-zero-pixels-using-python-and-pillow
-        nonzero_pixels = (
-            diff.crop(bbox)
-            .point(lambda x: 255 if x else 0)
-            .convert("L")
-            .point(bool)
-            .getdata()
-        )
-        num_nonzero_pixels = sum(nonzero_pixels)
-        width, height = expected_png.size
-        num_pixels = width * height
-        fraction = num_nonzero_pixels / num_pixels
-        # Fraction of mismatched pixels should be less than 0.02%
-        if fraction >= 0.0002:
-            verbose = False
-            if verbose:
-                print("\npath_to_actual_png={}".format(path_to_actual_png))
-                print("path_to_expected_png={}".format(path_to_expected_png))
-                print("diff has {} nonzero pixels.".format(num_nonzero_pixels))
-                print("total number of pixels={}".format(num_pixels))
-                print("num_nonzero_pixels/num_pixels fraction={}".format(fraction))
+# 3. Launch zppy jobs to produce actual images for image checker test
+# Edit tests/integration/utils.py:
+# UNIQUE_ID = "custom_name"
+#        "diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate e3sm-diags-main-<date>",
+#        "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-main-<date>",
+python tests/integration/utils.py
 
-            mismatched_images.append(image_name)
+zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v3_chrysalis.cfg
+zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v2_chrysalis.cfg
+zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_bundles_chrysalis.cfg # Runs 1st part of bundles cfg
 
-            diff_dir_actual_png = os.path.join(
-                diff_dir, "{}_actual.png".format(image_name)
-            )
-            # image_name could contain a number of subdirectories.
-            os.makedirs(os.path.dirname(diff_dir_actual_png), exist_ok=True)
-            shutil.copy(
-                path_to_actual_png,
-                diff_dir_actual_png,
-            )
-            diff_dir_expected_png = os.path.join(
-                diff_dir, "{}_expected.png".format(image_name)
-            )
-            # image_name could contain a number of subdirectories.
-            os.makedirs(os.path.dirname(diff_dir_expected_png), exist_ok=True)
-            shutil.copy(
-                path_to_expected_png,
-                diff_dir_expected_png,
-            )
-            # https://stackoverflow.com/questions/41405632/draw-a-rectangle-and-a-text-in-it-using-pil
-            draw = ImageDraw.Draw(diff)
-            (left, upper, right, lower) = diff.getbbox()
-            draw.rectangle(((left, upper), (right, lower)), outline="red")
-            diff.save(
-                os.path.join(diff_dir, "{}_diff.png".format(image_name)),
-                "PNG",
-            )
+zppy -c tests/integration/generated/test_weekly_comprehensive_v3_chrysalis.cfg
+zppy -c tests/integration/generated/test_weekly_comprehensive_v2_chrysalis.cfg
+zppy -c tests/integration/generated/test_weekly_bundles_chrysalis.cfg # Runs 1st part of bundles cfg
 
+# Wait
 
-def check_mismatched_images(
-    actual_images_dir: str,
-    expected_images_file: str,
-    expected_images_dir: str,
-    diff_dir: str,
-    task: str,
-) -> Results:
-    missing_images: List[str] = []
-    mismatched_images: List[str] = []
+zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_bundles_chrysalis.cfg # Runs 2nd part of bundles cfg
+zppy -c tests/integration/generated/test_weekly_bundles_chrysalis.cfg # Runs 2nd part of bundles cfg
 
-    counter = 0
-    print(f"Opening expected images file {expected_images_file}")
-    with open(expected_images_file) as f:
-        print(f"Reading expected images file {expected_images_file}")
-        for line in f:
-            image_name = line.strip("./").strip("\n")
-            proceed = False
-            if image_name.startswith(task):
-                proceed = True
-            if proceed:
-                counter += 1
-                if counter % 250 == 0:
-                    print("On line #", counter)
-                path_to_actual_png = os.path.join(actual_images_dir, image_name)
-                path_to_expected_png = os.path.join(expected_images_dir, image_name)
+# Wait
 
-                compare_images(
-                    missing_images,
-                    mismatched_images,
-                    image_name,
-                    path_to_actual_png,
-                    path_to_expected_png,
-                    diff_dir,
-                )
+ls tests/integration/test_*.py # to see what tests are available to run
+pytest tests/integration/test_images.py
+# 1 passed in 2910.93s (0:48:30)
+"""
 
-    if missing_images:
-        print("Missing images:")
-        for i in missing_images:
-            print(i)
-    if mismatched_images:
-        print("Mismatched images:")
-        for i in mismatched_images:
-            print(i)
-
-    # Count summary
-    print(f"Total: {counter}")
-    print(f"Number of missing images: {len(missing_images)}")
-    print(f"Number of mismatched images: {len(mismatched_images)}")
-    print(
-        f"Number of correct images: {counter - len(missing_images) - len(mismatched_images)}"
-    )
-    test_results = Results(diff_dir, task, counter, missing_images, mismatched_images)
-
-    # Make diff_dir readable
-    if os.path.exists(diff_dir):
-        os.system(f"chmod -R 755 {diff_dir}")
-    else:
-        # diff_dir won't exist if all the expected images are missing
-        # That is, if we're in this case, we expect the following:
-        assert len(missing_images) == counter
-
-    return test_results
-
-
-# Multi-machine testing ##########################################################
-
+# Multi-machine testing #########################################################
 # Inspired by https://github.com/E3SM-Project/e3sm_diags/blob/master/docs/source/quickguides/generate_quick_guides.py
 
 
@@ -195,7 +91,13 @@ def get_chyrsalis_expansions(config):
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
         # To run this test, replace conda environment with your e3sm_diags dev environment
-        # To use default environment_commands, set to ""
+        # Or the Unified environment
+        # (The same for `global_time_series_environment_commands`)
+        # Never set this to "" because it will print the line
+        # `environment_commands = ""` for the [e3sm_diags] task, overriding zppy's
+        # default of using Unified. That is, there will be no environment set.
+        # `environment_commands = ""` only redirects to Unified if specified under the
+        # [default] task
         "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "5:00:00",
         "environment_commands_test": "",
@@ -215,7 +117,6 @@ def get_chyrsalis_expansions(config):
 
 
 def get_compy_expansions(config):
-    # Note: `os.environ.get("USER")` also works. Here we're already using mache but not os, so using mache.
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
     d = {
@@ -223,8 +124,6 @@ def get_compy_expansions(config):
         "case_name": "v3.LR.historical_0051",
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
-        # To run this test, replace conda environment with your e3sm_diags dev environment
-        # To use default environment_commands, set to ""
         "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "03:00:00",
         "environment_commands_test": "",
@@ -244,7 +143,6 @@ def get_compy_expansions(config):
 
 
 def get_perlmutter_expansions(config):
-    # Note: `os.environ.get("USER")` also works. Here we're already using mache but not os, so using mache.
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
     d = {
@@ -252,8 +150,6 @@ def get_perlmutter_expansions(config):
         "case_name": "v3.LR.historical_0051",
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "cpu",
-        # To run this test, replace conda environment with your e3sm_diags dev environment
-        # To use default environment_commands, set to ""
         "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
         "diags_walltime": "6:00:00",
         "environment_commands_test": "",
@@ -390,6 +286,9 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "weekly_bundles",
         "weekly_comprehensive_v2",
         "weekly_comprehensive_v3",
+        "weekly_legacy_3.0.0_bundles",
+        "weekly_legacy_3.0.0_comprehensive_v2",
+        "weekly_legacy_3.0.0_comprehensive_v3",
     ]
     for cfg_name in cfg_names:
         cfg_template = f"{git_top_level}/tests/integration/template_{cfg_name}.cfg"
