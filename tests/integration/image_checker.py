@@ -1,10 +1,12 @@
 import os
 import shutil
 from math import ceil
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
+import cv2
 import matplotlib.backends.backend_pdf
 import matplotlib.image as mpimg
+import numpy as np
 from mache import MachineInfo
 from matplotlib import pyplot as plt
 from PIL import Image, ImageChops, ImageDraw
@@ -158,14 +160,25 @@ def _check_mismatched_images(
                     parameters.expected_images_dir, image_name
                 )
 
-                _compare_actual_and_expected(
-                    missing_images,
-                    mismatched_images,
-                    image_name,
-                    path_to_actual_png,
-                    path_to_expected_png,
-                    parameters.diff_dir,
-                )
+                USE_CV = True
+                if USE_CV:
+                    _cv_compare_actual_and_expected(
+                        missing_images,
+                        mismatched_images,
+                        image_name,
+                        path_to_actual_png,
+                        path_to_expected_png,
+                        parameters.diff_dir,
+                    )
+                else:
+                    _compare_actual_and_expected(
+                        missing_images,
+                        mismatched_images,
+                        image_name,
+                        path_to_actual_png,
+                        path_to_expected_png,
+                        parameters.diff_dir,
+                    )
 
     verbose: bool = False
     if verbose:
@@ -378,15 +391,19 @@ def _make_image_diff_grid(diff_subdir, pdf_name="image_diff_grid.pdf", rows_per_
 """
 cd /home/ac.forsyth2/ez/zppy
 lcrc_conda # alias to set up conda
-conda clean --all --y
-conda env create -f conda/dev.yml -n zppy-hackathon-20250707
-conda activate zppy-hackathon-20250707
 pre-commit run --all-files
+git add -A
+conda clean --all --y
+conda env create -f conda/dev.yml -n zppy-hackathon-20250707-with-cv
+conda activate zppy-hackathon-20250707-with-cv
 pip install .
 
+# Update try_num
 pre-commit run --all-files
+git add -A
 python tests/integration/image_checker.py
-cat cv_prototype_summary.md
+diff /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/diff_try9/e3sm_diags/missing_images.txt /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/diff_try1/e3sm_diags/missing_images.txt
+diff /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/diff_try9/e3sm_diags/mismatched_images.txt /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/diff_try1/e3sm_diags/mismatched_images.txt
 """
 
 
@@ -439,16 +456,149 @@ def cv_prototype(try_num: int):
         print(f"{key}: {d[key]}")
     parameters: Parameters = Parameters(d)
     test_results: Results = check_images(parameters, "e3sm_diags")
-    test_results_dict: Dict[str, Results] = {"e3sm_diags": test_results}
-    construct_markdown_summary_table(test_results_dict, "cv_prototype_summary.md")
+    # test_results_dict: Dict[str, Results] = {"e3sm_diags": test_results}
+    # construct_markdown_summary_table(test_results_dict, "cv_prototype_summary.md")
     # | e3sm_diags | 1713 | 1644 | 12 | 57 | /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/diff_try{try_num}/e3sm_diags |
+
+    # Try           | Total | Correct | Missing | Mismatched | Notes
+    # 1,2: original | 1713 | 1644    | 12       | 57         |
+    # 7,9: Step 1   | 1713 | 1632    | 12       | 69         | +12 mismatched
     assert test_results.image_count_total == 1713
-    assert test_results.image_count_correct == 1644
     assert test_results.image_count_missing == 12
     assert test_results.image_count_mismatched == 57
+    assert test_results.image_count_correct == 1644
+
+
+# Modified from LivChat code ###
+
+
+def _cv_compare_actual_and_expected(
+    missing_images,
+    mismatched_images,
+    image_name,
+    path_to_actual_png,
+    path_to_expected_png,
+    diff_dir,
+):
+    if not os.path.exists(path_to_actual_png):
+        missing_images.append(image_name)
+        return
+    actual_image: np.ndarray = cv2.imread(str(path_to_actual_png))
+    if actual_image is None:
+        raise ValueError(f"cv2.imread failed to read {path_to_actual_png}")
+    expected_image = cv2.imread(str(path_to_expected_png))
+    # diff: np.ndarray
+    mask: np.ndarray
+    _, mask = compute_diff_image(expected_image, actual_image)
+    if not mask.any():
+        # Images are close enough, call it a match
+        return
+    # # diff != 0 => boolean array where True indicates diff[i,j] is not 0
+    # # count_nonzero counts all the Trues
+    # num_nonzero_pixels = np.count_nonzero(diff != 0)
+    # width, height = diff.shape
+    # num_pixels = width * height
+    # threshold = num_nonzero_pixels / num_pixels
+    # # Threshold of mismatched pixels should be less than 0.02%
+    # if threshold >= 0.0002:
+    #     mismatched_images.append(image_name)
+    mismatched_images.append(image_name)
+    diff_dir_actual_png = os.path.join(diff_dir, f"{image_name}_actual.png")
+    # image_name could contain a number of subdirectories.
+    # So, let's make them.
+    os.makedirs(os.path.dirname(diff_dir_actual_png), exist_ok=True)
+    shutil.copy(
+        path_to_actual_png,
+        diff_dir_actual_png,
+    )
+    diff_dir_expected_png = os.path.join(diff_dir, f"{image_name}_expected.png")
+    # image_name could contain a number of subdirectories.
+    # So, let's make them.
+    os.makedirs(os.path.dirname(diff_dir_expected_png), exist_ok=True)
+    shutil.copy(
+        path_to_expected_png,
+        diff_dir_expected_png,
+    )
+    # Draw red box around diff-area on each of: diff, actual, expected
+    # _draw_box(diff, diff, os.path.join(diff_dir, f"{image_name}_diff.png"))
+    # _draw_box(actual_image, diff, os.path.join(diff_dir, f"{image_name}_actual.png"))
+    # _draw_box(
+    #     expected_image, diff, os.path.join(diff_dir, f"{image_name}_expected.png")
+    # )
+
+    # keypoints, _ = detect_features(expected_image)
+    # clusters = cluster_diff_regions(mask)
+    # groupings = assign_clusters_to_features(clusters, keypoints)
+    # # Save diff image
+    # diff_name = output_dir / f"diff_{Path(path_to_expected_png).stem}.png"
+    # cv2.imwrite(str(diff_name), diff)
+    # print(f"Processed {image_name}: {path_to_expected_png} vs {path_to_actual_png}: {len(clusters)} diff regions grouped by features.")
+
+
+# Step 1: Compute Diff Images
+def compute_diff_image(
+    expected_image: np.ndarray, actual_image: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
+    # Ensure both images are the same size
+    if expected_image.shape != actual_image.shape:
+        raise ValueError(
+            f"Images must be the same size. Expected shape={expected_image.shape}, actual shape={actual_image.shape}"
+        )
+    diff: np.ndarray = cv2.absdiff(expected_image, actual_image)
+    if len(diff.shape) != 3:
+        raise ValueError(f"diff.shape={diff.shape} should have 3 dimensions")
+    gray_diff: np.ndarray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
+    if len(gray_diff.shape) != 2:
+        raise ValueError(f"gray_diff.shape={gray_diff.shape} should have 2 dimensions")
+    mask: np.ndarray
+    # Before, we filtered based on `if fraction >= 0.0002`
+    # That is, the fraction of mismatched pixels should be less than 0.02%
+    # This is a little different.
+    # Here, we're seeing how high the grayscale value is for each pixel in the diff.
+    # If it's > 30, we add it to the mask.
+    _, mask = cv2.threshold(gray_diff, 30, 255, cv2.THRESH_BINARY)
+    if len(mask.shape) != 2:
+        raise ValueError(f"mask.shape={mask.shape} should have 2 dimensions")
+    return diff, mask
+
+
+# # Step 2: Feature Detection/Segmentation
+# # NOTE: I imagine this will take quite a bit of troubleshooting to actually get working! There are many many plot types, each with different features. Will this detect them accurately?
+# def detect_features(img):
+#     sift = cv2.SIFT_create()
+#     keypoints, descriptors = sift.detectAndCompute(img, None)
+#     return keypoints, descriptors
+
+# # Step 3: Cluster Diff Pixels
+# # NOTE: how would we ever know what `n_clusters` should be? Without that would we need to resort to classification rather than clustering (i.e., needing to hand-label a training set)?
+# def cluster_diff_regions(mask, n_clusters=3):
+#     # Find nonzero (diff) pixels
+#     ys, xs = np.nonzero(mask)
+#     coords = np.column_stack((xs, ys))
+#     if len(coords) == 0:
+#         return []
+#     kmeans = KMeans(n_clusters=min(n_clusters, len(coords)), random_state=42)
+#     labels = kmeans.fit_predict(coords)
+#     clusters = [coords[labels == i] for i in range(n_clusters)]
+#     return clusters
+
+# # Step 4: Group Diffs by Feature
+# def assign_clusters_to_features(clusters, keypoints):
+#     feature_coords = np.array([kp.pt for kp in keypoints])
+#     groupings = {}
+#     for i, cluster in enumerate(clusters):
+#         if len(feature_coords) == 0 or len(cluster) == 0:
+#             groupings[i] = None
+#             continue
+#         # Find the closest feature for each cluster centroid
+#         centroid = np.mean(cluster, axis=0)
+#         distances = np.linalg.norm(feature_coords - centroid, axis=1)
+#         closest_feature_idx = np.argmin(distances)
+#         groupings[i] = keypoints[closest_feature_idx]
+#     return groupings
 
 
 if __name__ == "__main__":
-    # Try 1: with current image checker functions
-    # Try 2: same, with minor code updates
-    cv_prototype(3)
+    # Tries 1-2: with current image checker functions
+    # Try 3-: first attempt using cv2, Step 1: Compute Diff Images
+    cv_prototype(9)
