@@ -104,7 +104,7 @@ def check_images(parameters: Parameters, prefix: str):
         with open(mismatched_images_file, "a") as f:
             f.write(f"{mismatched_image}\n")
     # Create image diff grid
-    _make_image_diff_grid(diff_subdir)
+    # _make_image_diff_grid(diff_subdir)
     return test_results
 
 
@@ -372,3 +372,83 @@ def _make_image_diff_grid(diff_subdir, pdf_name="image_diff_grid.pdf", rows_per_
     pdf.close()
     plt.close("all")
     print(f"Reminder:\n{web_portal_base_url}/{web_subdir}/{pdf_name}")
+
+
+# CV proof-of-concept #########################################################
+"""
+cd /home/ac.forsyth2/ez/zppy
+lcrc_conda # alias to set up conda
+conda clean --all --y
+conda env create -f conda/dev.yml -n zppy-hackathon-20250707
+conda activate zppy-hackathon-20250707
+pre-commit run --all-files
+pip install .
+
+pre-commit run --all-files
+python tests/integration/image_checker.py
+cat cv_prototype_summary.md
+"""
+
+
+def cv_prototype(try_num: int):
+    print("Computer Vision Prototype for image checker")
+    """
+    cd /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2
+    mkdir -p cv_prototype/actual_from_20250613/e3sm_diags/
+    cp -r zppy_weekly_comprehensive_v3_www/test_weekly_20250613/v3.LR.historical_0051/e3sm_diags/atm_monthly_180x360_aave cv_prototype/actual_from_20250613/e3sm_diags/
+    ls cv_prototype/actual_from_20250613/e3sm_diags/atm_monthly_180x360_aave/model_vs_obs_1987-1988/
+    # Contains the different sets, good
+    """
+    actual_images_dir: str = (
+        "/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/actual_from_20250613"
+    )
+    """
+    cd /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2
+    mkdir -p cv_prototype/expected_from_unified/e3sm_diags/
+    cp -r /lcrc/group/e3sm/public_html/zppy_test_resources_previous/expected_results_for_unified_1.11.1/expected_comprehensive_v3/e3sm_diags/atm_monthly_180x360_aave cv_prototype/expected_from_unified/e3sm_diags/
+    ls cv_prototype/expected_from_unified/e3sm_diags/atm_monthly_180x360_aave/model_vs_obs_1987-1988/
+    # Contains the different sets, good
+    """
+    expected_images_dir: str = (
+        "/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/expected_from_unified"
+    )
+    diff_dir: str = (
+        f"/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/diff_try{try_num}"
+    )
+    """
+    cd cv_prototype/expected_from_unified/
+    find . -type f -name '*.png' > ../image_list_expected.txt
+    cd ..
+    ls
+    # actual_from_20250613  expected_from_unified  image_list_expected.txt
+    """
+    expected_images_list: str = (
+        "/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/image_list_expected.txt"
+    )
+    d: Dict[str, str] = {
+        "actual_images_dir": actual_images_dir,
+        "expected_images_dir": expected_images_dir,
+        "diff_dir": diff_dir,
+        "expected_images_list": expected_images_list,
+    }
+    print(f"Removing diff_dir={d['diff_dir']} to produce new results")
+    if os.path.exists(d["diff_dir"]):
+        print(f"{d['diff_dir']} exists, increment try_num={try_num+1}")
+    print("Image checking dict:")
+    for key in d:
+        print(f"{key}: {d[key]}")
+    parameters: Parameters = Parameters(d)
+    test_results: Results = check_images(parameters, "e3sm_diags")
+    test_results_dict: Dict[str, Results] = {"e3sm_diags": test_results}
+    construct_markdown_summary_table(test_results_dict, "cv_prototype_summary.md")
+    # | e3sm_diags | 1713 | 1644 | 12 | 57 | /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/diff_try{try_num}/e3sm_diags |
+    assert test_results.image_count_total == 1713
+    assert test_results.image_count_correct == 1644
+    assert test_results.image_count_missing == 12
+    assert test_results.image_count_mismatched == 57
+
+
+if __name__ == "__main__":
+    # Try 1: with current image checker functions
+    # Try 2: same, with minor code updates
+    cv_prototype(3)
