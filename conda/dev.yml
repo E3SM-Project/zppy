@@ -14,6 +14,10 @@ dependencies:
   - mache>=1.5.0
   - mpas_tools>=0.15.0
   - pillow=9.2.0
+  # CV Prototype
+  # ============
+  - opencv
+  - scikit-learn
   # Testing
   # =======================
   - pytest

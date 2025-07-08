@@ -5,6 +5,7 @@ zppy.egg-info/
 *~
 \#*
 
+cv_prototype_summary.md
 examples/example_compy.cfg
 test_images_summary.md
 test_*_output
