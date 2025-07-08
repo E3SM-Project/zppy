@@ -92,10 +92,7 @@ def set_up_and_run_image_checker(
 
 
 def check_images(parameters: Parameters, prefix: str, cv_dict: Dict[str, Any] = {}):
-    if cv_dict:
-        test_results = _cv_check_mismatched_images(parameters, prefix, cv_dict)
-    else:
-        test_results = _check_mismatched_images(parameters, prefix)
+    test_results = _check_mismatched_images(parameters, prefix, cv_dict)
     diff_subdir = f"{parameters.diff_dir}/{prefix}"
     if not os.path.exists(diff_subdir):
         os.makedirs(diff_subdir, exist_ok=True)
@@ -141,11 +138,12 @@ def construct_markdown_summary_table(
 
 
 def _check_mismatched_images(
-    parameters: Parameters,
-    prefix: str,
+    parameters: Parameters, prefix: str, cv_dict: Dict[str, Any]
 ) -> Results:
     missing_images: List[str] = []
     mismatched_images: List[str] = []
+    features: List[np.ndarray] = []
+    diff_image_paths: List[str] = []
 
     counter = 0
     print(f"Opening expected images file {parameters.expected_images_list}")
@@ -153,10 +151,7 @@ def _check_mismatched_images(
         print(f"Reading expected images file {parameters.expected_images_list}")
         for line in f:
             image_name = line.strip("./").strip("\n")
-            proceed = False
             if image_name.startswith(prefix):
-                proceed = True
-            if proceed:
                 counter += 1
                 if counter % 250 == 0:
                     print("On line #", counter)
@@ -167,14 +162,33 @@ def _check_mismatched_images(
                     parameters.expected_images_dir, image_name
                 )
 
-                _compare_actual_and_expected(
-                    missing_images,
-                    mismatched_images,
-                    image_name,
-                    path_to_actual_png,
-                    path_to_expected_png,
-                    parameters.diff_dir,
-                )
+                if cv_dict:
+                    # Compare a single image's actual & expected, compute diffs
+                    _cv_compare_actual_and_expected(
+                        missing_images,
+                        mismatched_images,
+                        image_name,
+                        path_to_actual_png,
+                        path_to_expected_png,
+                        parameters.diff_dir,
+                        features,
+                        diff_image_paths,
+                        cv_dict,
+                    )
+                else:
+                    _compare_actual_and_expected(
+                        missing_images,
+                        mismatched_images,
+                        image_name,
+                        path_to_actual_png,
+                        path_to_expected_png,
+                        parameters.diff_dir,
+                    )
+
+    if cv_dict:
+        # Compare all the diffs we found
+        # Pass in parallel lists: features & diff_image_paths
+        group_diffs(features, diff_image_paths, parameters.diff_dir, cv_dict)
 
     verbose: bool = False
     if verbose:
@@ -388,36 +402,15 @@ def _make_image_diff_grid(diff_subdir, pdf_name="image_diff_grid.pdf", rows_per_
 
 def cv_prototype(try_num: int, cv_dict: Dict[str, Any]):
     print("Computer Vision Prototype for image checker")
-    """
-    cd /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2
-    mkdir -p cv_prototype/actual_from_20250613/e3sm_diags/
-    cp -r zppy_weekly_comprehensive_v3_www/test_weekly_20250613/v3.LR.historical_0051/e3sm_diags/atm_monthly_180x360_aave cv_prototype/actual_from_20250613/e3sm_diags/
-    ls cv_prototype/actual_from_20250613/e3sm_diags/atm_monthly_180x360_aave/model_vs_obs_1987-1988/
-    # Contains the different sets, good
-    """
     actual_images_dir: str = (
         "/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/actual_from_20250613"
     )
-    """
-    cd /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2
-    mkdir -p cv_prototype/expected_from_unified/e3sm_diags/
-    cp -r /lcrc/group/e3sm/public_html/zppy_test_resources_previous/expected_results_for_unified_1.11.1/expected_comprehensive_v3/e3sm_diags/atm_monthly_180x360_aave cv_prototype/expected_from_unified/e3sm_diags/
-    ls cv_prototype/expected_from_unified/e3sm_diags/atm_monthly_180x360_aave/model_vs_obs_1987-1988/
-    # Contains the different sets, good
-    """
     expected_images_dir: str = (
         "/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/expected_from_unified"
     )
     diff_dir: str = (
         f"/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/diff_try{try_num}"
     )
-    """
-    cd cv_prototype/expected_from_unified/
-    find . -type f -name '*.png' > ../image_list_expected.txt
-    cd ..
-    ls
-    # actual_from_20250613  expected_from_unified  image_list_expected.txt
-    """
     expected_images_list: str = (
         "/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/image_list_expected.txt"
     )
@@ -429,105 +422,18 @@ def cv_prototype(try_num: int, cv_dict: Dict[str, Any]):
     }
     print(f"Removing diff_dir={d['diff_dir']} to produce new results")
     if os.path.exists(d["diff_dir"]):
-        print(f"{d['diff_dir']} exists, increment try_num={try_num+1}")
+        raise RuntimeError(f"{d['diff_dir']} exists, increment try_num={try_num+1}")
     print("Image checking dict:")
     for key in d:
         print(f"{key}: {d[key]}")
     parameters: Parameters = Parameters(d)
-    # TODO: if/when merging, do the following:
-    # To use the CV-version of the image checker for actual integration testing,
-    # we'd simply need to update `set_up_and_run_image_checker` from
-    # `check_images(parameters, task)` to `check_images(parameters, task, use_cv=cv_dict)`
     test_results: Results = check_images(parameters, "e3sm_diags", cv_dict=cv_dict)
-    # Try                       | Total | Correct | Missing | Mismatched | Notes
-    # 1,2: original             | 1713 | 1644    | 12       | 57         |
-    # 7,9: compute_diff_image   | 1713 | 1632    | 12       | 69         | +12 mismatched
-    # 29,30,31,32: clustering   | 1713 | 1632    | 12       | 69         |
     print(f"Done with try {try_num}")
     assert test_results.image_count_total == 1713
     assert test_results.image_count_missing == 12
+    # This 12 more than the 57 using the original image checker.
     assert test_results.image_count_mismatched == 69
     assert test_results.image_count_correct == 1632
-
-
-def _cv_check_mismatched_images(
-    parameters: Parameters, prefix: str, cv_dict: Dict[str, Any]
-) -> Results:
-    missing_images: List[str] = []
-    mismatched_images: List[str] = []
-    features: List[np.ndarray] = []
-    diff_image_paths: List[str] = []
-
-    counter = 0
-    print(f"Opening expected images file {parameters.expected_images_list}")
-    with open(parameters.expected_images_list) as f:
-        print(f"Reading expected images file {parameters.expected_images_list}")
-        # Step 1: Process all pairs and collect diff regions
-        for line in f:
-            image_name = line.strip("./").strip("\n")
-            if image_name.startswith(prefix):
-                counter += 1
-                if counter % 250 == 0:
-                    print("On line #", counter)
-                path_to_actual_png = os.path.join(
-                    parameters.actual_images_dir, image_name
-                )
-                path_to_expected_png = os.path.join(
-                    parameters.expected_images_dir, image_name
-                )
-
-                # Compare a single image's actual & expected, compute diffs
-                _cv_compare_actual_and_expected(
-                    missing_images,
-                    mismatched_images,
-                    image_name,
-                    path_to_actual_png,
-                    path_to_expected_png,
-                    parameters.diff_dir,
-                    features,
-                    diff_image_paths,
-                    cv_dict,
-                )
-
-    # Compare all the diffs we found
-    # Pass in parallel lists: features & diff_image_paths
-    group_diffs(features, diff_image_paths, parameters.diff_dir, cv_dict)
-
-    verbose: bool = False
-    if verbose:
-        if missing_images:
-            print("Missing images:")
-            for i in missing_images:
-                print(i)
-        if mismatched_images:
-            print("Mismatched images:")
-            for i in mismatched_images:
-                print(i)
-
-    # Count summary
-    print(f"Total: {counter}")
-    print(f"Number of missing images: {len(missing_images)}")
-    print(f"Number of mismatched images: {len(mismatched_images)}")
-    print(
-        f"Number of correct images: {counter - len(missing_images) - len(mismatched_images)}"
-    )
-    test_results = Results(
-        parameters.diff_dir, prefix, counter, missing_images, mismatched_images
-    )
-
-    # Make diff_dir readable
-    if os.path.exists(parameters.diff_dir):
-        # Execute permission for user is needed to remove diff_dir if we're re-running the image checks.
-        # Execute permission for others is needed to make diff_dir visible on the web server.
-        # 7 - rwx for user
-        # 5 - r-x for group, others
-        _chmod_recursive(parameters.diff_dir, 0o755)
-    else:
-        # diff_dir won't exist if all the expected images are missing
-        # That is, if we're in this case, we expect the following:
-        assert len(missing_images) == counter
-
-    return test_results
 
 
 def _cv_compare_actual_and_expected(
@@ -591,11 +497,6 @@ def compute_diff_image(
     if len(gray_diff.shape) != 2:
         raise ValueError(f"gray_diff.shape={gray_diff.shape} should have 2 dimensions")
     mask: np.ndarray
-    # Before, we filtered based on `if fraction >= 0.0002`
-    # That is, the fraction of mismatched pixels should be less than 0.02%
-    # This is a little different.
-    # Here, we're seeing how high the grayscale value is for each pixel in the diff.
-    # If it's > gray_diff_threshold, we add it to the mask.
     _, mask = cv2.threshold(
         gray_diff, cv_dict["gray_diff_threshold"], 255, cv2.THRESH_BINARY
     )
@@ -696,6 +597,8 @@ def extract_features(img: np.ndarray, cv_dict: Dict[str, Any]) -> np.ndarray:
 def get_sector_slices(img_h, img_w):
     # Example: hardcoded values, adjust to your layout!
     thirds = np.linspace(0, img_h, 4, dtype=int)
+    # The plots usually have 5 tickmarks, dividing the world into 6 lat/lon bands.
+    # Add a segement on each side, and we get an extremely rough estimate of 8 "segments".
     segment_h = img_h // 8
     segment_w = img_w // 8
     top_bound = segment_h
@@ -836,133 +739,12 @@ def copy_to_cluster_subdir(full_path: str, diff_dir: str, clusters_subdir: str) 
 
 
 if __name__ == "__main__":
-    # Tries 1-2: with current image checker functions
-    # Tries 3-9: first attempt using cv2, compute_diff_image
-    # Tries 10-13: detect_features
-    # Tries 14-24: reworking code to group multiple diff images together
-    # Tries 25-28: working on clusters
-    # Tries 29-32: 4 combinations of DBSCAN/KMeans & extract features on diff/diff+actual
-    # Try 33: cleaned up code, DBSCAN & diff-only
-    # Try 34: cleaned up code, DBSCAN & diff+actual
-    # Tries 35-38: new feature detection, clustering algorithms
-    """
-    ###########################################################################
-    To run:
-    ```bash
-    # Initial setup
-    cd /home/ac.forsyth2/ez/zppy
-    lcrc_conda # alias to set up conda
-    pre-commit run --all-files
-    git add -A
-    conda clean --all --y
-    conda env create -f conda/dev.yml -n zppy-hackathon-20250707-with-cv
-    conda activate zppy-hackathon-20250707-with-cv
-    pip install .
-
-    # Each run
-    # Update `try_num` below (the argument to `cv_prototype`)
-    pre-commit run --all-files
-    git add -A
-    python tests/integration/image_checker.py
-    # Compare missing/mismatched images with the original image checker's results
-    # Change the number below to the `try_num`
-    ${num} = 0
-    diff /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/diff_try${num}/e3sm_diags/missing_images.txt /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/diff_try1/e3sm_diags/missing_images.txt
-    diff /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/diff_try${num}/e3sm_diags/mismatched_images.txt /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/cv_prototype/diff_try1/e3sm_diags/mismatched_images.txt
-    ```
-
-    ###########################################################################
-    Try 29: feature detection -- actual + diffs, clustering algorithm -- DBSCAN
-    Total of 69 mismatched images. That's 12 more than the original image checker found,
-    because we're using a new mask-and-threshold method. Those new diffs are:
-    < lat_lon/Cloud SSM/I/SSMI-TGCLDLWP_OCN-ANN-global.png
-    < lat_lon/Cloud SSM/I/SSMI-TGCLDLWP_OCN-DJF-global.png
-    < lat_lon/Cloud SSM/I/SSMI-TGCLDLWP_OCN-JJA-global.png
-    < lat_lon/OMI-MLS/OMI-MLS-TCO-JJA-60S60N.png
-    < lat_lon/SST_CL_HadISST/HadISST_CL-SST-ANN-global.png
-    < lat_lon/SST_CL_HadISST/HadISST_CL-SST-DJF-global.png
-    < at_lon/SST_CL_HadISST/HadISST_CL-SST-JJA-global.png
-    < lat_lon/SST_CL_HadISST/HadISST_CL-SST-MAM-global.png
-    < lat_lon/SST_PD_HadISST/HadISST_PD-SST-ANN-global.png
-    < lat_lon/SST_PD_HadISST/HadISST_PD-SST-DJF-global.png
-    < lat_lon/SST_PD_HadISST/HadISST_PD-SST-MAM-global.png
-    < lat_lon/SST_PI_HadISST/HadISST_PI-SST-ANN-global.png
-
-    These 27 diffs all involve the bottom plot AND the metrics
-    0: 5 polar MERRA2 > MERRA2-U-850-{season}-polar_S, diffs in bottom plot/metrics
-    1: 7 polar MERRA2 > MERRA2-T-850-{season}-polar_{hemisphere}, diffs in bottom plot/metrics
-    2: 5 polar MERRA2 > MERRA2-U-850-{season}_polar_{hemisphere}, diffs in bottom plot/metrics
-    6: 5 lat_lon Cloud_Calpiso > CALIPSOCOSP-CLDLOW_CAL-{season}-global, diffs in bottom plot/metrics
-    11: 5 lat_lon MERRA2 > MERRA2-OMEGA-850-{season}-global, diffs in bottom plot/metrics
-
-    These 7 diffs all involve all 3 plots
-    3: 3 tropical_subseasonal wavernumber-frequency > PRECT_{}_15N-15S, diffs in all 3 plots
-    4: 4 tropical_subseasonal wavernumber-frequency > PRECT_norm_{}_15N-15S, diffs in all 3 plots
-
-    These 5 diffs all involve the bottom plot only
-    9: 5 lat_lon MERRA2 > MERRA2-U-850-{season}-global, all barely noticeable diffs in bottom plot
-
-    These 25 diffs all involve the bottom plots and/or metrics, but with less similarity
-    5: 15 lat_lon SST_{}_HadISST > HadISST_{}-SST-{season}-global diff always in bottom plot, sometimes on bottom metrics; some diffs are barely visible, but some are noticeable
-    7: 3 lat_lon OMI-MLS > OMI-MLS-TCO-{season}-60S60N, 1 barely noticeable diff in bottom plot, 1 diff in bottom plot/metrics, 1 diff in bottom plot only
-    8: 3 lat_lon Cloud_SSM.I > SSMI-TGCLDLWP_OCN-{season}-global, 2 nearly invisible diffs in bottom plot, 1 nearly invisible diff in bottom metrics
-    10: 4 lat_lon MERRA2 > MERRA2-T-850-{season}-global, 2 diffs in bottom plot/metrics and 2 just in bottom plot
-
-    noise: 5 remaining diffs. 1 lat_lon, 3 polar, 1 qbo
-
-    CONCLUSIONS
-    - Diffs of plots in the same family almost always have the same things wrong with them.
-    - Our combination of feature detection + clustering algorithm (DBSCAN) is actually able to tell which plot types are which, so that is interesting/good. HOWEVER, we're really more interested in grouping together similar diffs. E.g., clusters 0,1,2,6,11 above all involve diffs in the bottom plot AND metrics. Is there *anything* we can do to get the feature detection/clustering algorithm to merge clusters 0,1,2,6,11 into one cluster?
-    - The ultimate goal here is to be able to look at just a few representative diffs rather than needing to sort through many many diffs manually (69 diffs is already a lot, but there can be even more).
-
-    ###########################################################################
-    Try 30: feature detection -- diffs only, clustering algorithm -- DBSCAN
-
-    cluster_0 has all 69 diffs in it.
-
-    CONCLUSIONS
-    - Looking at only the diffs, it doesn't seem "smart" enough to distinguish that the 3-plot square diffs of tropical_subseasonal clearly belong in a different cluster than the small world map diffs of the other plots.
-
-    ###########################################################################
-    Try 31: feature detection -- diffs only, clustering algorithm -- KMeans
-
-    Trying with n_clusters = 3. Can we get it to make the following 3 clusters: the world map plots, the tropical_subseasonal plots, and the qbo plots?
-
-    Clusters:
-    0: 2 tropical_subseasonal diffs
-    2: 2 tropical_subseasonal diffs
-    1: the remaining 65 diffs, including 3 tropical_subseasonal diffs
-
-    CONCLUSIONS
-    - Not good at all. The tropical subeasonal plots are spread out into 3 clusters and everything else is in one of those.
-
-    ###########################################################################
-    Try 32: feature detection -- actual + diffs, clustering algorithm -- KMeans
-
-    Clusters:
-    0: 39 diffs in lat_lon, polar, tropical_subseasonal
-    1: 21 diffs in lat_lon, polar
-    2: 9 diffs in polar
-
-    ###########################################################################
-    Try 38: feature detection -- diffs, clustering algorithm -- AC
-    4 clusters -- 2 for tropical_subseasonal, 1 for qbo, and 1 for lat_lon/polar
-    Pretty decent!
-
-    ###########################################################################
-    Try 40: feature detection -- sector slice on diffs, clustering algorithm -- AC
-    3 clusters -- 2 for tropical_subseasonal/qbo, 1 for lat_lon, 1 for lat_lon/polar/tropical_subseasonal
-    So, not that great
-
-    diff_try# subdirectories to keep: 1, 2, 7, 9, 29, 30, 31, 32, 38
-    TODO: delete remaining try# subdirectories
-    """
     cv_dict: Dict[str, Any] = {
         # Image diff
         "gray_diff_threshold": 30,  # Out of 255
         # Feature extraction
         "extract_diff_features_only": True,
-        "feature_extraction_algorithm": "sector_slice",
+        "feature_extraction_algorithm": "combined_features",
         "simple_hist_bins": 32,
         "combined_features_bins": 8,
         # Preprocessing
@@ -975,6 +757,6 @@ if __name__ == "__main__":
         "eps": 0.5,
         "min_samples": 2,
         # Clustering > KMeans, AgglomerativeClustering
-        "n_clusters": 3,
+        "n_clusters": 4,
     }
-    cv_prototype(41, cv_dict)
+    cv_prototype(42, cv_dict)
