@@ -30,8 +30,10 @@ topography_file=`echo $(ncks --trd -M -m ${first_file} | grep -E -i "^global att
 echo "topography_file=${topography_file}"
 res={{ res }}
 pg2=false
-if [[ ${topography_file##*/} =~ [^_]*_([^_]*)_.*nc ]]; then
-    grid=${BASH_REMATCH[1]}
+filename="${topography_file##*/}"
+echo "filename=${filename}"
+if [[ $filename =~ ne[0-9]+np4pg2+ ]]; then
+    grid="${BASH_REMATCH[0]}"
     echo "grid=${grid}"
     if [[ -z "${res}" ]]; then
         echo "Inferring res from grid"
@@ -39,9 +41,9 @@ if [[ ${topography_file##*/} =~ [^_]*_([^_]*)_.*nc ]]; then
             res=${BASH_REMATCH[1]}
         fi
     fi
-    if [[ $grid =~ pg2 ]]; then
-	pg2=true
-    fi
+    pg2=true
+else
+    echo "Pattern not found in filename: $filename"
 fi
 echo "res=${res}"
 echo "pg2=${pg2}"
