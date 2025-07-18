@@ -22,6 +22,7 @@ result_dir={{ output }}/post/atm/tc-analysis_${Y1}_${Y2}/
 rm -rf ${result_dir}
 
 atm_name={{ atm_name }}
+input_files={{ input_files }}
 
 # Determine res and pg2
 first_file=`echo $(ls ${drc_in}/${caseid}.{{ input_files }}.*.nc | head -n 1)`
@@ -67,8 +68,8 @@ echo $out_type
 GenerateConnectivityFile --in_mesh ${result_dir}outCSne$res.g --out_type $out_type --out_connect ${result_dir}connect_CSne${res}_v2.dat
 
 # Get the list of files
-cd ${drc_in};eval ls ${drc_in}/${caseid}.$atm_name.h2.*{${start}..${end}}*.nc >${result_dir}inputfile_${file_name}.txt
-cd ${drc_in};eval ls ${caseid}.$atm_name.h2.*{${start}..${end}}*.nc >${result_dir}outputfile_${file_name}.txt
+cd ${drc_in};eval ls ${drc_in}/${caseid}.$input_files.*{${start}..${end}}*.nc >${result_dir}inputfile_${file_name}.txt
+cd ${drc_in};eval ls ${caseid}.$input_files.*{${start}..${end}}*.nc >${result_dir}outputfile_${file_name}.txt
 
 cd ${result_dir}
 # Detection threshold including:
