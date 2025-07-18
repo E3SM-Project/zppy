@@ -43,6 +43,16 @@ if [[ $filename =~ ne[0-9]+np4pg2+ ]]; then
         fi
     fi
     pg2=true
+elif [[ $filename =~ ne[0-9]+np4 ]]; then
+    grid="${BASH_REMATCH[0]}"
+    echo "grid=${grid}"
+    if [[ -z "${res}" ]]; then
+        echo "Inferring res from grid"
+        if [[ $grid =~ ne([0-9]*) ]]; then
+            res=${BASH_REMATCH[1]}
+        fi
+    fi
+    pg2=false
 else
     echo "Pattern not found in filename: $filename"
 fi
