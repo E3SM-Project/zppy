@@ -22,29 +22,57 @@ result_dir={{ output }}/post/atm/tc-analysis_${Y1}_${Y2}/
 rm -rf ${result_dir}
 
 atm_name={{ atm_name }}
+input_files={{ input_files }}
 
 # Determine res and pg2
 first_file=`echo $(ls ${drc_in}/${caseid}.{{ input_files }}.*.nc | head -n 1)`
 echo "first_file=${first_file}"
 topography_file=`echo $(ncks --trd -M -m ${first_file} | grep -E -i "^global attribute [0-9]+: topography_file" | cut -f 11- -d ' ' | sort)`
 echo "topography_file=${topography_file}"
+filename="${topography_file##*/}"
+echo "filename=${filename}"
+# Default values for res and pg2:
 res={{ res }}
 pg2=false
-if [[ $topography_file =~ /[^_]*_([^_]*)_.*nc ]]; then
-    grid=${BASH_REMATCH[1]}
+# We keep pg2=false unless it appears in this exact part of the filename:
+if [[ $filename =~ ne([0-9]+)np4pg2 ]]; then
+    # v3 datasets and many v2 datasets match neXnp4pg2
+    #
+    # Note: this block is repeated below, but it is
+    # hard to extract as a function because res may be empty,
+    # and an empty string parameter will confuse bash.
+    grid="${BASH_REMATCH[0]}"
     echo "grid=${grid}"
     if [[ -z "${res}" ]]; then
-        echo "Inferring res from grid"
-        if [[ $grid =~ ne([0-9]*) ]]; then
-            res=${BASH_REMATCH[1]}
-        fi
+        echo "Inferring res from ${filename}"
+        res=${BASH_REMATCH[1]}
     fi
-    if [[ $grid =~ pg2 ]]; then
-	pg2=true
+    pg2=true
+elif [[ $filename =~ ne([0-9]+)np4 ]]; then
+    # v1 datasets match neXnp4
+    grid="${BASH_REMATCH[0]}"
+    echo "grid=${grid}"
+    if [[ -z "${res}" ]]; then
+        echo "Inferring res from ${filename}"
+        res=${BASH_REMATCH[1]}
     fi
+else
+    echo "Pattern not found in filename=${filename}"
+    error_num=1
+    cd {{ scriptDir }}
+    echo "ERROR (${error_num})" > {{ prefix }}.status
+    exit ${error_num}
 fi
 echo "res=${res}"
 echo "pg2=${pg2}"
+if [[ -z "${res}" ]]; then
+    echo "Could not infer res from ${filename}"
+    echo "Please set res in the cfg."
+    error_num=2
+    cd {{ scriptDir }}
+    echo "ERROR (${error_num})" > {{ prefix }}.status
+    exit ${error_num}
+fi
 
 mkdir -p $result_dir
 file_name=${caseid}_${start}_${end}
@@ -65,8 +93,8 @@ echo $out_type
 GenerateConnectivityFile --in_mesh ${result_dir}outCSne$res.g --out_type $out_type --out_connect ${result_dir}connect_CSne${res}_v2.dat
 
 # Get the list of files
-cd ${drc_in};eval ls ${drc_in}/${caseid}.$atm_name.h2.*{${start}..${end}}*.nc >${result_dir}inputfile_${file_name}.txt
-cd ${drc_in};eval ls ${caseid}.$atm_name.h2.*{${start}..${end}}*.nc >${result_dir}outputfile_${file_name}.txt
+cd ${drc_in};eval ls ${drc_in}/${caseid}.$input_files.*{${start}..${end}}*.nc >${result_dir}inputfile_${file_name}.txt
+cd ${drc_in};eval ls ${caseid}.$input_files.*{${start}..${end}}*.nc >${result_dir}outputfile_${file_name}.txt
 
 cd ${result_dir}
 # Detection threshold including:
