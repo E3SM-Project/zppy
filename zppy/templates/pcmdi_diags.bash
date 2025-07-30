@@ -1,5 +1,5 @@
 #!/bin/bash
-{% include 'inclusions/slurm_header.sh' %}
+{% include 'inclusions/slurm_header.bash' %}
 
 {{ environment_commands }}
 
