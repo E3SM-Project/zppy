@@ -44,8 +44,8 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
         ref_year_sets: List[Tuple[int, int]]
         if ("ref_years" in c.keys()) and (c["ref_years"] != [""]):
             ref_year_sets = get_years(c["ref_years"])
-            # For model_vs_model, use the single reference year set for all test year sets
-            if c["run_type"] == "model_vs_model" and len(ref_year_sets) == 1:
+            # If there is a single reference period provided, replicate it for all test year sets
+            if len(ref_year_sets) == 1:
                 ref_year_sets = ref_year_sets * len(year_sets)
         else:
             ref_year_sets = year_sets
