@@ -54,7 +54,9 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
         if c["sub"] != "synthetic_plots":
             year_sets: List[Tuple[int, int]] = get_years(c["ts_years"])
         else:
-            year_sets: List[Tuple[int, int]] = get_years(c["figure_sets_period"].split(","))
+            year_sets: List[Tuple[int, int]] = get_years(
+                c["figure_sets_period"].split(",")
+            )
 
         ref_year_sets: List[Tuple[int, int]]
         if ("ref_years" in c.keys()) and (c["ref_years"] != [""]):
