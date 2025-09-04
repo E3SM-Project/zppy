@@ -198,7 +198,7 @@ create_links_acyc_climo_obs() {
   for file in ${ts_dir_source}/*; do
     local fname
     local YYYYS YYYYE
-    local PREFIX
+    local SUBSTR
     local ttag tmp_file MM combined_name
 
     fname=$(basename "${file}")
@@ -221,7 +221,7 @@ create_links_acyc_climo_obs() {
     if [[ ${YYYYE} -gt ${end_year} ]]; then YYYYE=${end_year}; fi
 
     # Extract prefix before the date range (removes from .${YYYYS} or -${YYYYS})
-    PREFIX="${fname%%[._-]${YYYYS}*}"
+    SUBSTR="${fname%%[._-]${YYYYS}*}"
 
     ttag="$(printf "%04d" "${YYYYS}")01-$(printf "%04d" "${YYYYE}")12"
     tmp_file="tmp_combine_${ttag}.nc"
@@ -234,7 +234,7 @@ create_links_acyc_climo_obs() {
       ncra -O -h -F -d time,"${month}",,12 "${tmp_file}" "tmp_clm_${MM}.nc"
     done
 
-    combined_name="${PREFIX}.${ttag}.AC.${case_id}.nc"
+    combined_name="${SUBSTR}.${ttag}.AC.${case_id}.nc"
     ncrcat -O tmp_clm_*.nc "${combined_name}"
 
     # Adjust time metadata
@@ -354,7 +354,7 @@ create_links_ts_obs() {
   mkdir -p "${ts_dir_destination}"
   cd "${ts_dir_destination}" || exit
 
-  local file fname PREFIX YYYYS YYYYE ttag combined_name
+  local file fname SUBSTR YYYYS YYYYE ttag combined_name
 
   for file in ${ts_dir_source}/*; do
     fname=$(basename "$file")
@@ -365,10 +365,12 @@ create_links_ts_obs() {
     fi
     echo "create_links_ts_obs: processing ${file}"
     # Match two time patterns (YYYYMM or YYYYMMDD) separated by _ or -
-    if [[ ${fname} =~ ([0-9]{6,8})[_-]([0-9]{6,8}) ]]; then
-      YYYYS="${BASH_REMATCH[1]}"
-      YYYYE="${BASH_REMATCH[2]}"
+    if [[ $fname =~ ^(.+)\.([0-9]{4})([0-9]{2}){1,2}[-_]([0-9]{4})([0-9]{2}){1,2}\.nc$ ]]; then
+      SUBSTR="${BASH_REMATCH[1]}"   # everything before the .YYYY...
+      YYYYS="${BASH_REMATCH[2]}"    # start year
+      YYYYE="${BASH_REMATCH[4]}"    # end year
     else
+
       echo "Warning: Could not extract dates from ${fname}, basename of ${file}"
       continue
     fi
@@ -382,11 +384,8 @@ create_links_ts_obs() {
       YYYYE="${end_year}"
     fi
 
-    # Extract prefix (before the date range, ignoring separator)
-    PREFIX="${fname%%[._-]${YYYYS}*}"
-
     ttag="$(printf "%04d" "${YYYYS}")01-$(printf "%04d" "${YYYYE}")12"
-    combined_name="${PREFIX}.${ttag}.nc"
+    combined_name="${SUBSTR}.${ttag}.nc"
 
     # Extract subset of time series
     ncrcat -O -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${combined_name}"
@@ -489,7 +488,7 @@ echo "Linking observational data using SLURM..."
 command="zi-pcmdi-link-observation --model_name_ref ${model_name_ref} --tableID_ref ${tableID_ref} --vars={{ vars }} --obs_sets {{ obs_sets }} --obs_ts {{ obs_ts }} --obstmp_dir ${obstmp_dir}"
 echo "Running: ${command}"
 
-source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-20250529
+source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-diags-20250730
 time eval "${command}"
 source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh
 
@@ -555,7 +554,7 @@ user_notes = 'Provenance and results'
 debug = {{ pcmdi_debug }}
 
 # Enable plot generation for model and observation
-plot_model = {{ mov_plot_model }}
+plot = {{ mov_plot_model }}
 plot_obs = {{ mov_plot_obs }}  # optional
 
 # Execution mode and output format
@@ -578,7 +577,7 @@ regions_values = {
 # Template path for land/sea mask file (fixed input)
 modpath_lf = os.path.join(
     'fixed',
-    'sftlf.put_model_here.nc'
+    'sftlf.%(model).nc'
 )
 
 {% if "mean_climate" in subsection %}
@@ -619,7 +618,7 @@ test_data_path = '${climo_dir_primary}'
 filename_template = '.'.join([
     mip,
     exp,
-    'put_model_here',
+    '%(model)',
     '%(realization)',
     '${tableID}',
     '%(variable)',
@@ -723,7 +722,7 @@ modnames = [product]
 realization = "*"
 modpath = os.path.join(
     '${ts_dir_primary}',
-    '{}.{}.put_model_here.%(realization).{}.%(variable).{}.nc'.format(
+    '{}.{}.%(model).%(realization).{}.%(variable).{}.nc'.format(
         mip, exp, '${tableID}', period
     )
 )
@@ -748,7 +747,7 @@ realization = realm
 
 modpath = os.path.join(
     '${ts_dir_primary}',
-    '{}.{}.put_model_here.%(realization).{}.%(variable).{}.nc'.format(
+    '{}.{}.%(model).%(realization).{}.%(variable).{}.nc'.format(
         mip, exp, '${tableID}', period
     )
 )
@@ -776,7 +775,7 @@ results_dir = os.path.join(
 )
 
 # Output filenames for JSON and NetCDF
-json_name = "%(mip)_%(exp)_%(metricsCollection)_${case_id}_put_model_here_%(realization)"
+json_name = "%(mip)_%(exp)_%(metricsCollection)_${case_id}_%(model)_%(realization)"
 
 netcdf_name = json_name
 
@@ -827,12 +826,13 @@ command="zi-pcmdi-variability-modes ${core_parameters} --var_modes ${var_modes}"
 command="zi-pcmdi-enso ${core_parameters}  --enso_groups {{ enso_groups }}"
 {% endif %}
 {% if "synthetic_plots" in subsection %}
-# Note: ts_years may be List[str]
-command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure_format {{ figure_format }} --www ${www} --results_dir ${results_dir} --case {{ case }} --model_name {{ model_name }} --model_tableID {{model_tableID }} --web_dir=${web_dir} --cmip_clim_dir {{ cmip_clim_dir }} --cmip_clim_set {{ cmip_clim_set }} --cmip_movs_dir {{ cmip_movs_dir }} --cmip_movs_set {{ cmip_movs_set }} --atm_modes {{ atm_modes }} --cpl_modes {{ cpl_modes }} --cmip_enso_dir {{ cmip_enso_dir }} --cmip_enso_set {{ cmip_enso_set }} --sub_sets {{ sub_sets }} --pcmdi_webtitle {{ pcmdi_webtitle }} --pcmdi_version {{ pcmdi_version }} --run_type ${run_type} --ts_years {{ ts_years }} --pcmdi_external_prefix {{ pcmdi_external_prefix }} --pcmdi_viewer_template {{ pcmdi_viewer_template }}"
+# Note: figure_sets_period changed to a string 
+# Note: sub_sets was renamed to figure_sets to be clearer
+command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure_format {{ figure_format }} --www ${www} --results_dir ${results_dir} --case {{ case }} --model_name {{ model_name }} --model_tableID {{model_tableID }} --web_dir=${web_dir} --cmip_clim_dir {{ cmip_clim_dir }} --cmip_clim_set {{ cmip_clim_set }} --cmip_movs_dir {{ cmip_movs_dir }} --cmip_movs_set {{ cmip_movs_set }} --atm_modes {{ atm_modes }} --cpl_modes {{ cpl_modes }} --cmip_enso_dir {{ cmip_enso_dir }} --cmip_enso_set {{ cmip_enso_set }} --figure_sets {{ figure_sets }} --pcmdi_webtitle {{ pcmdi_webtitle }} --pcmdi_version {{ pcmdi_version }} --run_type ${run_type} --figure_sets_period {{ figure_sets_period }} --pcmdi_external_prefix {{ pcmdi_external_prefix }} --pcmdi_viewer_template {{ pcmdi_viewer_template }}"
 {% endif %}
 
 # Run diagnostics
-source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-20250529
+source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-diags-20250730
 echo "About to run a zi-pcmdi command"
 echo "The current directory is: $PWD" # This will be of the form .../post/scripts/tmpDir
 time ${command}
