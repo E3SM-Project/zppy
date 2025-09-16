@@ -27,41 +27,41 @@ def test_images():
         expansions = get_expansions()
         diff_dir_suffix = ""
     test_results_dict: Dict[str, Results] = dict()
-    sets_to_run: List[str] = list(expansions["sets_to_run"])
+    tasks_to_run: List[str] = list(expansions["tasks_to_run"])
     try:
         # TODO: these could be run in parallel, if easy to implement
 
         # Weekly comprehensive tests
         print("Checking weekly cfg output")
-        if "weekly_comprehensive_v2" in expansions["tests_to_run"]:
+        if "weekly_comprehensive_v2" in expansions["cfgs_to_run"]:
             set_up_and_run_image_checker(
                 "comprehensive_v2",
                 V2_CASE_NAME,
                 expansions,
                 diff_dir_suffix,
-                sets_to_run,
+                tasks_to_run,
                 test_results_dict,
             )
-        if "weekly_comprehensive_v3" in expansions["tests_to_run"]:
+        if "weekly_comprehensive_v3" in expansions["cfgs_to_run"]:
             set_up_and_run_image_checker(
                 "comprehensive_v3",
                 V3_CASE_NAME,
                 expansions,
                 diff_dir_suffix,
-                sets_to_run,
+                tasks_to_run,
                 test_results_dict,
             )
-        if "weekly_bundles" in expansions["tests_to_run"]:
+        if "weekly_bundles" in expansions["cfgs_to_run"]:
             # No mpas_analysis
-            if "mpas_analysis" in expansions["sets_to_run"]:
-                sets_to_run = sets_to_run.copy()
-                sets_to_run.remove("mpas_analysis")
+            if "mpas_analysis" in expansions["tasks_to_run"]:
+                tasks_to_run = tasks_to_run.copy()
+                tasks_to_run.remove("mpas_analysis")
             set_up_and_run_image_checker(
                 "bundles",
                 V3_CASE_NAME,
                 expansions,
                 diff_dir_suffix,
-                sets_to_run,
+                tasks_to_run,
                 test_results_dict,
             )
 
@@ -69,35 +69,35 @@ def test_images():
         # These cfgs remain unchanged, but we test the latest zppy code on them
         # to check for backwards-compatiblity issues.
         print("Checking legacy cfg output")
-        if "weekly_legacy_3.0.0_comprehensive_v2" in expansions["tests_to_run"]:
+        if "weekly_legacy_3.0.0_comprehensive_v2" in expansions["cfgs_to_run"]:
             set_up_and_run_image_checker(
                 "legacy_3.0.0_comprehensive_v2",
                 V2_CASE_NAME,
                 expansions,
                 diff_dir_suffix,
-                sets_to_run,
+                tasks_to_run,
                 test_results_dict,
             )
-        if "weekly_legacy_3.0.0_comprehensive_v3" in expansions["tests_to_run"]:
+        if "weekly_legacy_3.0.0_comprehensive_v3" in expansions["cfgs_to_run"]:
             set_up_and_run_image_checker(
                 "legacy_3.0.0_comprehensive_v3",
                 V3_CASE_NAME,
                 expansions,
                 diff_dir_suffix,
-                sets_to_run,
+                tasks_to_run,
                 test_results_dict,
             )
-        if "weekly_legacy_3.0.0_bundles" in expansions["tests_to_run"]:
+        if "weekly_legacy_3.0.0_bundles" in expansions["cfgs_to_run"]:
             # No mpas_analysis
-            if "mpas_analysis" in expansions["sets_to_run"]:
-                sets_to_run = sets_to_run.copy()
-                sets_to_run.remove("mpas_analysis")
+            if "mpas_analysis" in expansions["tasks_to_run"]:
+                tasks_to_run = tasks_to_run.copy()
+                tasks_to_run.remove("mpas_analysis")
             set_up_and_run_image_checker(
                 "legacy_3.0.0_bundles",
                 V3_CASE_NAME,
                 expansions,
                 diff_dir_suffix,
-                sets_to_run,
+                tasks_to_run,
                 test_results_dict,
             )
     except Exception as e:

@@ -14,7 +14,7 @@ from mache import MachineInfo
 TEST_SPECIFICS: Dict[str, Any] = {
     "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
-    "tests_to_run": [
+    "cfgs_to_run": [
         "weekly_bundles",
         "weekly_comprehensive_v2",
         "weekly_comprehensive_v3",
@@ -22,7 +22,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
         "weekly_legacy_3.0.0_comprehensive_v2",
         "weekly_legacy_3.0.0_comprehensive_v3",
     ],
-    "sets_to_run": ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"],
+    "tasks_to_run": ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"],
     "unique_id": "unique_id",
 }
 
@@ -139,19 +139,19 @@ def get_expansions():
     expansions["active_mpas_analysis"] = "False"
     expansions["active_global_time_series"] = "False"
     expansions["active_ilamb"] = "False"
-    if "e3sm_diags" in TEST_SPECIFICS["sets_to_run"]:
+    if "e3sm_diags" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_e3sm_diags"] = "True"
-    if "mpas_analysis" in TEST_SPECIFICS["sets_to_run"]:
+    if "mpas_analysis" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_mpas_analysis"] = "True"
-    if "global_time_series" in TEST_SPECIFICS["sets_to_run"]:
+    if "global_time_series" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_global_time_series"] = "True"
         expansions["active_mpas_analysis"] = "True"  # For ocn plots
         expansions["active_e3sm_to_cmip"] = "True"  # For lnd plots
-    if "ilamb" in TEST_SPECIFICS["sets_to_run"]:
+    if "ilamb" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_ilamb"] = "True"
         expansions["active_e3sm_to_cmip"] = "True"
-    expansions["tests_to_run"] = TEST_SPECIFICS["tests_to_run"]
-    expansions["sets_to_run"] = TEST_SPECIFICS["sets_to_run"]
+    expansions["cfgs_to_run"] = TEST_SPECIFICS["cfgs_to_run"]
+    expansions["tasks_to_run"] = TEST_SPECIFICS["tasks_to_run"]
 
     expansions["diagnostics_base_path"] = config.get("diagnostics", "base_path")
     expansions["machine"] = machine
@@ -267,10 +267,10 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         "weekly_legacy_3.0.0_comprehensive_v2",
         "weekly_legacy_3.0.0_comprehensive_v3",
     ]
-    if TEST_SPECIFICS["tests_to_run"] == []:
+    if TEST_SPECIFICS["cfgs_to_run"] == []:
         cfg_names = full_list_cfg_names
     else:
-        cfg_names = TEST_SPECIFICS["tests_to_run"]
+        cfg_names = TEST_SPECIFICS["cfgs_to_run"]
     for cfg_name in cfg_names:
         cfg_template = f"{git_top_level}/tests/integration/template_{cfg_name}.cfg"
         cfg_generated = (
