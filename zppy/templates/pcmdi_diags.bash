@@ -699,6 +699,9 @@ ObsUnitsAdjust = {{ ObsUnitsAdjust }}
 # Mask out land regions (consider ocean-only if True)
 landmask = {{ landmask }}
 
+# Maximum number of eof modes 
+eofn_mod_max = {{ eofn_mod_max }}
+
 # If True, remove domain mean from each time step
 RmDomainMean = {{ RmDomainMean }}
 
