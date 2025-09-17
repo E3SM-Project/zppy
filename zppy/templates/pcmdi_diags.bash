@@ -488,9 +488,9 @@ echo "Linking observational data using SLURM..."
 command="zi-pcmdi-link-observation --model_name_ref ${model_name_ref} --tableID_ref ${tableID_ref} --vars={{ vars }} --obs_sets {{ obs_sets }} --obs_ts {{ obs_ts }} --obstmp_dir ${obstmp_dir}"
 echo "Running: ${command}"
 
-source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-diags-20250730
+{{ environment_commands_secondary }}
 time eval "${command}"
-source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh
+{{ environment_commands }}
 
 if [ $? -ne 0 ]; then
   cd {{ scriptDir }}
@@ -699,7 +699,7 @@ ObsUnitsAdjust = {{ ObsUnitsAdjust }}
 # Mask out land regions (consider ocean-only if True)
 landmask = {{ landmask }}
 
-# Maximum number of eof modes 
+# Maximum number of eof modes
 eofn_mod_max = {{ eofn_mod_max }}
 
 # If True, remove domain mean from each time step
@@ -835,7 +835,7 @@ command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure
 {% endif %}
 
 # Run diagnostics
-source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-diags-20250730
+{{ environment_commands_secondary }}
 echo "About to run a zi-pcmdi command"
 echo "The current directory is: $PWD" # This will be of the form .../post/scripts/tmpDir
 time ${command}
@@ -844,7 +844,7 @@ if [ $? != 0 ]; then
   echo 'ERROR (11)' > {{ prefix }}.status
   exit 11
 fi
-source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh
+{{ environment_commands }}
 
 #################################
 # Copy output to web server
