@@ -30,7 +30,6 @@ case="{{ case }}"
 www="{{ www }}"
 run_type="{{ run_type }}"
 results_dir="{{ run_type }}"
-ref_name={{ ref_name }}
 {% if "synthetic_plots" not in subsection %}
 
 # Input variables
@@ -92,11 +91,7 @@ workdir=`mktemp -d tmp.${id}.XXXX`
 cd ${workdir}
 
 
-# TODO: Move anything in {{pcmdi_external_prefix}} == /lcrc/group/e3sm/diagnostics/ to the inclusions subdir
-# or to zppy-interfaces
-
-# utility file for pcmdi-zppy workflow
-cp -r '{{pcmdi_external_prefix}}/{{pcmdi_zppy_util}}'   .
+# TODO: Move anything in {{pcmdi_external_prefix}} == /lcrc/group/e3sm/diagnostics/ to the inclusions subdir or to zppy-interfaces. In theory, we would then not need to copy these files around.
 
 # files for definition of regions for regional mean
 cp -r '{{pcmdi_external_prefix}}/{{regions_specs}}'     .
@@ -106,9 +101,6 @@ cp -r '{{pcmdi_external_prefix}}/{{reference_alias}}'   .
 
 # file for list of variables for synthetic_metrics metric plots
 cp -r '{{pcmdi_external_prefix}}/{{synthetic_metrics}}' .
-
-# utility file for pcmdi-zppy viewer
-cp -r '{{pcmdi_external_prefix}}/{{pcmdi_viewer_util}}' .
 
 {% if "mean_climate" in subsection %}
 create_links_acyc_climo() {

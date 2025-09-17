@@ -215,7 +215,6 @@ def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
                 "enso",
             ]
         )
-        check_set_specific_parameter(c, ts_sets, "ts_num_years_ref")
         check_set_specific_parameter(c, ts_sets, "ts_subsection")
 
 
