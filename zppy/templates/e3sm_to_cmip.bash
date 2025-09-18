@@ -48,18 +48,10 @@ EOF
   srun -N 1 e3sm_to_cmip \
   --output-path \
   ${dest_cmip}/${tmp_dir} \
-  {% if input_files.split(".")[0] == 'clm2' or input_files.split(".")[0] == 'elm' -%}
   --var-list \
-  'snd, mrsos, mrso, mrfso, mrros, mrro, prveg, evspsblveg, evspsblsoi, tran, tsl, lai, cLitter, cProduct, cSoilFast, cSoilMedium, cSoilSlow, fFire, fHarvest, cVeg, nbp, gpp, ra, rh' \
+  {{ cmip_vars }} \
   --realm \
-  lnd \
-  {% endif -%}
-  {% if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' -%}
-  --var-list \
-  'ua, va, ta, wa, zg, hur, pr, prc, prsn, ts, tas, prw, psl, sfcWind, tasmax, tasmin, tauu, tauv, rtmt, rsdt, rsds, rsdscs, rlds, rldscs, rsus, rsuscs, rsut, rsutcs, rlus, rlut, rlutcs, clivi, clwvi, clt, evspsbl, hfls, hfss, huss' \
-  --realm \
-  atm \
-  {% endif -%}
+  {{ component }} \
   --input-path \
   ${input_dir} \
   --user-metadata \
