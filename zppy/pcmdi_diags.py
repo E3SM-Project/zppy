@@ -47,7 +47,6 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
         c["cmor_tables_prefix"] = c["diagnostics_base_path"]
 
         # check and set parameter for pcmdi
-        c["pcmdi_external_prefix"] = c["diagnostics_base_path"]
         check_parameters_for_pcmdi(c)
 
         # Loop over year sets
@@ -219,7 +218,9 @@ def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
 
 
 def check_and_define_parameters(c: Dict[str, Any]) -> None:
-    # TODO: do this based on sets, rather than by relying on the user setting ts_num_years
+    # TODO, future PR: do this based on sets, rather than by relying on the user setting ts_num_years
+    # This is the same item as for e3sm_diags.
+    # Here, we'd have to determine which sets of sets "mean_climate","variability_modes_atm","variability_modes_cpl","enso","synthetic_plots" require `ts`
     if "ts_num_years" in c.keys():
         set_value_of_parameter_if_undefined(
             c,
