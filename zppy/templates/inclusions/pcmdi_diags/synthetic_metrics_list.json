@@ -1,0 +1,58 @@
+{
+    "mean_climate" : {
+            "mae_xy" : {
+                    "name"   : "Mean Absolute Error Normalized by Median",
+                    "type"   : ["portrait"],
+                    "region" : ["global","ocean","land","NHEX","SHEX","TROPICS"],
+                    "season" : ["djf", "mam", "jja", "son"]
+            },
+	    "cor_xy"  : {
+		    "name"   : "Pattern Corr.",
+		    "type"   : ["portrait"],
+		    "region" : ["global","ocean","land","NHEX","SHEX","TROPICS"],
+		    "season" : ["djf", "mam", "jja", "son"]
+	    },
+	    "rms_xy"  : {
+		    "name"   : "RMSE Normalized by Median",
+		    "type"   : ["portrait"],
+                    "region" : ["global","ocean","land","NHEX","SHEX","TROPICS"],
+		    "season" : ["djf", "mam", "jja", "son"]
+	    },
+            "bias_xy" : {
+                    "name"   : "Annual Mean Bias",
+                    "type"   : ["parcoord"],
+                    "region" : ["global","ocean","land","NHEX","SHEX","TROPICS"],
+                    "season" : ["ann"]
+            },
+	    "rms_xyt" : {
+		    "name"   : "Spatiotemporal RMSE",
+		    "type"   : ["parcoord"],
+                    "region" : ["global","ocean","land","NHEX","SHEX","TROPICS"],
+		    "season" : ["ann"]
+	    }
+    },
+    "variability_modes" : {
+	    "rms"  : {
+                    "name"   : "RMSE Normalized by Median",
+                    "type"   : ["portrait","parcoord"],
+                    "season" : []
+	    },
+	    "rmsc" : {
+                    "name"   : "CenteredRMSE Normalized by Median",
+                    "type"   : ["portrait","parcoord"],
+                    "season" : []
+	    },
+	    "stdv_pc_ratio_to_obs" : {
+		    "name"   : "Amplitude Ratio to Reference",
+		    "type"   : ["portrait","parcoord"],
+		    "season" : []
+	    }
+    },
+    "enso_metric" : {
+           "skill" : {
+	           "collection" : ["ENSO_perf", "ENSO_tel", "ENSO_proc"],
+                   "type"       : ["portrait"],
+                   "season"     : []
+            }
+    }
+}

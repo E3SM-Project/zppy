@@ -1,0 +1,393 @@
+{
+  "rlds" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rldscs" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rlus" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rsds" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rsdscs" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+
+  "rsus" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rsuscs": {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rstcre" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rltcre" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rlut" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rlutcs" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rsdt" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rsut" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rsutcs" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "rtmt" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ceres_ebaf_v4.1",
+           "alternate"  : "ceres_ebaf_v4.0",
+           "alternate1" : "ceres_ebaf_v2.8",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C"
+           },
+  "pr" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "GPCP_v2.3",
+           "alternate"  : "GPCP_v2.2",
+           "alternate1" : "GPCP_1DD",
+           "alternate2" : "ERA5",
+           "alternate3" : "MERRA2",
+           "alternate4" : "ERA-Interim",
+           "alternate5" : "NOAA-20C",
+           "alternate6" : "GPCP_v3.2"
+           },
+  "prc" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "NOAA-20C"
+           },
+  "prsn" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "NOAA-20C"
+           },
+  "prw" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+	   "alternate"  : "MERRA2",
+           "alternate1" : "MERRA2",
+           "alternate2" : "ERA-Interim",
+           "alternate3" : "NOAA-20C"
+           },
+  "psl" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C"
+           },
+  "ps" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate " : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C"
+           },
+  "huss" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "MERRA2",
+           "alternate"  : "NOAA-20C",
+           "alternate1" : "ERA5",
+           "alternate2" : "ERA-Interim"
+           },
+  "ta" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C"
+           },
+  "ua" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C"
+           },
+  "va" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C"
+           },
+  "hur" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C"
+           },
+  "wap" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C"
+           },
+  "zg" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C"
+           },
+  "o3" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C"
+           },
+  "hus" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C"
+           },
+  "uas" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C"
+           },
+  "vas" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C"
+           },
+  "tauu" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C",
+           "alternate3" : "COREv2-Flux"
+           },
+  "taux" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C",
+           "alternate3" : "COREv2-Flux"
+           },
+  "tauv" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C",
+           "alternate3" : "COREv2-Flux"
+           },
+  "tauy" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C",
+           "alternate3" : "COREv2-Flux"
+           },
+  "tas" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C"
+           },
+  "ts" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "NOAA-20C",
+           "alternate1" : "HadISST2"
+           },
+  "sst" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "NOAA-20C",
+           "alternate1" : "HadISST2"
+           },
+  "sfcWind" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "NOAA-20C",
+	   "alternate"  : "ERA5",
+           "alternate1" : "MERRA2",
+           "alternate2" : "ERA-Interim"
+           },
+  "hfls" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C",
+           "alternate3" : "OAFlux"
+           },
+  "hfss" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "MERRA2",
+           "alternate1" : "ERA-Interim",
+           "alternate2" : "NOAA-20C",
+           "alternate3" : "OAFlux"
+           },
+  "evspsbl" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "NOAA-20C"
+           },
+  "clt" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate3" : "NOAA-20C"
+           },
+  "clwvi" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "NOAA-20C"
+           },
+  "clivi" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "ERA5",
+           "alternate"  : "NOAA-20C"
+           },
+  "tasmin" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "MERRA2"
+           },
+  "tasmax" : {
+           "defaultpi"  : "NOAA-20C",
+           "default"    : "MERRA2"
+           },
+  "sic" : {
+           "defaultpi"  : "HadSST2",
+           "default"    : "HadSST2"
+           },
+  "tos" : {
+           "defaultpi"  : "HadSST2",
+           "default"    : "HadSST2"
+           },
+  "zos" : {
+           "defaultpi"  : "AVISO",
+           "default"    : "AVISO",
+           "alternate"  : "HadISST"
+           },
+  "sos" : {
+           "defaultpi"  : "Aquarius",
+           "default"    : "Aquarius",
+           "alternate"  : "HadISST"
+           }
+}
