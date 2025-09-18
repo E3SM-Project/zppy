@@ -87,20 +87,23 @@ tableID_ref='{{ model_tableID_ref }}'
 case_id=v$(date '+%Y%m%d')
 
 # Create temporary workdir
-workdir=`mktemp -d tmp.${id}.XXXX`
+workdir=`mktemp -d tmp.{{ prefix }}.${id}.XXXX`
 cd ${workdir}
 
-
-# TODO: Move anything in {{pcmdi_external_prefix}} == /lcrc/group/e3sm/diagnostics/ to the inclusions subdir or to zppy-interfaces. In theory, we would then not need to copy these files around.
-
 # files for definition of regions for regional mean
-cp -r '{{pcmdi_external_prefix}}/{{regions_specs}}'     .
+cat > regions_specs.json << EOF
+{{ regions_specs }}
+EOF
 
 # file for aliases of observation datasets
-cp -r '{{pcmdi_external_prefix}}/{{reference_alias}}'   .
+cat > reference_alias.json << EOF
+{{ reference_alias }}
+EOF
 
 # file for list of variables for synthetic_metrics metric plots
-cp -r '{{pcmdi_external_prefix}}/{{synthetic_metrics}}' .
+cat > synthetic_metrics.json << EOF
+{{ synthetic_metrics }}
+EOF
 
 {% if "mean_climate" in subsection %}
 create_links_acyc_climo() {
@@ -433,7 +436,7 @@ create_links_ts_obs() {
 # Define output directory for climatology files
 climo_dir_primary="climo"
 # Path to model's monthly climatology files
-# TODO: how do we have cmip_ts under climo??
+# This cmip_ts path is created via zppy/templates/e3sm_to_cmip.bash
 climo_dir_source="{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly"
 # Link and process primary model climo data
 create_links_acyc_climo "${climo_dir_source}" "${climo_dir_primary}" "${Y1}" "${Y2}" "${model_name}.${tableID}" 1
@@ -823,7 +826,7 @@ command="zi-pcmdi-enso ${core_parameters}  --enso_groups {{ enso_groups }}"
 {% if "synthetic_plots" in subsection %}
 # Note: figure_sets_period changed to a string
 # Note: sub_sets was renamed to figure_sets to be clearer
-command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure_format {{ figure_format }} --www ${www} --results_dir ${results_dir} --case {{ case }} --model_name {{ model_name }} --model_tableID {{model_tableID }} --web_dir=${web_dir} --cmip_clim_dir {{ cmip_clim_dir }} --cmip_clim_set {{ cmip_clim_set }} --cmip_movs_dir {{ cmip_movs_dir }} --cmip_movs_set {{ cmip_movs_set }} --atm_modes {{ atm_modes }} --cpl_modes {{ cpl_modes }} --cmip_enso_dir {{ cmip_enso_dir }} --cmip_enso_set {{ cmip_enso_set }} --figure_sets {{ figure_sets }} --pcmdi_webtitle {{ pcmdi_webtitle }} --pcmdi_version {{ pcmdi_version }} --run_type ${run_type} --figure_sets_period {{ figure_sets_period }} --pcmdi_external_prefix {{ pcmdi_external_prefix }} --pcmdi_viewer_template {{ pcmdi_viewer_template }}"
+command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure_format {{ figure_format }} --www ${www} --results_dir ${results_dir} --case {{ case }} --model_name {{ model_name }} --model_tableID {{model_tableID }} --web_dir=${web_dir} --cmip_clim_dir {{ cmip_clim_dir }} --cmip_clim_set {{ cmip_clim_set }} --cmip_movs_dir {{ cmip_movs_dir }} --cmip_movs_set {{ cmip_movs_set }} --atm_modes {{ atm_modes }} --cpl_modes {{ cpl_modes }} --cmip_enso_dir {{ cmip_enso_dir }} --cmip_enso_set {{ cmip_enso_set }} --figure_sets {{ figure_sets }} --pcmdi_webtitle {{ pcmdi_webtitle }} --pcmdi_version {{ pcmdi_version }} --run_type ${run_type} --figure_sets_period {{ figure_sets_period }} --pcmdi_external_prefix {{ diagnostics_base_path }} --pcmdi_viewer_template {{ pcmdi_viewer_template }}"
 {% endif %}
 
 # Run diagnostics
