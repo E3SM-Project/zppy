@@ -92,17 +92,17 @@ cd ${workdir}
 
 # files for definition of regions for regional mean
 cat > regions_specs.json << EOF
-{{ regions_specs }}
+{% include regions_specs %}
 EOF
 
 # file for aliases of observation datasets
 cat > reference_alias.json << EOF
-{{ reference_alias }}
+{% include reference_alias %}
 EOF
 
 # file for list of variables for synthetic_metrics metric plots
-cat > synthetic_metrics.json << EOF
-{{ synthetic_metrics }}
+cat > synthetic_metrics_list.json << EOF
+{% include synthetic_metrics_list %}
 EOF
 
 {% if "mean_climate" in subsection %}
