@@ -24,7 +24,7 @@ EOF
   mkdir -p $input_dir
 
   cp -s $dest/*_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc $input_dir
-  dest_cmip={{ output }}/post/{{ component }}/{{ grid }}/cmip_ts/{{ frequency }}
+  dest_cmip={{ output }}/post/{{ component }}/{{ ts_grid }}/cmip_ts/{{ frequency }}
   mkdir -p ${dest_cmip}
 
   {% if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' -%}
@@ -49,7 +49,7 @@ EOF
   --output-path \
   ${dest_cmip}/${tmp_dir} \
   --var-list \
-  {{ cmip_vars }} \
+  '{{ cmip_vars }}' \
   --realm \
   {{ component }} \
   --input-path \
