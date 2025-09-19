@@ -187,8 +187,7 @@ def set_grid(c: Dict[str, Any]) -> None:
             c["grid"] = "glb"
         else:
             tmp = os.path.basename(c["mapping_file"])
-            # FIXME: W605 invalid escape sequence '\.'
-            tmp = re.sub("\.[^.]*\.nc$", "", tmp)  # noqa: W605
+            tmp = re.sub(r"\.[^.]*\.nc$", "", tmp)
             tmp = tmp.split("_")
             if tmp[0] == "map":
                 c["grid"] = f"{tmp[-2]}_{tmp[-1]}"
