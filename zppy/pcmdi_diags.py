@@ -5,6 +5,7 @@ from zppy.bundle import handle_bundles
 from zppy.logger import _setup_custom_logger
 from zppy.utils import (
     ParameterInferenceType,
+    ParameterNotProvidedError,
     add_dependencies,
     check_parameter_defined,
     check_set_specific_parameter,
@@ -23,6 +24,19 @@ from zppy.utils import (
 
 logger = _setup_custom_logger(__name__)
 
+VALID_PCMDI_SETS: Set[str] = set(
+    [
+        "mean_climate",
+        "variability_modes_atm",
+        "variability_modes_cpl",
+        "enso",
+        "synthetic_plots",
+    ]
+)
+BASE_PCMDI_SETS: Set[str] = set(
+    ["mean_climate", "variability_modes_atm", "variability_modes_cpl", "enso"]
+)
+
 
 # -----------------------------------------------------------------------------
 def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
@@ -37,16 +51,12 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
     # --- Generate and submit pcmdi_diags scripts ---
     for c in tasks:
         dependencies: List[str] = []
-        if "enso" in c["subsection"]:
+        define_current_set(c)
+        if c["current_set"] == "enso":
             logger.warning(
-                "The 'enso' set is not yet supported. Skipping the enso task."
+                "The 'enso' set is not yet supported in PCMDI Diags. Skipping launching of associated jobs."
             )
-            break  # Skip this task; we can't complete this subsection.
-        if "enso" in c["sets"]:
-            logger.warning(
-                "The 'enso' set is not yet supported. Skipping the enso set in synthetic_plots."
-            )
-            c["sets"].remove("enso")
+            break  # Skip this task
         c["sub"] = get_value_from_parameter(
             c, "subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
         )
@@ -64,7 +74,7 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
         # Loop over year sets
         year_sets: List[Tuple[int, int]]
-        if c["sub"] != "synthetic_plots":
+        if c["current_set"] != "synthetic_plots":
             year_sets = get_years(c["ts_years"])
         else:
             year_sets = get_years(c["figure_sets_period"].split(","))
@@ -84,7 +94,7 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
             c["ref_year1"] = rs[0]
             c["ref_year2"] = rs[1]
 
-            if c["sub"] != "synthetic_plots":
+            if c["current_set"] != "synthetic_plots":
                 check_and_define_parameters(c)
             else:
                 prefix = f"pcmdi_diags_{c['sub']}_{c['run_type']}"
@@ -159,34 +169,57 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
     return existing_bundles
 
 
+def define_current_set(c: Dict[str, Any]):
+    if c["current_set"] != "":
+        current_set = c["current_set"]
+        if current_set not in VALID_PCMDI_SETS:
+            raise ValueError(
+                f"Invalid set '{current_set}'. Must be one of {VALID_PCMDI_SETS}"
+            )
+    elif c["infer_path_parameters"]:
+        if "mean_climate" in c["subsection"]:
+            current_set = "mean_climate"
+        elif "variability_modes_cpl" in c["subsection"]:
+            current_set = "variability_modes_cpl"
+        elif "variability_modes_atm" in c["susbsection"]:
+            current_set = "variability_modes_atm"
+        elif "enso" in c["subsection"]:
+            current_set = "enso"
+        else:
+            raise ValueError(f"Could not determine set from {c['subsection']}")
+        if current_set not in VALID_PCMDI_SETS:
+            raise ValueError(
+                f"Invalid set: '{current_set}' inferred from {c['subsection']}. Must be one of {VALID_PCMDI_SETS}"
+            )
+    else:
+        raise ParameterNotProvidedError(
+            "current_set was not provided, and inferring is turned off. Turn on inferring by setting infer_path_parameters to True."
+        )
+    c["current_set"] = current_set
+
+
 def check_parameters_for_bash(c: Dict[str, Any]) -> None:
     if c["sub"] != "synthetic_plots":
         check_set_specific_parameter(
             c,
-            set(
-                ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
-            ),
+            BASE_PCMDI_SETS,
             "ref_final_yr",
         )
         check_set_specific_parameter(
             c,
-            set(
-                ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
-            ),
+            BASE_PCMDI_SETS,
             "ref_start_yr",
         )
         check_set_specific_parameter(
             c,
-            set(
-                ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
-            ),
+            BASE_PCMDI_SETS,
             "ref_end_yr",
         )
 
 
 def check_parameters_for_pcmdi(c: Dict[str, Any]) -> None:
     # check and set up the external data needed by pcmdi
-    if c["sub"] == "synthetic_plots":
+    if c["current_set"] == "synthetic_plots":
         set_value_of_parameter_if_undefined(
             c,
             "cmip_enso_dir",
@@ -211,29 +244,16 @@ def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
     check_parameter_defined(c, "reference_data_path_ts")
     check_parameter_defined(c, "model_name_ref")
     check_parameter_defined(c, "model_tableID_ref")
-    if c["sub"] != "synthetic_plots":
+    if c["current_set"] != "synthetic_plots":
         check_set_specific_parameter(
             c,
-            set(
-                ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
-            ),
+            BASE_PCMDI_SETS,
             "ref_start_yr",
         )
-        ts_sets = set(
-            [
-                "mean_climate",
-                "variability_mode_cpl",
-                "variability_mode_atm",
-                "enso",
-            ]
-        )
-        check_set_specific_parameter(c, ts_sets, "ts_subsection")
+        check_set_specific_parameter(c, BASE_PCMDI_SETS, "ts_subsection")
 
 
 def check_and_define_parameters(c: Dict[str, Any]) -> None:
-    # TODO, future PR: do this based on sets, rather than by relying on the user setting ts_num_years
-    # This is the same item as for e3sm_diags.
-    # Here, we'd have to determine which sets of sets "mean_climate","variability_modes_atm","variability_modes_cpl","enso","synthetic_plots" require `ts`
     if "ts_num_years" in c.keys():
         set_value_of_parameter_if_undefined(
             c,
@@ -250,9 +270,7 @@ def check_and_define_parameters(c: Dict[str, Any]) -> None:
         check_mvm_only_parameters_for_bash(c)
         prefix = f"pcmdi_diags_{c['sub']}_{c['run_type']}_{c['year1']:04d}-{c['year2']:04d}_vs_{c['ref_year1']:04d}-{c['ref_year2']:04d}"
         reference_data_path = c["reference_data_path"].split("/post")[0] + "/post"
-        if set(
-            ["mean_climate", "variability_mode_cpl", "variability_mode_atm", "enso"]
-        ) & set(c["sets"]):
+        if c["current_set"] in BASE_PCMDI_SETS:
             set_value_of_parameter_if_undefined(
                 c,
                 "reference_data_path_ts",
@@ -270,10 +288,7 @@ def add_ts_dependencies(
 ):
     start_yr = yr
     end_yr = yr + c["ts_num_years"] - 1
-    depend_on_ts: Set[str] = set(
-        ["mean_climate", "variability_mode_atm", "variability_mode_cpl", "enso"]
-    )
-    if depend_on_ts & set(c["sets"]):
+    if c["current_set"] in BASE_PCMDI_SETS:
         add_dependencies(
             dependencies,
             script_dir,
@@ -293,28 +308,29 @@ def add_pcmdi_dependencies(
         status_suffix = f"_{c['year1']:04d}-{c['year2']:04d}"
     elif c["run_type"] == "model_vs_model":
         status_suffix = f"_{c['year1']:04d}-{c['year2']:04d}_vs_{c['ref_year1']:04d}-{c['ref_year2']:04d}"
-    if "mean_climate" in c["sets"]:
+    if "mean_climate" in c["figure_sets"]:
         status_file = os.path.join(
             script_dir,
             f"pcmdi_diags_mean_climate_{c['run_type']}{status_suffix}.status",
         )
         if os.path.exists(status_file):
             dependencies.append(status_file)
-    if "variability_modes_cpl" in c["sets"]:
+    if "variability_modes" in c["figure_sets"]:
+        # cpl
         status_file = os.path.join(
             script_dir,
             f"pcmdi_diags_variability_modes_cpl_{c['run_type']}{status_suffix}.status",
         )
         if os.path.exists(status_file):
             dependencies.append(status_file)
-    if "variability_modes_atm" in c["sets"]:
+        # atm
         status_file = os.path.join(
             script_dir,
             f"pcmdi_diags_variability_modes_atm_{c['run_type']}{status_suffix}.status",
         )
         if os.path.exists(status_file):
             dependencies.append(status_file)
-    if "enso" in c["sets"]:
+    if "enso_metric" in c["figure_sets"]:
         status_file = os.path.join(
             script_dir, f"pcmdi_diags_enso_{c['run_type']}{status_suffix}.status"
         )

@@ -30,7 +30,7 @@ case="{{ case }}"
 www="{{ www }}"
 run_type="{{ run_type }}"
 results_dir="{{ run_type }}"
-{% if "synthetic_plots" not in subsection %}
+{% if current_set != "synthetic_plots" %}
 
 # Input variables
 y1={{ year1 }}
@@ -105,7 +105,7 @@ cat > synthetic_metrics_list.json << EOF
 {% include synthetic_metrics_list %}
 EOF
 
-{% if "mean_climate" in subsection %}
+{% if current_set == "mean_climate" %}
 create_links_acyc_climo() {
   local ts_dir_source="$1"
   local ts_dir_destination="$2"
@@ -262,9 +262,7 @@ create_links_acyc_climo_obs() {
 {% endif %}
 {% endif %}
 
-{% if "variability_modes_cpl" in subsection
-   or "variability_modes_atm" in subsection
-   or "enso" in subsection %}
+{% if current_set in ["variability_modes_cpl", "variability_modes_atm", "enso"] %}
 create_links_ts() {
   local ts_dir_source="$1"
   local ts_dir_destination="$2"
@@ -432,7 +430,7 @@ create_links_ts_obs() {
 ########################
 # Prepare the model data
 ########################
-{% if "mean_climate" in subsection %}
+{% if current_set == "mean_climate" %}
 # Define output directory for climatology files
 climo_dir_primary="climo"
 # Path to model's monthly climatology files
@@ -449,8 +447,8 @@ create_links_acyc_climo "${climo_dir_source_ref}" "${climo_dir_ref}" "${ref_Y1}"
 {% endif %}
 {% endif %}
 
-{% if "variability_modes_cpl" in subsection or "variability_modes_atm" in subsection or "enso" in subsection %}
-# All diagnostics in this subsection use time series (ts) data
+{% if current_set in ["variability_modes_cpl", "variability_modes_atm", "enso"] %}
+# All these diagnostics use time series (ts) data
 # Define output directory for primary model time series
 ts_dir_primary="ts"
 ts_dir_source="{{ output }}/post/atm/{{ ts_grid }}/cmip_ts/monthly"
@@ -465,7 +463,7 @@ create_links_ts "${ts_dir_source_ref}" "${ts_dir_ref}" "${ref_Y1}" "${ref_Y2}" "
 {% endif %}
 {% endif %}
 
-{% if run_type == "model_vs_obs" and "synthetic_plots" not in subsection %}
+{% if run_type == "model_vs_obs" and current_set != "synthetic_plots" %}
 ###########################################################################
 # Prepare the observation data
 # Observation datasets vary by diagnostic, so we use an external
@@ -499,17 +497,17 @@ fi
 #######################################################
 ts_dir_ref_source="{{ scriptDir }}/${workdir}/${obstmp_dir}"
 
-{% if "mean_climate" in subsection %}
+{% if current_set == "mean_climate" %}
 climo_dir_ref=climo_ref
 create_links_acyc_climo_obs "${ts_dir_ref_source}" "${climo_dir_ref}" ${ref_Y1} ${ref_Y2} 7
-{% elif "variability_modes_cpl" in subsection or "variability_modes_atm" in subsection or "enso" in subsection %}
+{% elif current_set in ["variability_modes_cpl", "variability_modes_atm", "enso"] %}
 ts_dir_ref=ts_ref
 create_links_ts_obs "${ts_dir_ref_source}" "${ts_dir_ref}" ${ref_Y1} ${ref_Y2} 8
 {% endif %}
 
 {% endif %}
 
-{% if "synthetic_plots" not in subsection %}
+{% if current_set != "synthetic_plots" %}
 ########################################################
 # generate basic parameter file for pcmdi metrics driver
 ########################################################
@@ -575,7 +573,7 @@ modpath_lf = os.path.join(
     'sftlf.%(model).nc'
 )
 
-{% if "mean_climate" in subsection %}
+{% if current_set == "mean_climate" %}
 
 ############################################
 # Setup Specific for Mean Climate Metrics
@@ -673,7 +671,7 @@ test_clims_interpolated_output = diagnostics_output_path
 
 {% endif %}
 
-{% if "variability_modes" in subsection %}
+{% if current_set in ["variability_modes_cpl", "variability_modes_atm"] %}
 # Setup for Mode Variability Diagnostics
 msyear = int(start_yr)
 meyear = int(end_yr)
@@ -738,7 +736,7 @@ results_dir = os.path.join(
 )
 {% endif %}
 
-{% if "enso" in subsection %}
+{% if current_set == "enso" %}
 # Parameter Setup for ENSO Metrics
 modnames = [product]
 realization = realm
@@ -796,10 +794,10 @@ echo "The current directory is: $PWD" # This will be of the form .../post/script
 # Run diagnostics
 mkdir -p pcmdi_diags
 
-{% if "synthetic_plots" not in subsection %}
-{% if "mean_climate" in subsection %}
+{% if current_set != "synthetic_plots" %}
+{% if current_set == "mean_climate"%}
 source_dirs="--climo_ts_dir_primary ${climo_dir_primary} --climo_ts_dir_ref ${climo_dir_ref}"
-{% elif "variability_modes" in subsection or "enso" in subsection %}
+{% elif current_set in ["variability_modes_cpl", "variability_modes_atm", "enso"] %}
 source_dirs="--climo_ts_dir_primary ${ts_dir_primary} --climo_ts_dir_ref ${ts_dir_ref}"
 {% endif %}
 # Parameter passing can encounter errors if parameters are empty.
@@ -809,21 +807,21 @@ source_dirs="--climo_ts_dir_primary ${ts_dir_primary} --climo_ts_dir_ref ${ts_di
 core_parameters="--num_workers {{ num_workers }} --multiprocessing {{ multiprocessing }} --subsection {{ subsection }} ${source_dirs} --model_name ${model_name} --model_tableID {{model_tableID }} --figure_format {{ figure_format }}  --run_type {{ run_type }} --obs_sets {{ obs_sets }} --model_name_ref ${model_name_ref} --vars {{ vars }} --tableID_ref ${tableID_ref} --generate_sftlf {{ generate_sftlf }} --case_id ${case_id} --results_dir ${results_dir}"
 {% endif %}
 
-{% if "mean_climate" in subsection %}
+{% if current_set == "mean_climate" %}
 command="zi-pcmdi-mean-climate ${core_parameters} --regions {{ regions }}"
 {% endif %}
-{% if "variability_modes" in subsection %}
-{% if subsection == "variability_modes_atm" %}
+{% if current_set in ["variability_modes_cpl", "variability_modes_atm"] %}
+{% if current_set == "variability_modes_atm" %}
 var_modes={{ atm_modes }}
-{% elif subsection == "variability_modes_cpl" %}
+{% elif current_set == "variability_modes_cpl" %}
 var_modes={{ cpl_modes }}
 {% endif %}
 command="zi-pcmdi-variability-modes ${core_parameters} --var_modes ${var_modes}"
 {% endif %}
-{% if "enso" in subsection %}
+{% if current_set == "enso"n %}
 command="zi-pcmdi-enso ${core_parameters}  --enso_groups {{ enso_groups }}"
 {% endif %}
-{% if "synthetic_plots" in subsection %}
+{% if current_set == "synthetic_plots" %}
 # Note: figure_sets_period changed to a string
 # Note: sub_sets was renamed to figure_sets to be clearer
 command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure_format {{ figure_format }} --www ${www} --results_dir ${results_dir} --case {{ case }} --model_name {{ model_name }} --model_tableID {{model_tableID }} --web_dir=${web_dir} --cmip_clim_dir {{ cmip_clim_dir }} --cmip_clim_set {{ cmip_clim_set }} --cmip_movs_dir {{ cmip_movs_dir }} --cmip_movs_set {{ cmip_movs_set }} --atm_modes {{ atm_modes }} --cpl_modes {{ cpl_modes }} --cmip_enso_dir {{ cmip_enso_dir }} --cmip_enso_set {{ cmip_enso_set }} --figure_sets {{ figure_sets }} --pcmdi_webtitle {{ pcmdi_webtitle }} --pcmdi_version {{ pcmdi_version }} --run_type ${run_type} --figure_sets_period {{ figure_sets_period }} --pcmdi_external_prefix {{ diagnostics_base_path }} --pcmdi_viewer_template {{ pcmdi_viewer_template }}"
@@ -872,7 +870,7 @@ done
 ############################################
 # Copy files
 #rsync -a --delete ${results_dir} ${web_dir}/
-{% if "synthetic_plots" not in subsection %}
+{% if current_set != "synthetic_plots" %}
 rsync -a ${results_dir} ${web_dir}/
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
