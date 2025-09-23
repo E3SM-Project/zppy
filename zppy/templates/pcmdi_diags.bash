@@ -818,12 +818,10 @@ var_modes={{ cpl_modes }}
 {% endif %}
 command="zi-pcmdi-variability-modes ${core_parameters} --var_modes ${var_modes}"
 {% endif %}
-{% if current_set == "enso"n %}
+{% if current_set == "enso" %}
 command="zi-pcmdi-enso ${core_parameters}  --enso_groups {{ enso_groups }}"
 {% endif %}
 {% if current_set == "synthetic_plots" %}
-# Note: figure_sets_period changed to a string
-# Note: sub_sets was renamed to figure_sets to be clearer
 command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure_format {{ figure_format }} --www ${www} --results_dir ${results_dir} --case {{ case }} --model_name {{ model_name }} --model_tableID {{model_tableID }} --web_dir=${web_dir} --cmip_clim_dir {{ cmip_clim_dir }} --cmip_clim_set {{ cmip_clim_set }} --cmip_movs_dir {{ cmip_movs_dir }} --cmip_movs_set {{ cmip_movs_set }} --atm_modes {{ atm_modes }} --cpl_modes {{ cpl_modes }} --cmip_enso_dir {{ cmip_enso_dir }} --cmip_enso_set {{ cmip_enso_set }} --figure_sets {{ figure_sets }} --pcmdi_webtitle {{ pcmdi_webtitle }} --pcmdi_version {{ pcmdi_version }} --run_type ${run_type} --figure_sets_period {{ figure_sets_period }} --pcmdi_external_prefix {{ diagnostics_base_path }} --pcmdi_viewer_template {{ pcmdi_viewer_template }}"
 {% endif %}
 
