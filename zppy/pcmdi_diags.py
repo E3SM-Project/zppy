@@ -2,6 +2,7 @@ import os
 from typing import Any, Dict, List, Set, Tuple
 
 from zppy.bundle import handle_bundles
+from zppy.logger import _setup_custom_logger
 from zppy.utils import (
     ParameterInferenceType,
     add_dependencies,
@@ -20,6 +21,8 @@ from zppy.utils import (
     write_settings_file,
 )
 
+logger = _setup_custom_logger(__name__)
+
 
 # -----------------------------------------------------------------------------
 def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
@@ -34,6 +37,16 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
     # --- Generate and submit pcmdi_diags scripts ---
     for c in tasks:
         dependencies: List[str] = []
+        if "enso" in c["subsection"]:
+            logger.warning(
+                "The 'enso' set is not yet supported. Skipping the enso task."
+            )
+            break  # Skip this task; we can't complete this subsection.
+        if "enso" in c["sets"]:
+            logger.warning(
+                "The 'enso' set is not yet supported. Skipping the enso set in synthetic_plots."
+            )
+            c["sets"].remove("enso")
         c["sub"] = get_value_from_parameter(
             c, "subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
         )
