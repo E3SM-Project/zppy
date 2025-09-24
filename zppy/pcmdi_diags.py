@@ -66,9 +66,6 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
         if "ts_num_years" in c.keys():
             c["ts_num_years"] = int(c["ts_num_years"])
 
-        # procedure type for e3sm_to_cmip
-        c["cmor_tables_prefix"] = c["diagnostics_base_path"]
-
         # check and set parameter for pcmdi
         check_parameters_for_pcmdi(c)
 
@@ -210,7 +207,7 @@ def define_current_set(c: Dict[str, Any]):
 
 
 def check_parameters_for_bash(c: Dict[str, Any]) -> None:
-    if c["sub"] != "synthetic_plots":
+    if c["current_set"] != "synthetic_plots":
         check_set_specific_parameter(
             c,
             BASE_PCMDI_SETS,
@@ -220,11 +217,6 @@ def check_parameters_for_bash(c: Dict[str, Any]) -> None:
             c,
             BASE_PCMDI_SETS,
             "ref_start_yr",
-        )
-        check_set_specific_parameter(
-            c,
-            BASE_PCMDI_SETS,
-            "ref_end_yr",
         )
 
 
