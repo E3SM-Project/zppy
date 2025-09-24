@@ -231,24 +231,27 @@ def check_parameters_for_bash(c: Dict[str, Any]) -> None:
 def check_parameters_for_pcmdi(c: Dict[str, Any]) -> None:
     # check and set up the external data needed by pcmdi
     if c["current_set"] == "synthetic_plots":
-        set_value_of_parameter_if_undefined(
-            c,
-            "cmip_enso_dir",
-            f"{c['diagnostics_base_path']}/pcmdi_data/metrics_data/enso_metric",
-            ParameterInferenceType.PATH_INFERENCE,
-        )
-        set_value_of_parameter_if_undefined(
-            c,
-            "cmip_clim_dir",
-            f"{c['diagnostics_base_path']}/pcmdi_data/metrics_data/mean_climate",
-            ParameterInferenceType.PATH_INFERENCE,
-        )
-        set_value_of_parameter_if_undefined(
-            c,
-            "cmip_movs_dir",
-            f"{c['diagnostics_base_path']}/pcmdi_data/metrics_data/variability_modes",
-            ParameterInferenceType.PATH_INFERENCE,
-        )
+        if "enso_metric" in c["figure_sets"]:
+            set_value_of_parameter_if_undefined(
+                c,
+                "cmip_enso_dir",
+                f"{c['diagnostics_base_path']}/pcmdi_data/metrics_data/enso_metric",
+                ParameterInferenceType.PATH_INFERENCE,
+            )
+        if "mean_climate" in c["figure_sets"]:
+            set_value_of_parameter_if_undefined(
+                c,
+                "cmip_clim_dir",
+                f"{c['diagnostics_base_path']}/pcmdi_data/metrics_data/mean_climate",
+                ParameterInferenceType.PATH_INFERENCE,
+            )
+        if "variability_modes" in c["figure_sets"]:
+            set_value_of_parameter_if_undefined(
+                c,
+                "cmip_movs_dir",
+                f"{c['diagnostics_base_path']}/pcmdi_data/metrics_data/variability_modes",
+                ParameterInferenceType.PATH_INFERENCE,
+            )
 
 
 def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:

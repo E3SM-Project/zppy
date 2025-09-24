@@ -316,6 +316,9 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     print(
         f"global_time_series_environment_commands={expansions['global_time_series_environment_commands']}"
     )
+    print(
+        f"pcmdi_diags_environment_commands={expansions['pcmdi_diags_environment_commands']}"
+    )
     print(f"environment_commands={expansions['environment_commands']}")
     print(
         "Reminder: `environment_commands=''` => the latest E3SM Unified environment will be used"
