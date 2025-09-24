@@ -231,7 +231,15 @@ def set_component_and_prc_typ(c: Dict[str, Any]) -> None:
 def check_set_specific_parameter(
     c: Dict[str, Any], sets_with_requirement: Set[str], relevant_parameter: str
 ) -> None:
-    requested_sets = set(c["sets"])
+    requested_sets: Set[str]
+    if ("sets" in c) and c["sets"]:
+        # For tasks that permit multiple sets
+        requested_sets = set(c["sets"])
+    elif ("current_set" in c) and c["current_set"]:
+        # For tasks that permit only a single set
+        requested_sets = {c["current_set"]}
+    else:
+        requested_sets = set()
     intersection = sets_with_requirement & requested_sets
     if (
         intersection
