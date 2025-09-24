@@ -96,9 +96,15 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
             if c["current_set"] != "synthetic_plots":
                 check_and_define_parameters(c)
+                print(c["prefix"])
             else:
                 prefix = f"pcmdi_diags_{c['sub']}_{c['run_type']}"
-                print(prefix)
+                if i < len(year_sets) - 1:
+                    logger.debug(
+                        f"Not printing prefix={prefix} because we will only submit the job on the final iteration."
+                    )
+                else:
+                    print(prefix)
                 c["prefix"] = prefix
 
             bash_file, settings_file, status_file = get_file_names(
@@ -115,7 +121,7 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
             # List of dependencies
             # Iterate from year1 to year2 incrementing by the number of years per time series file.
-            if "ts_num_years" in c.keys():
+            if c["current_set"] != "synthetic_plots":
                 for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
                     add_ts_dependencies(c, dependencies, script_dir, yr)
                     set_value_of_parameter_if_undefined(
@@ -124,17 +130,16 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
                         "atm_monthly_180x360_aave",
                         ParameterInferenceType.SECTION_INFERENCE,
                     )
-                    add_dependencies(
-                        dependencies,
-                        script_dir,
-                        "e3sm_to_cmip",
-                        c["e3sm_to_cmip_atm_subsection"],
-                        c["year1"],
-                        c["year2"],
-                        c["ts_num_years"],
-                    )
-
-            if c["sub"] == "synthetic_plots":
+                add_dependencies(
+                    dependencies,
+                    script_dir,
+                    "e3sm_to_cmip",
+                    c["e3sm_to_cmip_atm_subsection"],
+                    c["year1"],
+                    c["year2"],
+                    c["ts_num_years"],
+                )
+            else:
                 add_pcmdi_dependencies(c, dependencies, script_dir)
                 if i < len(year_sets) - 1:
                     continue
@@ -177,14 +182,20 @@ def define_current_set(c: Dict[str, Any]):
                 f"Invalid set '{current_set}'. Must be one of {VALID_PCMDI_SETS}"
             )
     elif c["infer_path_parameters"]:
-        if "mean_climate" in c["subsection"]:
+        if "subsection" not in c:
+            raise ParameterNotProvidedError(
+                "subsection must be available if current_set is to be inferred."
+            )
+        elif "mean_climate" in c["subsection"]:
             current_set = "mean_climate"
         elif "variability_modes_cpl" in c["subsection"]:
             current_set = "variability_modes_cpl"
-        elif "variability_modes_atm" in c["susbsection"]:
+        elif "variability_modes_atm" in c["subsection"]:
             current_set = "variability_modes_atm"
         elif "enso" in c["subsection"]:
             current_set = "enso"
+        elif "synthetic_plots" in c["subsection"]:
+            current_set = "synthetic_plots"
         else:
             raise ValueError(f"Could not determine set from {c['subsection']}")
         if current_set not in VALID_PCMDI_SETS:
@@ -279,7 +290,6 @@ def check_and_define_parameters(c: Dict[str, Any]) -> None:
             )
     else:
         raise ValueError(f"Invalid run_type={c['run_type']}")
-    print(prefix)
     c["prefix"] = prefix
 
 
@@ -313,7 +323,7 @@ def add_pcmdi_dependencies(
             script_dir,
             f"pcmdi_diags_mean_climate_{c['run_type']}{status_suffix}.status",
         )
-        if os.path.exists(status_file):
+        if os.path.exists(status_file) and (status_file not in dependencies):
             dependencies.append(status_file)
     if "variability_modes" in c["figure_sets"]:
         # cpl
@@ -321,18 +331,18 @@ def add_pcmdi_dependencies(
             script_dir,
             f"pcmdi_diags_variability_modes_cpl_{c['run_type']}{status_suffix}.status",
         )
-        if os.path.exists(status_file):
+        if os.path.exists(status_file) and (status_file not in dependencies):
             dependencies.append(status_file)
         # atm
         status_file = os.path.join(
             script_dir,
             f"pcmdi_diags_variability_modes_atm_{c['run_type']}{status_suffix}.status",
         )
-        if os.path.exists(status_file):
+        if os.path.exists(status_file) and (status_file not in dependencies):
             dependencies.append(status_file)
     if "enso_metric" in c["figure_sets"]:
         status_file = os.path.join(
             script_dir, f"pcmdi_diags_enso_{c['run_type']}{status_suffix}.status"
         )
-        if os.path.exists(status_file):
+        if os.path.exists(status_file) and (status_file not in dependencies):
             dependencies.append(status_file)
