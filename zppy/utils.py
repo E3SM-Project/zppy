@@ -330,6 +330,7 @@ def set_value_of_parameter_if_undefined(
             raise ParameterNotProvidedError(
                 f"{parameter} was not provided, and inferring is turned off. Turn on inferring by setting {inference_type_parameter} to True."
             )
+    # If parameter is already defined, do nothing.
 
 
 def check_parameter_defined(
