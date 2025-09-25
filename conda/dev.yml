@@ -1,12 +1,11 @@
 name: zppy_dev
 channels:
   - conda-forge
-  - defaults
 dependencies:
   # Build
   # =======================
-  - python=3.11
-  - pip=22.2.2
+  - python >=3.11,<3.14
+  - pip
   # Base
   # =================
   - configobj=5.0.6
@@ -21,22 +20,22 @@ dependencies:
   # Documentation
   # If versions are updated, also update in `.github/workflows/build_workflow.yml`
   # =================
-  - sphinx=5.2.3
-  - sphinx_rtd_theme=1.0.0
-  - sphinx-multiversion=0.2.4
+  - sphinx >=5.2.0
+  - sphinx-multiversion >=0.2.4
+  - sphinx_rtd_theme >=1.0.0
   # Need to pin docutils because 0.17 has a bug with unordered lists
   # https://github.com/readthedocs/sphinx_rtd_theme/issues/1115
-  - docutils=0.16
+  - docutils >=0.16,<0.17
   # Quality Assurance Tools
   # =======================
   # If versions are updated, also update 'rev' in `.pre-commit-config.yaml`
-  - black=24.10.0        # version from https://anaconda.org/conda-forge/black
-  - flake8=7.1.1         # version from https://anaconda.org/conda-forge/flake8
+  - black >=24.0.0
+  - flake8 >=7.0.0
   # This line also implicitly installs isort
-  - flake8-isort=6.1.1  # version from https://anaconda.org/conda-forge/flake8-isort
-  - mypy=1.11.2         # version from https://anaconda.org/conda-forge/mypy
-  - pre-commit=4.0.1    # version from https://anaconda.org/conda-forge/pre-commit
-  - tbump=6.9.0
+  - flake8-isort >=6.0.0
+  - mypy >=1.11.0
+  - pre-commit >=4.0.0
+  - tbump >=6.9.0
   # Developer Tools
   # =======================
   - tbump=6.9.0
