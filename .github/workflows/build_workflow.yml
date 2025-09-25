@@ -70,7 +70,7 @@ jobs:
         with:
           path: ~/conda_pkgs_dir
           key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
-            hashFiles('conda/dev.yml') }}}-python${{ matrix.python-version }}
+            hashFiles('conda/dev.yml') }}-python${{ matrix.python-version }}
 
       - name: Build Conda Environment
         uses: conda-incubator/setup-miniconda@v3
@@ -144,7 +144,7 @@ jobs:
           environment-file: conda/dev.yml
           channel-priority: flexible # Changed from strict to flexible
           auto-update-conda: true
-          python-version: "3.11" # Use stable Python version for docs
+          python-version: "3.13" # Use stable Python version for docs
 
       - if: ${{ needs.check-jobs-to-skip.outputs.should_skip != 'true' }}
         name: Show Conda Environment Info
