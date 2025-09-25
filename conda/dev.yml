@@ -8,11 +8,11 @@ dependencies:
   - pip
   # Base
   # =================
-  - configobj=5.0.6
-  - jinja2=3.1.2
+  - configobj>=5.0.6  # Changed from =5.0.6
+  - jinja2>=3.1.2     # Changed from =3.1.2
   - mache>=1.5.0
   - mpas_tools>=0.15.0
-  - pillow=9.2.0
+  - pillow>=9.2.0     # Changed from =9.2.0
   # Testing
   # =======================
   - pytest
@@ -25,7 +25,8 @@ dependencies:
   - sphinx_rtd_theme >=1.0.0
   # Need to pin docutils because 0.17 has a bug with unordered lists
   # https://github.com/readthedocs/sphinx_rtd_theme/issues/1115
-  - docutils >=0.16,<0.17
+  # This issue has been resolved.
+  - docutils>=0.16    # Removed <0.17 constraint
   # Quality Assurance Tools
   # =======================
   # If versions are updated, also update 'rev' in `.pre-commit-config.yaml`
