@@ -6,8 +6,9 @@ from configobj import ConfigObj
 from zppy.bundle import handle_bundles
 from zppy.utils import (
     ParameterInferenceType,
-    ParameterNotProvidedError,
     add_dependencies,
+    check_parameter_defined,
+    check_set_specific_parameter,
     check_status,
     get_file_names,
     get_tasks,
@@ -102,32 +103,6 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
             print_url(c, "e3sm_diags")
 
     return existing_bundles
-
-
-def check_parameter_defined(
-    c: Dict[str, Any], relevant_parameter: str, explanation: str = ""
-) -> None:
-    if (relevant_parameter not in c.keys()) or (c[relevant_parameter] == ""):
-        if explanation:
-            message = f"{relevant_parameter} is needed because {explanation}"
-        else:
-            message = f"{relevant_parameter} is not defined."
-        raise ParameterNotProvidedError(message)
-
-
-def check_set_specific_parameter(
-    c: Dict[str, Any], sets_with_requirement: Set[str], relevant_parameter: str
-) -> None:
-    requested_sets = set(c["sets"])
-    intersection = sets_with_requirement & requested_sets
-    if (
-        intersection
-        and (relevant_parameter in c.keys())
-        and (c[relevant_parameter] == "")
-    ):
-        raise ParameterNotProvidedError(
-            f"{relevant_parameter} is required because the sets {intersection} were requested."
-        )
 
 
 def check_parameters_for_bash(c: Dict[str, Any]) -> None:

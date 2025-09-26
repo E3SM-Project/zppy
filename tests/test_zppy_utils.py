@@ -6,6 +6,8 @@ from zppy.utils import (
     ParameterInferenceType,
     ParameterNotProvidedError,
     add_dependencies,
+    check_parameter_defined,
+    check_set_specific_parameter,
     get_active_status,
     get_file_names,
     get_inference_type_parameter,
@@ -185,6 +187,24 @@ def test_set_component_and_prc_typ():
     c = {"input_component": "", "input_files": ""}
     with pytest.raises(ValueError):
         set_component_and_prc_typ(c)
+
+
+def test_check_set_specific_parameter():
+    # Parameter is required
+    # a, b need parameter p, and we want sets a, b, c
+    c = {"sets": ["a", "b", "c"], "p": "exists"}
+    check_set_specific_parameter(c, set(["a", "b"]), "p")
+
+    # Parameter isn't required based on the sets we want
+    # z needs parameter p, but we only want sets a, b, c
+    c = {"sets": ["a", "b", "c"], "p": ""}
+    check_set_specific_parameter(c, set(["z"]), "p")
+
+    # Parameter is required
+    # a, b need parameter p, and we want sets a, b, c
+    c = {"sets": ["a", "b", "c"], "p": ""}
+    with pytest.raises(ParameterNotProvidedError):
+        check_set_specific_parameter(c, set(["a", "b"]), "p")
 
 
 def test_get_years():
@@ -476,6 +496,15 @@ def test_set_value_of_parameter_if_undefined():
         ParameterInferenceType.SECTION_INFERENCE,
     )
     assert c["required_parameter"] == "backup_option"
+
+
+def test_check_parameter_defined():
+    c = {"a": 1, "b": 2, "c": ""}
+    check_parameter_defined(c, "a")
+    with pytest.raises(ParameterNotProvidedError):
+        check_parameter_defined(c, "c")
+    with pytest.raises(ParameterNotProvidedError):
+        check_parameter_defined(c, "d")
 
 
 def test_get_file_names():
