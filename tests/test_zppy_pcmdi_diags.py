@@ -169,7 +169,7 @@ def test_check_parameters_for_pcmdi():
     check_parameters_for_pcmdi(c)
     assert c["cmip_clim_dir"] == "diags/post/pcmdi_data/metrics_data/mean_climate"
     assert c["cmip_movs_dir"] == "diags/post/pcmdi_data/metrics_data/variability_modes"
-    assert c["cmip_enso_dir"] == ""
+    assert c["cmip_enso_dir"] == "placeholder_dir"
 
     c = {
         "current_set": "mean_climate",
