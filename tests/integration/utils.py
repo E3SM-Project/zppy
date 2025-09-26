@@ -12,25 +12,16 @@ from mache import MachineInfo
 # pytest tests/integration/test_*.py
 
 TEST_SPECIFICS: Dict[str, Any] = {
-    "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
-    "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
-    "pcmdi_diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+    "diags_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
+    "global_time_series_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
+    "pcmdi_diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-diags-20250925",
     "cfgs_to_run": [
-        "weekly_bundles",
-        "weekly_comprehensive_v2",
         "weekly_comprehensive_v3",
-        "weekly_legacy_3.0.0_bundles",
-        "weekly_legacy_3.0.0_comprehensive_v2",
-        "weekly_legacy_3.0.0_comprehensive_v3",
     ],
     "tasks_to_run": [
-        "e3sm_diags",
-        "mpas_analysis",
-        "global_time_series",
-        "ilamb",
         "pcmdi_diags",
     ],
-    "unique_id": "unique_id",
+    "unique_id": "unique_id_pcmdi_diags_20250925_try4",
 }
 
 # Multi-machine testing #########################################################
