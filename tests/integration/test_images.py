@@ -54,14 +54,16 @@ def test_images():
         if "weekly_bundles" in expansions["cfgs_to_run"]:
             # No mpas_analysis
             if "mpas_analysis" in expansions["tasks_to_run"]:
-                tasks_to_run_copy = tasks_to_run.copy()
-                tasks_to_run_copy.remove("mpas_analysis")
+                tasks_to_run_modified = tasks_to_run.copy()
+                tasks_to_run_modified.remove("mpas_analysis")
+            else:
+                tasks_to_run_modified = tasks_to_run
             set_up_and_run_image_checker(
                 "bundles",
                 V3_CASE_NAME,
                 expansions,
                 diff_dir_suffix,
-                tasks_to_run_copy,
+                tasks_to_run_modified,
                 test_results_dict,
             )
 
@@ -90,14 +92,16 @@ def test_images():
         if "weekly_legacy_3.0.0_bundles" in expansions["cfgs_to_run"]:
             # No mpas_analysis
             if "mpas_analysis" in expansions["tasks_to_run"]:
-                tasks_to_run_copy = tasks_to_run.copy()
-                tasks_to_run_copy.remove("mpas_analysis")
+                tasks_to_run_modified = tasks_to_run.copy()
+                tasks_to_run_modified.remove("mpas_analysis")
+            else:
+                tasks_to_run_modified = tasks_to_run
             set_up_and_run_image_checker(
                 "legacy_3.0.0_bundles",
                 V3_CASE_NAME,
                 expansions,
                 diff_dir_suffix,
-                tasks_to_run_copy,
+                tasks_to_run_modified,
                 test_results_dict,
             )
     except Exception as e:

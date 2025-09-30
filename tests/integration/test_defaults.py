@@ -7,6 +7,7 @@ def test_defaults():
     # cfg is not machine-specific
     assert os.system("zppy -c tests/integration/test_defaults.cfg") == 0
     assert os.system("rm test_defaults_output/post/scripts/*.bash") == 0
+    assert os.system("rm test_defaults_output/post/scripts/provenance*") == 0
     assert (
         os.system(
             "rm -rf test_defaults_output/post/scripts/global_time_series_0001-0020_dir"

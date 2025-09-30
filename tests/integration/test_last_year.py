@@ -4,8 +4,12 @@ import os
 def test_last_year():
     # Note that this integration test does not have any expected files in `tests.integration.utils.get_expansions()["expected_dir"]`
     # cfg is not machine-specific
+    # Start fresh:
+    assert os.system("rm -rf test_last_year_output") == 0
     assert os.system("zppy -c tests/integration/test_last_year.cfg --last-year 12") == 0
+    # Remove files that are not deterministic:
     assert os.system("rm test_last_year_output/post/scripts/*.settings") == 0
+    assert os.system("rm test_last_year_output/post/scripts/provenance*") == 0
     actual_files = sorted(os.listdir("test_last_year_output/post/scripts"))
     expected_files = [
         "climo_atm_monthly_180x360_aave_0001-0010.bash",
