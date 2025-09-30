@@ -7,6 +7,7 @@ from tests.integration.utils import get_expansions
 def test_campaign_cryosphere():
     assert os.system("zppy -c tests/integration/test_campaign_cryosphere.cfg") == 0
     assert os.system("rm test_campaign_cryosphere_output/post/scripts/*.bash") == 0
+    assert os.system("rm test_campaign_cryosphere_output/post/scripts/provenance*") == 0
     expected_dir = get_expansions()["expected_dir"]
     assert (
         os.system(
@@ -26,6 +27,12 @@ def test_campaign_cryosphere_override():
         os.system("rm test_campaign_cryosphere_override_output/post/scripts/*.bash")
         == 0
     )
+    assert (
+        os.system(
+            "rm test_campaign_cryosphere_override_output/post/scripts/provenance*"
+        )
+        == 0
+    )
     expected_dir = get_expansions()["expected_dir"]
     assert (
         os.system(
@@ -39,6 +46,9 @@ def test_campaign_cryosphere_override():
 def test_campaign_high_res_v1():
     assert os.system("zppy -c tests/integration/test_campaign_high_res_v1.cfg") == 0
     assert os.system("rm test_campaign_high_res_v1_output/post/scripts/*.bash") == 0
+    assert (
+        os.system("rm test_campaign_high_res_v1_output/post/scripts/provenance*") == 0
+    )
     expected_dir = get_expansions()["expected_dir"]
     assert (
         os.system(
@@ -52,6 +62,7 @@ def test_campaign_high_res_v1():
 def test_campaign_none():
     assert os.system("zppy -c tests/integration/test_campaign_none.cfg") == 0
     assert os.system("rm test_campaign_none_output/post/scripts/*.bash") == 0
+    assert os.system("rm test_campaign_none_output/post/scripts/provenance*") == 0
     expected_dir = get_expansions()["expected_dir"]
     assert (
         os.system(
@@ -65,6 +76,9 @@ def test_campaign_none():
 def test_campaign_water_cycle():
     assert os.system("zppy -c tests/integration/test_campaign_water_cycle.cfg") == 0
     assert os.system("rm test_campaign_water_cycle_output/post/scripts/*.bash") == 0
+    assert (
+        os.system("rm test_campaign_water_cycle_output/post/scripts/provenance*") == 0
+    )
     expected_dir = get_expansions()["expected_dir"]
     assert (
         os.system(
@@ -82,6 +96,12 @@ def test_campaign_water_cycle_override():
     )
     assert (
         os.system("rm test_campaign_water_cycle_override_output/post/scripts/*.bash")
+        == 0
+    )
+    assert (
+        os.system(
+            "rm test_campaign_water_cycle_override_output/post/scripts/provenance*"
+        )
         == 0
     )
     expected_dir = get_expansions()["expected_dir"]
