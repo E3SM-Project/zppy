@@ -511,7 +511,7 @@ echo "Linking observational data into ${obstmp_dir}..."
 echo "Linking observational data using SLURM..."
 
 command="zi-pcmdi-link-observation --model_name_ref ${model_name_ref} --tableID_ref ${tableID_ref} --vars=${source_vars} --obs_sets {{ obs_sets }} --obs_ts {{ obs_ts }} --obstmp_dir ${obstmp_dir}"
-echo "Running: ${command}"
+echo "Running a zi-pcmdi command: ${command}"
 
 {{ environment_commands_secondary }}
 time eval "${command}"
@@ -892,7 +892,7 @@ command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure
 
 # Run diagnostics
 {{ environment_commands_secondary }}
-echo "About to run a zi-pcmdi command"
+echo "Running a zi-pcmdi command: ${command}"
 echo "The current directory is: $PWD" # This will be of the form .../post/scripts/tmpDir
 time ${command}
 if [ $? != 0 ]; then
