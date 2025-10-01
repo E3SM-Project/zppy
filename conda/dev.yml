@@ -38,7 +38,6 @@ dependencies:
   - tbump >=6.9.0
   # Developer Tools
   # =======================
-  - tbump=6.9.0
   - ipykernel
 
 prefix: /opt/miniconda3/envs/zppy_dev
