@@ -9,7 +9,7 @@ def test_last_year():
     assert os.system("zppy -c tests/integration/test_last_year.cfg --last-year 12") == 0
     # Remove files that are not deterministic:
     assert os.system("rm test_last_year_output/post/scripts/*.settings") == 0
-    assert os.system("rm test_last_year_output/post/scripts/provenance*") == 0
+    assert os.system("rm -rf test_last_year_output/post/scripts/provenance*") == 0
     actual_files = sorted(os.listdir("test_last_year_output/post/scripts"))
     expected_files = [
         "climo_atm_monthly_180x360_aave_0001-0010.bash",
