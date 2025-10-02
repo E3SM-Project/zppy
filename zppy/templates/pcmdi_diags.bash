@@ -30,9 +30,10 @@ case="{{ case }}"
 www="{{ www }}"
 run_type="{{ run_type }}"
 results_dir="{{ run_type }}"
+
 {% if current_set != "synthetic_plots" %}
 
-# Input variables
+# Input time range 
 y1={{ year1 }}
 y2={{ year2 }}
 ref_y1={{ ref_year1 }}
@@ -85,6 +86,16 @@ else
       fi
    fi
 fi
+
+{% if current_set == "mean_climate"%}
+source_vars="{{ clim_vars }}"
+{% elif current_set == "variability_modes_cpl"%}
+source_vars="{{ movc_vars }}"
+{% elif current_set == "variability_modes_atm"%}
+source_vars="{{ mova_vars }}"
+{% elif current_set == "enso"%}
+source_vars="{{ enso_vars }}"
+{% endif %}
 
 {% endif %}
 
@@ -294,8 +305,8 @@ create_links_ts() {
 
   local script_dir="{{ scriptDir }}"
   local prefix="{{ prefix }}"
-  local vars="{{ vars }}"
   local ts_step="{{ ts_num_years }}"
+  local vars="${source_vars}"
 
   echo "create_links_ts: linking from ${ts_dir_source} to ${ts_dir_destination}"
 
@@ -499,7 +510,7 @@ echo "Linking observational data into ${obstmp_dir}..."
 ###################
 echo "Linking observational data using SLURM..."
 
-command="zi-pcmdi-link-observation --model_name_ref ${model_name_ref} --tableID_ref ${tableID_ref} --vars={{ vars }} --obs_sets {{ obs_sets }} --obs_ts {{ obs_ts }} --obstmp_dir ${obstmp_dir}"
+command="zi-pcmdi-link-observation --model_name_ref ${model_name_ref} --tableID_ref ${tableID_ref} --vars=${source_vars} --obs_sets {{ obs_sets }} --obs_ts {{ obs_ts }} --obstmp_dir ${obstmp_dir}"
 echo "Running: ${command}"
 
 {{ environment_commands_secondary }}
@@ -704,7 +715,11 @@ seasons = '{{ seasons }}'.split(",")
 frequency = '{{ frequency }}'
 
 # Variables to analyze (comma-separated string or space-separated)
-varModel = '{{ vars }}'
+{% if current_set == "variability_modes_cpl"%}
+varModel = '{{ movc_vars }}'
+{% elif current_set == "variability_modes_atm"%}
+varModel = '{{ mova_vars }}'
+{% endif %}
 
 # Unit conversion flags for model and observations
 ModUnitsAdjust = {{ ModUnitsAdjust }}
@@ -825,7 +840,7 @@ source_dirs="--climo_ts_dir_primary ${ts_dir_primary} --climo_ts_dir_ref ${ts_di
 # So, it's a good idea to make sure they can't be (or at least are unlikely to be) empty.
 # run_type == "model_vs_obs" only: obs_sets (default value is NOT "")
 # run_type == "model_vs_model" only: model_name_ref, tableID_ref (default values are NOT "")
-core_parameters="--num_workers {{ num_workers }} --multiprocessing {{ multiprocessing }} --subsection {{ subsection }} ${source_dirs} --model_name ${model_name} --model_tableID {{model_tableID }} --figure_format {{ figure_format }}  --run_type {{ run_type }} --obs_sets {{ obs_sets }} --model_name_ref ${model_name_ref} --vars {{ vars }} --tableID_ref ${tableID_ref} --generate_sftlf {{ generate_sftlf }} --case_id ${case_id} --results_dir ${results_dir}"
+core_parameters="--num_workers {{ num_workers }} --multiprocessing {{ multiprocessing }} --subsection {{ subsection }} ${source_dirs} --model_name ${model_name} --model_tableID {{model_tableID }} --figure_format {{ figure_format }}  --run_type {{ run_type }} --obs_sets {{ obs_sets }} --model_name_ref ${model_name_ref} --vars ${source_vars} --tableID_ref ${tableID_ref} --generate_sftlf {{ generate_sftlf }} --case_id ${case_id} --results_dir ${results_dir}"
 {% endif %}
 
 {% if current_set == "mean_climate" %}
