@@ -31,7 +31,7 @@ Bumping the Version
 
     ::
 
-        git fetch upstream main 
+        git fetch upstream main
         # Prepend "v" to <version>
         # For release candidates, append "rc" to <version>
         git checkout -b v<version> upstream/main
@@ -46,8 +46,8 @@ Bumping the Version
 
         :: Bumping from 1.0.0 to 1.1.0
         => Would patch these files
-        - setup.py:26 version="1.0.0",
-        + setup.py:26 version="1.1.0",
+        - pyproject.toml: version = "1.0.0"
+        + pyproject.toml: version = "1.1.0"
         - zppy/__init__.py:1 __version__ = "v1.0.0"
         + zppy/__init__.py:1 __version__ = "v1.1.0"
         - conda/meta.yaml:2 {% set version = "1.0.0" %}
