@@ -27,7 +27,7 @@ setup(
     author="Ryan Forsyth, Chris Golaz",
     author_email="forsyth2@llnl.gov, golaz1@llnl.gov",
     description="Post-processing software for E3SM",
-    python_requires=">=3.9",
+    python_requires=">=3.11,<3.14",
     packages=find_packages(include=["zppy", "zppy.*"]),
     package_data={"": data_files},
     entry_points={"console_scripts": ["zppy=zppy.__main__:main"]},
