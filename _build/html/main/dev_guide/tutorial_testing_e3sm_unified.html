@@ -1,21 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Testing zppy for E3SM Unified release &mdash; zppy  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -30,11 +30,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> zppy
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            zppy
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -101,9 +105,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Developer Guide</a> &raquo;</li>
-      <li>Testing zppy for E3SM Unified release</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Developer Guide</a></li>
+      <li class="breadcrumb-item active">Testing zppy for E3SM Unified release</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/dev_guide/tutorial_testing_e3sm_unified.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -113,8 +117,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="testing-zppy-for-e3sm-unified-release">
-<span id="testing-e3sm-unified"></span><h1>Testing zppy for E3SM Unified release<a class="headerlink" href="#testing-zppy-for-e3sm-unified-release" title="Permalink to this heading"></a></h1>
+  <section id="testing-zppy-for-e3sm-unified-release">
+<span id="testing-e3sm-unified"></span><h1>Testing zppy for E3SM Unified release<a class="headerlink" href="#testing-zppy-for-e3sm-unified-release" title="Link to this heading"></a></h1>
 <p>This tutorial covers testing <code class="docutils literal notranslate"><span class="pre">zppy</span></code> for an E3SM Unified release.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -123,8 +127,8 @@ They may be outdated because of more recent changes.
 For example, <code class="docutils literal notranslate"><span class="pre">/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/</span></code>
 has replaced <code class="docutils literal notranslate"><span class="pre">/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/</span></code>.</p>
 </div>
-<div class="section" id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h2>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
 <p>Only a few parameters in the configuration file need to change for different machines.
 Be sure to change the file paths to fit your own workspaces.</p>
 <div class="admonition warning">
@@ -188,9 +192,9 @@ here:</p>
 <li><p>&lt;ZSTASH_OUTPUT_DIR&gt;: /global/cscratch1/sd/forsyth/e3sm_unified_test_zstash</p></li>
 <li><p>&lt;ZSTASH_CACHE_DIR&gt;: /global/cscratch1/sd/forsyth/e3sm_unified_test_zstash/unified_test_cache</p></li>
 </ul>
-</div>
-<div class="section" id="testing-zppy-on-a-small-simulation">
-<h2>Testing zppy on a small simulation<a class="headerlink" href="#testing-zppy-on-a-small-simulation" title="Permalink to this heading"></a></h2>
+</section>
+<section id="testing-zppy-on-a-small-simulation">
+<h2>Testing zppy on a small simulation<a class="headerlink" href="#testing-zppy-on-a-small-simulation" title="Link to this heading"></a></h2>
 <p>1. Find a simulation to test on. In this example, we’ll use a simulation on Chrysalis:
 <code class="docutils literal notranslate"><span class="pre">/lcrc/group/e3sm/ac.golaz/E3SM_simulations/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis/</span></code>.</p>
 <p>2. The simulation might be too large to reasonably test on. We can copy over a
@@ -357,9 +361,9 @@ If that command fails, return to step 3.</p>
 </ol>
 <p>7. Output can be viewed at the web link corresponding to <code class="docutils literal notranslate"><span class="pre">&lt;WWW&gt;</span></code> in the configuration
 file (i.e., <code class="docutils literal notranslate"><span class="pre">&lt;HTML&gt;</span></code> defined in “Parameters” above).</p>
-</div>
-<div class="section" id="archive-simulation-using-zstash">
-<h2>Archive simulation using zstash<a class="headerlink" href="#archive-simulation-using-zstash" title="Permalink to this heading"></a></h2>
+</section>
+<section id="archive-simulation-using-zstash">
+<h2>Archive simulation using zstash<a class="headerlink" href="#archive-simulation-using-zstash" title="Link to this heading"></a></h2>
 <ol class="arabic">
 <li><dl>
 <dt>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_create.bash</span></code> to run <code class="docutils literal notranslate"><span class="pre">zstash</span></code>.</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
@@ -379,15 +383,15 @@ file (i.e., <code class="docutils literal notranslate"><span class="pre">&lt;HTM
 </li>
 <li><p>Run with <code class="docutils literal notranslate"><span class="pre">sbatch</span> <span class="pre">zstash_create.bash</span></code>. This example takes about 2.5 hours to run.</p></li>
 </ol>
-</div>
-<div class="section" id="transfer-simulation-to-other-machines">
-<h2>Transfer simulation to other machines<a class="headerlink" href="#transfer-simulation-to-other-machines" title="Permalink to this heading"></a></h2>
+</section>
+<section id="transfer-simulation-to-other-machines">
+<h2>Transfer simulation to other machines<a class="headerlink" href="#transfer-simulation-to-other-machines" title="Link to this heading"></a></h2>
 <p>We can follow an adapted version of the steps at
 <a class="reference external" href="https://e3sm-project.github.io/zstash/_build/html/master/best_practices.html#transfer-to-nersc-hpss">https://e3sm-project.github.io/zstash/_build/html/master/best_practices.html#transfer-to-nersc-hpss</a>
 to transfer the data.</p>
 <p>Login to Globus: <a class="reference external" href="https://www.globus.org/">https://www.globus.org/</a> (using NERSC credentials)</p>
-<div class="section" id="transfer-to-cori">
-<h3>Transfer to Cori<a class="headerlink" href="#transfer-to-cori" title="Permalink to this heading"></a></h3>
+<section id="transfer-to-cori">
+<h3>Transfer to Cori<a class="headerlink" href="#transfer-to-cori" title="Link to this heading"></a></h3>
 <ol class="arabic simple">
 <li><p>On the left sidebar, choose “ENDPOINTS”.</p></li>
 <li><p>Search for “NERSC DTN”. Click on Green power button to activate endpoint.</p></li>
@@ -414,9 +418,9 @@ in the “Path” box.</p>
 <li><p>For “Label This Transfer”, put something like “zstash archive LCRC to NERSC”.</p></li>
 <li><p>On the left side, click “Start &gt;”. This will start the transfer from LCRC to NERSC.</p></li>
 </ol>
-</div>
-<div class="section" id="transfer-to-compy">
-<h3>Transfer to Compy<a class="headerlink" href="#transfer-to-compy" title="Permalink to this heading"></a></h3>
+</section>
+<section id="transfer-to-compy">
+<h3>Transfer to Compy<a class="headerlink" href="#transfer-to-compy" title="Link to this heading"></a></h3>
 <ol class="arabic simple">
 <li><p>On the left sidebar, choose “ENDPOINTS”.</p></li>
 </ol>
@@ -445,12 +449,12 @@ This path needs to already exist.</p>
 <li><p>For “Label This Transfer”, put something like “zstash archive LCRC to Compy”.</p></li>
 <li><p>On the left side, click “Start &gt;”. This will start the transfer from LCRC to Compy.</p></li>
 </ol>
-</div>
-</div>
-<div class="section" id="check-transfers-were-successful">
-<h2>Check transfers were successful<a class="headerlink" href="#check-transfers-were-successful" title="Permalink to this heading"></a></h2>
-<div class="section" id="cori">
-<h3>Cori<a class="headerlink" href="#cori" title="Permalink to this heading"></a></h3>
+</section>
+</section>
+<section id="check-transfers-were-successful">
+<h2>Check transfers were successful<a class="headerlink" href="#check-transfers-were-successful" title="Link to this heading"></a></h2>
+<section id="cori">
+<h3>Cori<a class="headerlink" href="#cori" title="Link to this heading"></a></h3>
 <ol class="arabic">
 <li><p>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_check.bash</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
@@ -469,9 +473,9 @@ This path needs to already exist.</p>
 </li>
 <li><p>Run <code class="docutils literal notranslate"><span class="pre">sbatch</span> <span class="pre">zstash_check.bash</span></code>. This takes about an hour to run.</p></li>
 </ol>
-</div>
-<div class="section" id="compy">
-<h3>Compy<a class="headerlink" href="#compy" title="Permalink to this heading"></a></h3>
+</section>
+<section id="compy">
+<h3>Compy<a class="headerlink" href="#compy" title="Link to this heading"></a></h3>
 <ol class="arabic">
 <li><p>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_check.bash</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
@@ -488,13 +492,13 @@ This path needs to already exist.</p>
 </li>
 <li><p>Run <code class="docutils literal notranslate"><span class="pre">sbatch</span> <span class="pre">zstash_check.bash</span></code>. This takes over 3 hours to run.</p></li>
 </ol>
-</div>
-</div>
-<div class="section" id="extract-the-data-from-the-archives">
-<h2>Extract the data from the archives<a class="headerlink" href="#extract-the-data-from-the-archives" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+<section id="extract-the-data-from-the-archives">
+<h2>Extract the data from the archives<a class="headerlink" href="#extract-the-data-from-the-archives" title="Link to this heading"></a></h2>
 <p>Use <code class="docutils literal notranslate"><span class="pre">zstash</span> <span class="pre">extract</span></code>.</p>
-<div class="section" id="id1">
-<h3>Cori<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<section id="id1">
+<h3>Cori<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
 <ol class="arabic">
 <li><p><code class="docutils literal notranslate"><span class="pre">mkdir</span> <span class="pre">unified_test_extraction</span></code>.</p></li>
 <li><p>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_extract.bash</span></code>:</p>
@@ -515,9 +519,9 @@ This path needs to already exist.</p>
 </li>
 <li><p>Run <code class="docutils literal notranslate"><span class="pre">sbatch</span> <span class="pre">zstash_extract.bash</span></code>.</p></li>
 </ol>
-</div>
-<div class="section" id="id2">
-<h3>Compy<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+</section>
+<section id="id2">
+<h3>Compy<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
 <ol class="arabic">
 <li><p><code class="docutils literal notranslate"><span class="pre">mkdir</span> <span class="pre">unified_test_extraction</span></code>.</p></li>
 <li><p>Create a batch script <code class="docutils literal notranslate"><span class="pre">zstash_extract.bash</span></code>:</p>
@@ -536,22 +540,22 @@ This path needs to already exist.</p>
 </li>
 <li><p>Run <code class="docutils literal notranslate"><span class="pre">sbatch</span> <span class="pre">zstash_extract.bash</span></code>.</p></li>
 </ol>
-</div>
-</div>
-<div class="section" id="testing-zppy-on-other-machines">
-<h2>Testing zppy on other machines<a class="headerlink" href="#testing-zppy-on-other-machines" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+<section id="testing-zppy-on-other-machines">
+<h2>Testing zppy on other machines<a class="headerlink" href="#testing-zppy-on-other-machines" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">mv</span> <span class="pre">e3sm_unified_test_zstash/unified_test_extraction</span> <span class="pre">e3sm_unified_test_zppy/20210528.v2rc3e.piControl.ne30pg2_EC30to60E2r2.chrysalis</span></code>.</p>
 <p>Go through steps 3-7 of “Testing zppy on a small simulation” but for
 Cori (haswell) and Compy.</p>
-<div class="section" id="sample-configuration-files-for-compy-and-cori">
-<h3>Sample configuration files for Compy and Cori<a class="headerlink" href="#sample-configuration-files-for-compy-and-cori" title="Permalink to this heading"></a></h3>
+<section id="sample-configuration-files-for-compy-and-cori">
+<h3>Sample configuration files for Compy and Cori<a class="headerlink" href="#sample-configuration-files-for-compy-and-cori" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">&lt;OUTPUT&gt;/e3sm_unified_test_simulation.cfg</span></code>:
 Use the configuration file from “Testing zppy on a small simulation” step 4, updating
 the appropriate parameters for Compy or Cori.</p>
-</div>
-</div>
-<div class="section" id="run-unit-tests-and-integration-tests">
-<h2>Run unit tests and integration tests<a class="headerlink" href="#run-unit-tests-and-integration-tests" title="Permalink to this heading"></a></h2>
+</section>
+</section>
+<section id="run-unit-tests-and-integration-tests">
+<h2>Run unit tests and integration tests<a class="headerlink" href="#run-unit-tests-and-integration-tests" title="Link to this heading"></a></h2>
 <p>Run the unit tests and integration tests on Chrysalis:</p>
 <p><code class="docutils literal notranslate"><span class="pre">cd</span></code> into your clone of the <code class="docutils literal notranslate"><span class="pre">zppy</span></code> repo. Then:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">checkout</span> <span class="n">main</span> <span class="c1"># if not already on the `main` branch</span>
@@ -562,8 +566,8 @@ the appropriate parameters for Compy or Cori.</p>
 <span class="n">pytest</span> <span class="n">tests</span><span class="o">/</span><span class="n">integration</span><span class="o">/</span><span class="n">test_</span><span class="o">*.</span><span class="n">py</span> <span class="c1"># Run integration tests</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

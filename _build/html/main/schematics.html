@@ -1,21 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>A schematic view of zppy &mdash; zppy  documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -30,11 +30,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> zppy
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            zppy
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -65,8 +69,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>A schematic view of zppy</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">A schematic view of zppy</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/schematics.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -76,8 +80,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="a-schematic-view-of-zppy">
-<h1>A schematic view of zppy<a class="headerlink" href="#a-schematic-view-of-zppy" title="Permalink to this heading"></a></h1>
+  <section id="a-schematic-view-of-zppy">
+<h1>A schematic view of zppy<a class="headerlink" href="#a-schematic-view-of-zppy" title="Link to this heading"></a></h1>
 <p>The following example provides a schematic view of how <code class="docutils literal notranslate"><span class="pre">zppy</span></code> functions.
 For this example, assume a researcher has 200 years of simulation data.
 Figure 1 displays some of the tasks they might configure zppy to run:</p>
@@ -111,16 +115,18 @@ The plots for years 1-50 require the the monthly time-series for years 1-10, 11-
 The plots for years 51-100 have similar requirements – however the graph calls
 attention to the fact that MPAS-Analysis for years 51-100 itself depends on
 MPAS-Analysis for years 1-50.</p>
-<a class="reference internal image-reference" href="_images/zppy_jobs.png"><img alt="_images/zppy_jobs.png" src="_images/zppy_jobs.png" style="width: 1792.0px; height: 1792.0px;" /></a>
+<a class="reference internal image-reference" href="_images/zppy_jobs.png"><img alt="_images/zppy_jobs.png" src="_images/zppy_jobs.png" style="width: 1792.0px; height: 1792.0px;" />
+</a>
 <p>Figure 1.  Illustration of how zppy uses sections of the configuration file and
 bash/Jinja2 templates to launch various jobs.
 climo stands for climatology and ts stands for time series.
 Note that the configuration file is abridged – see the <a class="reference internal" href="tutorial.html#tutorial"><span class="std std-ref">zppy tutorial</span></a>
 for more complete examples.</p>
-<a class="reference internal image-reference" href="_images/zppy_dependencies.png"><img alt="_images/zppy_dependencies.png" src="_images/zppy_dependencies.png" style="width: 1792.0px; height: 1792.0px;" /></a>
+<a class="reference internal image-reference" href="_images/zppy_dependencies.png"><img alt="_images/zppy_dependencies.png" src="_images/zppy_dependencies.png" style="width: 1792.0px; height: 1792.0px;" />
+</a>
 <p>Figure 2. Two possible job dependency graphs.
 climo stands for climatology and ts stands for time series.</p>
-</div>
+</section>
 
 
            </div>

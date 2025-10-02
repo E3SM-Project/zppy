@@ -1,21 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Parameters &mdash; zppy  documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -30,11 +30,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> zppy
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            zppy
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -70,8 +74,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Parameters</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Parameters</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/parameters.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -81,8 +85,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="parameters">
-<span id="id1"></span><h1>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading"></a></h1>
+  <section id="parameters">
+<span id="id1"></span><h1>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h1>
 <p>Parameters make use of inheritance. Parameters set in <code class="docutils literal notranslate"><span class="pre">[default]</span></code> can
 be overridden by parameters set in a <code class="docutils literal notranslate"><span class="pre">[section]</span></code>, which can themselves
 be overridden by parameters set in a <code class="docutils literal notranslate"><span class="pre">[[subsection]</span></code>.</p>
@@ -94,8 +98,8 @@ be overridden by parameters set in a <code class="docutils literal notranslate">
 on GitHub for a complete list of parameters and their default values.
 You can also view the most up-to-date,
 <a class="reference external" href="https://github.com/E3SM-Project/zppy/blob/main/zppy/templates/default.ini">unreleased parameter defaults</a>.</p>
-<div class="section" id="deprecated-parameters">
-<h2>Deprecated parameters<a class="headerlink" href="#deprecated-parameters" title="Permalink to this heading"></a></h2>
+<section id="deprecated-parameters">
+<h2>Deprecated parameters<a class="headerlink" href="#deprecated-parameters" title="Link to this heading"></a></h2>
 <dl>
 <dt>The following parameters no longer perform any function:</dt><dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;e3sm_to_cmip_environment_commands&quot;</span>
 <span class="s2">&quot;ts_fmt&quot;</span>
@@ -106,9 +110,9 @@ You can also view the most up-to-date,
 </div>
 </dd>
 </dl>
-</div>
-<div class="section" id="parameter-checking-inferring-for-users">
-<h2>Parameter checking &amp; inferring – for users<a class="headerlink" href="#parameter-checking-inferring-for-users" title="Permalink to this heading"></a></h2>
+</section>
+<section id="parameter-checking-inferring-for-users">
+<h2>Parameter checking &amp; inferring – for users<a class="headerlink" href="#parameter-checking-inferring-for-users" title="Link to this heading"></a></h2>
 <p>There are two types of inferences, each with their own parameter in <code class="docutils literal notranslate"><span class="pre">default.ini</span></code>:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">infer_path_parameters</span></code>: infer paths that are not explicitly provided in the configuraiton file. Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
@@ -141,9 +145,9 @@ You can also view the most up-to-date,
 </ul>
 <p><strong>Required parameters, by e3sm_diags set</strong></p>
 <p>See <a class="reference external" href="https://acme-climate.atlassian.net/wiki/spaces/IPD/pages/4984209586/zppy+parameters+for+e3sm_diags">Confluence</a> for tables of which sets require which parameters.</p>
-</div>
-<div class="section" id="parameter-checking-inferring-for-developers">
-<h2>Parameter checking &amp; inferring – for developers<a class="headerlink" href="#parameter-checking-inferring-for-developers" title="Permalink to this heading"></a></h2>
+</section>
+<section id="parameter-checking-inferring-for-developers">
+<h2>Parameter checking &amp; inferring – for developers<a class="headerlink" href="#parameter-checking-inferring-for-developers" title="Link to this heading"></a></h2>
 <p>There are many parameter-handling functions.</p>
 <p>In <code class="docutils literal notranslate"><span class="pre">utils.py</span></code>:</p>
 <ul class="simple">
@@ -159,8 +163,8 @@ You can also view the most up-to-date,
 <li><p><code class="docutils literal notranslate"><span class="pre">check_and_define_parameters</span></code>: make sure all parameters are defined, using <code class="docutils literal notranslate"><span class="pre">utils.py</span> <span class="pre">get_value_from_parameter</span></code>, <code class="docutils literal notranslate"><span class="pre">utils.py</span> <span class="pre">set_value_of_parameter_if_undefined</span></code>,  and <code class="docutils literal notranslate"><span class="pre">check_mvm_only_parameters_for_bash</span></code>.</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">check_parameters_for_bash</span></code> can be run immediately for each subtask because it has very few conditions. Other checks are included in <code class="docutils literal notranslate"><span class="pre">check_and_define_parameters</span></code> later on in the code.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

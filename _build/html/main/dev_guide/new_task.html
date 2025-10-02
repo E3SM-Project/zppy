@@ -1,21 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Adding a new task &mdash; zppy  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -30,11 +30,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> zppy
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            zppy
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -85,9 +89,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Developer Guide</a> &raquo;</li>
-      <li>Adding a new task</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Developer Guide</a></li>
+      <li class="breadcrumb-item active">Adding a new task</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/dev_guide/new_task.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -97,10 +101,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="adding-a-new-task">
-<h1>Adding a new task<a class="headerlink" href="#adding-a-new-task" title="Permalink to this heading"></a></h1>
-<div class="section" id="the-task-s-bash-file">
-<h2>The task’s bash file<a class="headerlink" href="#the-task-s-bash-file" title="Permalink to this heading"></a></h2>
+  <section id="adding-a-new-task">
+<h1>Adding a new task<a class="headerlink" href="#adding-a-new-task" title="Link to this heading"></a></h1>
+<section id="the-task-s-bash-file">
+<h2>The task’s bash file<a class="headerlink" href="#the-task-s-bash-file" title="Link to this heading"></a></h2>
 <p>Create <code class="docutils literal notranslate"><span class="pre">zppy/templates/&lt;task-name&gt;.bash</span></code>.
 This is where the bulk of the work required for a task will be.
 Most of the file is task-specific, so it is difficult to describe precise steps.
@@ -149,9 +153,9 @@ exit 0
 </ol>
 <p>Another possible source is <code class="docutils literal notranslate"><span class="pre">zppy/&lt;task-name&gt;.py</span></code>
 (in the form of <code class="docutils literal notranslate"><span class="pre">c[&quot;&lt;variable-name&gt;&quot;]</span></code> where <code class="docutils literal notranslate"><span class="pre">c</span></code> is defined in <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">c</span> <span class="pre">in</span> <span class="pre">tasks</span></code>).</p>
-</div>
-<div class="section" id="the-task-s-python-file">
-<h2>The task’s Python file<a class="headerlink" href="#the-task-s-python-file" title="Permalink to this heading"></a></h2>
+</section>
+<section id="the-task-s-python-file">
+<h2>The task’s Python file<a class="headerlink" href="#the-task-s-python-file" title="Link to this heading"></a></h2>
 <p>Create <code class="docutils literal notranslate"><span class="pre">zppy/&lt;task-name&gt;.py</span></code>. The basic outline of the file should be similar to the
 below example, adapted from <code class="docutils literal notranslate"><span class="pre">zppy/e3sm_diags.py</span></code>.</p>
 <blockquote>
@@ -235,9 +239,9 @@ below example, adapted from <code class="docutils literal notranslate"><span cla
 </pre></div>
 </div>
 </div></blockquote>
-</div>
-<div class="section" id="the-main-file">
-<h2>The main file<a class="headerlink" href="#the-main-file" title="Permalink to this heading"></a></h2>
+</section>
+<section id="the-main-file">
+<h2>The main file<a class="headerlink" href="#the-main-file" title="Link to this heading"></a></h2>
 <p>Add the task to <code class="docutils literal notranslate"><span class="pre">zppy/__main__.py</span></code>:</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="o">&lt;</span><span class="n">task_name</span><span class="o">&gt;</span> <span class="kn">import</span><span class="w"> </span><span class="o">&lt;</span><span class="n">task_name</span><span class="o">&gt;</span>
@@ -248,9 +252,9 @@ below example, adapted from <code class="docutils literal notranslate"><span cla
 </pre></div>
 </div>
 </div></blockquote>
-</div>
-<div class="section" id="update-defaults">
-<h2>Update defaults<a class="headerlink" href="#update-defaults" title="Permalink to this heading"></a></h2>
+</section>
+<section id="update-defaults">
+<h2>Update defaults<a class="headerlink" href="#update-defaults" title="Link to this heading"></a></h2>
 <p>Add default values for parameters in <code class="docutils literal notranslate"><span class="pre">zppy/templates/default.ini</span></code>.</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">&lt;</span><span class="n">task</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span><span class="p">]</span>
@@ -261,9 +265,9 @@ below example, adapted from <code class="docutils literal notranslate"><span cla
 </pre></div>
 </div>
 </div></blockquote>
-</div>
-<div class="section" id="update-the-tutorial">
-<h2>Update the tutorial<a class="headerlink" href="#update-the-tutorial" title="Permalink to this heading"></a></h2>
+</section>
+<section id="update-the-tutorial">
+<h2>Update the tutorial<a class="headerlink" href="#update-the-tutorial" title="Link to this heading"></a></h2>
 <p>Add example values for parameters in <code class="docutils literal notranslate"><span class="pre">docs/source/post.mysimulation.cfg</span></code>.</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span> <span class="o">&lt;</span><span class="n">task</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span> <span class="p">]</span>
@@ -274,20 +278,20 @@ below example, adapted from <code class="docutils literal notranslate"><span cla
 </pre></div>
 </div>
 </div></blockquote>
-</div>
-<div class="section" id="explain-new-parameters">
-<h2>Explain new parameters<a class="headerlink" href="#explain-new-parameters" title="Permalink to this heading"></a></h2>
+</section>
+<section id="explain-new-parameters">
+<h2>Explain new parameters<a class="headerlink" href="#explain-new-parameters" title="Link to this heading"></a></h2>
 <p>In <code class="docutils literal notranslate"><span class="pre">docs/source/parameters.rst</span></code></p>
 <p>Copy defaults from <code class="docutils literal notranslate"><span class="pre">zppy/templates/default.ini</span></code> and add a comment line
 above each explaining the parameter.</p>
-</div>
-<div class="section" id="update-the-tests">
-<h2>Update the tests<a class="headerlink" href="#update-the-tests" title="Permalink to this heading"></a></h2>
+</section>
+<section id="update-the-tests">
+<h2>Update the tests<a class="headerlink" href="#update-the-tests" title="Link to this heading"></a></h2>
 <p>In <code class="docutils literal notranslate"><span class="pre">tests/integration/test_*.cfg</span></code></p>
 <p>Copy example values from <code class="docutils literal notranslate"><span class="pre">docs/source/post.mysimulation.cfg</span></code>.
 The expected files will have to be updated as well.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
