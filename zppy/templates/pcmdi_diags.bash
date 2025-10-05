@@ -844,13 +844,13 @@ core_parameters="--num_workers {{ num_workers }} --multiprocessing {{ multiproce
 {% endif %}
 
 {% if current_set == "mean_climate" %}
-command="zi-pcmdi-mean-climate ${core_parameters} --regions {{ regions }}"
+command="zi-pcmdi-mean-climate ${core_parameters} --regions {{ clim_regions }}"
 {% endif %}
 {% if current_set in ["variability_modes_cpl", "variability_modes_atm"] %}
 {% if current_set == "variability_modes_atm" %}
-var_modes={{ atm_modes }}
+var_modes={{ mova_modes }}
 {% elif current_set == "variability_modes_cpl" %}
-var_modes={{ cpl_modes }}
+var_modes={{ movc_modes }}
 {% endif %}
 command="zi-pcmdi-variability-modes ${core_parameters} --var_modes ${var_modes}"
 {% endif %}
@@ -859,12 +859,35 @@ command="zi-pcmdi-enso ${core_parameters}  --enso_groups {{ enso_groups }}"
 {% endif %}
 {% if current_set == "synthetic_plots" %}
 
+#add command for mean climate viewer 
+clim_keys="--clim_viewer {{clim_viewer}} --cmip_clim_dir {{ cmip_clim_dir }} --cmip_clim_set {{ cmip_clim_set }} --clim_vars {{clim_vars}} --clim_years {{ clim_years }} --clim_regions {{ clim_regions }}"
+{% if clim_viewer %}
+echo "Checking if *.${case_id}.json files exist in clim_dir:"
+clim_dir=${web_dir}/model_vs_obs/metrics_data/mean_climate/
+find ${clim_dir} -name "*.${case_id}*.json"
+echo "Done checking. There should be a list of files above, if they exist."
+{% endif %}
+
+#add command for modes variability viewer 
+movs_keys="--mova_viewer {{mova_viewer}} --movc_viewer {{movc_viewer}} --cmip_movs_dir {{ cmip_movs_dir }} --cmip_movs_set {{ cmip_movs_set }} --mova_modes {{ mova_modes }} --mova_vars {{mova_vars}} --mova_years {{mova_years}} --movc_modes {{ movc_modes }} --movc_vars {{movc_vars}} --movc_years {{movc_years}}"
+{% if movc_viewer or mova_viewer %}
 echo "Checking if var_mode_*.json files exist in variability_modes_dir:"
 variability_modes_dir=${web_dir}/model_vs_obs/metrics_data/variability_modes/
-find ${variability_modes_dir} -name "var_mode_*.json"
+find ${variability_modes_dir} -name "var_mode_*${case_id}*.json"
 echo "Done checking. There should be a list of files above, if they exist."
+{% endif %}
 
-command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure_format {{ figure_format }} --www ${www} --results_dir ${results_dir} --case {{ case }} --model_name {{ model_name }} --model_tableID {{model_tableID }} --web_dir=${web_dir} --cmip_clim_dir {{ cmip_clim_dir }} --cmip_clim_set {{ cmip_clim_set }} --cmip_movs_dir {{ cmip_movs_dir }} --cmip_movs_set {{ cmip_movs_set }} --atm_modes {{ atm_modes }} --cpl_modes {{ cpl_modes }} --cmip_enso_dir {{ cmip_enso_dir }} --cmip_enso_set {{ cmip_enso_set }} --figure_sets {{ figure_sets }} --pcmdi_webtitle {{ pcmdi_webtitle }} --pcmdi_version {{ pcmdi_version }} --run_type ${run_type} --figure_sets_period {{ figure_sets_period }} --pcmdi_external_prefix {{ diagnostics_base_path }} --pcmdi_viewer_template {{ pcmdi_viewer_template }}"
+#add command for enso viewer 
+enso_keys="--enso_viewer {{enso_viewer}} --cmip_enso_dir {{ cmip_enso_dir }} --cmip_enso_set {{ cmip_enso_set }} --enso_vars {{enso_vars}} --enso_years {{enso_years}}"
+{% if enso_viewer %}
+echo "Checking if var_mode_*.json files exist in variability_modes_dir:"
+enso_dir=${web_dir}/model_vs_obs/metrics_data/enso_metric/*
+find ${enso_dir} -name "*.${case_id}*.json"
+echo "Done checking. There should be a list of files above, if they exist."
+{% endif %}
+
+command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure_format {{ figure_format }} --www ${www} --results_dir ${results_dir} --case {{ case }} --model_name {{ model_name }} --model_tableID {{model_tableID }} --web_dir=${web_dir} --pcmdi_webtitle {{ pcmdi_webtitle }} --pcmdi_version {{ pcmdi_version }} --run_type ${run_type} --pcmdi_external_prefix {{ diagnostics_base_path }} --pcmdi_viewer_template {{ pcmdi_viewer_template }} --save_all_data {{save_all_data}} ${clim_keys} ${movs_keys} ${enso_keys}"
+
 {% endif %}
 
 # Run diagnostics

@@ -73,8 +73,16 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
         year_sets: List[Tuple[int, int]]
         if c["current_set"] != "synthetic_plots":
             year_sets = get_years(c["ts_years"])
+        elif ("clim_years" in c.keys()) and (c["clim_years"] != ""):
+            year_sets =  get_years(c["clim_years"])
+        elif ("mova_years" in c.keys()) and (c["mova_years"] != ""):
+            year_sets =  get_years(c["mova_years"])
+        elif ("movc_years" in c.keys()) and (c["movc_years"] != ""):
+            year_sets =  get_years(c["movc_years"])
+        elif ("enso_years" in c.keys()) and (c["enso_years"] != ""):
+            year_sets =  get_years(c["enso_years"])
         else:
-            year_sets = get_years(c["figure_sets_period"].split(","))
+            year_sets = get_years(c["ts_years"])
 
         ref_year_sets: List[Tuple[int, int]]
         if ("ref_years" in c.keys()) and (c["ref_years"] != [""]):
@@ -90,10 +98,18 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
             c["ref_year1"] = rs[0]
             c["ref_year2"] = rs[1]
-
+            
             if c["current_set"] != "synthetic_plots":
                 check_and_define_parameters(c)
                 print(c["prefix"])
+                if c["current_set"] == "mean_climate":
+                    c["clim_years"] = f"{c['year1']}-{c['year2']}"
+                elif c["current_set"] == "variability_modes_cpl":
+                    c["movc_years"] = f"{c['year1']}-{c['year2']}"
+                elif c["current_set"] == "variability_modes_atm":
+                    c["mova_years"] = f"{c['year1']}-{c['year2']}"
+                elif c["current_set"] == "enso":
+                    c["enso_years"] = f"{c['year1']}-{c['year2']}"
             else:
                 prefix = f"pcmdi_diags_{c['sub']}_{c['run_type']}"
                 if i < len(year_sets) - 1:
@@ -103,7 +119,16 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
                 else:
                     print(prefix)
                 c["prefix"] = prefix
-
+                # assign period for set if empty
+                if c["clim_years"] == "":
+                    c["clim_years"] = f"{c['year1']}-{c['year2']}"
+                if c["mova_years"] == "":
+                    c["mova_years"] = f"{c['year1']}-{c['year2']}"
+                if c["movc_years"] == "":
+                    c["movc_years"] = f"{c['year1']}-{c['year2']}"
+                if c["enso_years"] == "":
+                    c["enso_years"] = f"{c['year1']}-{c['year2']}"
+    
             bash_file, settings_file, status_file = get_file_names(
                 script_dir, c["prefix"]
             )
@@ -223,7 +248,7 @@ def check_parameters_for_bash(c: Dict[str, Any]) -> None:
 def check_parameters_for_pcmdi(c: Dict[str, Any]) -> None:
     # check and set up the external data needed by pcmdi
     if c["current_set"] == "synthetic_plots":
-        if "enso_metric" in c["figure_sets"]:
+        if c["enso_viewer"]:
             set_value_of_parameter_if_undefined(
                 c,
                 "cmip_enso_dir",
@@ -232,7 +257,7 @@ def check_parameters_for_pcmdi(c: Dict[str, Any]) -> None:
             )
         else:
             c["cmip_enso_dir"] = "placeholder_dir"
-        if "mean_climate" in c["figure_sets"]:
+        if c["clim_viewer"]:
             set_value_of_parameter_if_undefined(
                 c,
                 "cmip_clim_dir",
@@ -241,7 +266,7 @@ def check_parameters_for_pcmdi(c: Dict[str, Any]) -> None:
             )
         else:
             c["cmip_clim_dir"] = "placeholder_dir"
-        if "variability_modes" in c["figure_sets"]:
+        if c["mova_viewer"] or c["movc_viewer"]:
             set_value_of_parameter_if_undefined(
                 c,
                 "cmip_movs_dir",
@@ -319,14 +344,15 @@ def add_pcmdi_dependencies(
         status_suffix = f"_{c['year1']:04d}-{c['year2']:04d}"
     elif c["run_type"] == "model_vs_model":
         status_suffix = f"_{c['year1']:04d}-{c['year2']:04d}_vs_{c['ref_year1']:04d}-{c['ref_year2']:04d}"
-    if "mean_climate" in c["figure_sets"]:
+    
+    if c["clim_viewer"]:
         status_file = os.path.join(
             script_dir,
             f"pcmdi_diags_mean_climate_{c['run_type']}{status_suffix}.status",
         )
         if os.path.exists(status_file) and (status_file not in dependencies):
             dependencies.append(status_file)
-    if "variability_modes" in c["figure_sets"]:
+    if c["movc_viewer"]:
         # cpl
         status_file = os.path.join(
             script_dir,
@@ -334,6 +360,7 @@ def add_pcmdi_dependencies(
         )
         if os.path.exists(status_file) and (status_file not in dependencies):
             dependencies.append(status_file)
+    if c["mova_viewer"]:
         # atm
         status_file = os.path.join(
             script_dir,
@@ -341,7 +368,7 @@ def add_pcmdi_dependencies(
         )
         if os.path.exists(status_file) and (status_file not in dependencies):
             dependencies.append(status_file)
-    if "enso_metric" in c["figure_sets"]:
+    if c["enso_viewer"]:
         status_file = os.path.join(
             script_dir, f"pcmdi_diags_enso_{c['run_type']}{status_suffix}.status"
         )
