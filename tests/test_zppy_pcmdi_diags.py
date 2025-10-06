@@ -163,6 +163,9 @@ def test_check_parameters_for_pcmdi():
         "cmip_enso_dir": "",
         "cmip_clim_dir": "",
         "cmip_movs_dir": "",
+        "enso_viewer": False,
+        "clim_viewer": True,
+        "mova_viewer": True,
         "diagnostics_base_path": "diags/post",
         "infer_path_parameters": True,
     }
@@ -197,6 +200,8 @@ def test_check_parameters_for_pcmdi():
         "cmip_enso_dir": "",
         "cmip_clim_dir": "",
         "cmip_movs_dir": "",
+        "enso_viewer": False,
+        "clim_viewer": True,
         "diagnostics_base_path": "diags/post",
         "infer_path_parameters": False,
     }
@@ -227,11 +232,14 @@ def test_check_parameters_for_pcmdi():
         "cmip_enso_dir": "",
         "cmip_clim_dir": "",
         "cmip_movs_dir": "",
+        "enso_viewer": False,
+        "clim_viewer": True,
+        "mova_viewer": True,
         "diagnostics_base_path": "diags/post",
         "infer_path_parameters": True,
     }
     check_parameters_for_pcmdi(c)
-    assert c["cmip_enso_dir"] == "diags/post/pcmdi_data/metrics_data/enso_metric"
+    assert c["cmip_enso_dir"] == "placeholder_dir"
 
     # Test when parameters are already defined
     c = {
@@ -240,6 +248,9 @@ def test_check_parameters_for_pcmdi():
         "cmip_enso_dir": "/custom/enso",
         "cmip_clim_dir": "/custom/clim",
         "cmip_movs_dir": "/custom/movs",
+        "enso_viewer": False,
+        "clim_viewer": True,
+        "mova_viewer": True,
         "diagnostics_base_path": "diags/post",
         "infer_path_parameters": True,
     }
@@ -359,6 +370,7 @@ def test_check_and_define_parameters():
         "reference_data_path": "/ref/path/post/analysis",
         "grid": "180x360_aave",
         "infer_path_parameters": True,
+        "clim_viewer": True,
     }
     check_and_define_parameters(c)
     assert (
@@ -434,6 +446,10 @@ def test_add_pcmdi_dependencies(mock_exists):
         "year1": 2000,
         "year2": 2010,
         "figure_sets": ["mean_climate", "variability_modes", "enso_metric"],
+        "clim_viewer": True,
+        "mova_viewer": True,
+        "movc_viewer": True,
+        "enso_viewer": False,
     }
     script_dir = "/scripts"
 
@@ -446,7 +462,6 @@ def test_add_pcmdi_dependencies(mock_exists):
         "/scripts/pcmdi_diags_mean_climate_model_vs_obs_2000-2010.status",
         "/scripts/pcmdi_diags_variability_modes_cpl_model_vs_obs_2000-2010.status",
         "/scripts/pcmdi_diags_variability_modes_atm_model_vs_obs_2000-2010.status",
-        "/scripts/pcmdi_diags_enso_model_vs_obs_2000-2010.status",
     ]
     assert set(dependencies) == set(expected_dependencies)
 
@@ -459,6 +474,10 @@ def test_add_pcmdi_dependencies(mock_exists):
         "ref_year1": 1850,
         "ref_year2": 1900,
         "figure_sets": ["mean_climate"],
+        "clim_viewer": True,
+        "enso_viewer": False,
+        "mova_viewer": False,
+        "movc_viewer": False,
     }
 
     add_pcmdi_dependencies(c, dependencies, script_dir)
@@ -474,6 +493,10 @@ def test_add_pcmdi_dependencies(mock_exists):
         "year1": 2000,
         "year2": 2010,
         "figure_sets": ["mean_climate"],
+        "clim_viewer": True,
+        "enso_viewer": False,
+        "mova_viewer": False,
+        "movc_viewer": False,
     }
     mock_exists.return_value = False
 
@@ -496,6 +519,10 @@ def test_add_pcmdi_dependencies(mock_exists):
         "year1": 2000,
         "year2": 2010,
         "figure_sets": ["mean_climate"],
+        "clim_viewer": True,
+        "enso_viewer": False,
+        "mova_viewer": False,
+        "movc_viewer": False,
     }
     mock_exists.return_value = True
 
