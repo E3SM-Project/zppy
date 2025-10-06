@@ -510,7 +510,7 @@ echo "Linking observational data into ${obstmp_dir}..."
 ###################
 echo "Linking observational data using SLURM..."
 
-command="zi-pcmdi-link-observation --model_name_ref ${model_name_ref} --tableID_ref ${tableID_ref} --vars=${source_vars} --obs_sets {{ obs_sets }} --obs_ts {{ obs_ts }} --obstmp_dir ${obstmp_dir}"
+command="zi-pcmdi-link-observation --model_name_ref ${model_name_ref} --tableID_ref ${tableID_ref} --vars=${source_vars} --obs_sets {{ obs_sets }} --obs_ts {{ obs_ts }} --obstmp_dir ${obstmp_dir} --debug ${debug,,}"
 echo "Running a zi-pcmdi command: ${command}"
 
 {{ environment_commands_secondary }}
@@ -840,7 +840,7 @@ source_dirs="--climo_ts_dir_primary ${ts_dir_primary} --climo_ts_dir_ref ${ts_di
 # So, it's a good idea to make sure they can't be (or at least are unlikely to be) empty.
 # run_type == "model_vs_obs" only: obs_sets (default value is NOT "")
 # run_type == "model_vs_model" only: model_name_ref, tableID_ref (default values are NOT "")
-core_parameters="--num_workers {{ num_workers }} --multiprocessing {{ multiprocessing }} --subsection {{ subsection }} ${source_dirs} --model_name ${model_name} --model_tableID {{model_tableID }} --figure_format {{ figure_format }}  --run_type {{ run_type }} --obs_sets {{ obs_sets }} --model_name_ref ${model_name_ref} --vars ${source_vars} --tableID_ref ${tableID_ref} --generate_sftlf {{ generate_sftlf }} --case_id ${case_id} --results_dir ${results_dir}"
+core_parameters="--num_workers {{ num_workers }} --multiprocessing {{ multiprocessing }} --subsection {{ subsection }} ${source_dirs} --model_name ${model_name} --model_tableID {{model_tableID }} --figure_format {{ figure_format }}  --run_type {{ run_type }} --obs_sets {{ obs_sets }} --model_name_ref ${model_name_ref} --vars ${source_vars} --tableID_ref ${tableID_ref} --generate_sftlf {{ generate_sftlf }} --case_id ${case_id} --results_dir ${results_dir} --debug ${debug,,}"
 {% endif %}
 
 {% if current_set == "mean_climate" %}
@@ -886,7 +886,7 @@ find ${enso_dir} -name "*.${case_id}*.json"
 echo "Done checking. There should be a list of files above, if they exist."
 {% endif %}
 
-command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure_format {{ figure_format }} --www ${www} --results_dir ${results_dir} --case {{ case }} --model_name {{ model_name }} --model_tableID {{model_tableID }} --web_dir=${web_dir} --pcmdi_webtitle {{ pcmdi_webtitle }} --pcmdi_version {{ pcmdi_version }} --run_type ${run_type} --pcmdi_external_prefix {{ diagnostics_base_path }} --pcmdi_viewer_template {{ pcmdi_viewer_template }} --save_all_data {{save_all_data}} ${clim_keys} ${movs_keys} ${enso_keys}"
+command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure_format {{ figure_format }} --www ${www} --results_dir ${results_dir} --case {{ case }} --model_name {{ model_name }} --model_tableID {{model_tableID }} --web_dir=${web_dir} --pcmdi_webtitle {{ pcmdi_webtitle }} --pcmdi_version {{ pcmdi_version }} --run_type ${run_type} --pcmdi_external_prefix {{ diagnostics_base_path }} --pcmdi_viewer_template {{ pcmdi_viewer_template }} --save_all_data {{save_all_data}} ${clim_keys} ${movs_keys} ${enso_keys} --debug ${debug,,}"
 
 {% endif %}
 
