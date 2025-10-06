@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 from unittest.mock import patch
 
 import pytest
@@ -11,6 +11,9 @@ from zppy.pcmdi_diags import (
     check_parameters_for_bash,
     check_parameters_for_pcmdi,
     define_current_set,
+    define_relevant_years,
+    define_relevant_years_for_synthetic_plots,
+    define_year_sets,
 )
 from zppy.utils import ParameterNotProvidedError
 
@@ -258,6 +261,49 @@ def test_check_parameters_for_pcmdi():
     assert c["cmip_clim_dir"] == "/custom/clim"  # Should not change
 
 
+def test_define_year_sets():
+    # Should use ts_years
+    c = {
+        "current_set": "mean_climate",
+        "ts_years": "2000:2010:5",
+    }
+    actual: List[Tuple[int, int]] = define_year_sets(c)
+    expected = [(2000, 2004), (2005, 2009)]
+    assert actual == expected
+
+    # Should use available year set
+    c = {
+        "current_set": "synthetic_plots",
+        "ts_years": "2000:2010:5",
+        "enso_years": "2001-2004",
+    }
+    actual = define_year_sets(c)
+    expected = [(2001, 2004)]
+    assert actual == expected
+
+    # Should use the first available year set
+    c = {
+        "current_set": "synthetic_plots",
+        "ts_years": "2000:2010:5",
+        "clim_years": "2001-2004",
+        "mova_years": "2002-2003",
+        "movc_years": "2003-2004",
+        "enso_years": "2004-2005",
+    }
+    actual = define_year_sets(c)
+    expected = [(2001, 2004)]
+    assert actual == expected
+
+    # Should default to ts_years
+    c = {
+        "current_set": "synthetic_plots",
+        "ts_years": "2000:2010:5",
+    }
+    actual = define_year_sets(c)
+    expected = [(2000, 2004), (2005, 2009)]
+    assert actual == expected
+
+
 def test_check_mvm_only_parameters_for_bash():
     # Test with all required parameters present
     c = {
@@ -403,6 +449,93 @@ def test_check_and_define_parameters():
     check_and_define_parameters(c)
     assert c["prefix"] == "pcmdi_diags_mean_climate_model_vs_obs_2000-2010"
     assert c["obs_ts"] == ""
+
+
+def test_define_relevant_years():
+    c = {
+        "current_set": "mean_climate",
+        "year1": 2000,
+        "year2": 2010,
+    }
+    define_relevant_years(c)
+    assert c["clim_years"] == "2000-2010"
+
+    c = {
+        "current_set": "variability_modes_cpl",
+        "year1": 1990,
+        "year2": 2000,
+    }
+    define_relevant_years(c)
+    assert c["movc_years"] == "1990-2000"
+
+    c = {
+        "current_set": "variability_modes_atm",
+        "year1": 1980,
+        "year2": 1990,
+    }
+    define_relevant_years(c)
+    assert c["mova_years"] == "1980-1990"
+
+    c = {
+        "current_set": "enso",
+        "year1": 1970,
+        "year2": 1980,
+    }
+    define_relevant_years(c)
+    assert c["enso_years"] == "1970-1980"
+
+    # Test synthetic_plots (should not set any years)
+    c = {
+        "current_set": "synthetic_plots",
+        "year1": 2000,
+        "year2": 2010,
+    }
+    with pytest.raises(ValueError):
+        define_relevant_years(c)
+
+
+def test_define_relevant_years_for_synthetic_plots():
+    c = {
+        "current_set": "synthetic_plots",
+        "year1": 2000,
+        "year2": 2010,
+        "clim_years": "",
+        "mova_years": "",
+        "movc_years": "",
+        "enso_years": "",
+    }
+    define_relevant_years_for_synthetic_plots(c)
+    assert c["clim_years"] == "2000-2010"
+    assert c["mova_years"] == "2000-2010"
+    assert c["movc_years"] == "2000-2010"
+    assert c["enso_years"] == "2000-2010"
+
+    c = {
+        "current_set": "synthetic_plots",
+        "year1": 1990,
+        "year2": 2000,
+        "clim_years": "1991-1995",
+        "mova_years": "",
+        "movc_years": "",
+        "enso_years": "",
+    }
+    define_relevant_years_for_synthetic_plots(c)
+    assert c["clim_years"] == "1991-1995"  # Should not change
+    assert c["mova_years"] == "1990-2000"
+    assert c["movc_years"] == "1990-2000"
+    assert c["enso_years"] == "1990-2000"
+
+    c = {
+        "current_set": "mean_climate",
+        "year1": 2000,
+        "year2": 2010,
+        "clim_years": "",
+        "mova_years": "",
+        "movc_years": "",
+        "enso_years": "",
+    }
+    with pytest.raises(ValueError):
+        define_relevant_years_for_synthetic_plots(c)
 
 
 def test_add_ts_dependencies():

@@ -39,8 +39,7 @@ BASE_PCMDI_SETS: Set[str] = set(
 
 
 # -----------------------------------------------------------------------------
-# C901 'pcmdi_diags' is too complex (29)
-def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):  # noqa: C901
+def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
     template, _ = initialize_template(config, "pcmdi_diags.bash")
 
@@ -71,19 +70,7 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):  # noqa: C9
         check_parameters_for_pcmdi(c)
 
         # Loop over year sets
-        year_sets: List[Tuple[int, int]]
-        if c["current_set"] != "synthetic_plots":
-            year_sets = get_years(c["ts_years"])
-        elif ("clim_years" in c.keys()) and (c["clim_years"] != ""):
-            year_sets = get_years(c["clim_years"])
-        elif ("mova_years" in c.keys()) and (c["mova_years"] != ""):
-            year_sets = get_years(c["mova_years"])
-        elif ("movc_years" in c.keys()) and (c["movc_years"] != ""):
-            year_sets = get_years(c["movc_years"])
-        elif ("enso_years" in c.keys()) and (c["enso_years"] != ""):
-            year_sets = get_years(c["enso_years"])
-        else:
-            year_sets = get_years(c["ts_years"])
+        year_sets: List[Tuple[int, int]] = define_year_sets(c)
 
         ref_year_sets: List[Tuple[int, int]]
         if ("ref_years" in c.keys()) and (c["ref_years"] != [""]):
@@ -103,14 +90,7 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):  # noqa: C9
             if c["current_set"] != "synthetic_plots":
                 check_and_define_parameters(c)
                 print(c["prefix"])
-                if c["current_set"] == "mean_climate":
-                    c["clim_years"] = f"{c['year1']}-{c['year2']}"
-                elif c["current_set"] == "variability_modes_cpl":
-                    c["movc_years"] = f"{c['year1']}-{c['year2']}"
-                elif c["current_set"] == "variability_modes_atm":
-                    c["mova_years"] = f"{c['year1']}-{c['year2']}"
-                elif c["current_set"] == "enso":
-                    c["enso_years"] = f"{c['year1']}-{c['year2']}"
+                define_relevant_years(c)
             else:
                 prefix = f"pcmdi_diags_{c['sub']}_{c['run_type']}"
                 if i < len(year_sets) - 1:
@@ -120,15 +100,7 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):  # noqa: C9
                 else:
                     print(prefix)
                 c["prefix"] = prefix
-                # assign period for set if empty
-                if c["clim_years"] == "":
-                    c["clim_years"] = f"{c['year1']}-{c['year2']}"
-                if c["mova_years"] == "":
-                    c["mova_years"] = f"{c['year1']}-{c['year2']}"
-                if c["movc_years"] == "":
-                    c["movc_years"] = f"{c['year1']}-{c['year2']}"
-                if c["enso_years"] == "":
-                    c["enso_years"] = f"{c['year1']}-{c['year2']}"
+                define_relevant_years_for_synthetic_plots(c)
 
             bash_file, settings_file, status_file = get_file_names(
                 script_dir, c["prefix"]
@@ -278,6 +250,24 @@ def check_parameters_for_pcmdi(c: Dict[str, Any]) -> None:
             c["cmip_movs_dir"] = "placeholder_dir"
 
 
+def define_year_sets(c: Dict[str, Any]) -> List[Tuple[int, int]]:
+    # Use ts_years unless we are in synthetic plots, in which case, use the appropriate set if defined
+    year_sets: List[Tuple[int, int]]
+    if c["current_set"] != "synthetic_plots":
+        year_sets = get_years(c["ts_years"])
+    elif ("clim_years" in c.keys()) and (c["clim_years"] != ""):
+        year_sets = get_years(c["clim_years"])
+    elif ("mova_years" in c.keys()) and (c["mova_years"] != ""):
+        year_sets = get_years(c["mova_years"])
+    elif ("movc_years" in c.keys()) and (c["movc_years"] != ""):
+        year_sets = get_years(c["movc_years"])
+    elif ("enso_years" in c.keys()) and (c["enso_years"] != ""):
+        year_sets = get_years(c["enso_years"])
+    else:
+        year_sets = get_years(c["ts_years"])
+    return year_sets
+
+
 def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
     check_parameter_defined(c, "reference_data_path_ts")
     check_parameter_defined(c, "model_name_ref")
@@ -318,6 +308,39 @@ def check_and_define_parameters(c: Dict[str, Any]) -> None:
     else:
         raise ValueError(f"Invalid run_type={c['run_type']}")
     c["prefix"] = prefix
+
+
+def define_relevant_years(c: Dict[str, Any]) -> None:
+    if c["current_set"] == "synthetic_plots":
+        raise ValueError(
+            "define_relevant_years should not be called for synthetic_plots."
+        )
+    year_str: str = f"{c['year1']}-{c['year2']}"
+    if c["current_set"] == "mean_climate":
+        c["clim_years"] = year_str
+    elif c["current_set"] == "variability_modes_cpl":
+        c["movc_years"] = year_str
+    elif c["current_set"] == "variability_modes_atm":
+        c["mova_years"] = year_str
+    elif c["current_set"] == "enso":
+        c["enso_years"] = year_str
+
+
+def define_relevant_years_for_synthetic_plots(c: Dict[str, Any]) -> None:
+    if c["current_set"] != "synthetic_plots":
+        raise ValueError(
+            "define_relevant_years_for_synthetic_plots should only be called for synthetic_plots."
+        )
+    # assign period for set if empty
+    year_str: str = f"{c['year1']}-{c['year2']}"
+    if c["clim_years"] == "":
+        c["clim_years"] = year_str
+    if c["mova_years"] == "":
+        c["mova_years"] = year_str
+    if c["movc_years"] == "":
+        c["movc_years"] = year_str
+    if c["enso_years"] == "":
+        c["enso_years"] = year_str
 
 
 def add_ts_dependencies(
