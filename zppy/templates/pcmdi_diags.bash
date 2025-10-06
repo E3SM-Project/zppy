@@ -33,7 +33,7 @@ results_dir="{{ run_type }}"
 
 {% if current_set != "synthetic_plots" %}
 
-# Input time range 
+# Input time range
 y1={{ year1 }}
 y2={{ year2 }}
 ref_y1={{ ref_year1 }}
@@ -859,7 +859,7 @@ command="zi-pcmdi-enso ${core_parameters}  --enso_groups {{ enso_groups }}"
 {% endif %}
 {% if current_set == "synthetic_plots" %}
 
-#add command for mean climate viewer 
+#add command for mean climate viewer
 clim_keys="--clim_viewer {{clim_viewer}} --cmip_clim_dir {{ cmip_clim_dir }} --cmip_clim_set {{ cmip_clim_set }} --clim_vars {{clim_vars}} --clim_years {{ clim_years }} --clim_regions {{ clim_regions }}"
 {% if clim_viewer %}
 echo "Checking if *.${case_id}.json files exist in clim_dir:"
@@ -868,7 +868,7 @@ find ${clim_dir} -name "*.${case_id}*.json"
 echo "Done checking. There should be a list of files above, if they exist."
 {% endif %}
 
-#add command for modes variability viewer 
+#add command for modes variability viewer
 movs_keys="--mova_viewer {{mova_viewer}} --movc_viewer {{movc_viewer}} --cmip_movs_dir {{ cmip_movs_dir }} --cmip_movs_set {{ cmip_movs_set }} --mova_modes {{ mova_modes }} --mova_vars {{mova_vars}} --mova_years {{mova_years}} --movc_modes {{ movc_modes }} --movc_vars {{movc_vars}} --movc_years {{movc_years}}"
 {% if movc_viewer or mova_viewer %}
 echo "Checking if var_mode_*.json files exist in variability_modes_dir:"
@@ -877,7 +877,7 @@ find ${variability_modes_dir} -name "var_mode_*${case_id}*.json"
 echo "Done checking. There should be a list of files above, if they exist."
 {% endif %}
 
-#add command for enso viewer 
+#add command for enso viewer
 enso_keys="--enso_viewer {{enso_viewer}} --cmip_enso_dir {{ cmip_enso_dir }} --cmip_enso_set {{ cmip_enso_set }} --enso_vars {{enso_vars}} --enso_years {{enso_years}}"
 {% if enso_viewer %}
 echo "Checking if var_mode_*.json files exist in variability_modes_dir:"

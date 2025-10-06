@@ -3,9 +3,10 @@ def remove_consecutive_duplicates(input_file_path):
     output_file_path = input_file_path + ".duplicates_removed"
     last_written_line = None
 
-    with open(input_file_path, "r", encoding="utf-8") as infile, open(
-        output_file_path, "w", encoding="utf-8"
-    ) as outfile:
+    with (
+        open(input_file_path, "r", encoding="utf-8") as infile,
+        open(output_file_path, "w", encoding="utf-8") as outfile,
+    ):
         for line in infile:
             if line != last_written_line:
                 outfile.write(line)

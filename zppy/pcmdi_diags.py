@@ -39,7 +39,8 @@ BASE_PCMDI_SETS: Set[str] = set(
 
 
 # -----------------------------------------------------------------------------
-def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
+# C901 'pcmdi_diags' is too complex (29)
+def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):  # noqa: C901
 
     template, _ = initialize_template(config, "pcmdi_diags.bash")
 
@@ -74,13 +75,13 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
         if c["current_set"] != "synthetic_plots":
             year_sets = get_years(c["ts_years"])
         elif ("clim_years" in c.keys()) and (c["clim_years"] != ""):
-            year_sets =  get_years(c["clim_years"])
+            year_sets = get_years(c["clim_years"])
         elif ("mova_years" in c.keys()) and (c["mova_years"] != ""):
-            year_sets =  get_years(c["mova_years"])
+            year_sets = get_years(c["mova_years"])
         elif ("movc_years" in c.keys()) and (c["movc_years"] != ""):
-            year_sets =  get_years(c["movc_years"])
+            year_sets = get_years(c["movc_years"])
         elif ("enso_years" in c.keys()) and (c["enso_years"] != ""):
-            year_sets =  get_years(c["enso_years"])
+            year_sets = get_years(c["enso_years"])
         else:
             year_sets = get_years(c["ts_years"])
 
@@ -98,7 +99,7 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
             c["ref_year1"] = rs[0]
             c["ref_year2"] = rs[1]
-            
+
             if c["current_set"] != "synthetic_plots":
                 check_and_define_parameters(c)
                 print(c["prefix"])
@@ -128,7 +129,7 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
                     c["movc_years"] = f"{c['year1']}-{c['year2']}"
                 if c["enso_years"] == "":
                     c["enso_years"] = f"{c['year1']}-{c['year2']}"
-    
+
             bash_file, settings_file, status_file = get_file_names(
                 script_dir, c["prefix"]
             )
@@ -344,7 +345,7 @@ def add_pcmdi_dependencies(
         status_suffix = f"_{c['year1']:04d}-{c['year2']:04d}"
     elif c["run_type"] == "model_vs_model":
         status_suffix = f"_{c['year1']:04d}-{c['year2']:04d}_vs_{c['ref_year1']:04d}-{c['ref_year2']:04d}"
-    
+
     if c["clim_viewer"]:
         status_file = os.path.join(
             script_dir,
