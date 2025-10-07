@@ -14,12 +14,6 @@ dest={{ output }}/post/{{ component }}/{{ ts_grid }}/ts/{{ frequency }}/{{ '%dyr
 
 tmp_dir=tmp_{{ prefix }}
 
-# Copy cmip_plevdata file
-# Alternatively, this could be placed in diagnostics_base_path and reached from there
-cat > cmip_plevdata.nc << EOF
-{% include cmip_plevdata %}
-EOF
-
 # Generate CMIP ts
 cat > default_metadata.json << EOF
 {% include cmip_metadata %}
@@ -42,7 +36,7 @@ EOF
     do
       if [ -f ${file} ]; then
         #ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev
-        ncremap -p mpi --vrt_ntp=log --vrt_xtr=mss_val --vrt_out='cmip_plevdata.nc' ${file} ${file}.plev
+        ncremap -p mpi --vrt_ntp=log --vrt_xtr=mss_val --vrt_out='{{cmip_plevdata}}' ${file} ${file}.plev
         #overwrite the model level data
 	mv ${file}.plev ${file}
       fi

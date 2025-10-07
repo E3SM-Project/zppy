@@ -38,6 +38,14 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
         set_component_and_prc_typ(c)
         check_parameters_for_bash(c)
         c["cmor_tables_prefix"] = c["diagnostics_base_path"]
+        if c["component"] == "atm":
+            default_cmip_plevdata = f"{c['diagnostics_base_path']}/vrt_remap_plev19.nc"
+            set_value_of_parameter_if_undefined(
+                c,
+                "cmip_plevdata",
+                default_cmip_plevdata,
+                ParameterInferenceType.PATH_INFERENCE,
+            )
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
         # Loop over year sets
         for s in year_sets:
