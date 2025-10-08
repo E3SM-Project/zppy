@@ -21,7 +21,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
     "tasks_to_run": [
         "pcmdi_diags",
     ],
-    "unique_id": "unique_id_test_20251007_3",
+    "unique_id": "unique_id_test_20251007_4",
 }
 
 # Multi-machine testing #########################################################
