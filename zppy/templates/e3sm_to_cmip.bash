@@ -19,7 +19,7 @@ cat > default_metadata.json << EOF
 {% include cmip_metadata %}
 EOF
 {
-  export cmortables_dir={{ cmor_tables_prefix }}/e3sm_to_cmip_data/cmip6-cmor-tables/Tables
+  export cmortables_dir={{ cmor_tables_prefix }}/cmip6-cmor-tables/Tables
   input_dir=${dest}/{{ '%04d' % (yr_start) }}_{{ '%04d' % (yr_end) }}
   mkdir -p $input_dir
 
@@ -27,11 +27,29 @@ EOF
   dest_cmip={{ output }}/post/{{ component }}/{{ ts_grid }}/cmip_ts/{{ frequency }}
   mkdir -p ${dest_cmip}
 
+  {% if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' -%}
+  #add code to do vertical interpolation variables at model levels before e3sm_to_cmip
+  IFS=',' read -ra mlvars <<< "{{ interp_vars }}"
+  for var in "${mlvars[@]}"
+  do
+    for file in ${input_dir}/${var}_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc
+    do
+      if [ -f ${file} ]; then
+        #ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev
+        ncremap -p mpi --vrt_ntp=log --vrt_xtr=mss_val --vrt_out='{{cmip_plevdata}}' ${file} ${file}.plev
+        #overwrite the model level data
+	mv ${file}.plev ${file}
+      fi
+    done
+  done
+  {% endif -%}
+
+  #call e3sm_to_cmip
   srun -N 1 e3sm_to_cmip \
   --output-path \
   ${dest_cmip}/${tmp_dir} \
   --var-list \
-  {{ cmip_vars }} \
+  '{{ cmip_vars }}' \
   --realm \
   {{ component }} \
   --input-path \

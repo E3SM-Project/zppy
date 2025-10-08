@@ -12,18 +12,16 @@ from mache import MachineInfo
 # pytest tests/integration/test_*.py
 
 TEST_SPECIFICS: Dict[str, Any] = {
-    "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
-    "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+    "diags_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
+    "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-diags-20251007-test1",
+    "pcmdi_diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-diags-20251007-test1",
     "cfgs_to_run": [
-        "weekly_bundles",
-        "weekly_comprehensive_v2",
         "weekly_comprehensive_v3",
-        "weekly_legacy_3.0.0_bundles",
-        "weekly_legacy_3.0.0_comprehensive_v2",
-        "weekly_legacy_3.0.0_comprehensive_v3",
     ],
-    "tasks_to_run": ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"],
-    "unique_id": "unique_id",
+    "tasks_to_run": [
+        "pcmdi_diags",
+    ],
+    "unique_id": "unique_id_test_20251007_4",
 }
 
 # Multi-machine testing #########################################################
@@ -132,6 +130,9 @@ def get_expansions():
     expansions["global_time_series_environment_commands"] = TEST_SPECIFICS[
         "global_time_series_environment_commands"
     ]
+    expansions["pcmdi_diags_environment_commands"] = TEST_SPECIFICS[
+        "pcmdi_diags_environment_commands"
+    ]
 
     # Activate requested tests
     expansions["active_e3sm_to_cmip"] = "False"
@@ -139,6 +140,7 @@ def get_expansions():
     expansions["active_mpas_analysis"] = "False"
     expansions["active_global_time_series"] = "False"
     expansions["active_ilamb"] = "False"
+    expansions["active_pcmdi_diags"] = "False"
     if "e3sm_diags" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_e3sm_diags"] = "True"
     if "mpas_analysis" in TEST_SPECIFICS["tasks_to_run"]:
@@ -149,6 +151,9 @@ def get_expansions():
         expansions["active_e3sm_to_cmip"] = "True"  # For lnd plots
     if "ilamb" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_ilamb"] = "True"
+        expansions["active_e3sm_to_cmip"] = "True"
+    if "pcmdi_diags" in TEST_SPECIFICS["tasks_to_run"]:
+        expansions["active_pcmdi_diags"] = "True"
         expansions["active_e3sm_to_cmip"] = "True"
     expansions["cfgs_to_run"] = TEST_SPECIFICS["cfgs_to_run"]
     expansions["tasks_to_run"] = TEST_SPECIFICS["tasks_to_run"]
@@ -301,6 +306,9 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     print(f"diags_environment_commands={expansions['diags_environment_commands']}")
     print(
         f"global_time_series_environment_commands={expansions['global_time_series_environment_commands']}"
+    )
+    print(
+        f"pcmdi_diags_environment_commands={expansions['pcmdi_diags_environment_commands']}"
     )
     print(f"environment_commands={expansions['environment_commands']}")
     print(

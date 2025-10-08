@@ -7,7 +7,7 @@ import stat
 import time
 from enum import Enum
 from subprocess import PIPE, Popen
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Set, Tuple
 
 import jinja2
 from configobj import ConfigObj
@@ -228,6 +228,29 @@ def set_component_and_prc_typ(c: Dict[str, Any]) -> None:
     c["prc_typ"] = prc_typ
 
 
+def check_set_specific_parameter(
+    c: Dict[str, Any], sets_with_requirement: Set[str], relevant_parameter: str
+) -> None:
+    requested_sets: Set[str]
+    if ("sets" in c) and c["sets"]:
+        # For tasks that permit multiple sets
+        requested_sets = set(c["sets"])
+    elif ("current_set" in c) and c["current_set"]:
+        # For tasks that permit only a single set
+        requested_sets = {c["current_set"]}
+    else:
+        requested_sets = set()
+    intersection = sets_with_requirement & requested_sets
+    if (
+        intersection
+        and (relevant_parameter in c.keys())
+        and (c[relevant_parameter] == "")
+    ):
+        raise ParameterNotProvidedError(
+            f"{relevant_parameter} is required because the sets {intersection} were requested."
+        )
+
+
 # Return all year sets from a configuration given by a list of strings
 # "year_begin:year_end:year_freq"
 # "year_begin-year_end"
@@ -307,6 +330,18 @@ def set_value_of_parameter_if_undefined(
             raise ParameterNotProvidedError(
                 f"{parameter} was not provided, and inferring is turned off. Turn on inferring by setting {inference_type_parameter} to True."
             )
+    # If parameter is already defined, do nothing.
+
+
+def check_parameter_defined(
+    c: Dict[str, Any], relevant_parameter: str, explanation: str = ""
+) -> None:
+    if (relevant_parameter not in c.keys()) or (c[relevant_parameter] == ""):
+        if explanation:
+            message = f"{relevant_parameter} is needed because {explanation}"
+        else:
+            message = f"{relevant_parameter} is not defined."
+        raise ParameterNotProvidedError(message)
 
 
 def get_file_names(script_dir: str, prefix: str):
