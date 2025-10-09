@@ -35,17 +35,17 @@ do
     # Copy output so you don't have to rerun zppy to generate the output.
     if [[ "${test_name,,}" =~ "v2" ]]; then
       # We need the v2 case name
-      cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_weekly_${test_name}_www/unique_id_test_20251007_4/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_${test_name}
+      cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_weekly_${test_name}_www/unique_id_test_20251009_2/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_${test_name}
     else
       # We need the v3 case name
-      cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_weekly_${test_name}_www/unique_id_test_20251007_4/v3.LR.historical_0051 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_${test_name}
+      cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_weekly_${test_name}_www/unique_id_test_20251009_2/v3.LR.historical_0051 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_${test_name}
     fi
 
     # test_bundles.py also needs the bash files transferred.
     # Note that for legacy cfgs, we're only testing test_images.py
     if [[ "${test_name,,}" == "bundles" ]]; then
       mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
-      cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_bundles_output/unique_id_test_20251007_4/v3.LR.historical_0051/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
+      cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_bundles_output/unique_id_test_20251009_2/v3.LR.historical_0051/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
     fi
 
     zppy_top_level=$(pwd)

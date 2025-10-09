@@ -13,15 +13,15 @@ from mache import MachineInfo
 
 TEST_SPECIFICS: Dict[str, Any] = {
     "diags_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
-    "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-diags-20251007-test1",
-    "pcmdi_diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-diags-20251007-test1",
+    "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-updates-20251009",
+    "pcmdi_diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate zi-pcmdi-updates-20251009",
     "cfgs_to_run": [
         "weekly_comprehensive_v3",
     ],
     "tasks_to_run": [
         "pcmdi_diags",
     ],
-    "unique_id": "unique_id_test_20251007_4",
+    "unique_id": "unique_id_test_20251009_2",
 }
 
 # Multi-machine testing #########################################################
