@@ -43,7 +43,7 @@ EOF
           exit 1
         fi
         #overwrite the model level data
-	      mv ${file}.plev ${file}
+        mv ${file}.plev ${file}
       fi
     done
   done
