@@ -67,6 +67,9 @@ cat input.txt | /home/ac.zender/bin_chrysalis/ncclimo --npo \
 {%- if vars != '' %}
 -v ${vars} \
 {%- endif %}
+{%- if job_nbr > 0 %}
+--jobs={{ job_nbr }} \
+{%- endif %}
 --split \
 {%- if extra_vars != '' %}
 --var_xtr={{extra_vars}} \
