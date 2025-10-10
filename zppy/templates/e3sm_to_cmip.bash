@@ -37,8 +37,13 @@ EOF
       if [ -f ${file} ]; then
         #ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev
         ncremap -p mpi --vrt_ntp=log --vrt_xtr=mss_val --vrt_out='{{cmip_plevdata}}' ${file} ${file}.plev
+        if [ $? != 0 ]; then
+          cd {{ scriptDir }}
+          echo 'ERROR (1)' > {{ prefix }}.status
+          exit 1
+        fi
         #overwrite the model level data
-	mv ${file}.plev ${file}
+        mv ${file}.plev ${file}
       fi
     done
   done
@@ -63,16 +68,16 @@ EOF
 
   if [ $? != 0 ]; then
     cd {{ scriptDir }}
-    echo 'ERROR (1)' > {{ prefix }}.status
-    exit 1
+    echo 'ERROR (2)' > {{ prefix }}.status
+    exit 2
   fi
 
   # Move output ts files to final destination
   mv ${dest_cmip}/${tmp_dir}/CMIP6/CMIP/*/*/*/*/*/*/*/*/*.nc ${dest_cmip}
   if [ $? != 0 ]; then
     cd {{ scriptDir }}
-    echo 'ERROR (2)' > {{ prefix }}.status
-    exit 2
+    echo 'ERROR (3)' > {{ prefix }}.status
+    exit 3
   fi
 
   rm -r ${dest_cmip}/${tmp_dir}
@@ -80,8 +85,8 @@ EOF
 }
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (3)' > {{ prefix }}.status
-  exit 3
+  echo 'ERROR (4)' > {{ prefix }}.status
+  exit 4
 fi
 
 # Delete temporary workdir

@@ -135,9 +135,11 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
                     c["ts_num_years"],
                 )
             else:
-                add_pcmdi_dependencies(c, dependencies, script_dir)
                 if i < len(year_sets) - 1:
                     continue
+                else:
+                    # only need to add dependency once
+                    add_pcmdi_dependencies(c, dependencies, script_dir)
 
             c["dependencies"] = dependencies
             write_settings_file(settings_file, c, s)
