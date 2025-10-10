@@ -39,7 +39,7 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
         check_parameters_for_bash(c)
         c["cmor_tables_prefix"] = c["diagnostics_base_path"]
         if c["component"] == "atm":
-            default_cmip_plevdata = f"{c['diagnostics_base_path']}/vrt_remap_plev19.nc"
+            default_cmip_plevdata = f"{c['diagnostics_base_path']}/e3sm_to_cmip_data/maps/vrt_remap_plev19.nc"
             set_value_of_parameter_if_undefined(
                 c,
                 "cmip_plevdata",
