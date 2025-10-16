@@ -127,7 +127,7 @@ def get_expansions():
     # Set up environments
     # To run this test, replace conda environment with your e3sm_diags dev environment
     # Or the Unified environment
-    # (The same for `global_time_series_environment_commands`)
+    # (The same for `global_time_series_environment_commands` and `pcmdi_diags_environment_commands`)
     # Never set this to "" because it will print the line
     # `environment_commands = ""` for the [e3sm_diags] task, overriding zppy's
     # default of using Unified. That is, there will be no environment set.
@@ -203,13 +203,17 @@ def generate_cfgs(unified_testing=False, dry_run=False):
     expansions = get_expansions()
     if unified_testing:
         expansions["environment_commands"] = expansions["environment_commands_test"]
-        # Use Unified for e3sm_diags and global_time_series unless we specify otherwise
+        # Use Unified for e3sm_diags, global_time_series, pcmdi_diags unless we specify otherwise
         if expansions["diags_environment_commands"] == "":
             expansions["diags_environment_commands"] = expansions[
                 "environment_commands_test"
             ]
         if expansions["global_time_series_environment_commands"] == "":
             expansions["global_time_series_environment_commands"] = expansions[
+                "environment_commands_test"
+            ]
+        if expansions["pcmdi_diags_environment_commands"] == "":
+            expansions["pcmdi_diags_environment_commands"] = expansions[
                 "environment_commands_test"
             ]
     else:
