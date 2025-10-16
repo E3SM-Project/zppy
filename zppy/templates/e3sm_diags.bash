@@ -1,7 +1,9 @@
 #!/bin/bash
 {% include 'inclusions/slurm_header.bash' %}
 {% include 'inclusions/boilerplate.bash' %}
+set -e
 {{ environment_commands }}
+set +e
 
 # Make sure UVCDAT doesn't prompt us about anonymous logging
 export UVCDAT_ANONYMOUS_LOG=False

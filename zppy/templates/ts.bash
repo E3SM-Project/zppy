@@ -1,7 +1,9 @@
 #!/bin/bash
 {% include 'inclusions/slurm_header.bash' %}
 {% include 'inclusions/boilerplate.bash' %}
+set -e
 {{ environment_commands }}
+set +e
 
 # Create temporary workdir
 hash=`mktemp --dry-run -d XXXX`

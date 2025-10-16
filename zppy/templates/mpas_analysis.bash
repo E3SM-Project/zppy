@@ -1,7 +1,9 @@
 #!/bin/bash
 {% include 'inclusions/slurm_header.bash' %}
 {% include 'inclusions/boilerplate.bash' %}
+set -e
 {{ environment_commands }}
+set +e
 
 # Additional settings for MPAS-Analysis
 export OMP_NUM_THREADS=1
