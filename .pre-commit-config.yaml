@@ -8,7 +8,6 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
-        exclude: conda/meta.yaml
 
   # Can run individually with `pre-commit run black --all-files`
   - repo: https://github.com/psf/black
