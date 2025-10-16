@@ -1,9 +1,8 @@
 #!/bin/bash
 {% include 'inclusions/slurm_header.bash' %}
 {% include 'inclusions/boilerplate.bash' %}
-{{ environment_commands }}
-
 set -e # Stop running script on error
+{{ environment_commands }}
 
 # A Bash script to post-process E3SM 6 hourly (h2) instantaneous output to generate a text file storing Tropical Cyclone tracks
 # tempestremap and tempestextremes are built in e3sm-unified from version 1.5.0.

@@ -1,7 +1,9 @@
 #!/bin/bash
 {% include 'inclusions/slurm_header.bash' %}
 {% include 'inclusions/boilerplate.bash' %}
+set -e
 {{ environment_commands }}
+set +e
 
 # Point to observation data
 export ILAMB_ROOT={{ ilamb_obs }}

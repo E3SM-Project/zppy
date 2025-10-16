@@ -1,7 +1,9 @@
 #!/bin/bash
 {% include 'inclusions/slurm_header.bash' %}
 
+set -e
 {{ environment_commands }}
+set +e
 
 # Turn on debug output if needed
 debug={{ debug }}
@@ -513,15 +515,21 @@ echo "Linking observational data using SLURM..."
 command="zi-pcmdi-link-observation --model_name_ref ${model_name_ref} --tableID_ref ${tableID_ref} --vars=${source_vars} --obs_sets {{ obs_sets }} --obs_ts {{ obs_ts }} --obstmp_dir ${obstmp_dir} --debug ${debug,,}"
 echo "Running a zi-pcmdi command: ${command}"
 
+set -e
 {{ environment_commands_secondary }}
+set +e
+
 time eval "${command}"
-{{ environment_commands }}
 
 if [ $? -ne 0 ]; then
   cd {{ scriptDir }}
   echo "ERROR (6)" > {{ prefix }}.status
   exit 6
 fi
+
+set -e
+{{ environment_commands }}
+set +e
 
 #######################################################
 # Now create obs climo and time series for PCMDI diags
@@ -891,7 +899,10 @@ command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure
 {% endif %}
 
 # Run diagnostics
+set -e
 {{ environment_commands_secondary }}
+set +e
+
 echo "Running a zi-pcmdi command: ${command}"
 echo "The current directory is: $PWD" # This will be of the form .../post/scripts/tmpDir
 time ${command}
@@ -900,7 +911,10 @@ if [ $? != 0 ]; then
   echo 'ERROR (11)' > {{ prefix }}.status
   exit 11
 fi
+
+set -e
 {{ environment_commands }}
+set +e
 
 #################################
 # Copy output to web server
