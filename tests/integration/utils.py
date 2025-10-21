@@ -30,7 +30,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
         "ilamb",
         "pcmdi_diags",
     ],
-    "unique_id": "update_test_images_20251021_try2",
+    "unique_id": "update_test_images_20251021_try3",
 }
 
 # Multi-machine testing #########################################################

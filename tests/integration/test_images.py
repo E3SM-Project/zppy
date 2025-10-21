@@ -1,5 +1,5 @@
-import sys
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from typing import Dict, List
 
@@ -20,62 +20,10 @@ def intersect_tasks(
     return [task for task in requested_tasks if task in available_tasks]
 
 
-def run_test(
-    test_name: str,
-    case_name: str,
-    expansions: Dict,
-    diff_dir_suffix: str,
-    tasks_to_run: List[str],
-) -> tuple[str, Dict[str, Results], str]:
-    """Run a single test and return its name, results dict, and captured output."""
-    # Capture both stdout and stderr for this test
-    old_stdout = sys.stdout
-    old_stderr = sys.stderr
-    sys.stdout = sys.stderr = captured_output = StringIO()
-
-    try:
-        test_results_dict: Dict[str, Results] = dict()
-        set_up_and_run_image_checker(
-            test_name,
-            case_name,
-            expansions,
-            diff_dir_suffix,
-            tasks_to_run,
-            test_results_dict,
-        )
-        output = captured_output.getvalue()
-
-        # Write to individual log file
-        log_filename = f"test_{test_name}.log"
-        with open(log_filename, "w") as f:
-            f.write(output)
-
-        return test_name, test_results_dict, output
-    finally:
-        sys.stdout = old_stdout
-        sys.stderr = old_stderr
-
-
-def test_images():
-    # To test a different branch, set this to True, and manually set the expansions.
-    TEST_DIFFERENT_EXPANSIONS = False
-    if TEST_DIFFERENT_EXPANSIONS:
-        expansions = dict()
-        # Example settings:
-        expansions["expected_dir"] = "/lcrc/group/e3sm/public_html/zppy_test_resources/"
-        expansions["user_www"] = (
-            "/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/"
-        )
-        expansions["unique_id"] = "test_zppy_20250401"
-        diff_dir_suffix = "_test_pr699_try6"
-    else:
-        expansions = get_expansions()
-        diff_dir_suffix = ""
-
-    test_results_dict: Dict[str, Results] = dict()
-    requested_tasks: List[str] = list(expansions["tasks_to_run"])
-
-    # Prepare test configurations
+def prepare_test_configs(
+    expansions: Dict, diff_dir_suffix: str, requested_tasks: List[str]
+) -> List[tuple]:
+    """Prepare test configurations based on expansions."""
     test_configs = []
 
     # Weekly comprehensive tests
@@ -169,17 +117,116 @@ def test_images():
             )
         )
 
+    return test_configs
+
+
+def map_cfg_to_test_name(cfg: str) -> str:
+    """Map from weekly_* config names to actual test names."""
+    return cfg.replace("weekly_", "")
+
+
+def order_results(
+    test_results_dict: Dict[str, Results],
+    test_configs: List[tuple],
+    expansions: Dict,
+) -> Dict[str, Results]:
+    """Reorder results to match the order in expansions."""
+    ordered_results_dict: Dict[str, Results] = dict()
+
+    # Get the order from expansions
+    cfg_order = [map_cfg_to_test_name(cfg) for cfg in expansions["cfgs_to_run"]]
+    task_order = list(expansions["tasks_to_run"])
+
+    for cfg_name in cfg_order:
+        # Find the test config that matches this cfg_name
+        matching_config = None
+        for config in test_configs:
+            if config[0] == cfg_name:
+                matching_config = config
+                break
+
+        if matching_config is None:
+            continue
+
+        test_name = matching_config[0]
+        # Add results for each task in the order from expansions
+        for task in task_order:
+            # Look for exact key match: test_name_task
+            expected_key = f"{test_name}_{task}"
+            if expected_key in test_results_dict:
+                ordered_results_dict[expected_key] = test_results_dict[expected_key]
+
+    return ordered_results_dict
+
+
+def run_test(
+    test_name: str,
+    case_name: str,
+    expansions: Dict,
+    diff_dir_suffix: str,
+    tasks_to_run: List[str],
+) -> tuple[str, Dict[str, Results], str]:
+    """Run a single test and return its name, results dict, and captured output."""
+    captured_output = StringIO()
+
     try:
-        # Run tests in parallel
+        test_results_dict: Dict[str, Results] = dict()
+
+        # Use context managers for thread-safe redirection
+        with redirect_stdout(captured_output), redirect_stderr(captured_output):
+            set_up_and_run_image_checker(
+                test_name,
+                case_name,
+                expansions,
+                diff_dir_suffix,
+                tasks_to_run,
+                test_results_dict,
+            )
+
+        output = captured_output.getvalue()
+
+        # Write to individual log file
+        log_filename = f"test_{test_name}.log"
+        with open(log_filename, "w") as f:
+            f.write(output)
+
+        return test_name, test_results_dict, output
+    except Exception as e:
+        output = captured_output.getvalue()
+        # Still write the partial output
+        log_filename = f"test_{test_name}.log"
+        with open(log_filename, "w") as f:
+            f.write(output)
+        raise e
+
+
+def test_images():
+    # To test a different branch, set this to True, and manually set the expansions.
+    TEST_DIFFERENT_EXPANSIONS = False
+    if TEST_DIFFERENT_EXPANSIONS:
+        expansions = dict()
+        # Example settings:
+        expansions["expected_dir"] = "/lcrc/group/e3sm/public_html/zppy_test_resources/"
+        expansions["user_www"] = (
+            "/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/"
+        )
+        expansions["unique_id"] = "test_zppy_20250401"
+        diff_dir_suffix = "_test_pr699_try6"
+    else:
+        expansions = get_expansions()
+        diff_dir_suffix = ""
+
+    test_results_dict: Dict[str, Results] = dict()
+    requested_tasks: List[str] = list(expansions["tasks_to_run"])
+
+    # Prepare test configurations
+    test_configs = prepare_test_configs(expansions, diff_dir_suffix, requested_tasks)
+
+    try:
+        # Run tests in parallel using ProcessPoolExecutor for isolated stdout/stderr
         print(f"Running {len(test_configs)} tests in parallel")
         print("Individual test logs will be written to test_<name>.log files")
-        """
-        Note from Claude: used ThreadPoolExecutor instead of ProcessPoolExecutor because:
-        - Threads share memory, making it easier to work with the shared expansions dict
-        - If set_up_and_run_image_checker is I/O bound (file operations, network), threads will be efficient
-        - If it's CPU-bound, you could switch to ProcessPoolExecutor for better parallelism
-        """
-        with ThreadPoolExecutor(max_workers=6) as executor:
+        with ProcessPoolExecutor(max_workers=6) as executor:
             # Submit all tests
             future_to_test = {
                 executor.submit(run_test, *config): config[0] for config in test_configs
@@ -209,14 +256,17 @@ def test_images():
         )
         raise e
 
-    construct_markdown_summary_table(test_results_dict, "test_images_summary.md")
+    # Reorder results to match the order in expansions
+    ordered_results_dict = order_results(test_results_dict, test_configs, expansions)
+
+    construct_markdown_summary_table(ordered_results_dict, "test_images_summary.md")
 
     print("\nTest Summary:")
-    print("{'Test':<50} {'Total':>10} {'Correct':>10} {'Status':>10}")
+    print(f"{'Test':<50} {'Total':>10} {'Correct':>10} {'Status':>10}")
     print("-" * 82)
 
     all_passed = True
-    for key, tr in test_results_dict.items():
+    for key, tr in ordered_results_dict.items():
         status = (
             "✓ PASS" if tr.image_count_total == tr.image_count_correct else "✗ FAIL"
         )
@@ -233,5 +283,5 @@ def test_images():
             "\n⚠ Some tests had mismatched or missing images. Check individual log files for details."
         )
 
-    for tr in test_results_dict.values():
+    for tr in ordered_results_dict.values():
         assert tr.image_count_total == tr.image_count_correct
