@@ -76,9 +76,6 @@ def set_up_and_run_image_checker(
         print(f"{key}: {d[key]}")
     parameters: Parameters = Parameters(d)
     for task in task_list:
-        if task == "pcmdi_diags":
-            print(f"{task} hs no expected results yet, skipping.")
-            continue
         test_results = check_images(parameters, task)
         test_results_dict[f"{cfg_specifier}_{task}"] = test_results
 

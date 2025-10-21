@@ -11,6 +11,12 @@ V3_CASE_NAME = "v3.LR.historical_0051"
 V2_CASE_NAME = "v2.LR.historical_0201"
 
 
+def intersect_tasks(
+    available_tasks: List[str], requested_tasks: List[str]
+) -> List[str]:
+    return [task for task in requested_tasks if task in available_tasks]
+
+
 def test_images():
     # To test a different branch, set this to True, and manually set the expansions.
     TEST_DIFFERENT_EXPANSIONS = False
@@ -27,13 +33,20 @@ def test_images():
         expansions = get_expansions()
         diff_dir_suffix = ""
     test_results_dict: Dict[str, Results] = dict()
-    tasks_to_run: List[str] = list(expansions["tasks_to_run"])
+    requested_tasks: List[str] = list(expansions["tasks_to_run"])
     try:
         # TODO: these could be run in parallel, if easy to implement
 
         # Weekly comprehensive tests
         print("Checking weekly cfg output")
         if "weekly_comprehensive_v2" in expansions["cfgs_to_run"]:
+            available_tasks = [
+                "e3sm_diags",
+                "mpas_analysis",
+                "global_time_series",
+                "ilamb",
+            ]
+            tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
             set_up_and_run_image_checker(
                 "comprehensive_v2",
                 V2_CASE_NAME,
@@ -43,6 +56,15 @@ def test_images():
                 test_results_dict,
             )
         if "weekly_comprehensive_v3" in expansions["cfgs_to_run"]:
+            # Adds pcmdi_diags
+            available_tasks = [
+                "e3sm_diags",
+                "mpas_analysis",
+                "global_time_series",
+                "ilamb",
+                "pcmdi_diags",
+            ]
+            tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
             set_up_and_run_image_checker(
                 "comprehensive_v3",
                 V3_CASE_NAME,
@@ -53,17 +75,14 @@ def test_images():
             )
         if "weekly_bundles" in expansions["cfgs_to_run"]:
             # No mpas_analysis
-            if "mpas_analysis" in expansions["tasks_to_run"]:
-                tasks_to_run_modified = tasks_to_run.copy()
-                tasks_to_run_modified.remove("mpas_analysis")
-            else:
-                tasks_to_run_modified = tasks_to_run
+            available_tasks = ["e3sm_diags", "global_time_series", "ilamb"]
+            tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
             set_up_and_run_image_checker(
                 "bundles",
                 V3_CASE_NAME,
                 expansions,
                 diff_dir_suffix,
-                tasks_to_run_modified,
+                tasks_to_run,
                 test_results_dict,
             )
 
@@ -72,6 +91,13 @@ def test_images():
         # to check for backwards-compatiblity issues.
         print("Checking legacy cfg output")
         if "weekly_legacy_3.0.0_comprehensive_v2" in expansions["cfgs_to_run"]:
+            available_tasks = [
+                "e3sm_diags",
+                "mpas_analysis",
+                "global_time_series",
+                "ilamb",
+            ]
+            tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
             set_up_and_run_image_checker(
                 "legacy_3.0.0_comprehensive_v2",
                 V2_CASE_NAME,
@@ -81,6 +107,13 @@ def test_images():
                 test_results_dict,
             )
         if "weekly_legacy_3.0.0_comprehensive_v3" in expansions["cfgs_to_run"]:
+            available_tasks = [
+                "e3sm_diags",
+                "mpas_analysis",
+                "global_time_series",
+                "ilamb",
+            ]
+            tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
             set_up_and_run_image_checker(
                 "legacy_3.0.0_comprehensive_v3",
                 V3_CASE_NAME,
@@ -91,17 +124,14 @@ def test_images():
             )
         if "weekly_legacy_3.0.0_bundles" in expansions["cfgs_to_run"]:
             # No mpas_analysis
-            if "mpas_analysis" in expansions["tasks_to_run"]:
-                tasks_to_run_modified = tasks_to_run.copy()
-                tasks_to_run_modified.remove("mpas_analysis")
-            else:
-                tasks_to_run_modified = tasks_to_run
+            available_tasks = ["e3sm_diags", "global_time_series", "ilamb"]
+            tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
             set_up_and_run_image_checker(
                 "legacy_3.0.0_bundles",
                 V3_CASE_NAME,
                 expansions,
                 diff_dir_suffix,
-                tasks_to_run_modified,
+                tasks_to_run,
                 test_results_dict,
             )
     except Exception as e:
