@@ -12,9 +12,9 @@ from mache import MachineInfo
 # pytest tests/integration/test_*.py
 
 TEST_SPECIFICS: Dict[str, Any] = {
-    "diags_environment_commands": "source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.12.0rc2_chrysalis.sh",
-    "global_time_series_environment_commands": "source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.12.0rc2_chrysalis.sh",
-    "pcmdi_diags_environment_commands": "source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.12.0rc2_chrysalis.sh",
+    "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+    "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+    "pcmdi_diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     "cfgs_to_run": [
         "weekly_bundles",
         "weekly_comprehensive_v2",
@@ -30,7 +30,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
         "ilamb",
         "pcmdi_diags",
     ],
-    "unique_id": "update_test_images_20251021_try3",
+    "unique_id": "unique_id",
 }
 
 # Multi-machine testing #########################################################
@@ -47,7 +47,7 @@ def get_chyrsalis_expansions(config):
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
         "diags_walltime": "5:00:00",
-        "environment_commands_test": "source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.12.0rc2_chrysalis.sh",
+        "environment_commands_test": "",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
@@ -330,4 +330,4 @@ def generate_cfgs(unified_testing=False, dry_run=False):
 
 
 if __name__ == "__main__":
-    generate_cfgs(unified_testing=True, dry_run=False)
+    generate_cfgs(unified_testing=False, dry_run=False)
