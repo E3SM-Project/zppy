@@ -79,7 +79,7 @@ def get_compy_expansions(config):
         "qos_long": "regular",
         "qos_short": "regular",
         "user_input_v2": "/compyfs/fors729/",
-        "user_input_v3": "/compyfs/fors729/",
+        "user_input_v3": "/compyfs/fors729/zppy_test_data",
         "user_output": f"/compyfs/{username}/",
         "user_www": f"{web_base_path}/{username}/",
     }
