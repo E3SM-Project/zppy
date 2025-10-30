@@ -12,9 +12,19 @@ from mache import MachineInfo
 # pytest tests/integration/test_*.py
 
 TEST_SPECIFICS: Dict[str, Any] = {
+    # These are custom environment_commands for specific tasks.
+    # Never set these to "", because they will print the line
+    # `environment_commands = ""` for the corresponding task,
+    # thus overriding the value set higher up in the cfg.
+    # That is, there will be no environment set.
+    # (`environment_commands = ""` only redirects to Unified
+    # if specified under the [default] task)
     "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     "pcmdi_diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+    # This is the environment setup for other tasks.
+    # Leave as "" to use the latest Unified environment.
+    "environment_commands": "",
     "cfgs_to_run": [
         "weekly_bundles",
         "weekly_comprehensive_v2",
@@ -47,7 +57,6 @@ def get_chyrsalis_expansions(config):
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
         "diags_walltime": "5:00:00",
-        "environment_commands_test": "",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
@@ -75,7 +84,6 @@ def get_compy_expansions(config):
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
         "diags_walltime": "03:00:00",
-        "environment_commands_test": "",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
         "mpas_analysis_walltime": "02:00:00",
         "partition_long": "slurm",
@@ -101,7 +109,6 @@ def get_perlmutter_expansions(config):
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "cpu",
         "diags_walltime": "6:00:00",
-        "environment_commands_test": "",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
         "mpas_analysis_walltime": "03:00:00",
         "partition_long": "",
@@ -133,14 +140,6 @@ def get_expansions():
         raise ValueError(f"Unsupported machine={machine}")
 
     # Set up environments
-    # To run this test, replace conda environment with your e3sm_diags dev environment
-    # Or the Unified environment
-    # (The same for `global_time_series_environment_commands` and `pcmdi_diags_environment_commands`)
-    # Never set this to "" because it will print the line
-    # `environment_commands = ""` for the [e3sm_diags] task, overriding zppy's
-    # default of using Unified. That is, there will be no environment set.
-    # `environment_commands = ""` only redirects to Unified if specified under the
-    # [default] task
     expansions["diags_environment_commands"] = TEST_SPECIFICS[
         "diags_environment_commands"
     ]
@@ -150,6 +149,7 @@ def get_expansions():
     expansions["pcmdi_diags_environment_commands"] = TEST_SPECIFICS[
         "pcmdi_diags_environment_commands"
     ]
+    expansions["environment_commands"] = TEST_SPECIFICS["environment_commands"]
 
     # Activate requested tests
     expansions["active_e3sm_to_cmip"] = "False"
@@ -202,32 +202,13 @@ def substitute_expansions(expansions, file_in, file_out):
                 file_write.write(line)
 
 
-def generate_cfgs(unified_testing=False, dry_run=False):
+def generate_cfgs(dry_run=False):
     git_top_level = (
         subprocess.check_output("git rev-parse --show-toplevel".split())
         .strip()
         .decode("utf-8")
     )
     expansions = get_expansions()
-    if unified_testing:
-        expansions["environment_commands"] = expansions["environment_commands_test"]
-        # Use Unified for e3sm_diags, global_time_series, pcmdi_diags unless we specify otherwise
-        if expansions["diags_environment_commands"] == "":
-            expansions["diags_environment_commands"] = expansions[
-                "environment_commands_test"
-            ]
-        if expansions["global_time_series_environment_commands"] == "":
-            expansions["global_time_series_environment_commands"] = expansions[
-                "environment_commands_test"
-            ]
-        if expansions["pcmdi_diags_environment_commands"] == "":
-            expansions["pcmdi_diags_environment_commands"] = expansions[
-                "environment_commands_test"
-            ]
-    else:
-        # The cfg doesn't need this line,
-        # but it would be difficult to only write environment_commands in the unified_testing case.
-        expansions["environment_commands"] = ""
     machine = expansions["machine"]
 
     if dry_run:
@@ -323,7 +304,6 @@ def generate_cfgs(unified_testing=False, dry_run=False):
         substitute_expansions(expansions, script_template, script_generated)
     print("CFG FILES HAVE BEEN GENERATED FROM TEMPLATES WITH THESE SETTINGS:")
     print(f"UNIQUE_ID={TEST_SPECIFICS['unique_id']}")
-    print(f"unified_testing={unified_testing}")
     print(f"diags_environment_commands={expansions['diags_environment_commands']}")
     print(
         f"global_time_series_environment_commands={expansions['global_time_series_environment_commands']}"
@@ -338,4 +318,4 @@ def generate_cfgs(unified_testing=False, dry_run=False):
 
 
 if __name__ == "__main__":
-    generate_cfgs(unified_testing=False, dry_run=False)
+    generate_cfgs(dry_run=False)
