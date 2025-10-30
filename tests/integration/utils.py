@@ -52,6 +52,10 @@ def get_chyrsalis_expansions(config):
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
         "partition_short": "debug",
+        # This differs from the default path /lcrc/group/e3sm/diagnostics/observations/Atm/climatology
+        "path_dc_obs_climo": "/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/climatology",
+        # This differs from the default path /lcrc/group/e3sm/diagnostics/observations/Atm/time-series
+        "path_pcmdi_diags_obs_ts": "/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/time-series",
         "qos_long": "regular",
         "qos_short": "regular",
         "user_input_v2": "/lcrc/group/e3sm/ac.forsyth2/",
@@ -76,6 +80,8 @@ def get_compy_expansions(config):
         "mpas_analysis_walltime": "02:00:00",
         "partition_long": "slurm",
         "partition_short": "short",
+        "path_dc_obs_climo": "/compyfs/diagnostics/observations/Atm/climatology/",
+        "path_pcmdi_diags_obs_ts": "/compyfs/diagnostics/observations/Atm/time-series/",
         "qos_long": "regular",
         "qos_short": "regular",
         "user_input_v2": "/compyfs/fors729/",
@@ -100,6 +106,8 @@ def get_perlmutter_expansions(config):
         "mpas_analysis_walltime": "03:00:00",
         "partition_long": "",
         "partition_short": "",
+        "path_dc_obs_climo": "/global/cfs/cdirs/e3sm/diagnostics/observations/Atm/climatology/",
+        "path_pcmdi_diags_obs_ts": "/global/cfs/cdirs/e3sm/diagnostics/observations/Atm/time-series/",
         "qos_long": "regular",
         "qos_short": "regular",  # debug walltime too short?
         # Use CFS for large datasets
