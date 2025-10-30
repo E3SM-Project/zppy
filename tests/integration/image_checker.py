@@ -347,7 +347,7 @@ def _make_image_diff_grid(diff_subdir, pdf_name="image_diff_grid.pdf", rows_per_
         fig, axes = plt.subplots(rows_per_page, cols)
         print(f"Page {page}")
         for i, ax_row in enumerate(axes):
-            count = page * 3 + i
+            count = page * rows_per_page + i
             if count > len(prefixes) - 1:
                 break
             # We already know all the files are in `diff_subdir`; no need to repeat it.
