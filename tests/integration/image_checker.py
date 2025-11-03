@@ -111,19 +111,60 @@ def check_images(parameters: Parameters, prefix: str):
 def construct_markdown_summary_table(
     test_results_dict: Dict[str, Results], output_file_path: str
 ):
+    machine_info = MachineInfo()
+    config = machine_info.config
+    web_portal_base_path = config.get(
+        "web_portal", "base_path"
+    )  # Does NOT include trailing "/"
+    web_portal_base_url = config.get(
+        "web_portal", "base_url"
+    )  # Does NOT include trailing "/"
     with open(output_file_path, "w") as f:
         f.write("# Summary of test results\n\n")
         f.write(
-            "Diff subdir is where to find the lists of missing/mismatched images, the image diff grid, and the individual diffs.\n"
+            "| Test name | Total images | Correct images | Missing images | Mismatched images | \n"
         )
-        f.write("Note image diff grids can not yet be constructed automatically.\n")
-        f.write(
-            "| Test name | Total images | Correct images | Missing images | Mismatched images | Diff subdir | \n"
-        )
-        f.write("| --- | --- | --- | --- | --- | --- | \n")
+        f.write("| --- | --- | --- | --- | --- | \n")
         for test_name, test_results in test_results_dict.items():
+            missing_str = f"{test_results.image_count_missing}"
+            mismatched_str = f"{test_results.image_count_mismatched}"
+
+            # test_results.diff_dir starts with the file path that is displayed on the web server.
+            # That is, it starts with the web_portal_base_path
+
+            web_link = ""
+            diff_subdir = f"{test_results.diff_dir}/{test_results.prefix}"
+            if test_results.diff_dir.startswith(web_portal_base_path):
+                web_subdir = test_results.diff_dir.removeprefix(web_portal_base_path)
+                web_link = f"{web_portal_base_url}/{web_subdir}/{test_results.prefix}"
+            if web_link:
+                has_missing: bool = test_results.image_count_missing > 0
+                if has_missing:
+                    if os.path.exists(f"{diff_subdir}/missing_images.txt"):
+                        missing_str = f"{test_results.image_count_missing} ([list]({web_link}/missing_images.txt))"
+                    else:
+                        missing_str = (
+                            f"{test_results.image_count_missing} (no list created)"
+                        )
+                has_mismatched: bool = test_results.image_count_mismatched > 0
+                if has_mismatched:
+                    mismatched_list_exists = os.path.exists(
+                        f"{diff_subdir}/mismatched_images.txt"
+                    )
+                    image_diff_grid_exists = os.path.exists(
+                        f"{diff_subdir}/image_diff_grid.pdf"
+                    )
+                    if mismatched_list_exists and image_diff_grid_exists:
+                        mismatched_str = f"{test_results.image_count_mismatched} ([list]({web_link}/mismatched_images.txt), [grid]({web_link}/image_diff_grid.pdf))"
+                    elif mismatched_list_exists:
+                        mismatched_str = f"{test_results.image_count_mismatched} ([list]({web_link}/mismatched_images.txt), no grid created)"
+                    elif image_diff_grid_exists:
+                        mismatched_str = f"{test_results.image_count_mismatched} (no list created, [grid]({web_link}/image_diff_grid.pdf))"
+                    else:
+                        mismatched_str = f"{test_results.image_count_mismatched} (no list/grid created)"
+
             f.write(
-                f"| {test_name} | {test_results.image_count_total} | {test_results.image_count_correct} | {test_results.image_count_missing} | {test_results.image_count_mismatched} | {test_results.diff_dir}/{test_results.prefix} | \n"
+                f"| {test_name} | {test_results.image_count_total} | {test_results.image_count_correct} | {missing_str} | {mismatched_str} | \n"
             )
     print(f"Copy the output of {output_file_path} to a Pull Request comment")
 
