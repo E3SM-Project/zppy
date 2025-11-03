@@ -2,6 +2,7 @@ import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
+from multiprocessing import get_context
 from typing import Dict, List
 
 from tests.integration.image_checker import (
@@ -230,7 +231,9 @@ def test_images():
         # Run tests in parallel using ProcessPoolExecutor for isolated stdout/stderr
         print(f"Running {len(test_configs)} tests in parallel")
         print("Individual test logs will be written to test_<name>.log files")
-        with ProcessPoolExecutor(max_workers=6) as executor:
+        with ProcessPoolExecutor(
+            max_workers=6, mp_context=get_context("spawn")
+        ) as executor:
             # Submit all tests
             future_to_test = {
                 executor.submit(run_test, *config): config[0] for config in test_configs
