@@ -1,3 +1,4 @@
+import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
@@ -186,7 +187,10 @@ def run_test(
         output = captured_output.getvalue()
 
         # Write to individual log file
-        log_filename = f"test_{test_name}.log"
+        log_filename = f"images_logs/test_{test_name}.log"
+        os.makedirs(
+            "images_logs", exist_ok=True
+        )  # Creates directory if it doesn't exist
         with open(log_filename, "w") as f:
             f.write(output)
 
@@ -262,6 +266,7 @@ def test_images():
     construct_markdown_summary_table(ordered_results_dict, "test_images_summary.md")
 
     print("\nTest Summary:")
+    # Using alignment specifiers:
     print(f"{'Test':<50} {'Total':>10} {'Correct':>10} {'Status':>10}")
     print("-" * 82)
 
