@@ -232,7 +232,7 @@ def test_images():
         print(f"Running {len(test_configs)} tests in parallel")
         print("Individual test logs will be written to test_<name>.log files")
         with ProcessPoolExecutor(
-            max_workers=6, mp_context=get_context("spawn")
+            max_workers=6, mp_context=get_context("forkserver")
         ) as executor:
             # Submit all tests
             future_to_test = {
