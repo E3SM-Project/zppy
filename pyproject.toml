@@ -13,7 +13,7 @@ name = "zppy"
 version = "3.1.0rc3"
 description = "Post-processing software for E3SM"
 readme = "README.md"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.11,<3.15"
 license = { file = "LICENSE" }
 authors = [
   { name = "Ryan Forsyth", email = "forsyth2@llnl.gov" },
@@ -30,6 +30,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Scientific/Engineering",
 ]
 
@@ -96,7 +97,7 @@ exclude = [
 ]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 check_untyped_defs = true
 ignore_missing_imports = true
 warn_unused_ignores = true
