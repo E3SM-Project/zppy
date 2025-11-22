@@ -10,7 +10,7 @@ channels:
 dependencies:
   # Build
   # =======================
-  - python >=3.11,<3.14
+  - python >=3.11,<3.15
   - pip
   # Base
   # =================
