@@ -64,7 +64,7 @@ if grep -q "*" input.txt; then
 fi
 # Generate time series files
 # If the user-defined parameter "vars" is "", then ${vars}, defined above, will be too.
-cat input.txt | ncclimo \
+cat input.txt | {{ ncclimo_cmd }} \
 -c {{ case }} \
 {%- if vars != '' %}
 -v ${vars} \
