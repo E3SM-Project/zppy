@@ -25,13 +25,17 @@ TEST_SPECIFICS: Dict[str, Any] = {
     # This is the environment setup for other tasks.
     # Leave as "" to use the latest Unified environment.
     "environment_commands": "",
+    # For a complete test, run the set of latest cfgs and at least one set of legacy cfgs
     "cfgs_to_run": [
         "weekly_bundles",
         "weekly_comprehensive_v2",
         "weekly_comprehensive_v3",
-        "weekly_legacy_3.0.0_bundles",
-        "weekly_legacy_3.0.0_comprehensive_v2",
-        "weekly_legacy_3.0.0_comprehensive_v3",
+        "weekly_legacy_3.1.0_bundles",
+        "weekly_legacy_3.1.0_comprehensive_v2",
+        "weekly_legacy_3.1.0_comprehensive_v3",
+        # "weekly_legacy_3.0.0_bundles",
+        # "weekly_legacy_3.0.0_comprehensive_v2",
+        # "weekly_legacy_3.0.0_comprehensive_v3",
     ],
     "tasks_to_run": [
         "e3sm_diags",
