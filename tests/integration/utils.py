@@ -20,6 +20,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
     # (`environment_commands = ""` only redirects to Unified
     # if specified under the [default] task)
     "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+    "mpas_analysis_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     "pcmdi_diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     # This is the environment setup for other tasks.
@@ -142,6 +143,9 @@ def get_expansions():
     # Set up environments
     expansions["diags_environment_commands"] = TEST_SPECIFICS[
         "diags_environment_commands"
+    ]
+    expansions["mpas_analysis_environment_commands"] = TEST_SPECIFICS[
+        "mpas_analysis_environment_commands"
     ]
     expansions["global_time_series_environment_commands"] = TEST_SPECIFICS[
         "global_time_series_environment_commands"
@@ -305,6 +309,9 @@ def generate_cfgs(dry_run=False):
     print("CFG FILES HAVE BEEN GENERATED FROM TEMPLATES WITH THESE SETTINGS:")
     print(f"UNIQUE_ID={TEST_SPECIFICS['unique_id']}")
     print(f"diags_environment_commands={expansions['diags_environment_commands']}")
+    print(
+        f"mpas_analysis_environment_commands={expansions['mpas_analysis_environment_commands']}"
+    )
     print(
         f"global_time_series_environment_commands={expansions['global_time_series_environment_commands']}"
     )
