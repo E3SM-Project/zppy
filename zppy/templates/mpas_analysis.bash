@@ -43,7 +43,7 @@ mkdir -p cfg
 files=( "mpasIndexOcean.nc" "mpasTimeSeriesOcean.nc" "seaIceAreaVolNH.nc" "seaIceAreaVolSH.nc")
 for file in "${files[@]}"
 do
-  cp cache/${file} ${identifier}/${file}
+  cp cache/timeseries/${file} ${identifier}/timeseries/${file}
 done
 # Restore cached copies of pre-computed files
 cached=( "timeseries/moc" "timeseries/OceanBasins" "timeseries/transport" )
