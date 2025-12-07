@@ -97,14 +97,24 @@ def determine_components(c: Dict[str, Any]) -> None:
     c["use_lnd"] = False
     c["use_ocn"] = False
     if c["plots_original"]:
-        c["use_atm"] = True
-        has_original_ocn_plots = (
-            ("change_ohc" in c["plots_original"])
-            or ("max_moc" in c["plots_original"])
-            or ("change_sea_level" in c["plots_original"])
-        )
-        if has_original_ocn_plots:
+        # Define ocean-specific plots that don't require ATM data
+        ocean_plots = {"change_ohc", "max_moc", "change_sea_level"}
+
+        # Parse the plots_original into individual plot names
+        original_plots = set(plot.strip() for plot in c["plots_original"].split(","))
+
+        # Check for ocean plots
+        has_ocean_plots = bool(original_plots & ocean_plots)
+        if has_ocean_plots:
             c["use_ocn"] = True
+
+        # Check for non-ocean plots (ATM plots)
+        non_ocean_plots = original_plots - ocean_plots
+        has_atm_plots = bool(non_ocean_plots)
+
+        # Only require ATM if we have non-ocean plots
+        if has_atm_plots:
+            c["use_atm"] = True
     else:
         # For better string processing in global_time_series.bash
         c["plots_original"] = "None"
