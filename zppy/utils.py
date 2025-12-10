@@ -220,6 +220,7 @@ def set_component_and_prc_typ(c: Dict[str, Any]) -> None:
         prc_typ = tmp
     elif tmp in ("mosart",):
         component = "rof"
+        prc_typ = tmp
     else:
         raise ValueError(
             f"Cannot extract output component name from {c['input_component']} or {c['input_files']}."
