@@ -48,6 +48,11 @@ do
   mkdir -p cache/${subdir} ${identifier}/${subdir}
   rsync -av cache/${subdir}/ ${identifier}/${subdir}/
 done
+files=( "mpasIndexOcean.nc" "mpasTimeSeriesOcean.nc" "seaIceAreaVolNH.nc" "seaIceAreaVolSH.nc")
+for file in "${files[@]}"
+do
+  cp cache/timeseries/${file} ${identifier}/timeseries/${file}
+done
 {% endif %}
 
 # Run MPAS-Analysis
@@ -297,10 +302,16 @@ fi
 echo
 echo ===== CACHE OUTPUT FILES =====
 echo
+for file in "${files[@]}"
+do
+  cp ${identifier}/timeseries/${file} cache/timeseries/${file}
+done
 for subdir in "${cached[@]}"
 do
   rsync -av ${identifier}/${subdir}/ cache/${subdir}/
 done
+# Remove one particularly large file which does not need to be cached
+rm ${identifier}/timeseries/mpasTimeSeriesSeaIce.nc
 {% endif %}
 
 # Copy output to web server
