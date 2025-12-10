@@ -40,11 +40,6 @@ mkdir -p ${identifier}
 mkdir -p cfg
 
 {% if cache == true %}
-files=( "mpasIndexOcean.nc" "mpasTimeSeriesOcean.nc" "seaIceAreaVolNH.nc" "seaIceAreaVolSH.nc")
-for file in "${files[@]}"
-do
-  cp cache/timeseries/${file} ${identifier}/timeseries/${file}
-done
 # Restore cached copies of pre-computed files
 cached=( "timeseries/moc" "timeseries/OceanBasins" "timeseries/transport" )
 mkdir -p cache
@@ -52,6 +47,11 @@ for subdir in "${cached[@]}"
 do
   mkdir -p cache/${subdir} ${identifier}/${subdir}
   rsync -av cache/${subdir}/ ${identifier}/${subdir}/
+done
+files=( "mpasIndexOcean.nc" "mpasTimeSeriesOcean.nc" "seaIceAreaVolNH.nc" "seaIceAreaVolSH.nc")
+for file in "${files[@]}"
+do
+  cp cache/timeseries/${file} ${identifier}/timeseries/${file}
 done
 {% endif %}
 
