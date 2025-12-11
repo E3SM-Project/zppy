@@ -145,7 +145,7 @@ def test_set_component_and_prc_typ():
     c = {"input_component": "mosart"}
     set_component_and_prc_typ(c)
     assert c["component"] == "rof"
-    assert c["prc_typ"] == "sgs"
+    assert c["prc_typ"] == "mosart"
 
     # Test with input_files
     c = {"input_component": "", "input_files": "cam.extension"}
@@ -181,7 +181,7 @@ def test_set_component_and_prc_typ():
     c = {"input_component": "", "input_files": "mosart.extension"}
     set_component_and_prc_typ(c)
     assert c["component"] == "rof"
-    assert c["prc_typ"] == "sgs"
+    assert c["prc_typ"] == "mosart"
 
     # Test error case
     c = {"input_component": "", "input_files": ""}

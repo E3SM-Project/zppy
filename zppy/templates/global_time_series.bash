@@ -19,6 +19,25 @@ results_dir_absolute_path={{ scriptDir }}/${results_dir}
 ################################################################################
 case={{ case }}
 www={{ www }}
+case_dir={{ output }}
+
+# Copy ocean results to case directory
+echo
+echo ===== COPY OCEAN RESULTS TO CASE DIRECTORY =====
+echo
+
+if [ -d "${results_dir_absolute_path}/ocn" ]; then
+    mkdir -p ${case_dir}/post/ocn
+    rsync -av ${results_dir_absolute_path}/ocn/ ${case_dir}/post/ocn/
+    if [ $? != 0 ]; then
+        cd {{ scriptDir }}
+        echo 'ERROR (6)' > {{ prefix }}.status
+        exit 6
+    fi
+    echo "Ocean results copied to ${case_dir}/post/ocn/"
+else
+    echo "No ocean results directory found at ${results_dir_absolute_path}/ocn"
+fi
 
 # Copy output to web server
 echo
@@ -49,8 +68,8 @@ do
 done
 {% endif %}
 
-# Copy files
-rsync -a --delete ${results_dir_absolute_path} ${top_level}
+# Copy files (excluding ocn directory)
+rsync -a --delete --exclude='ocn' ${results_dir_absolute_path} ${top_level}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (8)' > {{ prefix }}.status
@@ -71,6 +90,17 @@ pushd ${top_level}
 chmod -R go+rX,go-w ${results_dir}
 popd
 {% endif %}
+
+# Clean up temporary results directory
+echo
+echo ===== CLEANUP TEMPORARY RESULTS DIRECTORY =====
+echo
+rm -rf ${results_dir_absolute_path}
+if [ $? = 0 ]; then
+    echo "Successfully cleaned up ${results_dir_absolute_path}"
+else
+    echo "Warning: Failed to clean up ${results_dir_absolute_path}"
+fi
 
 ################################################################################
 # Update status file and exit

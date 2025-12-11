@@ -39,7 +39,9 @@ echo
 # Create output directory
 # Create local links to input cmip time-series files
 lnd_ts_for_ilamb={{ output }}/post/lnd/{{ ts_land_grid }}/cmip_ts/monthly/
+{% if not land_only %}
 atm_ts_for_ilamb={{ output }}/post/atm/{{ ts_atm_grid }}/cmip_ts/monthly/
+{% endif %}
 # Go through the time series files for between year1 and year2,
 # using a step size equal to the number of years per time series file
 start_year=$(echo $Y1 | sed 's/^0*//')
@@ -56,12 +58,14 @@ do
     echo 'ERROR (1)' > {{ prefix }}.status
     exit 1
   fi
+{% if not land_only %}
   cp -s ${atm_ts_for_ilamb}/*_*_*_*_*_*_${start_year}??-${end_year}??.nc .
   if [ $? != 0 ]; then
     cd {{ scriptDir }}
     echo 'ERROR (2)' > {{ prefix }}.status
     exit 2
   fi
+{% endif %}
 done
 cd ../..
 
