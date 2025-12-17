@@ -348,8 +348,30 @@ def _chmod_recursive(path: str, mode):
     os.chmod(path, mode)
 
 
-# TODO: fix issue where blank plots generate after so many pages in the PDF
 def _make_image_diff_grid(diff_subdir, pdf_name="image_diff_grid.pdf", rows_per_page=2):
+    """
+    Path definitions:
+    z = x.removeprefix(y) => x = y + z
+
+    diff_subdir     = web_portal_base_path + web_subdir
+    pdf_path        = diff_subdir + "/" + pdf_name
+    prefixes[count] = diff_subdir + short_title
+
+    pdf_url  = web_portal_base_url + "/" + web_subdir + "/" + pdf_name
+    diff_url = web_portal_base_url + "/" + web_subdir + short_title + "_diff.png"
+
+    Example:
+
+    Given:
+    short_title = /lnd_monthly_mvm_lnd/model_vs_model_1982-1983/lat_lon_land/Physical State/v2.LR.historical_0201-SNOINTABS-DJF-global.png
+
+    pdf_url = https://web.lcrc.anl.gov/public/e3sm/diagnostic_output//ac.forsyth2/zppy_weekly_comprehensive_v2_www/test-zppy-diags-1019-xc-break/v2.LR.historical_0201/image_check_failures_comprehensive_v2/e3sm_diags/image_diff_grid.pdf
+
+    Then:
+    web_portal_base_url + "/" + web_subdir = https://web.lcrc.anl.gov/public/e3sm/diagnostic_output//ac.forsyth2/zppy_weekly_comprehensive_v2_www/test-zppy-diags-1019-xc-break/v2.LR.historical_0201/image_check_failures_comprehensive_v2/e3sm_diags/
+
+    diff_url = web_portal_base_url + "/" + web_subdir + short_title  + "_diff.png" = https://web.lcrc.anl.gov/public/e3sm/diagnostic_output//ac.forsyth2/zppy_weekly_comprehensive_v2_www/test-zppy-diags-1019-xc-break/v2.LR.historical_0201/image_check_failures_comprehensive_v2/e3sm_diags/lnd_monthly_mvm_lnd/model_vs_model_1982-1983/lat_lon_land/Physical State/v2.LR.historical_0201-SNOINTABS-DJF-global.png_diff.png
+    """
     machine_info = MachineInfo()
     web_portal_base_path = machine_info.config.get("web_portal", "base_path")
     web_portal_base_url = machine_info.config.get("web_portal", "base_url")
@@ -365,6 +387,7 @@ def _make_image_diff_grid(diff_subdir, pdf_name="image_diff_grid.pdf", rows_per_
     pdf_path = f"{diff_subdir}/{pdf_name}"
     pdf = matplotlib.backends.backend_pdf.PdfPages(pdf_path)
     print(f"Saving to:\n{pdf_path}")
+    # web_subdir does NOT start with a slash.
     web_subdir = diff_subdir.removeprefix(web_portal_base_path)
     print(f"Web page will be at:\n{web_portal_base_url}/{web_subdir}/{pdf_name}")
 
@@ -392,9 +415,20 @@ def _make_image_diff_grid(diff_subdir, pdf_name="image_diff_grid.pdf", rows_per_
             if count > len(prefixes) - 1:
                 break
             # We already know all the files are in `diff_subdir`; no need to repeat it.
+            # short_title starts with a slash.
             short_title = prefixes[count].removeprefix(diff_subdir)
             print(f"short_title {i}: {short_title}")
-            ax_row[1].set_title(short_title, fontsize=6)
+
+            # Recall:
+            # web_subdir does not start with a slash.
+            # short_title starts with a slash.
+            diff_url = f"{web_portal_base_url}/{web_subdir}{short_title}_diff.png"
+
+            # Set title with hyperlink
+            title = ax_row[1].set_title(short_title, fontsize=6, color="blue")
+            title.set_url(diff_url)
+
+            # Load and display images
             img = mpimg.imread(f"{prefixes[count]}_actual.png")
             ax_row[0].imshow(img)
             ax_row[0].set_xticks([])
