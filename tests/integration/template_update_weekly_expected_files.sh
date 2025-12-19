@@ -6,12 +6,15 @@
 # NOTE: in `tests` below, do *not* include the `zppy_weekly_` prefix, as that is added later.
 
 # Update all
-tests=("comprehensive_v2" "comprehensive_v3" "bundles" "legacy_3.0.0_comprehensive_v2" "legacy_3.0.0_comprehensive_v3" "legacy_3.0.0_bundles")
+tests=("comprehensive_v2" "comprehensive_v3" "bundles" "legacy_3.1.0_comprehensive_v2" "legacy_3.1.0_comprehensive_v3" "legacy_3.1.0_bundles" "legacy_3.0.0_comprehensive_v2" "legacy_3.0.0_comprehensive_v3" "legacy_3.0.0_bundles")
 
 # Update regular only
 #tests=("comprehensive_v2" "comprehensive_v3" "bundles")
 
-# Update legacy only
+# Update legacy 3.1.0 only
+#tests=("legacy_3.1.0_comprehensive_v2" "legacy_3.1.0_comprehensive_v3" "legacy_3.1.0_bundles")
+
+# Update legacy 3.0.0 only
 #tests=("legacy_3.0.0_comprehensive_v2" "legacy_3.0.0_comprehensive_v3" "legacy_3.0.0_bundles")
 
 for test_name in "${tests[@]}"
@@ -20,9 +23,10 @@ do
     #
     # expected_dir = /lcrc/group/e3sm/public_html/zppy_test_resources/
     #
-    # There are 6 subdirectories relevant to image checking:
+    # There are 9 subdirectories relevant to image checking:
     # 1-3. expected_bundles, expected_comprehensive_v2, expected_comprehensive_v3
-    # 4-6. expected_legacy_3.0.0_bundles, expected_legacy_3.0.0_comprehensive_v2, expected_legacy_3.0.0_comprehensive_v3
+    # 4-6. expected_legacy_3.1.0_bundles, expected_legacy_3.1.0_comprehensive_v2, expected_legacy_3.1.0_comprehensive_v3
+    # 7-9. expected_legacy_3.0.0_bundles, expected_legacy_3.0.0_comprehensive_v2, expected_legacy_3.0.0_comprehensive_v3
     # Notice the subdirectories do *not* include the `zppy_weekly` prefix.
     #
     # Each of those subdirectories has a corresponding image list of the form:
