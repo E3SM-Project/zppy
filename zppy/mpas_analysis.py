@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 from configobj import ConfigObj
@@ -41,33 +43,113 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
         set_subdirs(config, c)
         # Loop over year sets
         ts_year_sets: List[Tuple[int, int]] = get_years(c["ts_years"])
-        climo_year_sets: List[Tuple[int, int]]
-        enso_year_sets: List[Tuple[int, int]]
-        if c["climo_years"] != [""]:
-            climo_year_sets = get_years(c["climo_years"])
-        else:
-            climo_year_sets = ts_year_sets
-        if c["enso_years"] != [""]:
-            enso_year_sets = get_years(c["enso_years"])
-        else:
-            enso_year_sets = ts_year_sets
-        for s, rs, es in zip(ts_year_sets, climo_year_sets, enso_year_sets):
-            c["ts_year1"] = s[0]
-            c["ts_year2"] = s[1]
+
+        # Main climo/index year sets default to time series years.
+        climo_year_sets = _resolve_year_sets(
+            c.get("climo_years", [""]),
+            fallback=ts_year_sets,
+            target_len=len(ts_year_sets),
+            label="climo_years",
+        )
+        enso_year_sets = _resolve_year_sets(
+            c.get("enso_years", [""]),
+            fallback=ts_year_sets,
+            target_len=len(ts_year_sets),
+            label="enso_years",
+        )
+
+        # Reference year sets for test-vs-reference (main-vs-control) mode.
+        # If not provided, default to the main run's corresponding year sets.
+        ref_ts_year_sets = _resolve_year_sets(
+            c.get("ref_ts_years", [""]),
+            fallback=ts_year_sets,
+            target_len=len(ts_year_sets),
+            label="ref_ts_years",
+        )
+        ref_climo_year_sets = _resolve_year_sets(
+            c.get("ref_climo_years", [""]),
+            fallback=ref_ts_year_sets,
+            target_len=len(ts_year_sets),
+            label="ref_climo_years",
+        )
+        ref_enso_year_sets = _resolve_year_sets(
+            c.get("ref_enso_years", [""]),
+            fallback=ref_ts_year_sets,
+            target_len=len(ts_year_sets),
+            label="ref_enso_years",
+        )
+
+        for ts, climo, enso, ctrl_ts, ctrl_climo, ctrl_enso in zip(
+            ts_year_sets,
+            climo_year_sets,
+            enso_year_sets,
+            ref_ts_year_sets,
+            ref_climo_year_sets,
+            ref_enso_year_sets,
+        ):
+            c["ts_year1"] = ts[0]
+            c["ts_year2"] = ts[1]
             if ("last_year" in c.keys()) and (c["ts_year2"] > c["last_year"]):
                 continue  # Skip this year set
-            c["climo_year1"] = rs[0]
-            c["climo_year2"] = rs[1]
+            c["climo_year1"] = climo[0]
+            c["climo_year2"] = climo[1]
             if ("last_year" in c.keys()) and (c["climo_year2"] > c["last_year"]):
                 continue  # Skip this year set
-            c["enso_year1"] = es[0]
-            c["enso_year2"] = es[1]
+            c["enso_year1"] = enso[0]
+            c["enso_year2"] = enso[1]
             if ("last_year" in c.keys()) and (c["enso_year2"] > c["last_year"]):
                 continue  # Skip this year set
             c["scriptDir"] = script_dir
+            identifier: str = _get_identifier(
+                ts_year1=c["ts_year1"],
+                ts_year2=c["ts_year2"],
+                climo_year1=c["climo_year1"],
+                climo_year2=c["climo_year2"],
+            )
+            c["identifier"] = identifier
+
+            ref_identifier: str = _get_identifier(
+                ts_year1=ctrl_ts[0],
+                ts_year2=ctrl_ts[1],
+                climo_year1=ctrl_climo[0],
+                climo_year2=ctrl_climo[1],
+            )
+            c["ref_identifier"] = ref_identifier
+
+            # Optional: point MPAS-Analysis at already-completed MPAS-Analysis runs
+            # so it can do a "test vs. reference" ("main vs. control") comparison.
+            #
+            # These zppy options are expected to point to either:
+            #  - a prior zppy run's output directory (containing a post/ directory),
+            #  - the post/ directory itself,
+            #  - an MPAS-Analysis directory (analysis/mpas_analysis),
+            #  - the cfg/ directory, or
+            #  - directly to the specific mpas_analysis_*.cfg file.
+            #
+            # For user consistency with other zppy tasks, prefer *_data_path naming.
+            # These point to a prior zppy run's output directory (or its post/ dir),
+            # and zppy will locate the MPAS-Analysis config file within it.
+            #
+            # We keep *_run_output_dir as backwards-compatible aliases.
+            reference_data_path = c.get("reference_data_path", "")
+            test_data_path = c.get("test_data_path", "")
+            c["controlRunConfigFile"] = (
+                _resolve_mpas_analysis_config_file(reference_data_path, ref_identifier)
+                if reference_data_path
+                else ""
+            )
+            c["mainRunConfigFile"] = (
+                _resolve_mpas_analysis_config_file(test_data_path, identifier)
+                if test_data_path
+                else ""
+            )
             prefix_suffix: str = (
                 f"_ts_{c['ts_year1']:04d}-{c['ts_year2']:04d}_climo_{c['climo_year1']:04d}-{c['climo_year2']:04d}"
             )
+
+            # If reference years differ, include them in the script/status prefix to avoid collisions.
+            if c["controlRunConfigFile"] and (ref_identifier != identifier):
+                prefix_suffix = f"{prefix_suffix}_vs_ref_{ref_identifier}"
             prefix: str
             if c["subsection"]:
                 prefix = f"mpas_analysis_{c['subsection']}{prefix_suffix}"
@@ -87,7 +169,7 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
                 f.write(template.render(**c))
             make_executable(bash_file)
             c["dependencies"] = dependencies
-            write_settings_file(settings_file, c, s)
+            write_settings_file(settings_file, c, ts)
             export = "ALL"
             existing_bundles = handle_bundles(
                 c,
@@ -120,6 +202,112 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
             print_url(c, "mpas_analysis")
 
     return existing_bundles
+
+
+def _get_identifier(
+    *, ts_year1: int, ts_year2: int, climo_year1: int, climo_year2: int
+) -> str:
+    # Must match identifier in zppy/templates/mpas_analysis.bash
+    ts_y1 = f"{ts_year1:04d}"
+    ts_y2 = f"{ts_year2:04d}"
+    clim_y1 = f"{climo_year1:04d}"
+    clim_y2 = f"{climo_year2:04d}"
+    return f"ts_{ts_y1}-{ts_y2}_climo_{clim_y1}-{clim_y2}"
+
+
+def _resolve_year_sets(
+    years_value: Any,
+    *,
+    fallback: List[Tuple[int, int]],
+    target_len: int,
+    label: str,
+) -> List[Tuple[int, int]]:
+    """Parse and normalize year sets.
+
+    Behavior:
+    - If the parsed year sets are empty, return fallback.
+    - If there is a single year set and target_len > 1, replicate to match target_len.
+    - If the length is neither 1 nor target_len (and non-empty), raise ValueError.
+    """
+
+    parsed = get_years(years_value)
+    if len(parsed) == 0:
+        return fallback
+    if (len(parsed) == 1) and (target_len > 1):
+        return parsed * target_len
+    if (target_len > 0) and (len(parsed) != target_len):
+        raise ValueError(
+            f"{label} has {len(parsed)} ranges but expected 1 or {target_len} to match ts_years."
+        )
+    return parsed
+
+
+def _resolve_mpas_analysis_config_file(run_output_dir: str, identifier: str) -> str:
+    """Resolve the MPAS-Analysis config file for a prior run.
+
+    The resolved file is expected to be named:
+        mpas_analysis_<identifier>.cfg
+
+    with identifier like:
+        ts_1850-2014_climo_1985-2014
+
+    The input may be a directory (various plausible roots) or a direct .cfg path.
+    """
+
+    path = Path(os.path.expandvars(os.path.expanduser(run_output_dir))).resolve()
+
+    # Direct file path
+    if path.is_file():
+        return str(path)
+
+    file_name = f"mpas_analysis_{identifier}.cfg"
+
+    if not path.is_dir():
+        raise FileNotFoundError(
+            f"MPAS-Analysis run path does not exist: {run_output_dir}"
+        )
+
+    candidate_dirs = [
+        # User points at zppy output root
+        path / "post" / "analysis" / "mpas_analysis" / "cfg",
+        # User points at post/
+        path / "analysis" / "mpas_analysis" / "cfg",
+        # User points at mpas_analysis/
+        path / "cfg",
+        # Fallbacks
+        path,
+    ]
+
+    tried: List[str] = []
+    for cfg_dir in candidate_dirs:
+        candidate = cfg_dir / file_name
+        tried.append(str(candidate))
+        if candidate.is_file():
+            return str(candidate)
+
+    # Last resort: small bounded search (avoids an expensive full tree walk)
+    max_depth = 5
+    matches: List[Path] = []
+    root_depth = len(path.parts)
+    for root, dirs, files in os.walk(path):
+        current_depth = len(Path(root).parts) - root_depth
+        if current_depth > max_depth:
+            dirs[:] = []
+            continue
+        if file_name in files:
+            matches.append(Path(root) / file_name)
+            break
+
+    if matches:
+        return str(matches[0])
+
+    raise FileNotFoundError(
+        "Could not find prior MPAS-Analysis config file for model-vs-model run. "
+        f"Searched for {file_name} under {run_output_dir}. "
+        "Common fix: set [mpas_analysis]/reference_data_path to the prior run's "
+        "zppy output directory (the one containing post/analysis/mpas_analysis/cfg/). "
+        f"Tried: {tried}"
+    )
 
 
 def set_subdirs(config: ConfigObj, c: Dict[str, Any]) -> None:

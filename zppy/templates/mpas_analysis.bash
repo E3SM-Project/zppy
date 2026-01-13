@@ -98,6 +98,15 @@ cat > cfg/mpas_analysis_${identifier}.cfg << EOF
 # mainRunName is a name that identifies the simulation being analyzed.
 mainRunName = {{ case }}
 
+{% if controlRunConfigFile %}
+# config file for a control run to which this run will be compared.
+controlRunConfigFile = {{ controlRunConfigFile }}
+{% endif %}
+{% if mainRunConfigFile %}
+# config file for a main run on which the analysis was already run to completion.
+mainRunConfigFile = {{ mainRunConfigFile }}
+{% endif %}
+
 [execute]
 ## options related to executing parallel tasks
 
