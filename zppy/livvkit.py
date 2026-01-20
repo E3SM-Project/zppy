@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List
 
 from configobj import ConfigObj
 
@@ -15,8 +15,6 @@ from zppy.utils import (
     make_executable,
     print_url,
     set_value_of_parameter_if_undefined,
-    check_parameter_defined,
-    get_value_from_parameter,
     submit_script,
     write_settings_file,
 )
@@ -110,9 +108,7 @@ def add_climo_dependency(
     y2: int = start_yr + num_years - 1
     while y2 <= end_yr:
         dependencies.append(
-            os.path.join(
-                scriptDir, f"{prefix}_{sub}_{y1:04d}-{y2:04d}.status"
-            )
+            os.path.join(scriptDir, f"{prefix}_{sub}_{y1:04d}-{y2:04d}.status")
         )
         y1 += num_years
         y2 += num_years
@@ -121,7 +117,6 @@ def add_climo_dependency(
 def determine_and_add_dependencies(
     _c: Dict[str, Any], dependencies: List[str], script_dir: str
 ) -> None:
-    year_sets = get_years(_c["years"])
 
     set_value_of_parameter_if_undefined(
         _c,
@@ -164,52 +159,5 @@ def determine_and_add_dependencies(
             f"land_monthly_climo{_grid}",
             _c["year1"],
             _c["year2"],
-            _c["ts_num_years"]
+            _c["ts_num_years"],
         )
-
-    # set_value_of_parameter_if_undefined(
-    #     c,
-    #     "e3sm_to_cmip_land_subsection",
-    #     "land_monthly",
-    #     ParameterInferenceType.SECTION_INFERENCE,
-    # )
-    # add_dependencies(
-    #     dependencies,
-    #     script_dir,
-    #     "e3sm_to_cmip",
-    #     c["e3sm_to_cmip_land_subsection"],
-    #     c["year1"],
-    #     c["year2"],
-    #     c["ts_num_years"],
-    # )
-    # if not c["land_only"]:
-    #     set_value_of_parameter_if_undefined(
-    #         c,
-    #         "ts_atm_subsection",
-    #         "atm_monthly_180x360_aave",
-    #         ParameterInferenceType.SECTION_INFERENCE,
-    #     )
-    #     add_dependencies(
-    #         dependencies,
-    #         script_dir,
-    #         "ts",
-    #         c["ts_atm_subsection"],
-    #         c["year1"],
-    #         c["year2"],
-    #         c["ts_num_years"],
-    #     )
-    #     set_value_of_parameter_if_undefined(
-    #         c,
-    #         "e3sm_to_cmip_atm_subsection",
-    #         "atm_monthly_180x360_aave",
-    #         ParameterInferenceType.SECTION_INFERENCE,
-    #     )
-    #     add_dependencies(
-    #         dependencies,
-    #         script_dir,
-    #         "e3sm_to_cmip",
-    #         c["e3sm_to_cmip_atm_subsection"],
-    #         c["year1"],
-    #         c["year2"],
-    #         c["ts_num_years"],
-    #     )
