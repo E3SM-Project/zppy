@@ -8,15 +8,17 @@ Generates zppy configuration files from simulation metadata.
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
+from mache import MachineInfo
 from simulation_output_reviewer import (
     ARCHIVE_DIR,
     DirectoryMetadata,
     get_metadata_by_component,
 )
-from zppy_config_utils import Dependency, get_case_name, get_machine_specifics
 
-UNIQUE_ID = "run7"
+UNIQUE_ID = "run16"
 ZPPY_CFG_LOCATION = "/home/ac.forsyth2/ez/datathon/"
+ZPPY_CFG_SUFFIX_OUTPUT = "datathon_placeholder/"
+ZPPY_CFG_SUFFIX_WWW = "datathon_placeholder/"
 
 
 class ZppyConfigGenerator:
@@ -32,13 +34,14 @@ class ZppyConfigGenerator:
         self.input_path: str = machine_specifics["input_path"]
         self.output_path: str = machine_specifics["output_path"]
         self.www_path: str = machine_specifics["output_path"]
+        self.diagnostics_base_path: str = machine_specifics["diagnostics_base_path"]
         self.partition: str = machine_specifics["partition"]
         self.qos: str = machine_specifics["qos"]
 
         self.case_name = get_case_name(metadata_dict)
 
         # Trackers of available climo & time-series data
-        self.dependency_tracker: Dict[str, Dependency] = {
+        self.dependency_tracker: Dict[str, Optional[Dependency]] = {
             "climatology_atm_monthly": None,
             "climatology_atm_monthly_diurnal": None,
             "climatology_lnd_monthly": None,
@@ -87,7 +90,7 @@ class ZppyConfigGenerator:
         return "\n\n".join(sections)
 
     def _generate_default_section(self) -> str:
-        lines = [
+        lines: List[str] = [
             "[default]",
             f'case = "{self.case_name}"',
             'constraint = ""',
@@ -109,10 +112,11 @@ class ZppyConfigGenerator:
 
     def _generate_climo_section(self) -> str:
         atm_h0_var_str: str = self._get_var_str("atm", "h0", set())
-        atm_h3_var_str: str = self._get_var_str("atm", "h3", set("PRECT"))
+        atm_h3_var_str: str = self._get_var_str("atm", "h3", set(["PRECT"]))
         lnd_h0_var_str: str = self._get_var_str("lnd", "h0", set())
-        year_increment: int = 2
-        years_str: str = self._get_years_str("atm", year_increment)[0]
+        years_str: str
+        year_increment: int
+        years_str, _, _, year_increment = self._get_years_str("atm")
 
         lines: List[str] = [
             "[climo]",
@@ -143,7 +147,8 @@ class ZppyConfigGenerator:
             subtask_label = "atm_monthly_diurnal_8xdaily_180x360_aave"
             lines.extend(
                 [
-                    f"  [[ {subtask_label} ]]" '  frequency = "diurnal_8xdaily"',
+                    f"  [[ {subtask_label} ]]",
+                    '  frequency = "diurnal_8xdaily"',
                     '  input_files = "eam.h3"',
                     '  input_subdir = "archive/atm/hist"',
                     f'  vars = "{atm_h3_var_str}"',
@@ -186,14 +191,17 @@ class ZppyConfigGenerator:
         )
 
         atm_h0_var_str: str = self._get_var_str("atm", "h0", atm_h0_standard)
-        atm_h1_var_str: str = self._get_var_str("atm", "h1", set("PRECT"))
+        atm_h1_var_str: str = self._get_var_str("atm", "h1", set(["PRECT"]))
         lnd_h0_var_str: str = self._get_var_str("lnd", "h0", lnd_h0_standard)
+        lnd_h0_extra_vars_str: str = self._get_var_str("lnd", "h0", set(["landfrac"]))
         rof_h0_var_str: str = self._get_var_str(
-            "rof", "h0", set("RIVER_DISCHARGE_OVER_LAND_LIQ")
+            "rof", "h0", set(["RIVER_DISCHARGE_OVER_LAND_LIQ"])
         )
+        rof_h0_extra_vars_str: str = self._get_var_str("rof", "h0", set(["areatotal2"]))
         lnd_all_found_vars_str: str = self._get_var_str("lnd", "h0", set())
-        year_increment: int = 2
-        years_str: str = self._get_years_str("atm", year_increment)[0]
+        years_str: str
+        year_increment: int
+        years_str, _, _, year_increment = self._get_years_str("atm")
 
         lines: List[str] = [
             "[ts]",
@@ -203,7 +211,7 @@ class ZppyConfigGenerator:
             "",
         ]
 
-        subtask_label: str = ""
+        subtask_label: str
         if atm_h0_var_str:
             subtask_label = "atm_monthly_180x360_aave"
             lines.extend(
@@ -236,43 +244,53 @@ class ZppyConfigGenerator:
                 subtask_label, atm_h1_var_str, years_str, year_increment
             )
 
-        if lnd_h0_var_str and ("landfrac" in lnd_h0_var_str):
-            subtask_label = "land_monthly"
-            lines.extend(
-                [
-                    f"  [[ {subtask_label} ]]",
-                    '  extra_vars = "landfrac"',
-                    '  frequency = "monthly"',
-                    '  input_files = "elm.h0"',
-                    '  input_subdir = "archive/lnd/hist"',
-                    f'  vars = "{lnd_h0_var_str}"',
-                    "",
-                ]
-            )
-            self.dependency_tracker["ts_land_monthly"] = Dependency(
-                subtask_label, lnd_h0_var_str, years_str, year_increment
-            )
+        if lnd_h0_var_str:
+            if "landfrac" in lnd_h0_extra_vars_str:
+                subtask_label = "land_monthly"
+                lines.extend(
+                    [
+                        f"  [[ {subtask_label} ]]",
+                        f'  extra_vars = "{lnd_h0_extra_vars_str}"',
+                        '  frequency = "monthly"',
+                        '  input_files = "elm.h0"',
+                        '  input_subdir = "archive/lnd/hist"',
+                        f'  vars = "{lnd_h0_var_str}"',
+                        "",
+                    ]
+                )
+                self.dependency_tracker["ts_land_monthly"] = Dependency(
+                    subtask_label, lnd_h0_var_str, years_str, year_increment
+                )
+            else:
+                print(
+                    f"Warning: land_monthly has valid variables, but extra_vars 'landfrac' is missing. Found variables={lnd_h0_var_str}"
+                )
 
-        if rof_h0_var_str and ("areatotal2" in lnd_h0_var_str):
-            subtask_label = "rof_monthly"
-            lines.extend(
-                [
-                    f"  [[ {subtask_label} ]]",
-                    '  extra_vars = "areatotal2"',
-                    '  frequency = "monthly"',
-                    '  input_files = "mosart.h0"',
-                    '  input_subdir = "archive/rof/hist"',
-                    f'  vars = "{rof_h0_var_str}"',
-                    "",
-                ]
-            )
-            self.dependency_tracker["ts_rof_monthly"] = Dependency(
-                subtask_label, rof_h0_var_str, years_str, year_increment
-            )
+        if rof_h0_var_str:
+            if "areatotal2" in rof_h0_extra_vars_str:
+                subtask_label = "rof_monthly"
+                lines.extend(
+                    [
+                        f"  [[ {subtask_label} ]]",
+                        f'  extra_vars = "{rof_h0_extra_vars_str}"',
+                        '  frequency = "monthly"',
+                        '  input_files = "mosart.h0"',
+                        '  input_subdir = "archive/rof/hist"',
+                        f'  vars = "{rof_h0_var_str}"',
+                        "",
+                    ]
+                )
+                self.dependency_tracker["ts_rof_monthly"] = Dependency(
+                    subtask_label, rof_h0_var_str, years_str, year_increment
+                )
+            else:
+                print(
+                    f"Warning: rof_monthly has valid variables, but extra_vars 'areatotal2' is missing. Found variables={rof_h0_var_str}"
+                )
 
         # Use year increments of 5 for global time series
         year_increment = 5
-        years_str = self._get_years_str("atm", year_increment)[0]
+        years_str, _, _, year_increment = self._get_years_str("atm", year_increment)
 
         if atm_h0_var_str:
             subtask_label = "atm_monthly_glb"
@@ -317,7 +335,7 @@ class ZppyConfigGenerator:
             )
         )
         standard_vars: Set[str] = set(
-            "ICEFRAC,LANDFRAC,OCNFRAC,PSL,FSNTC,FSNTOAC,SWCF,LWCF,FLUT,FSNT,FSNTOA,FLNT,FLNTC,FSNS,FLNS,FSNS,SHFLX,QFLX,LHFLX,TAUX,TAUY,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT,U10,QREFHT,TMQ,CLDTOT,CLDHGH,CLDMED,CLDLOW,FLDS,FSDS,TGCLDIWP,TGCLDCWP,TGCLDLWP,FLNSC,FLUTC,FSDSC,SOLIN,FSNSC,AODABS,AODVIS,AODDUST,AREL,TREFMNAV,TREFMXAV,PS,PHIS,U,V,T,Z3".lower().split(
+            "ICEFRAC,LANDFRAC,OCNFRAC,PSL,FSNTC,FSNTOAC,SWCF,LWCF,FLUT,FSNT,FSNTOA,FLNT,FLNTC,FSNS,FLNS,FSNS,SHFLX,QFLX,LHFLX,TAUX,TAUY,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT,U10,QREFHT,TMQ,CLDTOT,CLDHGH,CLDMED,CLDLOW,FLDS,FSDS,TGCLDIWP,TGCLDCWP,TGCLDLWP,FLNSC,FLUTC,FSDSC,SOLIN,FSNSC,AODABS,AODVIS,AODDUST,AREL,TREFMNAV,TREFMXAV,PS,PHIS,U,V,T,Z3".split(
                 ","
             )
         )
@@ -325,7 +343,7 @@ class ZppyConfigGenerator:
         cmip_vars_str: str = self._get_var_str("atm", "h0", standard_cmip_vars)
         vars_str: str = self._get_var_str("atm", "h0", standard_vars)
 
-        lines = [
+        lines: List[str] = [
             "[e3sm_to_cmip]",
             "active = True",
             'frequency = "monthly"',
@@ -386,66 +404,108 @@ class ZppyConfigGenerator:
         return "\n".join(lines)
 
     def _generate_e3sm_diags_section(self) -> str:
-        climo_diurnal_frequency: str = ""
-        climo_diurnal_subsection: str = ""
+        sets_str: str = self._get_e3sm_diags_sets()
+        years_str: str
+        start_year: int
+        end_year: int
+        year_increment: int
+        years_str, start_year, end_year, year_increment = self._get_years_str("atm")
+
+        lines: List[str] = [
+            "[e3sm_diags]",
+            "active = True",
+            'grid = "180x360_aave"',
+            "multiprocessing = True",
+            "num_workers = 8",
+            f"ref_final_yr = {end_year}",
+            f"ref_start_yr = {start_year}",
+            f'ref_years = "{start_year}-{end_year}",',
+            f'sets = "{sets_str}",',
+            f'short_name= "{self.case_name}"',
+        ]
+
+        dependency_climo_atm_monthly: Optional[Dependency] = self.dependency_tracker[
+            "climatology_atm_monthly"
+        ]
+        if dependency_climo_atm_monthly:
+            climo_subsection: str = dependency_climo_atm_monthly.subtask_label
+            lines.extend(
+                [
+                    f'climo_subsection = "{climo_subsection}"',
+                    f'reference_data_path = "{self.diagnostics_base_path}observations/Atm/climatology/"',
+                ]
+            )
+
         dependency_climo_atm_monthly_diurnal: Optional[Dependency] = (
             self.dependency_tracker["climatology_atm_monthly_diurnal"]
         )
         if dependency_climo_atm_monthly_diurnal:
-            climo_diurnal_frequency = "diurnal_8xdaily"
-            climo_diurnal_subsection = (
+            climo_diurnal_frequency: str = "diurnal_8xdaily"
+            climo_diurnal_subsection: str = (
                 dependency_climo_atm_monthly_diurnal.subtask_label
+            )
+            lines.extend(
+                [
+                    f'climo_diurnal_frequency = "{climo_diurnal_frequency}"',
+                    f'climo_diurnal_subsection = "{climo_diurnal_subsection}"',
+                    'dc_obs_climo = "/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/climatology"',
+                ]
+            )
+
+        dependency_ts_atm_monthly: Optional[Dependency] = self.dependency_tracker[
+            "ts_atm_monthly"
+        ]
+        if dependency_ts_atm_monthly:
+            ts_subsection: str = dependency_ts_atm_monthly.subtask_label
+            lines.extend(
+                [
+                    f'ts_subsection = "{ts_subsection}"',
+                ]
             )
 
         dependency_ts_atm_daily: Optional[Dependency] = self.dependency_tracker[
             "ts_atm_daily"
         ]
-        ts_daily_subsection: str = ""
         if dependency_ts_atm_daily:
-            ts_daily_subsection = dependency_ts_atm_daily.subtask_label
+            ts_daily_subsection: str = dependency_ts_atm_daily.subtask_label
+            lines.extend(
+                [
+                    f'ts_daily_subsection = "{ts_daily_subsection}"',
+                ]
+            )
 
-        dependency_ts_atm_monthly: Optional[Dependency] = self.dependency_tracker[
-            "ts_atm_monthly"
+        dependency_ts_rof_monthly: Optional[Dependency] = self.dependency_tracker[
+            "ts_rof_monthly"
         ]
-        ts_subsection: str = ""
-        if dependency_ts_atm_monthly:
-            ts_subsection = dependency_ts_atm_monthly.subtask_label
+        if dependency_ts_rof_monthly:
+            lines.extend(
+                [
+                    f'streamflow_obs_ts = "{self.diagnostics_base_path}observations/Atm/time-series/"',
+                ]
+            )
 
-        sets_str: str = self._get_e3sm_diags_sets()
-        years_str: str
-        start_year: str
-        end_year: str
-        year_increment: int = 2
-        years_str, start_year, end_year = self._get_years_str("atm", year_increment)
+        if (
+            dependency_ts_atm_monthly
+            or dependency_ts_atm_daily
+            or dependency_ts_rof_monthly
+        ):
+            lines.extend(
+                [
+                    f"ts_num_years = {year_increment}",
+                    f'obs_ts = "{self.diagnostics_base_path}observations/Atm/time-series/"',
+                ]
+            )
 
-        return "\n".join(
+        # Add subtask
+        lines.extend(
             [
-                "[e3sm_diags]",
-                "active = True",
-                f'climo_diurnal_frequency = "{climo_diurnal_frequency}"',
-                f'climo_diurnal_subsection = "{climo_diurnal_subsection}"',
-                'climo_subsection = "atm_monthly_180x360_aave"',
-                'grid = "180x360_aave"',
-                "multiprocessing = True",
-                "num_workers = 8",
-                f"ref_final_yr = {end_year}",
-                f"ref_start_yr = {start_year}",
-                f'ref_years = "{start_year}-{end_year}",',
-                f'sets = "{sets_str}",',
-                f'short_name= "{self.case_name}"',
-                f'ts_daily_subsection = "{ts_daily_subsection}"',
-                f"ts_num_years = {year_increment}",
-                f'ts_subsection = "{ts_subsection}"',
-                f'years = "{years_str}"',
-                "# Used for mvo and mvm, if ts_num_years is set",
-                'obs_ts = "/lcrc/group/e3sm/diagnostics/observations/Atm/time-series/"',
                 "",
                 "  [[atm_monthly_180x360_aave]]",
-                '  reference_data_path = "/lcrc/group/e3sm/diagnostics/observations/Atm/climatology/"',
-                '  dc_obs_climo = "/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/climatology"',
-                '  streamflow_obs_ts = "/lcrc/group/e3sm/diagnostics/observations/Atm/time-series/"',
+                f'  years = "{years_str}"',
             ]
         )
+
+        return "\n".join(lines)
 
     def _get_e3sm_diags_sets(self) -> str:
         # Eventually: Add "tc_analysis" back in after empty dat is resolved.
@@ -482,20 +542,20 @@ class ZppyConfigGenerator:
         return ",".join(available_sets)
 
     def _generate_mpas_analysis_section(self) -> str:
-        year_increment: int = 10
-
-        start_year: str
-        end_year: str
-        _, start_year, end_year = self._get_years_str("ocn", year_increment)
+        years_str: str
+        start_year: int
+        end_year: int
+        year_increment: int
+        years_str, start_year, end_year, year_increment = self._get_years_str("ocn")
         if not (start_year and end_year):
             # Use years from ice data as fall-back option
-            _, start_year, end_year = self._get_years_str("ice", year_increment)
+            _, start_year, end_year, year_increment = self._get_years_str("ice")
 
         climo_years: str = f"{start_year}-{end_year}"
         ts_years: str = f"{start_year}-{end_year}"
 
         self.dependency_tracker["mpas_analysis"] = Dependency(
-            "mpas_analysis", "", year_increment, climo_years, ts_years
+            "mpas_analysis", "", years_str, year_increment, climo_years, ts_years
         )
 
         return "\n".join(
@@ -513,16 +573,22 @@ class ZppyConfigGenerator:
         )
 
     def _generate_global_time_series_section(self) -> str:
+        start_year: int
+        end_year: int
         year_increment: int = 5
-        start_year: str
-        end_year: str
-        _, start_year, end_year = self._get_years_str("atm", year_increment)
+        _, start_year, end_year, year_increment = self._get_years_str(
+            "atm", year_increment
+        )
         if not (start_year and end_year):
             # Use years from ocn data as fall-back option
-            _, start_year, end_year = self._get_years_str("ocn", year_increment)
+            _, start_year, end_year, year_increment = self._get_years_str(
+                "ocn", year_increment
+            )
         if not (start_year and end_year):
             # Use years from lnd data as fall-back option
-            _, start_year, end_year = self._get_years_str("lnd", year_increment)
+            _, start_year, end_year, year_increment = self._get_years_str(
+                "lnd", year_increment
+            )
 
         supported_plots: Set[str] = set()
 
@@ -550,7 +616,7 @@ class ZppyConfigGenerator:
         atm_h0_standard: Set[str] = set()
         plots_atm: str = ""
         if dependency_ts_atm_monthly_glb:
-            atm_h0_standard = set("TREFHT".lower().split(","))
+            atm_h0_standard = set("TREFHT".split(","))
             plots_atm = self._get_var_str("atm", "h0", atm_h0_standard)
             # Handle plots_original:
             available_atm_vars: str = self._get_var_str("atm", "h0", set())
@@ -579,7 +645,7 @@ class ZppyConfigGenerator:
         plots_lnd: str = ""
         if dependency_ts_lnd_monthly_glb:
             lnd_h0_standard = set(
-                "FSH,RH2M,LAISHA,LAISUN,QINTR,QOVER,QRUNOFF,QSOIL,QVEGE,QVEGT,SOILWATER_10CM,TSA,H2OSNO,TOTLITC,CWDC,SOIL1C,SOIL2C,SOIL3C,SOIL4C,WOOD_HARVESTC,TOTVEGC,NBP,GPP,AR,HR".lower().split(
+                "FSH,RH2M,LAISHA,LAISUN,QINTR,QOVER,QRUNOFF,QSOIL,QVEGE,QVEGT,SOILWATER_10CM,TSA,H2OSNO,TOTLITC,CWDC,SOIL1C,SOIL2C,SOIL3C,SOIL4C,WOOD_HARVESTC,TOTVEGC,NBP,GPP,AR,HR".split(
                     ","
                 )
             )
@@ -606,8 +672,6 @@ class ZppyConfigGenerator:
         )
 
     def _generate_ilamb_section(self) -> str:
-        year_increment: int = 4
-
         dependency_ts_atm_monthly: Optional[Dependency] = self.dependency_tracker[
             "ts_atm_monthly"
         ]
@@ -638,12 +702,17 @@ class ZppyConfigGenerator:
                 dependency_e3sm_to_cmip_lnd_monthly.subtask_label
             )
 
-        start_year: str
-        end_year: str
-        _, start_year, end_year = self._get_years_str("atm", year_increment)
+        start_year: int
+        end_year: int
+        year_increment: int = 4
+        _, start_year, end_year, year_increment = self._get_years_str(
+            "atm", year_increment
+        )
         if not (start_year and end_year):
             # Use years from lnd data as fall-back option
-            _, start_year, end_year = self._get_years_str("lnd", year_increment)
+            _, start_year, end_year, year_increment = self._get_years_str(
+                "lnd", year_increment
+            )
 
         return "\n".join(
             [
@@ -651,7 +720,7 @@ class ZppyConfigGenerator:
                 "active = True",
                 f'e3sm_to_cmip_atm_subsection = "{e3sm_to_cmip_atm_subsection}"',
                 f'e3sm_to_cmip_land_subsection = "{e3sm_to_cmip_lnd_subsection}"',
-                'ilamb_obs = "/lcrc/group/e3sm/diagnostics/ilamb_data"',
+                f'ilamb_obs = "{self.diagnostics_base_path}ilamb_data"',
                 "nodes = 8",
                 f'short_name = "{self.case_name}"',
                 f'ts_atm_subsection = "{ts_atm_subsection}"',
@@ -680,28 +749,114 @@ class ZppyConfigGenerator:
                     # Use ALL found h# variables
                     # (If `standard_vars=""`, the default is to use all available variables)
                     component_h_var_str = ",".join(component_h_vars)
+                    # component_h_var_str = ""  # Again, "" means use ALL
         return component_h_var_str
 
     def _get_years_str(
-        self, component: str, year_increment: int
-    ) -> Tuple[str, str, str]:
+        self, component: str, year_increment: int = 0
+    ) -> Tuple[str, int, int, int]:
         component_metadata: Optional[DirectoryMetadata] = self.metadata_dict[component]
-        if component_metadata:
-            if component_metadata.year_ranges:
-                n: int = len(component_metadata.year_ranges)
-                if n > 1:
-                    print(f"Warning: Found {n} year ranges for component {component}")
-                year_range: str = component_metadata.year_ranges[0]
-                if "-" in year_range:
-                    parts = year_range.split("-")
-                    start_year: str = parts[0]
-                    end_year: str = parts[1]
-                    return (
-                        f"{start_year}:{end_year}:{year_increment}",
-                        start_year,
-                        end_year,
-                    )
-        return "", "", ""
+        if component_metadata and component_metadata.year_ranges:
+            n: int = len(component_metadata.year_ranges)
+            if n > 1:
+                print(f"Warning: Found {n} year ranges for component {component}")
+            year_range: str = component_metadata.year_ranges[0]
+            if "-" in year_range:
+                parts = year_range.split("-")
+                start_year: int = int(parts[0])
+                end_year: int = int(parts[1])
+                year_diff: int = end_year - start_year
+                if (year_increment == 0) or (year_diff % year_increment != 0):
+                    # Condition 1: we are explicitly being asked to find the increment.
+                    # Condition 2: the increment is invalid and needs to be fixed.
+                    year_increment = year_diff  # Default to the entire period
+                    potential_increments: List[int] = [20, 10, 5, 2]
+                    for increment in potential_increments:
+                        if year_diff % increment == 0:
+                            year_increment = increment
+                            break
+                return (
+                    f"{start_year}:{end_year}:{year_increment}",
+                    start_year,
+                    end_year,
+                    year_increment,
+                )
+        return "", 0, 0, 0
+
+
+class Dependency(object):
+    def __init__(
+        self,
+        subtask_label: str,
+        var_str: str,
+        years_str: str,
+        year_increment: int,
+        climo_years: str = "",
+        ts_years: str = "",
+    ):
+        self.subtask_label: str = subtask_label
+        self.var_str: str = var_str
+        self.years_str: str = years_str
+        self.year_increment: int = year_increment
+        self.climo_years: str = climo_years
+        self.ts_years: str = ts_years
+
+
+# These functions are used to initialize the ZppyConfigGenerator
+def get_machine_specifics() -> Dict[str, str]:
+    machine_info = MachineInfo()
+    machine: str = machine_info.machine
+    config = machine_info.config
+    username: str = config.get("web_portal", "username")
+    web_base_path: str = config.get("web_portal", "base_path")
+    diagnostics_base_path: str = config.get("diagnostics", "base_path")
+
+    output_base_path: str = ""
+    partition: str = ""
+    qos: str = ""
+    if machine == "chrysalis":
+        output_base_path = "/lcrc/group/e3sm/"
+        partition = "compute"
+        qos = "regular"
+    elif machine == "perlmutter":
+        output_base_path = "/global/cfs/cdirs/e3sm/"
+        partition = ""
+        qos = "regular"
+    elif machine == "compy":
+        output_base_path = "/compyfs/"
+        partition = "slurm"
+        qos = "regular"
+    else:
+        print(f"Warning: invalid machine={machine}")
+
+    return {
+        "input_path": ARCHIVE_DIR,
+        "output_path": f"{output_base_path}{username}/{ZPPY_CFG_SUFFIX_OUTPUT}",
+        "www_path": f"{web_base_path}/{username}/{ZPPY_CFG_SUFFIX_WWW}",
+        "diagnostics_base_path": f"{diagnostics_base_path}/",
+        "partition": partition,
+        "qos": qos,
+    }
+
+
+def get_case_name(metadata: Dict[str, Optional[DirectoryMetadata]]) -> str:
+    found_case_names: Set[str] = set()
+    for component in metadata.keys():
+        metadata_for_component: Optional[DirectoryMetadata] = metadata[component]
+        if metadata_for_component is None:
+            continue  # No metadata to look through
+        case_names: Set[str] = metadata_for_component.case_names
+        if len(case_names) > 1:
+            print(
+                f"Warning: more than 1 case name found for component={component}. Cases: {case_names}"
+            )
+        for case_name in case_names:
+            found_case_names.add(case_name)
+    if len(found_case_names) > 1:
+        print(
+            f"Warning: more than 1 case name found across components. Cases: {found_case_names}"
+        )
+    return list(found_case_names)[0]
 
 
 def main(verbose: bool = False):
