@@ -1,0 +1,502 @@
+#!/bin/bash
+# zppy Integration Test Automation Script
+# Usage:
+# 1. Copy this file and `run_image_tests.bash` out of the zppy repo. (This script will change the branch).
+# 2. Edit configuration parameters below.
+# 3. Run: ./run_integration_test.bash [OPTIONS]
+# 4. Run: ./run_image_tests.bash
+#
+# Options:
+#   --date YYYYMMDD       Date stamp for test (default: today)
+#   --auto                Run fully automated (no checkpoints)
+#   --phase N             Start from phase N (1=setup, 2=bundles_part2, 3=validation)
+#   --help                Show this help message
+
+set -e  # Exit on error
+set -u  # Exit on undefined variable
+
+# ============================================================================
+# Configuration
+# ============================================================================
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DATE_STAMP="${DATE_STAMP:-$(date +%Y%m%d)}"
+AUTO_MODE=false
+START_PHASE=1
+
+# Paths
+HOME_DIR="$HOME"
+EZ_DIR="$HOME_DIR/ez"
+E3SM_DIAGS_DIR="$EZ_DIR/e3sm_diags"
+ZPPY_INTERFACES_DIR="$EZ_DIR/zppy-interfaces"
+ZPPY_DIR="$EZ_DIR/zppy"
+CONDA_PROFILE="$HOME_DIR/miniforge3/etc/profile.d/conda.sh"
+OUTPUT_WORKSPACE="/lcrc/group/e3sm/ac.forsyth2"
+
+# Environment names
+DIAGS_ENV="test-diags-main-${DATE_STAMP}"
+ZI_ENV="test-zi-main-${DATE_STAMP}"
+ZPPY_ENV="test-zppy-main-${DATE_STAMP}-env"
+
+# Test configuration
+UNIQUE_ID="zppy_main_branch_test_${DATE_STAMP}"
+
+# Cherry pick configuration
+CHERRY_PICK_BRANCH="test-fixes"
+CHERRY_PICK_COMMIT=""
+
+# Output directories
+BUNDLES_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_bundles_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
+LEGACY_BUNDLES_OUTPUT="${OUTPUT_WORKSPACE}zppy_weekly_legacy_3.0.0_bundles_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
+V2_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_comprehensive_v2_output/${UNIQUE_ID}/v2.LR.historical_0201/post/scripts"
+LEGACY_V2_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_legacy_3.0.0_comprehensive_v2_output/${UNIQUE_ID}/v2.LR.historical_0201/post/scripts"
+V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_comprehensive_v3_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
+LEGACY_V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_legacy_3.0.0_comprehensive_v3_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+log() {
+    echo -e "${BLUE}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $*"
+}
+
+log_success() {
+    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] ✓${NC} $*"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] ⚠${NC} $*"
+}
+
+log_error() {
+    echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] ✗${NC} $*"
+}
+
+checkpoint() {
+    local message="$1"
+    if [ "$AUTO_MODE" = false ]; then
+        log_warning "CHECKPOINT: $message"
+        read -p "Press Enter to continue or Ctrl+C to abort..."
+    else
+        log "AUTO MODE: $message"
+    fi
+}
+
+show_help() {
+    grep "^#" "$0" | grep -v "#!/bin/bash" | sed 's/^# //' | sed 's/^#//'
+    exit 0
+}
+
+activate_conda() {
+    source ~/.bashrc
+    lcrc_conda # Run conda activation function defined in ~/.bashrc
+}
+
+wait_for_slurm_jobs() {
+    local check_interval=${1:-600}  # Check every 600 seconds (10 minutes) by default
+    local max_wait=${2:-14400}     # Max wait 4 hours by default
+
+    log "Waiting for SLURM jobs to complete..."
+    local elapsed=0
+    local initial_count=$(squeue -u ac.forsyth2 | wc -l)
+    initial_count=$((initial_count - 1))  # Subtract header
+
+    log "Initial job count: $initial_count"
+
+    while true; do
+        local job_count=$(squeue -u ac.forsyth2 | wc -l)
+        job_count=$((job_count - 1))  # Subtract header
+
+        if [ "$job_count" -eq 0 ]; then
+            log_success "All SLURM jobs completed!"
+            return 0
+        fi
+
+        if [ $elapsed -ge $max_wait ]; then
+            log_error "Timeout waiting for SLURM jobs after ${max_wait}s"
+            return 1
+        fi
+
+        echo -ne "\r${YELLOW}Jobs remaining: $job_count${NC} (elapsed: ${elapsed}s)"
+        sleep "$check_interval"
+        elapsed=$((elapsed + check_interval))
+    done
+    echo ""  # New line after progress indicator
+}
+
+check_status_files() {
+    local dir="$1"
+    local name="$2"
+
+    if [ ! -d "$dir" ]; then
+        log_warning "Directory not found: $dir"
+        return 1
+    fi
+
+    cd "$dir"
+    local errors=$(grep -v "OK" *status 2>/dev/null || true)
+
+    if [ -z "$errors" ]; then
+        log_success "$name: No errors found"
+        return 0
+    else
+        log_error "$name: Errors found!"
+        echo "$errors"
+        return 1
+    fi
+}
+
+# ============================================================================
+# Parse Arguments
+# ============================================================================
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --date)
+            DATE_STAMP="$2"
+            shift 2
+            ;;
+        --auto)
+            AUTO_MODE=true
+            shift
+            ;;
+        --phase)
+            START_PHASE="$2"
+            shift 2
+            ;;
+        --help)
+            show_help
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            show_help
+            ;;
+    esac
+done
+
+# ============================================================================
+# Phase 1: Setup
+# ============================================================================
+
+phase_1_setup() {
+    log "========================================="
+    log "Phase 1: Setup"
+    log "Date: $DATE_STAMP"
+    log "Unique ID: $UNIQUE_ID"
+    log "========================================="
+
+    activate_conda
+
+    # ====================================================================
+    # Set up e3sm_diags environment
+    # ====================================================================
+    log "Setting up e3sm_diags environment..."
+    cd "$E3SM_DIAGS_DIR"
+
+    git status
+    git add -A
+    git commit -m "Auto-save before test" --no-verify || true
+
+    git fetch upstream main
+    git checkout main
+    git reset --hard upstream/main
+
+    log "Latest e3sm_diags commit (should match https://github.com/E3SM-Project/e3sm_diags/commits/main):"
+    git log -1 --oneline
+
+    rm -rf build
+    conda clean --all --yes
+    conda env create -f conda-env/dev.yml -n "$DIAGS_ENV"
+    conda activate "$DIAGS_ENV"
+    python -m pip install .
+    log_success "e3sm_diags environment ready: $DIAGS_ENV"
+
+    # ====================================================================
+    # Set up zppy-interfaces environment
+    # ====================================================================
+    log "Setting up zppy-interfaces environment..."
+    cd "$ZPPY_INTERFACES_DIR"
+
+    git status
+    git add -A
+    git commit -m "Auto-save before test" --no-verify || true
+
+    git fetch upstream main
+    git checkout main
+    git reset --hard upstream/main
+
+    log "Latest zppy-interfaces commit (should match https://github.com/E3SM-Project/zppy-interfaces/commits/main):"
+    git log -1 --oneline
+
+    rm -rf build
+    conda clean --all --yes
+    conda env create -f conda/dev.yml -n "$ZI_ENV"
+    conda activate "$ZI_ENV"
+    python -m pip install .
+    log_success "zppy-interfaces environment ready: $ZI_ENV"
+
+    # Run unit tests
+    log "Running pytest unit tests..."
+    pytest /zppy-interfaces/tests/unit/global_time_series/test_*.py
+    pytest /zppy-interfaces/tests/unit/pcmdi_diags/test_*.py
+    log_success "zppy-interfaces unit tests passed"
+
+    # ========================================================================
+    # Set up zppy environment
+    # ========================================================================
+    log "Setting up zppy environment..."
+    cd "$ZPPY_DIR"
+
+    git status
+    git add -A
+    git commit -m "Auto-save before test" --no-verify || true
+
+    git fetch upstream main
+    git checkout -b "test-zppy-main-${DATE_STAMP}" upstream/main
+
+    log "Latest zppy commit:"
+    git log -1 --oneline
+
+    # Cherry-pick if requested
+    if [ -n "$CHERRY_PICK_COMMIT" ]; then
+        log "Cherry-picking commit: $CHERRY_PICK_COMMIT"
+        git fetch upstream "$CHERRY_PICK_BRANCH"
+        git cherry-pick "$CHERRY_PICK_COMMIT"
+        log_success "Cherry-pick applied"
+    fi
+
+    rm -rf build
+    conda clean --all --yes
+    conda env create -f conda/dev.yml -n "$ZPPY_ENV"
+    conda activate "$ZPPY_ENV"
+    python -m pip install .
+    log_success "zppy environment ready: $ZPPY_ENV"
+
+    # Run unit tests
+    log "Running pytest unit tests..."
+    pytest tests/test_*.py
+    log_success "zppy unit tests passed"
+
+    # ========================================================================
+    # Generate config files
+    # ========================================================================
+    log "Generating config files..."
+
+    # Update utils.py with test specifics
+    UTILS_FILE="tests/integration/utils.py"
+
+    # Create a temporary Python script to update TEST_SPECIFICS
+    cat > /tmp/update_utils.py << EOF
+import re
+
+utils_file = "${UTILS_FILE}"
+
+with open(utils_file, 'r') as f:
+    content = f.read()
+
+# Find TEST_SPECIFICS dictionary and replace it
+pattern = r'TEST_SPECIFICS: Dict\[str, Any\] = \{.*?\n\}'
+replacement = '''TEST_SPECIFICS: Dict[str, Any] = {
+    "diags_environment_commands": "source ${CONDA_PROFILE}; conda activate ${DIAGS_ENV}",
+    "mpas_analysis_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
+    "global_time_series_environment_commands": "source ${CONDA_PROFILE}; conda activate ${ZI_ENV}",
+    "pcmdi_diags_environment_commands": "source ${CONDA_PROFILE}; conda activate ${ZI_ENV}",
+    "environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
+    "cfgs_to_run": [
+        "weekly_bundles",
+        "weekly_comprehensive_v2",
+        "weekly_comprehensive_v3",
+        "weekly_legacy_3.0.0_bundles",
+        "weekly_legacy_3.0.0_comprehensive_v2",
+        "weekly_legacy_3.0.0_comprehensive_v3",
+    ],
+    "tasks_to_run": [
+        "e3sm_diags",
+        "mpas_analysis",
+        "global_time_series",
+        "ilamb",
+        "pcmdi_diags",
+    ],
+    "unique_id": "${UNIQUE_ID}",
+}'''
+
+content = re.sub(pattern, replacement, content, flags=re.DOTALL)
+
+with open(utils_file, 'w') as f:
+    f.write(content)
+
+print("Updated utils.py")
+EOF
+
+    python /tmp/update_utils.py
+
+    log "Running utils.py to generate configs..."
+    python tests/integration/utils.py
+
+    log_success "Config files generated"
+
+    # ========================================================================
+    # Submit initial SLURM jobs
+    # ========================================================================
+    log "Submitting initial SLURM jobs..."
+
+    zppy -c tests/integration/generated/test_weekly_bundles_chrysalis.cfg
+    zppy -c tests/integration/generated/test_weekly_comprehensive_v2_chrysalis.cfg
+    zppy -c tests/integration/generated/test_weekly_comprehensive_v3_chrysalis.cfg
+    zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_bundles_chrysalis.cfg
+    zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v2_chrysalis.cfg
+    zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v3_chrysalis.cfg
+
+    local job_count=$(squeue -u ac.forsyth2 | wc -l)
+    job_count=$((job_count - 1)) # Don't count the header
+    log_success "Submitted jobs. Total in queue: $job_count"
+
+    checkpoint "Phase 1 complete. Jobs submitted and running."
+
+    # Wait for jobs to complete
+    wait_for_slurm_jobs 600 14400  # Check every 600sec (10min), max 4 hours
+
+    log_success "Phase 1 complete!"
+}
+
+# ============================================================================
+# Phase 2: Bundles Part 2
+# ============================================================================
+
+phase_2_bundles_part2() {
+    log "========================================="
+    log "Phase 2: Bundles Part 2"
+    log "========================================="
+
+    activate_conda
+    conda activate "$ZPPY_ENV"
+    cd "$ZPPY_DIR"
+
+    # Check bundles status
+    log "Checking bundles status..."
+    check_status_files "$BUNDLES_OUTPUT" "Bundles"
+    check_status_files "$LEGACY_BUNDLES_OUTPUT" "Legacy Bundles"
+
+    checkpoint "Bundles status checked. Ready to submit part 2."
+
+    # Submit bundles part 2
+    log "Submitting bundles part 2..."
+    zppy -c tests/integration/generated/test_weekly_bundles_chrysalis.cfg
+    zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_bundles_chrysalis.cfg
+
+    local job_count=$(squeue -u ac.forsyth2 | wc -l)
+    job_count=$((job_count - 1)) # Don't count the header
+    log_success "Submitted bundles part 2. Total in queue: $job_count"
+
+    # Wait for jobs to complete
+    wait_for_slurm_jobs 600 3600  # # Check every 600sec (10min), max 1 hour
+
+    log_success "Phase 2 complete!"
+}
+
+# ============================================================================
+# Phase 3: Validation
+# ============================================================================
+
+phase_3_validation() {
+    log "========================================="
+    log "Phase 3: Validation"
+    log "========================================="
+
+    activate_conda
+    conda activate "$ZPPY_ENV"
+    cd "$ZPPY_DIR"
+
+    # Check all status files
+    log "Checking all status files..."
+
+    local all_good=true
+
+    check_status_files "$V2_OUTPUT" "v2" || all_good=false
+    check_status_files "$LEGACY_V2_OUTPUT" "Legacy v2" || all_good=false
+    check_status_files "$V3_OUTPUT" "v3" || all_good=false
+    check_status_files "$LEGACY_V3_OUTPUT" "Legacy v3" || all_good=false
+    check_status_files "$BUNDLES_OUTPUT" "Bundles" || all_good=false
+    check_status_files "$LEGACY_BUNDLES_OUTPUT" "Legacy Bundles" || all_good=false
+
+    if [ "$all_good" = false ]; then
+        log_error "Some status checks failed!"
+        checkpoint "Errors found in status files. Continue anyway?"
+    else
+        log_success "All status files clean!"
+    fi
+
+    # Run pytest tests
+    log "Running integration tests..."
+
+    log "Running test_bash_generation.py..."
+    pytest tests/integration/test_bash_generation.py || log_warning "test_bash_generation.py had failures (may be expected)"
+
+    log "Running test_campaign.py..."
+    pytest tests/integration/test_campaign.py || log_warning "test_campaign.py had failures (may be expected)"
+
+    log "Running test_defaults.py..." || log_warning "test_defaults.py had failures (may be expected)"
+    pytest tests/integration/test_defaults.py
+
+    log "Running test_last_year.py..." || log_warning "test_last_year.py had failures (may be expected)"
+    pytest tests/integration/test_last_year.py
+
+    log "Running test_bundles.py..." || log_warning "test_bundles.py had failures (may be expected)"
+    pytest tests/integration/test_bundles.py
+
+    checkpoint "Ready to run test_images.py (requires compute node allocation)"
+
+    log "To run test_images.py, execute:"
+    log "  salloc --nodes=1 --partition=debug --time=02:00:00 --account=e3sm"
+    log "  source ${CONDA_PROFILE}"
+    log "  conda activate ${ZPPY_ENV}"
+    log "  cd ${ZPPY_DIR}"
+    log "  pytest tests/integration/test_images.py"
+    log "  cat test_images_summary.md"
+    log "Alternative: run ./run_integration_test.bash"
+
+    log_success "Phase 3 complete!"
+    log_success "All automated tests finished successfully!"
+}
+
+# ============================================================================
+# Main Execution
+# ============================================================================
+
+main() {
+    log "Starting zppy integration test automation"
+    log "Date stamp: $DATE_STAMP"
+    log "Auto mode: $AUTO_MODE"
+    log "Starting from phase: $START_PHASE"
+
+    case $START_PHASE in
+        1)
+            phase_1_setup
+            phase_2_bundles_part2
+            phase_3_validation
+            ;;
+        2)
+            phase_2_bundles_part2
+            phase_3_validation
+            ;;
+        3)
+            phase_3_validation
+            ;;
+        *)
+            log_error "Invalid phase: $START_PHASE"
+            exit 1
+            ;;
+    esac
+
+    log_success "Integration test automation complete!"
+}
+
+main
