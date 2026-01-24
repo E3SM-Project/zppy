@@ -63,7 +63,7 @@ def get_chyrsalis_expansions(config):
         "constraint": "",
         "diags_walltime": "5:00:00",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
-        "mpas_analysis_walltime": "00:30:00",
+        "mpas_analysis_walltime": "02:00:00",
         "partition_long": "compute",
         "partition_short": "debug",
         # This differs from the default path /lcrc/group/e3sm/diagnostics/observations/Atm/climatology
