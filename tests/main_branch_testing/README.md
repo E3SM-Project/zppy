@@ -256,3 +256,27 @@ For issues or questions:
 2. Review the script output for error messages
 3. Check SLURM logs in the output directories
 4. Contact the zppy development team
+
+## Example run
+
+```bash
+# For safety, confirm branches have no uncommitted changes beforehand:
+cd ~/ez/e3sm_diags
+git status
+cd ~/ez/zppy-interfaces
+git status
+cd ~/ez/zppy
+git status
+
+cd /home/ac.forsyth2/ez/zppy_main_branch_tests/test_20260123
+cp ~/ez/zppy/tests/main_branch_testing/* . # Copy, so the script isn't affected by the branch change
+emacs run_integration_test.bash # Configure parameters
+
+screen # Run on screen
+cd /home/ac.forsyth2/ez/zppy_main_branch_tests/test_20260123 # If not there already
+# Bypass manual checkpoints, tee output:
+time ./run_integration_test.bash --date 20260123_run1 --auto 2>&1 | tee integration_test.log
+# CTRL A D to exit screen
+screen -ls # Check which node the screen is on.
+tail -f integration_test.log # Follow log updates
+```
