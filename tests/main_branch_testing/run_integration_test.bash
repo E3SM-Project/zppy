@@ -36,14 +36,14 @@ OUTPUT_WORKSPACE="/lcrc/group/e3sm/ac.forsyth2"
 # Environment names
 DIAGS_ENV="test-diags-main-${DATE_STAMP}"
 ZI_ENV="test-zi-main-${DATE_STAMP}"
-ZPPY_ENV="test-zppy-main-${DATE_STAMP}-env"
+ZPPY_ENV="test-zppy-main-${DATE_STAMP}"
 
 # Test configuration
 UNIQUE_ID="zppy_main_branch_test_${DATE_STAMP}"
 
 # Cherry pick configuration
 CHERRY_PICK_BRANCH="test-fixes"
-CHERRY_PICK_COMMIT=""
+CHERRY_PICK_COMMIT="b56a38c6ae5b24a96bbc80a2dacbc6d1b3dd730b"
 
 # Output directories
 BUNDLES_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_bundles_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
@@ -95,9 +95,70 @@ show_help() {
     exit 0
 }
 
-activate_conda() {
+activate_env() {
+    local env_name="${1:-}"  # Default to empty string if not provided
+    set +u
     source ~/.bashrc
     lcrc_conda # Run conda activation function defined in ~/.bashrc
+
+    # Only activate if an environment name was provided
+    if [ -n "$env_name" ]; then
+        conda activate "$env_name"
+    fi
+    set -u
+}
+
+setup_conda_env() {
+    local conda_dir="$1"
+    local env_name="$2"
+
+    # Check if environment already exists
+    if conda env list | grep -q "^${env_name} "; then
+        log "Environment '$env_name' already exists, skipping creation"
+    else
+        log "Creating new environment '$env_name'"
+        rm -rf build
+        conda clean --all --yes
+        conda env create -f "${conda_dir}/dev.yml" -n "$env_name"
+    fi
+
+    activate_env "$env_name"
+
+    # Always install/update the package
+    log "Installing package in '$env_name'"
+    python -m pip install .
+    log_success "Environment '$env_name' ready"
+}
+
+ensure_test_branch() {
+    local test_branch="$1"
+    local current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+
+    # Check if we're already on the test branch
+    if [ "$current_branch" = "$test_branch" ]; then
+        log "Already on branch '$test_branch', skipping checkout"
+        return 0
+    fi
+
+    # Save current work before switching branches
+    log "Saving current work..."
+    git status
+    git add -A
+    git commit -m "Auto-save before test" --no-verify || true
+
+    # Check if the test branch exists
+    if git show-ref --verify --quiet "refs/heads/$test_branch"; then
+        # Branch exists, just check it out
+        log "Checking out existing branch '$test_branch'"
+        git checkout "$test_branch"
+        log_success "Checked out existing branch '$test_branch'"
+    else
+        # Branch doesn't exist, create it from upstream/main
+        log "Creating new branch '$test_branch' from upstream/main"
+        git fetch upstream main
+        git checkout -b "$test_branch" upstream/main
+        log_success "Created and checked out new branch '$test_branch'"
+    fi
 }
 
 wait_for_slurm_jobs() {
@@ -193,60 +254,34 @@ phase_1_setup() {
     log "Unique ID: $UNIQUE_ID"
     log "========================================="
 
-    activate_conda
+    activate_env
 
     # ====================================================================
     # Set up e3sm_diags environment
     # ====================================================================
     log "Setting up e3sm_diags environment..."
     cd "$E3SM_DIAGS_DIR"
-
-    git status
-    git add -A
-    git commit -m "Auto-save before test" --no-verify || true
-
-    git fetch upstream main
-    git checkout main
-    git reset --hard upstream/main
+    ensure_test_branch test_e3sm_diags_${DATE_STAMP}
 
     log "Latest e3sm_diags commit (should match https://github.com/E3SM-Project/e3sm_diags/commits/main):"
     git log -1 --oneline
-
-    rm -rf build
-    conda clean --all --yes
-    conda env create -f conda-env/dev.yml -n "$DIAGS_ENV"
-    conda activate "$DIAGS_ENV"
-    python -m pip install .
-    log_success "e3sm_diags environment ready: $DIAGS_ENV"
+    setup_conda_env "conda-env" "$DIAGS_ENV"
 
     # ====================================================================
     # Set up zppy-interfaces environment
     # ====================================================================
     log "Setting up zppy-interfaces environment..."
     cd "$ZPPY_INTERFACES_DIR"
-
-    git status
-    git add -A
-    git commit -m "Auto-save before test" --no-verify || true
-
-    git fetch upstream main
-    git checkout main
-    git reset --hard upstream/main
+    ensure_test_branch test_zi_${DATE_STAMP}
 
     log "Latest zppy-interfaces commit (should match https://github.com/E3SM-Project/zppy-interfaces/commits/main):"
     git log -1 --oneline
-
-    rm -rf build
-    conda clean --all --yes
-    conda env create -f conda/dev.yml -n "$ZI_ENV"
-    conda activate "$ZI_ENV"
-    python -m pip install .
-    log_success "zppy-interfaces environment ready: $ZI_ENV"
+    setup_conda_env "conda" "$ZI_ENV"
 
     # Run unit tests
     log "Running pytest unit tests..."
-    pytest /zppy-interfaces/tests/unit/global_time_series/test_*.py
-    pytest /zppy-interfaces/tests/unit/pcmdi_diags/test_*.py
+    pytest tests/unit/global_time_series/test_*.py
+    pytest tests/unit/pcmdi_diags/test_*.py
     log_success "zppy-interfaces unit tests passed"
 
     # ========================================================================
@@ -254,13 +289,7 @@ phase_1_setup() {
     # ========================================================================
     log "Setting up zppy environment..."
     cd "$ZPPY_DIR"
-
-    git status
-    git add -A
-    git commit -m "Auto-save before test" --no-verify || true
-
-    git fetch upstream main
-    git checkout -b "test-zppy-main-${DATE_STAMP}" upstream/main
+    ensure_test_branch test_zppy_${DATE_STAMP}
 
     log "Latest zppy commit:"
     git log -1 --oneline
@@ -273,12 +302,7 @@ phase_1_setup() {
         log_success "Cherry-pick applied"
     fi
 
-    rm -rf build
-    conda clean --all --yes
-    conda env create -f conda/dev.yml -n "$ZPPY_ENV"
-    conda activate "$ZPPY_ENV"
-    python -m pip install .
-    log_success "zppy environment ready: $ZPPY_ENV"
+    setup_conda_env "conda" "$ZPPY_ENV"
 
     # Run unit tests
     log "Running pytest unit tests..."
@@ -376,9 +400,9 @@ phase_2_bundles_part2() {
     log "Phase 2: Bundles Part 2"
     log "========================================="
 
-    activate_conda
-    conda activate "$ZPPY_ENV"
+    activate_env "$ZPPY_ENV"
     cd "$ZPPY_DIR"
+    ensure_test_branch test_zppy_${DATE_STAMP}
 
     # Check bundles status
     log "Checking bundles status..."
@@ -411,9 +435,9 @@ phase_3_validation() {
     log "Phase 3: Validation"
     log "========================================="
 
-    activate_conda
-    conda activate "$ZPPY_ENV"
+    activate_env "$ZPPY_ENV"
     cd "$ZPPY_DIR"
+    ensure_test_branch test_zppy_${DATE_STAMP}
 
     # Check all status files
     log "Checking all status files..."
