@@ -176,6 +176,15 @@ wait_for_slurm_jobs() {
         local job_count=$(squeue -u ac.forsyth2 | wc -l)
         job_count=$((job_count - 1))  # Subtract header
 
+        # Check for failed dependencies
+        local failed_jobs=$(squeue -u ac.forsyth2 | grep "DependencyNeverSatisfied" || true)
+        if [ -n "$failed_jobs" ]; then
+            log_error "Jobs failed with DependencyNeverSatisfied!"
+            echo "$failed_jobs"
+            log_error "Check job logs for details"
+            return 1
+        fi
+
         if [ "$job_count" -eq 0 ]; then
             log_success "All SLURM jobs completed!"
             return 0
