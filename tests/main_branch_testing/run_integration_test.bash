@@ -181,7 +181,10 @@ wait_for_slurm_jobs() {
 
         # Check for failed dependencies
         local failed_jobs=$(squeue -u ${USER} | grep "DependencyNeverSatisfied" || true)
-        local failed_count=$(echo "$failed_jobs" | grep -c . || echo 0)
+        local failed_count=0
+        if [ -n "$failed_jobs" ]; then
+            failed_count=$(echo "$failed_jobs" | wc -l)
+        fi
         # prev_failed_count defaults to 0
         if [ "$failed_count" -gt "${prev_failed_count:-0}" ]; then
             log_error "Jobs found with DependencyNeverSatisfied:"
