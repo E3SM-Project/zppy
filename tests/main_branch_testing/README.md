@@ -141,6 +141,7 @@ conda remove --y --all --name test-zppy-main-YYYYMMDD
 ## Example run
 
 ```bash
+# The script WILL change branches and MAY cancel jobs.
 # For safety, confirm branches have no uncommitted changes beforehand:
 cd ~/ez/e3sm_diags
 git status
@@ -148,6 +149,8 @@ cd ~/ez/zppy-interfaces
 git status
 cd ~/ez/zppy
 git status
+# For safety, confirm no jobs are currently running:
+squeue -u <user>
 
 cd /home/ac.forsyth2/ez/zppy_main_branch_tests/test_20260126
 cp ~/ez/zppy/tests/main_branch_testing/* . # Copy, so the script isn't affected by the branch change

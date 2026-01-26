@@ -18,11 +18,10 @@ echo "User is: ${USER:-unknown}" # Pick this up from the environment
 # ============================================================================
 
 # Check these every time #####################################################
+
 RUN_NUMBER=1
 AUTO_MODE=true # By default, run automatically
 START_PHASE=1 # By default, start at phase 1 (of 3)
-
-UNIQUE_ID="zppy_main_branch_test_${DATE_STAMP}_run${RUN_NUMBER}"
 
 # Base branches (THESE ARE WHAT WE'RE TESTING)
 # Usually we test "main".
@@ -32,6 +31,7 @@ ZI_BASE_BRANCH="main"
 ZPPY_BASE_BRANCH="test-fixes" # https://github.com/E3SM-Project/zppy/pull/769
 
 # Set these up once ###########################################################
+
 # Paths
 HOME_DIR="$HOME"
 EZ_DIR="$HOME_DIR/ez"
@@ -42,10 +42,15 @@ CONDA_PROFILE="$HOME_DIR/miniforge3/etc/profile.d/conda.sh"
 OUTPUT_WORKSPACE="/lcrc/group/e3sm/${USER}"
 
 # Probably won't need to edit these ###########################################
+
+# ID
+TAG="${DATE_STAMP}_run${RUN_NUMBER}"
+UNIQUE_ID="zppy_main_branch_test_${TAG}"
+
 # Environment names
-DIAGS_ENV="test-diags-${DIAGS_BASE_BRANCH}-${DATE_STAMP}"
-ZI_ENV="test-zi-${ZI_BASE_BRANCH}-${DATE_STAMP}"
-ZPPY_ENV="test-zppy-${ZPPY_BASE_BRANCH}-${DATE_STAMP}"
+DIAGS_ENV="test-diags-${DIAGS_BASE_BRANCH}-${TAG}"
+ZI_ENV="test-zi-${ZI_BASE_BRANCH}-${TAG}"
+ZPPY_ENV="test-zppy-${ZPPY_BASE_BRANCH}-${TAG}"
 
 # Output directories
 BUNDLES_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_bundles_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
@@ -176,12 +181,20 @@ wait_for_slurm_jobs() {
 
         # Check for failed dependencies
         local failed_jobs=$(squeue -u ${USER} | grep "DependencyNeverSatisfied" || true)
-        if [ -n "$failed_jobs" ]; then
-            log_error "Jobs failed with DependencyNeverSatisfied!"
+        local failed_count=$(echo "$failed_jobs" | grep -c . || echo 0)
+        # prev_failed_count defaults to 0
+        if [ "$failed_count" -gt "${prev_failed_count:-0}" ]; then
+            log_error "Jobs found with DependencyNeverSatisfied:"
             echo "$failed_jobs"
-            log_error "Check job logs for details"
-            return 1
+            # Check if ALL jobs have DependencyNeverSatisfied
+            if [ "$job_count" -eq "$failed_count" ]; then
+                checkpoint "Some jobs can't run, because of DependencyNeverSatisfied"
+                log_error "All jobs have DependencyNeverSatisfied - cancelling all jobs"
+                scancel -u ${USER}
+                job_count=0
+            fi
         fi
+        prev_failed_count=$failed_count
 
         if [ "$job_count" -eq 0 ]; then
             log_success "All SLURM jobs completed!"
@@ -240,7 +253,7 @@ phase_1_setup() {
     # ====================================================================
     log "Setting up e3sm_diags environment..."
     cd "$E3SM_DIAGS_DIR"
-    ensure_test_branch test_e3sm_diags_${DATE_STAMP} ${DIAGS_BASE_BRANCH}
+    ensure_test_branch test_e3sm_diags_${TAG} ${DIAGS_BASE_BRANCH}
 
     log "Latest e3sm_diags commit (should match https://github.com/E3SM-Project/e3sm_diags/commits/${DIAGS_BASE_BRANCH}):"
     git log -1 --oneline
@@ -251,7 +264,7 @@ phase_1_setup() {
     # ====================================================================
     log "Setting up zppy-interfaces environment..."
     cd "$ZPPY_INTERFACES_DIR"
-    ensure_test_branch test_zi_${DATE_STAMP} ${ZI_BASE_BRANCH}
+    ensure_test_branch test_zi_${TAG} ${ZI_BASE_BRANCH}
 
     log "Latest zppy-interfaces commit (should match https://github.com/E3SM-Project/zppy-interfaces/commits/${ZI_BASE_BRANCH}):"
     git log -1 --oneline
@@ -268,7 +281,7 @@ phase_1_setup() {
     # ========================================================================
     log "Setting up zppy environment..."
     cd "$ZPPY_DIR"
-    ensure_test_branch test_zppy_${DATE_STAMP} ${ZPPY_BASE_BRANCH}
+    ensure_test_branch test_zppy_${TAG} ${ZPPY_BASE_BRANCH}
 
     log "Latest zppy commit (should match https://github.com/E3SM-Project/zppy/commits/${ZPPY_BASE_BRANCH}):"
     git log -1 --oneline
@@ -372,7 +385,7 @@ phase_2_bundles_part2() {
 
     activate_env "$ZPPY_ENV"
     cd "$ZPPY_DIR"
-    ensure_test_branch test_zppy_${DATE_STAMP} ${ZPPY_BASE_BRANCH}
+    ensure_test_branch test_zppy_${TAG} ${ZPPY_BASE_BRANCH}
 
     # Check bundles status
     log "Checking bundles status..."
@@ -407,7 +420,7 @@ phase_3_validation() {
 
     activate_env "$ZPPY_ENV"
     cd "$ZPPY_DIR"
-    ensure_test_branch test_zppy_${DATE_STAMP} ${ZPPY_BASE_BRANCH}
+    ensure_test_branch test_zppy_${TAG} ${ZPPY_BASE_BRANCH}
 
     # Check all status files
     log "Checking all status files..."
