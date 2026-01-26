@@ -3,27 +3,35 @@
 # Usage:
 # 1. Copy this file and `run_image_tests.bash` out of the zppy repo. (This script will change the branch).
 # 2. Edit configuration parameters below.
-# 3. Run: ./run_integration_test.bash [OPTIONS]
+# 3. Run: ./run_integration_test.bash
 # 4. Run: ./run_image_tests.bash
-#
-# Options:
-#   --date YYYYMMDD       Date stamp for test (default: today)
-#   --auto                Run fully automated (no checkpoints)
-#   --phase N             Start from phase N (1=setup, 2=bundles_part2, 3=validation)
-#   --help                Show this help message
 
 set -e  # Exit on error
 set -u  # Exit on undefined variable
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DATE_STAMP="${DATE_STAMP:-$(date +%Y%m%d)}"
+echo "User is: ${USER:-unknown}" # Pick this up from the environment
 
 # ============================================================================
 # Configuration
 # ============================================================================
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-DATE_STAMP="${DATE_STAMP:-$(date +%Y%m%d)}"
-AUTO_MODE=false
-START_PHASE=1
+# Check these every time #####################################################
+RUN_NUMBER=1
+AUTO_MODE=true # By default, run automatically
+START_PHASE=1 # By default, start at phase 1 (of 3)
 
+UNIQUE_ID="zppy_main_branch_test_${DATE_STAMP}_run${RUN_NUMBER}"
+
+# Base branches (THESE ARE WHAT WE'RE TESTING)
+# Usually we test "main".
+# If we need to test PRs or include test fixes, we may use a different branch.
+DIAGS_BASE_BRANCH="main"
+ZI_BASE_BRANCH="main"
+ZPPY_BASE_BRANCH="test-fixes" # https://github.com/E3SM-Project/zppy/pull/769
+
+# Set these up once ###########################################################
 # Paths
 HOME_DIR="$HOME"
 EZ_DIR="$HOME_DIR/ez"
@@ -31,19 +39,13 @@ E3SM_DIAGS_DIR="$EZ_DIR/e3sm_diags"
 ZPPY_INTERFACES_DIR="$EZ_DIR/zppy-interfaces"
 ZPPY_DIR="$EZ_DIR/zppy"
 CONDA_PROFILE="$HOME_DIR/miniforge3/etc/profile.d/conda.sh"
-OUTPUT_WORKSPACE="/lcrc/group/e3sm/ac.forsyth2"
+OUTPUT_WORKSPACE="/lcrc/group/e3sm/${USER}"
 
+# Probably won't need to edit these ###########################################
 # Environment names
-DIAGS_ENV="test-diags-main-${DATE_STAMP}"
-ZI_ENV="test-zi-main-${DATE_STAMP}"
-ZPPY_ENV="test-zppy-main-${DATE_STAMP}"
-
-# Test configuration
-UNIQUE_ID="zppy_main_branch_test_${DATE_STAMP}"
-
-# Cherry pick configuration
-CHERRY_PICK_BRANCH="test-fixes"
-CHERRY_PICK_COMMIT="b56a38c6ae5b24a96bbc80a2dacbc6d1b3dd730b"
+DIAGS_ENV="test-diags-${DIAGS_BASE_BRANCH}-${DATE_STAMP}"
+ZI_ENV="test-zi-${ZI_BASE_BRANCH}-${DATE_STAMP}"
+ZPPY_ENV="test-zppy-${ZPPY_BASE_BRANCH}-${DATE_STAMP}"
 
 # Output directories
 BUNDLES_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_bundles_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
@@ -90,11 +92,6 @@ checkpoint() {
     fi
 }
 
-show_help() {
-    grep "^#" "$0" | grep -v "#!/bin/bash" | sed 's/^# //' | sed 's/^#//'
-    exit 0
-}
-
 activate_env() {
     local env_name="${1:-}"  # Default to empty string if not provided
     set +u
@@ -132,6 +129,7 @@ setup_conda_env() {
 
 ensure_test_branch() {
     local test_branch="$1"
+    local base_branch="$2"
     local current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 
     # Check if we're already on the test branch
@@ -153,10 +151,10 @@ ensure_test_branch() {
         git checkout "$test_branch"
         log_success "Checked out existing branch '$test_branch'"
     else
-        # Branch doesn't exist, create it from upstream/main
-        log "Creating new branch '$test_branch' from upstream/main"
-        git fetch upstream main
-        git checkout -b "$test_branch" upstream/main
+        # Branch doesn't exist, create it from upstream/${base_branch}
+        log "Creating new branch '$test_branch' from upstream/${base_branch}"
+        git fetch upstream ${base_branch}
+        git checkout -b "$test_branch" upstream/${base_branch}
         log_success "Created and checked out new branch '$test_branch'"
     fi
 }
@@ -167,17 +165,17 @@ wait_for_slurm_jobs() {
 
     log "Waiting for SLURM jobs to complete..."
     local elapsed=0
-    local initial_count=$(squeue -u ac.forsyth2 | wc -l)
+    local initial_count=$(squeue -u ${USER} | wc -l)
     initial_count=$((initial_count - 1))  # Subtract header
 
     log "Initial job count: $initial_count"
 
     while true; do
-        local job_count=$(squeue -u ac.forsyth2 | wc -l)
+        local job_count=$(squeue -u ${USER} | wc -l)
         job_count=$((job_count - 1))  # Subtract header
 
         # Check for failed dependencies
-        local failed_jobs=$(squeue -u ac.forsyth2 | grep "DependencyNeverSatisfied" || true)
+        local failed_jobs=$(squeue -u ${USER} | grep "DependencyNeverSatisfied" || true)
         if [ -n "$failed_jobs" ]; then
             log_error "Jobs failed with DependencyNeverSatisfied!"
             echo "$failed_jobs"
@@ -225,34 +223,6 @@ check_status_files() {
 }
 
 # ============================================================================
-# Parse Arguments
-# ============================================================================
-
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --date)
-            DATE_STAMP="$2"
-            shift 2
-            ;;
-        --auto)
-            AUTO_MODE=true
-            shift
-            ;;
-        --phase)
-            START_PHASE="$2"
-            shift 2
-            ;;
-        --help)
-            show_help
-            ;;
-        *)
-            log_error "Unknown option: $1"
-            show_help
-            ;;
-    esac
-done
-
-# ============================================================================
 # Phase 1: Setup
 # ============================================================================
 
@@ -270,9 +240,9 @@ phase_1_setup() {
     # ====================================================================
     log "Setting up e3sm_diags environment..."
     cd "$E3SM_DIAGS_DIR"
-    ensure_test_branch test_e3sm_diags_${DATE_STAMP}
+    ensure_test_branch test_e3sm_diags_${DATE_STAMP} ${DIAGS_BASE_BRANCH}
 
-    log "Latest e3sm_diags commit (should match https://github.com/E3SM-Project/e3sm_diags/commits/main):"
+    log "Latest e3sm_diags commit (should match https://github.com/E3SM-Project/e3sm_diags/commits/${DIAGS_BASE_BRANCH}):"
     git log -1 --oneline
     setup_conda_env "conda-env" "$DIAGS_ENV"
 
@@ -281,9 +251,9 @@ phase_1_setup() {
     # ====================================================================
     log "Setting up zppy-interfaces environment..."
     cd "$ZPPY_INTERFACES_DIR"
-    ensure_test_branch test_zi_${DATE_STAMP}
+    ensure_test_branch test_zi_${DATE_STAMP} ${ZI_BASE_BRANCH}
 
-    log "Latest zppy-interfaces commit (should match https://github.com/E3SM-Project/zppy-interfaces/commits/main):"
+    log "Latest zppy-interfaces commit (should match https://github.com/E3SM-Project/zppy-interfaces/commits/${ZI_BASE_BRANCH}):"
     git log -1 --oneline
     setup_conda_env "conda" "$ZI_ENV"
 
@@ -298,19 +268,10 @@ phase_1_setup() {
     # ========================================================================
     log "Setting up zppy environment..."
     cd "$ZPPY_DIR"
-    ensure_test_branch test_zppy_${DATE_STAMP}
+    ensure_test_branch test_zppy_${DATE_STAMP} ${ZPPY_BASE_BRANCH}
 
-    log "Latest zppy commit:"
+    log "Latest zppy commit (should match https://github.com/E3SM-Project/zppy/commits/${ZPPY_BASE_BRANCH}):"
     git log -1 --oneline
-
-    # Cherry-pick if requested
-    if [ -n "$CHERRY_PICK_COMMIT" ]; then
-        log "Cherry-picking commit: $CHERRY_PICK_COMMIT"
-        git fetch upstream "$CHERRY_PICK_BRANCH"
-        git cherry-pick "$CHERRY_PICK_COMMIT"
-        log_success "Cherry-pick applied"
-    fi
-
     setup_conda_env "conda" "$ZPPY_ENV"
 
     # Run unit tests
@@ -388,7 +349,7 @@ EOF
     zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v2_chrysalis.cfg
     zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v3_chrysalis.cfg
 
-    local job_count=$(squeue -u ac.forsyth2 | wc -l)
+    local job_count=$(squeue -u ${USER} | wc -l)
     job_count=$((job_count - 1)) # Don't count the header
     log_success "Submitted jobs. Total in queue: $job_count"
 
@@ -411,7 +372,7 @@ phase_2_bundles_part2() {
 
     activate_env "$ZPPY_ENV"
     cd "$ZPPY_DIR"
-    ensure_test_branch test_zppy_${DATE_STAMP}
+    ensure_test_branch test_zppy_${DATE_STAMP} ${ZPPY_BASE_BRANCH}
 
     # Check bundles status
     log "Checking bundles status..."
@@ -425,7 +386,7 @@ phase_2_bundles_part2() {
     zppy -c tests/integration/generated/test_weekly_bundles_chrysalis.cfg
     zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_bundles_chrysalis.cfg
 
-    local job_count=$(squeue -u ac.forsyth2 | wc -l)
+    local job_count=$(squeue -u ${USER} | wc -l)
     job_count=$((job_count - 1)) # Don't count the header
     log_success "Submitted bundles part 2. Total in queue: $job_count"
 
@@ -446,7 +407,7 @@ phase_3_validation() {
 
     activate_env "$ZPPY_ENV"
     cd "$ZPPY_DIR"
-    ensure_test_branch test_zppy_${DATE_STAMP}
+    ensure_test_branch test_zppy_${DATE_STAMP} ${ZPPY_BASE_BRANCH}
 
     # Check all status files
     log "Checking all status files..."
