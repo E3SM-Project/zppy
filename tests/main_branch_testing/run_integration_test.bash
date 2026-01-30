@@ -54,7 +54,7 @@ ZPPY_ENV="test-zppy-${ZPPY_BASE_BRANCH}-${TAG}"
 
 # Output directories
 BUNDLES_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_bundles_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
-LEGACY_BUNDLES_OUTPUT="${OUTPUT_WORKSPACE}zppy_weekly_legacy_3.0.0_bundles_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
+LEGACY_BUNDLES_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_legacy_3.0.0_bundles_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
 V2_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_comprehensive_v2_output/${UNIQUE_ID}/v2.LR.historical_0201/post/scripts"
 LEGACY_V2_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_legacy_3.0.0_comprehensive_v2_output/${UNIQUE_ID}/v2.LR.historical_0201/post/scripts"
 V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_comprehensive_v3_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
@@ -97,6 +97,7 @@ checkpoint() {
     fi
 }
 
+# Use this to activate an existing environment and install zppy.
 activate_env() {
     local env_name="${1:-}"  # Default to empty string if not provided
     set +u
@@ -106,10 +107,14 @@ activate_env() {
     # Only activate if an environment name was provided
     if [ -n "$env_name" ]; then
         conda activate "$env_name"
+        # Always install/update the package
+        log "Installing package in '$env_name'"
+        python -m pip install .
     fi
     set -u
 }
 
+# Use this to create a new conda environment AND activate it and install zppy.
 setup_conda_env() {
     local conda_dir="$1"
     local env_name="$2"
@@ -125,10 +130,6 @@ setup_conda_env() {
     fi
 
     activate_env "$env_name"
-
-    # Always install/update the package
-    log "Installing package in '$env_name'"
-    python -m pip install .
     log_success "Environment '$env_name' ready"
 }
 
@@ -147,6 +148,8 @@ ensure_test_branch() {
     log "Saving current work..."
     git status
     git add -A
+    # We have to use --no-verify because we might not be in a conda env.
+    # (We need to be in a conda env that supports pre-commit checks to avoid this flag).
     git commit -m "Auto-save before test" --no-verify || true
 
     # Check if the test branch exists
@@ -229,10 +232,10 @@ check_status_files() {
     local errors=$(grep -v "OK" *status 2>/dev/null || true)
 
     if [ -z "$errors" ]; then
-        log_success "$name: No errors found"
+        log_success "$name: No errors found in ${dir}"
         return 0
     else
-        log_error "$name: Errors found!"
+        log_error "$name: Errors found in ${dir}!"
         echo "$errors"
         return 1
     fi
@@ -248,8 +251,6 @@ phase_1_setup() {
     log "Date: $DATE_STAMP"
     log "Unique ID: $UNIQUE_ID"
     log "========================================="
-
-    activate_env
 
     # ====================================================================
     # Set up e3sm_diags environment
@@ -386,8 +387,8 @@ phase_2_bundles_part2() {
     log "Phase 2: Bundles Part 2"
     log "========================================="
 
-    activate_env "$ZPPY_ENV"
     cd "$ZPPY_DIR"
+    activate_env "$ZPPY_ENV"
     ensure_test_branch test_zppy_${TAG} ${ZPPY_BASE_BRANCH}
 
     # Check bundles status
@@ -421,8 +422,8 @@ phase_3_validation() {
     log "Phase 3: Validation"
     log "========================================="
 
-    activate_env "$ZPPY_ENV"
     cd "$ZPPY_DIR"
+    activate_env "$ZPPY_ENV"
     ensure_test_branch test_zppy_${TAG} ${ZPPY_BASE_BRANCH}
 
     # Check all status files
@@ -445,6 +446,7 @@ phase_3_validation() {
     fi
 
     # Run pytest tests
+    cd ${ZPPY_DIR}
     log "Running integration tests..."
 
     log "Running test_bash_generation.py..."
@@ -471,10 +473,10 @@ phase_3_validation() {
     log "  cd ${ZPPY_DIR}"
     log "  pytest tests/integration/test_images.py"
     log "  cat test_images_summary.md"
-    log "Alternative: run ./run_integration_test.bash"
 
     log_success "Phase 3 complete!"
     log_success "All automated tests finished successfully!"
+    log_success "Reminder: run test_images.py manually, as described above"
 }
 
 # ============================================================================
