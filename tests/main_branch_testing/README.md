@@ -11,7 +11,7 @@ This automation system streamlines the zppy integration testing workflow, reduci
 
 ## Workflow Phases
 
-### Phase 1: Setup (~2-4 hours including SLURM wait)
+### Phase 1: Setup
 - Sets up e3sm_diags conda environment
 - Sets up zppy-interfaces conda environment
 - Sets up zppy conda environment
@@ -19,12 +19,12 @@ This automation system streamlines the zppy integration testing workflow, reduci
 - Submits initial SLURM jobs (6 configs)
 - Waits for jobs to complete
 
-### Phase 2: Bundles Part 2 (~30-60 minutes including SLURM wait)
+### Phase 2: Bundles Part 2
 - Checks status of bundles runs
 - Submits bundles part 2 jobs
 - Waits for completion
 
-### Phase 3: Validation (~15 minutes, excluding image tests)
+### Phase 3: Validation
 - Checks all status files
 - Runs pytest integration tests:
   - test_bash_generation.py
@@ -33,21 +33,6 @@ This automation system streamlines the zppy integration testing workflow, reduci
   - test_last_year.py
   - test_bundles.py
 - Provides instructions for running test_images.py on compute node
-
-## Running Image Tests
-
-The image tests require a compute node allocation. Two options:
-
-### Option 1: Manual Allocation (Recommended)
-```bash
-salloc --nodes=1 --partition=debug --time=02:00:00 --account=e3sm
-./run_image_tests.bash --date 20260123
-```
-
-### Option 2: Automatic Allocation
-```bash
-./run_image_tests.bash --date 20260123 --auto
-```
 
 ## Output and Logs
 
