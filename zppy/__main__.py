@@ -12,6 +12,7 @@ from configobj import ConfigObj
 from mache import MachineInfo
 from validate import Validator
 
+from zppy.budget import budget
 from zppy.bundle import Bundle, predefined_bundles
 from zppy.climo import climo
 from zppy.e3sm_diags import e3sm_diags
@@ -270,6 +271,9 @@ def _launch_scripts(config: ConfigObj, script_dir, job_ids_file, plugins) -> Non
 
     # ilamb tasks
     existing_bundles = ilamb(config, script_dir, existing_bundles, job_ids_file)
+
+    # budget tasks
+    existing_bundles = budget(config, script_dir, existing_bundles, job_ids_file)
 
     # pcmdi_diags tasks
     existing_bundles = pcmdi_diags(config, script_dir, existing_bundles, job_ids_file)
