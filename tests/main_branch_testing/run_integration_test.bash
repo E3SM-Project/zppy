@@ -119,6 +119,8 @@ setup_conda_env() {
     local conda_dir="$1"
     local env_name="$2"
 
+    activate_env # We need conda to exist
+
     # Check if environment already exists
     if conda env list | grep -q "^${env_name} "; then
         log "Environment '$env_name' already exists, skipping creation"
