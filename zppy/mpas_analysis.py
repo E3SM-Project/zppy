@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -37,10 +38,25 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
     # Dependencies carried over from previous task.
     carried_over_dependencies: List[str] = []
 
+    # Track base output directories for previously defined mpas_analysis subsections.
+    prior_subsection_outputs: Dict[str, str] = {}
+
     for c in tasks:
 
         dependencies: List[str] = carried_over_dependencies
         set_subdirs(config, c)
+        reference_data_path = _resolve_subsection_reference(
+            c.get("reference_data_path", ""),
+            prior_subsection_outputs,
+            "reference_data_path",
+        )
+        test_data_path = _resolve_subsection_reference(
+            c.get("test_data_path", ""),
+            prior_subsection_outputs,
+            "test_data_path",
+        )
+        c["reference_data_path"] = reference_data_path
+        c["test_data_path"] = test_data_path
         # Loop over year sets
         ts_year_sets: List[Tuple[int, int]] = get_years(c["ts_years"])
 
@@ -131,8 +147,6 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
             # and zppy will locate the MPAS-Analysis config file within it.
             #
             # We keep *_run_output_dir as backwards-compatible aliases.
-            reference_data_path = c.get("reference_data_path", "")
-            test_data_path = c.get("test_data_path", "")
             c["controlRunConfigFile"] = (
                 _resolve_mpas_analysis_config_file(reference_data_path, ref_identifier)
                 if reference_data_path
@@ -201,6 +215,12 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
             print(f"   environment_commands={c['environment_commands']}")
             print_url(c, "mpas_analysis")
 
+        if c.get("subsection"):
+            output_dir = os.path.abspath(
+                os.path.expandvars(os.path.expanduser(c["output"]))
+            )
+            prior_subsection_outputs[c["subsection"]] = output_dir
+
     return existing_bundles
 
 
@@ -240,6 +260,27 @@ def _resolve_year_sets(
             f"{label} has {len(parsed)} ranges but expected 1 or {target_len} to match ts_years."
         )
     return parsed
+
+
+def _resolve_subsection_reference(
+    value: str,
+    prior_subsection_outputs: Dict[str, str],
+    parameter_name: str,
+) -> str:
+    if not value or not isinstance(value, str):
+        return value
+
+    match = re.match(r"^\s*\[\[\s*(.+?)\s*\]\]\s*$", value)
+    if not match:
+        return value
+
+    subsection = match.group(1).strip()
+    if subsection not in prior_subsection_outputs:
+        raise ValueError(
+            f"{parameter_name} refers to mpas_analysis subsection '{subsection}', "
+            "but it has not been defined earlier in [mpas_analysis]."
+        )
+    return prior_subsection_outputs[subsection]
 
 
 def _resolve_mpas_analysis_config_file(run_output_dir: str, identifier: str) -> str:
