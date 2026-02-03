@@ -71,9 +71,10 @@ For the ``mpas_analysis`` task:
 
      The practical difference is what each downstream tool consumes:
      ``e3sm_diags`` needs ``reference_data_path`` to be the specific directory containing the reference climatology files (typically under the reference run's ``post/.../clim`` tree), whereas ``mpas_analysis`` needs to find the reference MPAS-Analysis config file.
-     For MPAS-Analysis, ``zppy`` can resolve that config file when ``reference_data_path`` points to the prior run's zppy output directory (the one containing ``post/``), the ``post/`` directory itself, or directly to an ``mpas_analysis_*.cfg`` file.
+     For MPAS-Analysis, ``zppy`` resolves the config file when ``reference_data_path`` points to the prior run's zppy output directory (the one containing ``post/``).
 
-  ``reference_data_path`` is intended to point to the prior run's zppy output directory (the one containing ``post/``) but zppy will also find the MPAS-Analysis config file if ``reference_data_path`` points to the ``post/`` directory itself, the MPAS-Analysis directory (``analysis/mpas_analysis``), the ``cfg/`` directory, or directly to an ``mpas_analysis_*.cfg`` file.
+  ``reference_data_path`` is intended to point to the prior run's zppy output directory (the one containing ``post/``). ``zppy`` will then use:
+  ``<reference_data_path>/post/analysis/mpas_analysis/cfg/mpas_analysis_<identifier>.cfg``.
 
 
 **MPAS-Analysis model-vs-model year ranges**

@@ -135,12 +135,8 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
             # Optional: point MPAS-Analysis at already-completed MPAS-Analysis runs
             # so it can do a "test vs. reference" ("main vs. control") comparison.
             #
-            # These zppy options are expected to point to either:
-            #  - a prior zppy run's output directory (containing a post/ directory),
-            #  - the post/ directory itself,
-            #  - an MPAS-Analysis directory (analysis/mpas_analysis),
-            #  - the cfg/ directory, or
-            #  - directly to the specific mpas_analysis_*.cfg file.
+            # These zppy options are expected to point to a prior zppy run's
+            # output directory (containing a post/ directory).
             #
             # For user consistency with other zppy tasks, prefer *_data_path naming.
             # These point to a prior zppy run's output directory (or its post/ dir),
@@ -242,7 +238,8 @@ def _resolve_year_sets(
     target_len: int,
     label: str,
 ) -> List[Tuple[int, int]]:
-    """Parse and normalize year sets.
+    """
+    Parse and normalize year sets.
 
     Behavior:
     - If the parsed year sets are empty, return fallback.
@@ -284,7 +281,8 @@ def _resolve_subsection_reference(
 
 
 def _resolve_mpas_analysis_config_file(run_output_dir: str, identifier: str) -> str:
-    """Resolve the MPAS-Analysis config file for a prior run.
+    """
+    Resolve the MPAS-Analysis config file path for a prior run.
 
     The resolved file is expected to be named:
         mpas_analysis_<identifier>.cfg
@@ -292,63 +290,21 @@ def _resolve_mpas_analysis_config_file(run_output_dir: str, identifier: str) -> 
     with identifier like:
         ts_1850-2014_climo_1985-2014
 
-    The input may be a directory (various plausible roots) or a direct .cfg path.
+    The input is expected to be the prior run's zppy output directory, which
+    contains a post/ directory.
+
+    Note: We intentionally do not check for filesystem existence here. This allows
+    zppy workflows where the referenced MPAS-Analysis run is produced later in the
+    same workflow. MPAS-Analysis will raise an error at runtime if the config file
+    is missing.
     """
 
     path = Path(os.path.expandvars(os.path.expanduser(run_output_dir))).resolve()
 
-    # Direct file path
-    if path.is_file():
-        return str(path)
-
     file_name = f"mpas_analysis_{identifier}.cfg"
 
-    if not path.is_dir():
-        raise FileNotFoundError(
-            f"MPAS-Analysis run path does not exist: {run_output_dir}"
-        )
-
-    candidate_dirs = [
-        # User points at zppy output root
-        path / "post" / "analysis" / "mpas_analysis" / "cfg",
-        # User points at post/
-        path / "analysis" / "mpas_analysis" / "cfg",
-        # User points at mpas_analysis/
-        path / "cfg",
-        # Fallbacks
-        path,
-    ]
-
-    tried: List[str] = []
-    for cfg_dir in candidate_dirs:
-        candidate = cfg_dir / file_name
-        tried.append(str(candidate))
-        if candidate.is_file():
-            return str(candidate)
-
-    # Last resort: small bounded search (avoids an expensive full tree walk)
-    max_depth = 5
-    matches: List[Path] = []
-    root_depth = len(path.parts)
-    for root, dirs, files in os.walk(path):
-        current_depth = len(Path(root).parts) - root_depth
-        if current_depth > max_depth:
-            dirs[:] = []
-            continue
-        if file_name in files:
-            matches.append(Path(root) / file_name)
-            break
-
-    if matches:
-        return str(matches[0])
-
-    raise FileNotFoundError(
-        "Could not find prior MPAS-Analysis config file for model-vs-model run. "
-        f"Searched for {file_name} under {run_output_dir}. "
-        "Common fix: set [mpas_analysis]/reference_data_path to the prior run's "
-        "zppy output directory (the one containing post/analysis/mpas_analysis/cfg/). "
-        f"Tried: {tried}"
-    )
+    cfg_dir = path / "post" / "analysis" / "mpas_analysis" / "cfg"
+    return str(cfg_dir / file_name)
 
 
 def set_subdirs(config: ConfigObj, c: Dict[str, Any]) -> None:
