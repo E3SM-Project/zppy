@@ -42,6 +42,10 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
     prior_subsection_outputs: Dict[str, str] = {}
     # Track year sets for previously defined subsections so later tasks can reference them.
     prior_subsection_year_sets: Dict[str, Dict[str, List[Tuple[int, int]]]] = {}
+    # Track analysis subdirectories (mpas_analysis vs mpas_analysis_mvm) for subsections.
+    prior_subsection_analysis_subdirs: Dict[str, str] = {}
+    # Track identifiers used by MVM runs to avoid cfg name collisions.
+    mvm_identifiers: Dict[str, str] = {}
 
     for c in tasks:
 
@@ -75,8 +79,33 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
             identifier, ref_identifier = _set_identifiers(
                 c, script_dir, ctrl_ts, ctrl_climo
             )
+            reference_analysis_subdir = _get_subsection_analysis_subdir(
+                reference_subsection, prior_subsection_analysis_subdirs
+            )
+            test_analysis_subdir = _get_subsection_analysis_subdir(
+                test_subsection, prior_subsection_analysis_subdirs
+            )
             _set_run_config_files(
-                c, reference_data_path, test_data_path, ref_identifier, identifier
+                c,
+                reference_data_path,
+                test_data_path,
+                ref_identifier,
+                identifier,
+                reference_analysis_subdir,
+                test_analysis_subdir,
+            )
+            _set_output_paths(
+                c,
+                reference_data_path,
+                reference_subsection,
+                identifier,
+                ref_identifier,
+            )
+            _check_mvm_identifier_collision(
+                c,
+                reference_data_path,
+                identifier,
+                mvm_identifiers,
             )
             prefix = _build_prefix(c, ref_identifier, identifier)
             print(prefix)
@@ -122,7 +151,7 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
                     print(f"...adding to bundle {c['bundle']}")
 
             print(f"   environment_commands={c['environment_commands']}")
-            print_url(c, "mpas_analysis")
+            print_url(c, c.get("analysis_task_name", "mpas_analysis"))
 
         if c.get("subsection"):
             output_dir = os.path.abspath(
@@ -134,6 +163,9 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
                 "climo": climo_year_sets,
                 "enso": enso_year_sets,
             }
+            prior_subsection_analysis_subdirs[c["subsection"]] = c.get(
+                "analysis_subdir", "mpas_analysis"
+            )
 
     return existing_bundles
 
@@ -313,14 +345,22 @@ def _set_run_config_files(
     test_data_path: str,
     ref_identifier: str,
     identifier: str,
+    reference_analysis_subdir: str,
+    test_analysis_subdir: str,
 ) -> None:
     c["controlRunConfigFile"] = (
-        _resolve_mpas_analysis_config_file(reference_data_path, ref_identifier)
+        _resolve_mpas_analysis_config_file(
+            reference_data_path,
+            ref_identifier,
+            analysis_subdir=reference_analysis_subdir,
+        )
         if reference_data_path
         else ""
     )
     c["mainRunConfigFile"] = (
-        _resolve_mpas_analysis_config_file(test_data_path, identifier)
+        _resolve_mpas_analysis_config_file(
+            test_data_path, identifier, analysis_subdir=test_analysis_subdir
+        )
         if test_data_path
         else ""
     )
@@ -340,6 +380,80 @@ def _build_prefix(c: Dict[str, Any], ref_identifier: str, identifier: str) -> st
         prefix = f"mpas_analysis{prefix_suffix}"
     c["prefix"] = prefix
     return prefix
+
+
+def _get_subsection_analysis_subdir(
+    subsection: str, prior_subsection_analysis_subdirs: Dict[str, str]
+) -> str:
+    if subsection and (subsection in prior_subsection_analysis_subdirs):
+        return prior_subsection_analysis_subdirs[subsection]
+    return "mpas_analysis"
+
+
+def _set_output_paths(
+    c: Dict[str, Any],
+    reference_data_path: str,
+    reference_subsection: str,
+    identifier: str,
+    ref_identifier: str,
+) -> None:
+    is_mvm = bool(reference_data_path)
+    if not is_mvm:
+        c["analysis_subdir"] = "mpas_analysis"
+        c["analysis_task_name"] = "mpas_analysis"
+        c["output_dir_name"] = identifier
+        return
+
+    c["analysis_subdir"] = "mpas_analysis_mvm"
+    c["analysis_task_name"] = "mpas_analysis_mvm"
+
+    if reference_subsection:
+        c["reference_case"] = c["case"]
+    else:
+        reference_case = c.get("reference_case", "")
+        if not reference_case:
+            raise ValueError(
+                "reference_case must be set when reference_data_path is provided and is not a subsection reference."
+            )
+        c["reference_case"] = reference_case
+
+    case = c["case"]
+    reference_case = c["reference_case"]
+    if case == reference_case:
+        output_dir_name = f"{identifier}_vs_{ref_identifier}"
+    else:
+        if identifier == ref_identifier:
+            output_dir_name = f"{case}_vs_{reference_case}"
+        else:
+            output_dir_name = (
+                f"{case}_{identifier}_vs_{reference_case}_{ref_identifier}"
+            )
+
+    c["output_dir_name"] = output_dir_name
+
+
+def _check_mvm_identifier_collision(
+    c: Dict[str, Any],
+    reference_data_path: str,
+    identifier: str,
+    mvm_identifiers: Dict[str, str],
+) -> None:
+    if not reference_data_path:
+        return
+
+    if identifier in mvm_identifiers:
+        raise ValueError(
+            "Multiple MPAS-Analysis MVM runs would overwrite the same config file "
+            f"(mpas_analysis_{identifier}.cfg). This identifier was already used by "
+            f"{mvm_identifiers[identifier]}. Adjust ts/climo years or split runs."
+        )
+
+    ref_case = c.get("reference_case", "")
+    if ref_case:
+        label = f"case={c['case']} ref_case={ref_case}"
+    else:
+        label = f"case={c['case']}"
+    mvm_identifiers[identifier] = label
 
 
 def _resolve_year_sets(
@@ -402,7 +516,9 @@ def _parse_subsection_reference(value: str) -> str:
     return match.group(1).strip()
 
 
-def _resolve_mpas_analysis_config_file(run_output_dir: str, identifier: str) -> str:
+def _resolve_mpas_analysis_config_file(
+    run_output_dir: str, identifier: str, *, analysis_subdir: str = "mpas_analysis"
+) -> str:
     """
     Resolve the MPAS-Analysis config file path for a prior run.
 
@@ -425,7 +541,7 @@ def _resolve_mpas_analysis_config_file(run_output_dir: str, identifier: str) -> 
 
     file_name = f"mpas_analysis_{identifier}.cfg"
 
-    cfg_dir = path / "post" / "analysis" / "mpas_analysis" / "cfg"
+    cfg_dir = path / "post" / "analysis" / analysis_subdir / "cfg"
     return str(cfg_dir / file_name)
 
 
