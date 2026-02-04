@@ -83,9 +83,14 @@ MPAS-Analysis comparisons are configured by year ranges, similar to other ``zppy
 For model-vs-model comparisons, ``zppy`` supports separate year ranges for the test and reference runs:
 
 * ``ts_years``, ``climo_years``, ``enso_years`` define the test run year ranges.
+   If ``test_data_path`` references a prior ``[mpas_analysis]`` subsection using
+   ``[[subsection]]``, and these values are not provided, zppy uses that
+   subsection's year ranges instead.
 * ``ref_ts_years``, ``ref_climo_years``, ``ref_enso_years`` optionally override the reference run year ranges.
 
 If a ``ref_*_years`` parameter is not provided, it defaults to the corresponding test year ranges.
+If ``reference_data_path`` references a prior ``[mpas_analysis]`` subsection using ``[[subsection]]``,
+the defaults come from that subsection's year ranges instead.
 If a ``ref_*_years`` parameter contains a single range and multiple test ranges are requested, the single reference range is used for each test range.
 
 
