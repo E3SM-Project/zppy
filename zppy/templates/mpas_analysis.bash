@@ -43,16 +43,17 @@ mkdir -p cfg
 {% if cache == true %}
 # Restore cached copies of pre-computed files
 cached=( "timeseries/moc" "timeseries/OceanBasins" "timeseries/transport" )
-mkdir -p cache
+cache_dir="{{ scriptDir }}/../analysis/mpas_analysis/cache"
+mkdir -p ${cache_dir}
 for subdir in "${cached[@]}"
 do
-  mkdir -p cache/${subdir} ${output_dir_name}/${subdir}
-  rsync -av cache/${subdir}/ ${output_dir_name}/${subdir}/
+  mkdir -p ${cache_dir}/${subdir} ${output_dir_name}/${subdir}
+  rsync -av ${cache_dir}/${subdir}/ ${output_dir_name}/${subdir}/
 done
 files=( "mpasIndexOcean.nc" "mpasTimeSeriesOcean.nc" "seaIceAreaVolNH.nc" "seaIceAreaVolSH.nc")
 for file in "${files[@]}"
 do
-  cp cache/timeseries/${file} ${output_dir_name}/timeseries/${file}
+  cp ${cache_dir}/timeseries/${file} ${output_dir_name}/timeseries/${file}
 done
 {% endif %}
 
@@ -314,11 +315,11 @@ echo ===== CACHE OUTPUT FILES =====
 echo
 for file in "${files[@]}"
 do
-  cp ${output_dir_name}/timeseries/${file} cache/timeseries/${file}
+  cp ${output_dir_name}/timeseries/${file} ${cache_dir}/timeseries/${file}
 done
 for subdir in "${cached[@]}"
 do
-  rsync -av ${output_dir_name}/${subdir}/ cache/${subdir}/
+  rsync -av ${output_dir_name}/${subdir}/ ${cache_dir}/${subdir}/
 done
 # Remove one particularly large file which does not need to be cached
 rm ${output_dir_name}/timeseries/mpasTimeSeriesSeaIce.nc
