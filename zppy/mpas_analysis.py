@@ -47,98 +47,19 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
 
         dependencies: List[str] = carried_over_dependencies
         set_subdirs(config, c)
-        reference_data_path_value = c.get("reference_data_path", "")
-        reference_subsection = _parse_subsection_reference(reference_data_path_value)
-        reference_data_path = _resolve_subsection_reference(
-            reference_data_path_value,
-            prior_subsection_outputs,
-            "reference_data_path",
+        (
+            reference_data_path,
+            test_data_path,
+            reference_subsection,
+            test_subsection,
+        ) = _resolve_subsection_paths(c, prior_subsection_outputs)
+        ts_year_sets, climo_year_sets, enso_year_sets = _resolve_test_year_sets(
+            c, test_subsection, prior_subsection_year_sets
         )
-        test_data_path_value = c.get("test_data_path", "")
-        test_subsection = _parse_subsection_reference(test_data_path_value)
-        test_data_path = _resolve_subsection_reference(
-            test_data_path_value,
-            prior_subsection_outputs,
-            "test_data_path",
-        )
-        c["reference_data_path"] = reference_data_path
-        c["test_data_path"] = test_data_path
-        # Loop over year sets
-        ts_years_value = c.get("ts_years", [""])
-        ts_year_sets: List[Tuple[int, int]] = get_years(ts_years_value)
-        if (len(ts_year_sets) == 0) and (test_subsection in prior_subsection_year_sets):
-            ts_year_sets = prior_subsection_year_sets[test_subsection]["ts"]
-
-        # Main climo/index year sets default to time series years.
-        climo_years_value = c.get("climo_years", [""])
-        climo_fallback = ts_year_sets
-        if test_subsection in prior_subsection_year_sets:
-            if len(get_years(climo_years_value)) == 0:
-                climo_fallback = prior_subsection_year_sets[test_subsection]["climo"]
-
-        climo_year_sets = _resolve_year_sets(
-            climo_years_value,
-            fallback=climo_fallback,
-            target_len=len(ts_year_sets),
-            label="climo_years",
-        )
-
-        enso_years_value = c.get("enso_years", [""])
-        enso_fallback = ts_year_sets
-        if test_subsection in prior_subsection_year_sets:
-            if len(get_years(enso_years_value)) == 0:
-                enso_fallback = prior_subsection_year_sets[test_subsection]["enso"]
-
-        enso_year_sets = _resolve_year_sets(
-            enso_years_value,
-            fallback=enso_fallback,
-            target_len=len(ts_year_sets),
-            label="enso_years",
-        )
-
-        # Reference year sets for test-vs-reference (main-vs-control) mode.
-        # If not provided, default to the main run's corresponding year sets.
-        ref_ts_years_value = c.get("ref_ts_years", [""])
-        ref_ts_fallback = ts_year_sets
-        if reference_subsection in prior_subsection_year_sets:
-            if len(get_years(ref_ts_years_value)) == 0:
-                ref_ts_fallback = prior_subsection_year_sets[reference_subsection]["ts"]
-
-        ref_ts_year_sets = _resolve_year_sets(
-            ref_ts_years_value,
-            fallback=ref_ts_fallback,
-            target_len=len(ts_year_sets),
-            label="ref_ts_years",
-        )
-
-        ref_climo_years_value = c.get("ref_climo_years", [""])
-        ref_climo_fallback = ref_ts_year_sets
-        if reference_subsection in prior_subsection_year_sets:
-            if len(get_years(ref_climo_years_value)) == 0:
-                ref_climo_fallback = prior_subsection_year_sets[reference_subsection][
-                    "climo"
-                ]
-
-        ref_climo_year_sets = _resolve_year_sets(
-            ref_climo_years_value,
-            fallback=ref_climo_fallback,
-            target_len=len(ts_year_sets),
-            label="ref_climo_years",
-        )
-
-        ref_enso_years_value = c.get("ref_enso_years", [""])
-        ref_enso_fallback = ref_ts_year_sets
-        if reference_subsection in prior_subsection_year_sets:
-            if len(get_years(ref_enso_years_value)) == 0:
-                ref_enso_fallback = prior_subsection_year_sets[reference_subsection][
-                    "enso"
-                ]
-
-        ref_enso_year_sets = _resolve_year_sets(
-            ref_enso_years_value,
-            fallback=ref_enso_fallback,
-            target_len=len(ts_year_sets),
-            label="ref_enso_years",
+        ref_ts_year_sets, ref_climo_year_sets, ref_enso_year_sets = (
+            _resolve_reference_year_sets(
+                c, reference_subsection, prior_subsection_year_sets, ts_year_sets
+            )
         )
 
         for ts, climo, enso, ctrl_ts, ctrl_climo, ctrl_enso in zip(
@@ -149,70 +70,16 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
             ref_climo_year_sets,
             ref_enso_year_sets,
         ):
-            c["ts_year1"] = ts[0]
-            c["ts_year2"] = ts[1]
-            if ("last_year" in c.keys()) and (c["ts_year2"] > c["last_year"]):
-                continue  # Skip this year set
-            c["climo_year1"] = climo[0]
-            c["climo_year2"] = climo[1]
-            if ("last_year" in c.keys()) and (c["climo_year2"] > c["last_year"]):
-                continue  # Skip this year set
-            c["enso_year1"] = enso[0]
-            c["enso_year2"] = enso[1]
-            if ("last_year" in c.keys()) and (c["enso_year2"] > c["last_year"]):
-                continue  # Skip this year set
-            c["scriptDir"] = script_dir
-            identifier: str = _get_identifier(
-                ts_year1=c["ts_year1"],
-                ts_year2=c["ts_year2"],
-                climo_year1=c["climo_year1"],
-                climo_year2=c["climo_year2"],
+            if _set_run_years(c, ts, climo, enso):
+                continue
+            identifier, ref_identifier = _set_identifiers(
+                c, script_dir, ctrl_ts, ctrl_climo
             )
-            c["identifier"] = identifier
-
-            ref_identifier: str = _get_identifier(
-                ts_year1=ctrl_ts[0],
-                ts_year2=ctrl_ts[1],
-                climo_year1=ctrl_climo[0],
-                climo_year2=ctrl_climo[1],
+            _set_run_config_files(
+                c, reference_data_path, test_data_path, ref_identifier, identifier
             )
-            c["ref_identifier"] = ref_identifier
-
-            # Optional: point MPAS-Analysis at already-completed MPAS-Analysis runs
-            # so it can do a "test vs. reference" ("main vs. control") comparison.
-            #
-            # These zppy options are expected to point to a prior zppy run's
-            # output directory (containing a post/ directory).
-            #
-            # For user consistency with other zppy tasks, prefer *_data_path naming.
-            # These point to a prior zppy run's output directory (or its post/ dir),
-            # and zppy will locate the MPAS-Analysis config file within it.
-            #
-            # We keep *_run_output_dir as backwards-compatible aliases.
-            c["controlRunConfigFile"] = (
-                _resolve_mpas_analysis_config_file(reference_data_path, ref_identifier)
-                if reference_data_path
-                else ""
-            )
-            c["mainRunConfigFile"] = (
-                _resolve_mpas_analysis_config_file(test_data_path, identifier)
-                if test_data_path
-                else ""
-            )
-            prefix_suffix: str = (
-                f"_ts_{c['ts_year1']:04d}-{c['ts_year2']:04d}_climo_{c['climo_year1']:04d}-{c['climo_year2']:04d}"
-            )
-
-            # If reference years differ, include them in the script/status prefix to avoid collisions.
-            if c["controlRunConfigFile"] and (ref_identifier != identifier):
-                prefix_suffix = f"{prefix_suffix}_vs_ref_{ref_identifier}"
-            prefix: str
-            if c["subsection"]:
-                prefix = f"mpas_analysis_{c['subsection']}{prefix_suffix}"
-            else:
-                prefix = f"mpas_analysis{prefix_suffix}"
+            prefix = _build_prefix(c, ref_identifier, identifier)
             print(prefix)
-            c["prefix"] = prefix
             bash_file, settings_file, status_file = get_file_names(script_dir, prefix)
             # Check if we can skip because it completed successfully before
             skip: bool = check_status(status_file)
@@ -280,6 +147,199 @@ def _get_identifier(
     clim_y1 = f"{climo_year1:04d}"
     clim_y2 = f"{climo_year2:04d}"
     return f"ts_{ts_y1}-{ts_y2}_climo_{clim_y1}-{clim_y2}"
+
+
+def _resolve_subsection_paths(
+    c: Dict[str, Any],
+    prior_subsection_outputs: Dict[str, str],
+) -> Tuple[str, str, str, str]:
+    reference_data_path_value = c.get("reference_data_path", "")
+    reference_subsection = _parse_subsection_reference(reference_data_path_value)
+    reference_data_path = _resolve_subsection_reference(
+        reference_data_path_value,
+        prior_subsection_outputs,
+        "reference_data_path",
+    )
+    test_data_path_value = c.get("test_data_path", "")
+    test_subsection = _parse_subsection_reference(test_data_path_value)
+    test_data_path = _resolve_subsection_reference(
+        test_data_path_value,
+        prior_subsection_outputs,
+        "test_data_path",
+    )
+    c["reference_data_path"] = reference_data_path
+    c["test_data_path"] = test_data_path
+    return reference_data_path, test_data_path, reference_subsection, test_subsection
+
+
+def _resolve_test_year_sets(
+    c: Dict[str, Any],
+    test_subsection: str,
+    prior_subsection_year_sets: Dict[str, Dict[str, List[Tuple[int, int]]]],
+) -> Tuple[List[Tuple[int, int]], List[Tuple[int, int]], List[Tuple[int, int]]]:
+    ts_years_value = c.get("ts_years", [""])
+    ts_year_sets: List[Tuple[int, int]] = get_years(ts_years_value)
+    if (len(ts_year_sets) == 0) and (test_subsection in prior_subsection_year_sets):
+        ts_year_sets = prior_subsection_year_sets[test_subsection]["ts"]
+
+    climo_years_value = c.get("climo_years", [""])
+    climo_fallback = ts_year_sets
+    if test_subsection in prior_subsection_year_sets:
+        if len(get_years(climo_years_value)) == 0:
+            climo_fallback = prior_subsection_year_sets[test_subsection]["climo"]
+
+    climo_year_sets = _resolve_year_sets(
+        climo_years_value,
+        fallback=climo_fallback,
+        target_len=len(ts_year_sets),
+        label="climo_years",
+    )
+
+    enso_years_value = c.get("enso_years", [""])
+    enso_fallback = ts_year_sets
+    if test_subsection in prior_subsection_year_sets:
+        if len(get_years(enso_years_value)) == 0:
+            enso_fallback = prior_subsection_year_sets[test_subsection]["enso"]
+
+    enso_year_sets = _resolve_year_sets(
+        enso_years_value,
+        fallback=enso_fallback,
+        target_len=len(ts_year_sets),
+        label="enso_years",
+    )
+
+    return ts_year_sets, climo_year_sets, enso_year_sets
+
+
+def _resolve_reference_year_sets(
+    c: Dict[str, Any],
+    reference_subsection: str,
+    prior_subsection_year_sets: Dict[str, Dict[str, List[Tuple[int, int]]]],
+    ts_year_sets: List[Tuple[int, int]],
+) -> Tuple[List[Tuple[int, int]], List[Tuple[int, int]], List[Tuple[int, int]]]:
+    ref_ts_years_value = c.get("ref_ts_years", [""])
+    ref_ts_fallback = ts_year_sets
+    if reference_subsection in prior_subsection_year_sets:
+        if len(get_years(ref_ts_years_value)) == 0:
+            ref_ts_fallback = prior_subsection_year_sets[reference_subsection]["ts"]
+
+    ref_ts_year_sets = _resolve_year_sets(
+        ref_ts_years_value,
+        fallback=ref_ts_fallback,
+        target_len=len(ts_year_sets),
+        label="ref_ts_years",
+    )
+
+    ref_climo_years_value = c.get("ref_climo_years", [""])
+    ref_climo_fallback = ref_ts_year_sets
+    if reference_subsection in prior_subsection_year_sets:
+        if len(get_years(ref_climo_years_value)) == 0:
+            ref_climo_fallback = prior_subsection_year_sets[reference_subsection][
+                "climo"
+            ]
+
+    ref_climo_year_sets = _resolve_year_sets(
+        ref_climo_years_value,
+        fallback=ref_climo_fallback,
+        target_len=len(ts_year_sets),
+        label="ref_climo_years",
+    )
+
+    ref_enso_years_value = c.get("ref_enso_years", [""])
+    ref_enso_fallback = ref_ts_year_sets
+    if reference_subsection in prior_subsection_year_sets:
+        if len(get_years(ref_enso_years_value)) == 0:
+            ref_enso_fallback = prior_subsection_year_sets[reference_subsection]["enso"]
+
+    ref_enso_year_sets = _resolve_year_sets(
+        ref_enso_years_value,
+        fallback=ref_enso_fallback,
+        target_len=len(ts_year_sets),
+        label="ref_enso_years",
+    )
+
+    return ref_ts_year_sets, ref_climo_year_sets, ref_enso_year_sets
+
+
+def _set_run_years(
+    c: Dict[str, Any],
+    ts: Tuple[int, int],
+    climo: Tuple[int, int],
+    enso: Tuple[int, int],
+) -> bool:
+    c["ts_year1"] = ts[0]
+    c["ts_year2"] = ts[1]
+    if ("last_year" in c.keys()) and (c["ts_year2"] > c["last_year"]):
+        return True
+    c["climo_year1"] = climo[0]
+    c["climo_year2"] = climo[1]
+    if ("last_year" in c.keys()) and (c["climo_year2"] > c["last_year"]):
+        return True
+    c["enso_year1"] = enso[0]
+    c["enso_year2"] = enso[1]
+    if ("last_year" in c.keys()) and (c["enso_year2"] > c["last_year"]):
+        return True
+    return False
+
+
+def _set_identifiers(
+    c: Dict[str, Any],
+    script_dir: str,
+    ctrl_ts: Tuple[int, int],
+    ctrl_climo: Tuple[int, int],
+) -> Tuple[str, str]:
+    c["scriptDir"] = script_dir
+    identifier = _get_identifier(
+        ts_year1=c["ts_year1"],
+        ts_year2=c["ts_year2"],
+        climo_year1=c["climo_year1"],
+        climo_year2=c["climo_year2"],
+    )
+    c["identifier"] = identifier
+
+    ref_identifier = _get_identifier(
+        ts_year1=ctrl_ts[0],
+        ts_year2=ctrl_ts[1],
+        climo_year1=ctrl_climo[0],
+        climo_year2=ctrl_climo[1],
+    )
+    c["ref_identifier"] = ref_identifier
+    return identifier, ref_identifier
+
+
+def _set_run_config_files(
+    c: Dict[str, Any],
+    reference_data_path: str,
+    test_data_path: str,
+    ref_identifier: str,
+    identifier: str,
+) -> None:
+    c["controlRunConfigFile"] = (
+        _resolve_mpas_analysis_config_file(reference_data_path, ref_identifier)
+        if reference_data_path
+        else ""
+    )
+    c["mainRunConfigFile"] = (
+        _resolve_mpas_analysis_config_file(test_data_path, identifier)
+        if test_data_path
+        else ""
+    )
+
+
+def _build_prefix(c: Dict[str, Any], ref_identifier: str, identifier: str) -> str:
+    prefix_suffix = (
+        f"_ts_{c['ts_year1']:04d}-{c['ts_year2']:04d}"
+        f"_climo_{c['climo_year1']:04d}-{c['climo_year2']:04d}"
+    )
+
+    if c["controlRunConfigFile"] and (ref_identifier != identifier):
+        prefix_suffix = f"{prefix_suffix}_vs_ref_{ref_identifier}"
+    if c["subsection"]:
+        prefix = f"mpas_analysis_{c['subsection']}{prefix_suffix}"
+    else:
+        prefix = f"mpas_analysis{prefix_suffix}"
+    c["prefix"] = prefix
+    return prefix
 
 
 def _resolve_year_sets(
