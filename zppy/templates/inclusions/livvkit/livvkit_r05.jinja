@@ -8,6 +8,7 @@ common: &common
     climo: {{ dir_native }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
     latlon: &climo_ann_file
       {{ dir_native }}/{{ case_id }}_ANN_{sea_s}_{sea_e}_climo.nc
+    # These are the same for purposes of typical model run, but can be different
     elevation: *climo_ann_file
     lnd_climo: *climo_ann_file
     topo: *climo_ann_file
@@ -34,7 +35,6 @@ common_smb: &common_smb
     References:
       - {{ livvproj_dir }}/data/smb/smb_icecores.bib
       - {{ livvproj_dir }}/data/livvkit.bib
-
 
 common_energy: &common_energy
   desc: Surface energy balance component {component}{comment} from {data_var_names}
