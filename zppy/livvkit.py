@@ -134,9 +134,9 @@ def determine_and_add_dependencies(
         _c["ts_num_years"],
     )
     grids = ["_native"]
-    for data_source in ["racmo", "merra2", "ceres", "era5"]:
+    for data_source in ["cmb", "smb", "racmo", "merra2", "ceres", "era5"]:
         if data_source in _c["sets"]:
-            if data_source == "racmo":
+            if data_source == "racmo" or data_source in ["cmb", "smb"]:
                 for _icesheet in _c["icesheets"].split(","):
                     grids.append(f"_racmo_{_icesheet}")
             elif data_source == "ceres":
@@ -144,7 +144,7 @@ def determine_and_add_dependencies(
                 grids.append("")
             else:
                 grids.append(f"_{data_source}")
-
+        grids = list(set(grids))
     for _grid in grids:
         set_value_of_parameter_if_undefined(
             _c,
