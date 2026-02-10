@@ -81,7 +81,6 @@ def test_ts_template_variable_exclusion_non_glb():
 
     # Test with non-glb mapping_file
     test_params = {
-        "mapping_file": "map_ne30pg2_to_180x360_aave.nc",
         "vars": "T,OMEGA500,U,U10,V,ICEFRAC",
         "environment_commands": "",
         "prefix": "test",
