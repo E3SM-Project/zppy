@@ -47,10 +47,11 @@ fi
 
 {% if mapping_file == 'glb' -%}
 vars={{ vars }}
-# https://unix.stackexchange.com/questions/237297/the-fastest-way-to-remove-a-string-in-a-variable
-# https://stackoverflow.com/questions/26457052/remove-a-substring-from-a-bash-variable
-# Remove U, since it is a 3D variable and thus will not work with rgn_avg
-vars=${vars//,U}
+# Remove 3D variables (U, U10, V) since they will not work with rgn_avg
+# Use sed to match complete variable names (not partial matches)
+# Pattern explanation: \(^\|,\) matches start of string or comma
+#                      \(,\|$\) matches comma or end of string
+vars=$(echo "$vars" | sed 's/\(^\|,\)U10\(,\|$\)/\1/g; s/\(^\|,\)U\(,\|$\)/\1/g; s/\(^\|,\)V\(,\|$\)/\1/g; s/,,*/,/g; s/^,//; s/,$//')
 {%- else %}
 vars={{ vars }}
 {%- endif %}
