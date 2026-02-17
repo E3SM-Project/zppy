@@ -44,12 +44,7 @@ def livvkit(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
             c["year2"] = s[1]
             c["ts_num_years"] = s[1] - s[0] + 1
             c["scriptDir"] = script_dir
-            # set_value_of_parameter_if_undefined(
-            #     c,
-            #     "livvkit_obs",
-            #     os.path.join(c["diagnostics_base_path"], "livvkit_data"),
-            #     ParameterInferenceType.PATH_INFERENCE,
-            # )
+
             # List of dependencies
             determine_and_add_dependencies(c, dependencies, script_dir)
             prefix: str = f"livvkit_{c['year1']:04d}-{c['year2']:04d}"
