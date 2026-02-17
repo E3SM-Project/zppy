@@ -62,7 +62,7 @@ echo ===== COPY FILES TO WEB SERVER =====
 echo
 
 # Create top-level directory
-web_dir=${www}/${case}/lex/${Y1}-${Y2}
+web_dir=${www}/${case}/livvkit/${Y1}-${Y2}
 mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
