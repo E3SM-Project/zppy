@@ -1,5 +1,9 @@
 #!/bin/bash
+{% if scheduler == "slurm" %}
 {% include 'inclusions/slurm_header.bash' %}
+{% elif scheduler == "pbs" %}
+{% include 'inclusions/pbs_header.bash' %}
+{% endif %}
 {% include 'inclusions/boilerplate.bash' %}
 set -e
 {{ environment_commands }}
@@ -20,7 +24,11 @@ cd ${workdir}
 {%- else -%}
 --case={{ case }} \
 {%- endif %}
+{% if scheduler == "slurm" -%}
 --jobs=${SLURM_NNODES} \
+{% elif scheduler == "pbs" -%}
+--jobs=${PBS_NUM_NODES} \
+{%- endif %}
 --thr=1 \
 {%- if exclude %}
 -n '-x' \
@@ -89,7 +97,11 @@ fi
 # Now, call ncclimo
 cat input.txt | {{ ncclimo_cmd }} \
 --case={{ case }}.{{ input_files }} \
+{% if scheduler == "slurm" -%}
 --jobs=${SLURM_NNODES} \
+{% elif scheduler == "pbs" -%}
+--jobs=${PBS_NUM_NODES} \
+{%- endif %}
 --thr=1 \
 {%- if exclude %}
 -n '-x' \

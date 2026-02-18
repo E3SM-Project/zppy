@@ -202,6 +202,10 @@ def _determine_parameters(machine_info: MachineInfo, config: ConfigObj) -> Confi
     config["default"]["web_portal_base_url"] = machine_info.config.get(
         "web_portal", "base_url"
     )
+    
+    # Determine scheduler from mache config
+    scheduler = machine_info.config.get("parallel", "system", fallback="slurm")
+    config["default"]["scheduler"] = scheduler
 
     # Determine machine to decide which header files to use
     if ("machine" not in config["default"]) or (config["default"]["machine"] == ""):
@@ -298,4 +302,5 @@ def _launch_scripts(config: ConfigObj, script_dir, job_ids_file, plugins) -> Non
                 job_ids_file,
                 dependFiles=list(b.dependencies_external),
                 fail_on_dependency_skip=config["default"]["fail_on_dependency_skip"],
+                scheduler=config["default"]["scheduler"],
             )

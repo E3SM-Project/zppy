@@ -8,7 +8,11 @@ fi
 cd {{ scriptDir }}
 
 # Get jobid
+{% if scheduler == "slurm" %}
 id=${SLURM_JOBID}
+{% elif scheduler == "pbs" %}
+id=${PBS_JOBID}
+{% endif %}
 
 # Update status file
 STARTTIME=$(date +%s)
