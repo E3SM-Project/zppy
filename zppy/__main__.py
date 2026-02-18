@@ -202,7 +202,7 @@ def _determine_parameters(machine_info: MachineInfo, config: ConfigObj) -> Confi
     config["default"]["web_portal_base_url"] = machine_info.config.get(
         "web_portal", "base_url"
     )
-    
+
     # Determine scheduler from mache config
     scheduler = machine_info.config.get("parallel", "system", fallback="slurm")
     config["default"]["scheduler"] = scheduler

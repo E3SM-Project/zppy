@@ -480,7 +480,7 @@ def submit_script(
         status = p1.returncode
         out = stdout.decode().strip()
         print(f"...{out}")
-        
+
         # Parse job ID based on scheduler
         if scheduler == "slurm":
             if status != 0 or not out.startswith("Submitted batch job"):
@@ -491,16 +491,22 @@ def submit_script(
                 raise RuntimeError(error_str)
             jobid = int(out.split()[-1])
         elif scheduler == "pbs":
-            if status != 0:
+            if status != 0 or not out:
                 error_str = f"Problem submitting script {script_file}"
                 logger.critical(error_str)
                 logger.critical(command)
                 logger.critical(stderr)
                 raise RuntimeError(error_str)
             # PBS returns the job ID directly (e.g., "12345.server" or just "12345")
-            # Extract numeric part
-            jobid_str = out.split('.')[0]  # Handle "jobid.servername" format
-            jobid = int(jobid_str)
+            # Extract numeric part by splitting on '.' and taking the first part
+            try:
+                jobid_str = out.split('.')[0]
+                jobid = int(jobid_str)
+            except (ValueError, IndexError) as e:
+                error_str = f"Problem parsing PBS job ID from output: {out}"
+                logger.critical(error_str)
+                logger.critical(command)
+                raise RuntimeError(error_str) from e
         
         with open(job_ids_file, "a") as j:
             # To include the scriptFile, use this line:
