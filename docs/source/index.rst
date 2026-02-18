@@ -34,8 +34,8 @@ a specified number of years, for example generating atmosphere climatology
 files every 20 and 50 years.
 
 ``zppy`` parses the configuration file and generates batch
-jobs that are submitted for execution by SLURM. Dependencies between tasks
-are handled and passed to SLURM. Internally, each batch job is created by
+jobs that are submitted for execution by the job scheduler (Slurm or PBS). Dependencies between tasks
+are handled and passed to the scheduler. Internally, each batch job is created by
 instantiating `Jinja <https://jinja.palletsprojects.com>`_ template scripts 
 (usually written in bash, but other languages are supported as well).
 

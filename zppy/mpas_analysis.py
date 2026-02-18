@@ -107,6 +107,7 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
                         job_ids_file,
                         dependFiles=dependencies,
                         fail_on_dependency_skip=c["fail_on_dependency_skip"],
+                        scheduler=c["scheduler"],
                     )
 
                     # Note that this line should still be executed even if jobid == -1

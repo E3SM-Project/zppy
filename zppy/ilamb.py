@@ -84,6 +84,7 @@ def ilamb(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
                         job_ids_file,
                         dependFiles=dependencies,
                         fail_on_dependency_skip=c["fail_on_dependency_skip"],
+                        scheduler=c["scheduler"],
                     )
                 else:
                     print("...adding to bundle '{c['bundle']}'")

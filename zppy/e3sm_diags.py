@@ -95,6 +95,7 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
                         job_ids_file,
                         dependFiles=dependencies,
                         fail_on_dependency_skip=c["fail_on_dependency_skip"],
+                        scheduler=c["scheduler"],
                     )
                 else:
                     print(f"...adding to bundle {c['bundle']}")

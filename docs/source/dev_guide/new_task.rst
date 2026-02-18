@@ -13,21 +13,21 @@ Some key parts, however, are displayed below:
     .. code::
 
         #!/bin/bash
-        {% include 'slurm_header.sh' %}
+        {% if scheduler == "slurm" %}
+        {% include 'inclusions/slurm_header.bash' %}
+        {% elif scheduler == "pbs" %}
+        {% include 'inclusions/pbs_header.bash' %}
+        {% endif %}
+        {% include 'inclusions/boilerplate.bash' %}
 
         {{ environment_commands }}
 
-        # Turn on debug output if needed
-        debug={{ debug }}
-        if [[ "${debug,,}" == "true" ]]; then
-          set -x
-        fi
-
-        # Script dir
-        cd {{ scriptDir }}
-
-        # Get jobid
-        id=${SLURM_JOBID}
+        # Task-specific code follows...
+        # The boilerplate.bash already handles:
+        # - Debug mode setup
+        # - Changing to script directory
+        # - Getting the job ID (scheduler-aware)
+        # - Creating initial status file
 
         # Update status file
         STARTTIME=$(date +%s)

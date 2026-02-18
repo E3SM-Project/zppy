@@ -1,5 +1,9 @@
 #!/bin/bash
+{% if scheduler == "slurm" %}
 {% include 'inclusions/slurm_header.bash' %}
+{% elif scheduler == "pbs" %}
+{% include 'inclusions/pbs_header.bash' %}
+{% endif %}
 {% include 'inclusions/boilerplate.bash' %}
 set -e # Stop running script on error
 {{ environment_commands }}

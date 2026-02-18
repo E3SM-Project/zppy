@@ -408,6 +408,7 @@ def submit_script(
     job_ids_file,
     dependFiles: List[str] = [],
     fail_on_dependency_skip: bool = False,
+    scheduler: str = "slurm",
 ):
     # id of submitted job, or -1 if not submitted
     jobid = None
@@ -445,17 +446,33 @@ def submit_script(
 
         # Submit command
         command: str
-        if len(dependIds) == 0:
-            command = f"sbatch --export={export} {script_file}"
+        if scheduler == "slurm":
+            if len(dependIds) == 0:
+                command = f"sbatch --export={export} {script_file}"
+            else:
+                jobs: str = ""
+                for i in dependIds:
+                    jobs += ":{:d}".format(i)
+                # Note that `--dependency` does handle bundles even though it lists individual tasks, not bundles.
+                # Since each task of a bundle lists "RUNNING <Job ID of bundle>", the bundle's job ID will be included.
+                command = (
+                    f"sbatch --export={export} --dependency=afterok{jobs} {script_file}"
+                )
+        elif scheduler == "pbs":
+            if len(dependIds) == 0:
+                command = f"qsub {script_file}"
+            else:
+                jobs: str = ""
+                for i in dependIds:
+                    if jobs:
+                        jobs += ":"
+                    jobs += "{:d}".format(i)
+                # PBS dependency format: -W depend=afterok:jobid1:jobid2
+                command = (
+                    f"qsub -W depend=afterok:{jobs} {script_file}"
+                )
         else:
-            jobs: str = ""
-            for i in dependIds:
-                jobs += ":{:d}".format(i)
-            # Note that `--dependency` does handle bundles even though it lists individual tasks, not bundles.
-            # Since each task of a bundle lists "RUNNING <Job ID of bundle>", the bundle's job ID will be included.
-            command = (
-                f"sbatch --export={export} --dependency=afterok{jobs} {script_file}"
-            )
+            raise ValueError(f"Unsupported scheduler: {scheduler}")
 
         # Actual submission
         p1 = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE)
@@ -463,13 +480,34 @@ def submit_script(
         status = p1.returncode
         out = stdout.decode().strip()
         print(f"...{out}")
-        if status != 0 or not out.startswith("Submitted batch job"):
-            error_str = f"Problem submitting script {script_file}"
-            logger.critical(error_str)
-            logger.critical(command)
-            logger.critical(stderr)
-            raise RuntimeError(error_str)
-        jobid = int(out.split()[-1])
+
+        # Parse job ID based on scheduler
+        if scheduler == "slurm":
+            if status != 0 or not out.startswith("Submitted batch job"):
+                error_str = f"Problem submitting script {script_file}"
+                logger.critical(error_str)
+                logger.critical(command)
+                logger.critical(stderr)
+                raise RuntimeError(error_str)
+            jobid = int(out.split()[-1])
+        elif scheduler == "pbs":
+            if status != 0 or not out:
+                error_str = f"Problem submitting script {script_file}"
+                logger.critical(error_str)
+                logger.critical(command)
+                logger.critical(stderr)
+                raise RuntimeError(error_str)
+            # PBS returns the job ID directly (e.g., "12345.server" or just "12345")
+            # Extract numeric part by splitting on '.' and taking the first part
+            try:
+                jobid_str = out.split('.')[0]
+                jobid = int(jobid_str)
+            except (ValueError, IndexError) as e:
+                error_str = f"Problem parsing PBS job ID from output: {out}"
+                logger.critical(error_str)
+                logger.critical(command)
+                raise RuntimeError(error_str) from e
+        
         with open(job_ids_file, "a") as j:
             # To include the scriptFile, use this line:
             # j.write(f"{scriptFile}: {jobid}\n")

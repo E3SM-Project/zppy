@@ -1,5 +1,9 @@
 #!/bin/bash
+{% if scheduler == "slurm" %}
 {% include 'inclusions/slurm_header.bash' %}
+{% elif scheduler == "pbs" %}
+{% include 'inclusions/pbs_header.bash' %}
+{% endif %}
 {% include 'inclusions/boilerplate.bash' %}
 set -e
 {{ environment_commands }}
@@ -125,6 +129,8 @@ mapMpiTasks = {{ mapMpiTasks }}
 mapParallelExec = srun
 {% elif machine in ['compy'] %}
 mapParallelExec = srun --mpi=pmi2
+{% elif machine in ['polaris', 'aurora'] %}
+mapParallelExec = mpirun
 {% endif %}
 
 # "None" if ncremap should perform remapping without a command, or "srun"
@@ -135,6 +141,8 @@ ncremapParallelExec = None
 ncremapParallelExec = srun -n 1
 {% elif machine in ['compy'] %}
 ncremapParallelExec = srun --mpi=pmi2 -n 1
+{% elif machine in ['polaris', 'aurora'] %}
+ncremapParallelExec = mpirun -n 1
 {% endif %}
 
 

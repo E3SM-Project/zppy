@@ -1,5 +1,9 @@
 #!/bin/bash
+{% if scheduler == "slurm" %}
 {% include 'inclusions/slurm_header.bash' %}
+{% elif scheduler == "pbs" %}
+{% include 'inclusions/pbs_header.bash' %}
+{% endif %}
 
 set -e
 {{ environment_commands }}
@@ -21,7 +25,11 @@ export UVCDAT_ANONYMOUS_LOG=False
 cd {{ scriptDir }}
 
 # Get jobid
+{% if scheduler == "slurm" %}
 id=${SLURM_JOBID}
+{% elif scheduler == "pbs" %}
+id=${PBS_JOBID}
+{% endif %}
 
 # Update status file
 STARTTIME=$(date +%s)

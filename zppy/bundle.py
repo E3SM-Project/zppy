@@ -42,6 +42,7 @@ class Bundle(object):
         c = {}
         c["machine"] = config["default"]["machine"]
         c["account"] = config["default"]["account"]
+        c["scheduler"] = config["default"]["scheduler"]
         c["constraint"] = self.constraint
         c["debug"] = self.debug
         c["environment_commands"] = self.environment_commands
