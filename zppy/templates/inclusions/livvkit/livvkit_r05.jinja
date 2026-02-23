@@ -628,7 +628,7 @@ common_ceres_energy_vars: &common_ceres_energy_vars
 # Greenland
 {% if cmb %}
 Climatic_Mass_Balance_GIS:
-  module: {{ lex_root }}/smb/smb_icecores.py
+  module: {{ livvext_root }}/smb/smb_icecores.py
   data_vars: *common_racmo_cmb_vars
   <<: [*common, *common_smb, *common_racmo, *common_racmo_gis]
   scales:
@@ -639,7 +639,7 @@ Climatic_Mass_Balance_GIS:
 
 {% if smb %}
 Surface_Mass_Balance_GIS:
-  module: {{ lex_root }}/smb/smb_icecores.py
+  module: {{ livvext_root }}/smb/smb_icecores.py
   data_vars: *common_racmo_smb_vars
   <<: [*common, *common_smb, *common_racmo, *common_racmo_gis]
   scales:
@@ -650,7 +650,7 @@ Surface_Mass_Balance_GIS:
 
 {% if energy_racmo %}
 Energy_Balance_RACMO_GIS:
-  module: {{ lex_root }}/energy/energy.py
+  module: {{ livvext_root }}/energy/energy.py
   <<: [*common, *common_energy, *common_racmo, *common_racmo_gis]
   scales: {model: 1, dset_a: 1}
   data_vars: *common_racmo_energy_vars
@@ -658,7 +658,7 @@ Energy_Balance_RACMO_GIS:
 
 {% if energy_era5 %}
 Energy_Balance_ERA5_GIS:
-  module: {{ lex_root }}/energy/energy.py
+  module: {{ livvext_root }}/energy/energy.py
   icesheet: gis
   mask_ocean: {model_native: false, model_remap: true, dset_a: true}
   <<: [*common, *common_energy, *common_era5]
@@ -667,7 +667,7 @@ Energy_Balance_ERA5_GIS:
 
 {% if energy_merra2 %}
 Energy_Balance_MERRA2_GIS:
-  module: {{ lex_root }}/energy/energy.py
+  module: {{ livvext_root }}/energy/energy.py
   icesheet: gis
   <<: [*common, *common_energy, *common_merra]
   mask_ocean: {model_native: false, model_remap: true, dset_a: true}
@@ -676,7 +676,7 @@ Energy_Balance_MERRA2_GIS:
 
 {% if energy_ceres %}
 Energy_Balance_CERES_GIS:
-  module: {{ lex_root }}/energy/energy.py
+  module: {{ livvext_root }}/energy/energy.py
   icesheet: gis
   <<: [*common, *common_energy, *common_ceres]
   mask_ocean: { model_native: false, model_remap: true, dset_a: true }
@@ -688,7 +688,7 @@ Energy_Balance_CERES_GIS:
 # Antarctica
 {% if cmb %}
 Climatic_Mass_Balance_AIS:
-  module: {{ lex_root }}/smb/smb_icecores.py
+  module: {{ livvext_root }}/smb/smb_icecores.py
   data_vars: *common_racmo_cmb_vars
   <<: [*common, *common_smb, *common_racmo, *common_racmo_ais]
   scales:
@@ -699,7 +699,7 @@ Climatic_Mass_Balance_AIS:
 
 {% if smb %}
 Surface_Mass_Balance_AIS:
-  module: {{ lex_root }}/smb/smb_icecores.py
+  module: {{ livvext_root }}/smb/smb_icecores.py
   data_vars: *common_racmo_smb_vars
   <<: [*common, *common_smb, *common_racmo, *common_racmo_ais]
   scales:
@@ -710,7 +710,7 @@ Surface_Mass_Balance_AIS:
 
 {% if energy_racmo %}
 Energy_Balance_RACMO_AIS:
-  module: {{ lex_root }}/energy/energy.py
+  module: {{ livvext_root }}/energy/energy.py
   <<: [*common, *common_energy, *common_racmo, *common_racmo_ais]
   scales: {model: 1, dset_a: 1}
   data_vars: *common_racmo_energy_vars
@@ -718,7 +718,7 @@ Energy_Balance_RACMO_AIS:
 
 {% if energy_era5 %}
 Energy_Balance_ERA5_AIS:
-  module: {{ lex_root }}/energy/energy.py
+  module: {{ livvext_root }}/energy/energy.py
   icesheet: ais
   mask_ocean: {model_native: false, model_remap: true, dset_a: true}
   <<: [*common, *common_energy, *common_era5]
@@ -727,7 +727,7 @@ Energy_Balance_ERA5_AIS:
 
 {% if energy_merra2 %}
 Energy_Balance_MERRA2_AIS:
-  module: {{ lex_root }}/energy/energy.py
+  module: {{ livvext_root }}/energy/energy.py
   icesheet: ais
   <<: [*common, *common_energy, *common_merra]
   mask_ocean: {model_native: false, model_remap: true, dset_a: true}
@@ -736,7 +736,7 @@ Energy_Balance_MERRA2_AIS:
 
 {% if energy_ceres %}
 Energy_Balance_CERES_AIS:
-  module: {{ lex_root }}/energy/energy.py
+  module: {{ livvext_root }}/energy/energy.py
   icesheet: ais
   <<: [*common, *common_energy, *common_ceres]
   mask_ocean: { model_native: false, model_remap: true, dset_a: true }
