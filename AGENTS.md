@@ -14,14 +14,50 @@ Each task is defined by:
 `zppy-interfaces` is a distinct repository and contains plotting packages used
 by `zppy`.
 
-## Key directories
+## Project overview
+
+`zppy` orchestrates post-processing tasks from user config (`cfg`) values. The
+task Python modules in `zppy/` translate cfg options into executable scripts
+from templates in `zppy/templates/`, then launch those scripts.
+
+## Key design decisions
+
+- Keep task logic in Python and execution logic in Jinja2 bash templates.
+- Keep repository boundaries clear: `zppy` controls workflow orchestration,
+  while plotting packages live in `zppy-interfaces`.
+- Prefer minimal changes for maintenance work to avoid altering behavior.
+
+## Repository layout
 
 - `docs/source`: documentation sources.
 - `tests/`: test files.
 - `zppy/`: Python task and workflow control logic.
 - `zppy/templates`: bash templates used to control individual tasks.
 
-## Typical test workflow
+## Tech stack
+
+- Python for workflow/task orchestration.
+- Jinja2 templates to generate bash scripts.
+- pytest for unit and integration tests.
+
+## Code style
+
+- Follow existing style in nearby files and keep changes minimal/surgical.
+- Avoid over-engineering; prefer straightforward updates.
+- Do not change behavior in non-functional updates.
+
+## Setting up a development environment
+
+Use a clean environment and install from source:
+
+```bash
+python -m pip install .
+```
+
+For integration workflows, create separate conda environments for
+`e3sm_diags`, `zppy-interfaces`, and `zppy`.
+
+## Testing
 
 ### Unit and integration tests in this repo
 
@@ -58,3 +94,27 @@ The common workflow is:
 7. Run integration pytest files under `tests/integration/`.
 8. For `test_images.py`, run on a compute node and inspect
    `test_images_summary.md`.
+
+### When to add or modify tests
+
+When to add tests:
+- Adding new features or internal functions.
+- Fixing a bug.
+
+When to modify tests:
+- Modifying existing features or internal functions.
+
+When not to modify tests:
+- Non-functional changes that should not change behavior (for example,
+  compatibility updates for new Python versions).
+
+## Git workflow
+
+- Keep each change focused and as small as possible.
+- Use the existing PR review process and address reviewer comments directly.
+
+## Adding dependencies
+
+- Add new dependencies only when necessary.
+- Record dependency updates in the appropriate repository dependency files
+  (for example, under `zppy/conda` when applicable), not only as imports.
