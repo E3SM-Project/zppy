@@ -98,15 +98,18 @@ The common workflow is:
 ### When to add or modify tests
 
 When to add tests:
-- Adding new features or internal functions.
-- Fixing a bug.
+- Adding new features or internal functions (add unit and/or integration tests
+  for the changed behavior).
+- Fixing a bug (add a regression test that fails before the fix and passes
+  after it).
 
 When to modify tests:
 - Modifying existing features or internal functions.
 
 When not to modify tests:
 - Non-functional changes that should not change behavior (for example,
-  compatibility updates for new Python versions).
+  documentation-only updates, formatting-only changes, or compatibility updates
+  for new Python versions).
 
 ## Git workflow
 
