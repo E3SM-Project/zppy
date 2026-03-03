@@ -120,19 +120,21 @@ def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
 
     check_set_specific_parameter(
         c,
-        set([
+        set(
+            [
                 "enso_diags",
                 "tropical_subseasonal",
                 "precip_pdf",
                 "streamflow",
                 "tc_analysis",
-            ]),
+            ]
+        ),
         "ref_final_yr",
     )
     check_set_specific_parameter(
         c,
         set(["tropical_subseasonal", "precip_pdf", "streamflow", "tc_analysis"]),
-        "ref_start_yr"
+        "ref_start_yr",
     )
     ts_sets = set(
         [
