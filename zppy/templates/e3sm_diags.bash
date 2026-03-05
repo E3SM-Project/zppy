@@ -121,7 +121,7 @@ create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_ref} 
 {%- endif %}
 {%- endif %}
 
-{%- if ("enso_diags" in sets) or ("qbo" in sets) or ("area_mean_time_series" in sets) %}
+{%- if ("enso_diags" in sets) or ("qbo" in sets) or ("area_mean_time_series" in sets) or ("mp_partition" in sets) %}
 # Create xml files for time series variables
 ts_dir_primary={{ output }}/post/atm/{{ grid }}/ts/monthly/{{ '%dyr' % (ts_num_years) }}
 {% if run_type == "model_vs_model" %}
@@ -129,7 +129,7 @@ ts_dir_ref={{ reference_data_path_ts }}/{{ ts_num_years_ref }}yr
 {%- endif %}
 {%- endif %}
 
-{%- if "tropical_subseasonal" in sets %}
+{%- if ("tropical_subseasonal" in sets) or ("precip_pdf" in sets) %}
 ts_daily_dir={{ output }}/post/atm/{{ grid }}/ts/daily/{{ '%dyr' % (ts_num_years) }}
 {% if run_type == "model_vs_model" %}
 ts_daily_dir_ref={{ reference_data_path_ts_daily }}/{{ ts_num_years_ref }}yr
@@ -174,6 +174,12 @@ from e3sm_diags.parameter.qbo_parameter import QboParameter
 {%- endif %}
 {%- if "streamflow" in sets %}
 from e3sm_diags.parameter.streamflow_parameter import StreamflowParameter
+{%- endif %}
+{%- if "mp_partition" in sets %}
+from e3sm_diags.parameter.mp_partition_parameter import MPpartitionParameter
+{%- endif %}
+{%- if "precip_pdf" in sets %}
+from e3sm_diags.parameter.precip_pdf_parameter import PrecipPDFParameter
 {%- endif %}
 {%- if "tc_analysis" in sets %}
 from e3sm_diags.parameter.tc_analysis_parameter import TCAnalysisParameter
@@ -363,6 +369,57 @@ if {{ swap_test_ref }}:
    ts_param.short_test_name, ts_param.short_ref_name = ts_param.short_ref_name, ts_param.short_test_name
 {%- endif %}
 params.append(ts_param)
+{%- endif %}
+
+{%- if "mp_partition" in sets %}
+mp_param = MPpartitionParameter()
+mp_param.test_data_path = test_ts
+mp_param.test_name = short_name
+mp_param.short_test_name = short_name
+mp_param.test_start_yr = start_yr
+mp_param.test_end_yr = end_yr
+{% if run_type == "model_vs_model" %}
+# Reference
+mp_param.reference_data_path = '${ts_dir_ref}'
+mp_param.ref_name = '${ref_name}'
+mp_param.short_ref_name = '{{ short_ref_name }}'
+mp_param.ref_start_yr = '{{ ref_start_yr }}'
+mp_param.ref_end_yr = '{{ ref_final_yr }}'
+# Optionally, swap test and reference model
+if {{ swap_test_ref }}:
+   mp_param.test_data_path, mp_param.reference_data_path = mp_param.reference_data_path, mp_param.test_data_path
+   mp_param.test_name, mp_param.ref_name = mp_param.ref_name, mp_param.test_name
+   mp_param.short_test_name, mp_param.short_ref_name = mp_param.short_ref_name, mp_param.short_test_name
+{%- endif %}
+params.append(mp_param)
+{%- endif %}
+
+{%- if "precip_pdf" in sets %}
+precip_pdf_param = PrecipPDFParameter()
+precip_pdf_param.test_data_path = '${ts_daily_dir}'
+precip_pdf_param.test_name = short_name
+precip_pdf_param.short_test_name = short_name
+precip_pdf_param.test_start_yr = start_yr
+precip_pdf_param.test_end_yr = end_yr
+{% if run_type == "model_vs_obs" %}
+# Obs
+precip_pdf_param.reference_data_path = '{{ obs_ts }}'
+precip_pdf_param.ref_start_yr = 2001
+precip_pdf_param.ref_end_yr = 2010
+{% elif run_type == "model_vs_model" %}
+# Reference
+precip_pdf_param.reference_data_path = '${ts_daily_dir_ref}'
+precip_pdf_param.ref_name = '${ref_name}'
+precip_pdf_param.short_ref_name = '{{ short_ref_name }}'
+precip_pdf_param.ref_start_yr = '{{ ref_start_yr }}'
+precip_pdf_param.ref_end_yr = '{{ ref_final_yr }}'
+# Optionally, swap test and reference model
+if {{ swap_test_ref }}:
+   precip_pdf_param.test_data_path, precip_pdf_param.reference_data_path = precip_pdf_param.reference_data_path, precip_pdf_param.test_data_path
+   precip_pdf_param.test_name, precip_pdf_param.ref_name = precip_pdf_param.ref_name, precip_pdf_param.test_name
+   precip_pdf_param.short_test_name, precip_pdf_param.short_ref_name = precip_pdf_param.short_ref_name, precip_pdf_param.short_test_name
+{%- endif %}
+params.append(precip_pdf_param)
 {%- endif %}
 
 {%- if "diurnal_cycle" in sets %}

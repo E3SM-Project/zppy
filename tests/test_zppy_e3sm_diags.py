@@ -189,6 +189,38 @@ def test_check_mvm_only_parameters_for_bash():
     with pytest.raises(ParameterNotProvidedError):
         check_mvm_only_parameters_for_bash(c)
 
+    # mp_partition
+    c = {"sets": ["mp_partition"]}
+    c.update(d0)
+    check_mvm_only_parameters_for_bash(c)
+    c.update(d1)
+    check_mvm_only_parameters_for_bash(c)  # ref_final_yr not needed
+    c.update(d2)
+    check_mvm_only_parameters_for_bash(c)  # ref_start_yr not needed
+    c.update(d3)
+    with pytest.raises(ParameterNotProvidedError):
+        check_mvm_only_parameters_for_bash(c)
+    c.update(d4)
+    with pytest.raises(ParameterNotProvidedError):
+        check_mvm_only_parameters_for_bash(c)
+
+    # precip_pdf
+    c = {"sets": ["precip_pdf"]}
+    c.update(d0)
+    check_mvm_only_parameters_for_bash(c)
+    c.update(d1)
+    with pytest.raises(ParameterNotProvidedError):
+        check_mvm_only_parameters_for_bash(c)
+    c.update(d2)
+    with pytest.raises(ParameterNotProvidedError):
+        check_mvm_only_parameters_for_bash(c)
+    c.update(d3)
+    with pytest.raises(ParameterNotProvidedError):
+        check_mvm_only_parameters_for_bash(c)
+    c.update(d4)
+    with pytest.raises(ParameterNotProvidedError):
+        check_mvm_only_parameters_for_bash(c)
+
 
 def test_check_and_define_parameters():
     # test_zppy_utils.py tests the inference functionality turned off.
@@ -286,7 +318,7 @@ def test_check_and_define_parameters():
     assert c["obs_ts"] == "diags/post/observations/Atm/time-series/"
 
     # area_mean_time_series/enso_diags/qbo, mvm
-    for diags_set in ["area_mean_time_series", "enso_diags", "qbo"]:
+    for diags_set in ["area_mean_time_series", "enso_diags", "qbo", "mp_partition"]:
         c = {
             "sets": [diags_set],
             "run_type": "model_vs_model",
@@ -455,28 +487,29 @@ def test_check_and_define_parameters():
     assert c["tc_obs"] == "diags/post/observations/Atm/tc-analysis/"
     assert c["reference_data_path_tc"] == "diags/post/atm/tc-analysis_1980_1990"
 
-    # tropical_subseasonal, mvm
-    c = {
-        "sets": ["tropical_subseasonal"],
-        "run_type": "model_vs_model",
-        "reference_data_path": "",
-        "reference_data_path_ts_daily": "a",
-        "grid": "grid",
-    }
-    c.update(mvm_base)
-    check_and_define_parameters(c)
-    assert c["reference_data_path_ts_daily"] == "a"
+    # tropical_subseasonal/precip_pdf, mvm
+    for diags_set in ["tropical_subseasonal", "precip_pdf"]:
+        c = {
+            "sets": [diags_set],
+            "run_type": "model_vs_model",
+            "reference_data_path": "",
+            "reference_data_path_ts_daily": "a",
+            "grid": "grid",
+        }
+        c.update(mvm_base)
+        check_and_define_parameters(c)
+        assert c["reference_data_path_ts_daily"] == "a"
 
-    c = {
-        "sets": ["tropical_subseasonal"],
-        "run_type": "model_vs_model",
-        "reference_data_path": "",
-        "reference_data_path_ts_daily": "",
-        "grid": "grid",
-    }
-    c.update(mvm_base)
-    check_and_define_parameters(c)
-    assert c["reference_data_path_ts_daily"] == "diags/post/atm/grid/ts/daily"
+        c = {
+            "sets": [diags_set],
+            "run_type": "model_vs_model",
+            "reference_data_path": "",
+            "reference_data_path_ts_daily": "",
+            "grid": "grid",
+        }
+        c.update(mvm_base)
+        check_and_define_parameters(c)
+        assert c["reference_data_path_ts_daily"] == "diags/post/atm/grid/ts/daily"
 
 
 def test_add_climo_dependencies():
@@ -523,7 +556,7 @@ def test_add_ts_dependencies():
         "ts_subsection": "sub",
         "ts_daily_subsection": "dsub",
     }
-    sets = ["area_mean_time_series", "enso_diags", "qbo"]
+    sets = ["area_mean_time_series", "enso_diags", "qbo", "mp_partition"]
     for diags_set in sets:
         c: Dict[str, Any] = {"sets": [diags_set]}
         c.update(base)
@@ -539,8 +572,9 @@ def test_add_ts_dependencies():
     add_ts_dependencies(c, dependencies, "script_dir", 1980)
     assert dependencies == ["script_dir/ts_rof_monthly_1980-1984-0005.status"]
 
-    c = {"sets": ["tropical_subseasonal"]}
-    c.update(base)
-    dependencies = []
-    add_ts_dependencies(c, dependencies, "script_dir", 1980)
-    assert dependencies == ["script_dir/ts_dsub_1980-1984-0005.status"]
+    for diags_set in ["tropical_subseasonal", "precip_pdf"]:
+        c = {"sets": [diags_set]}
+        c.update(base)
+        dependencies = []
+        add_ts_dependencies(c, dependencies, "script_dir", 1980)
+        assert dependencies == ["script_dir/ts_dsub_1980-1984-0005.status"]

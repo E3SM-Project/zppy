@@ -120,18 +120,30 @@ def check_mvm_only_parameters_for_bash(c: Dict[str, Any]) -> None:
 
     check_set_specific_parameter(
         c,
-        set(["enso_diags", "tropical_subseasonal", "streamflow", "tc_analysis"]),
+        set(
+            [
+                "enso_diags",
+                "tropical_subseasonal",
+                "precip_pdf",
+                "streamflow",
+                "tc_analysis",
+            ]
+        ),
         "ref_final_yr",
     )
     check_set_specific_parameter(
-        c, set(["tropical_subseasonal", "streamflow", "tc_analysis"]), "ref_start_yr"
+        c,
+        set(["tropical_subseasonal", "precip_pdf", "streamflow", "tc_analysis"]),
+        "ref_start_yr",
     )
     ts_sets = set(
         [
             "enso_diags",
             "qbo",
             "area_mean_time_series",
+            "mp_partition",
             "tropical_subseasonal",
+            "precip_pdf",
             "streamflow",
         ]
     )
@@ -198,14 +210,16 @@ def check_and_define_parameters(c: Dict[str, Any]) -> None:
             c["reference_data_path_tc"] = (
                 f"{reference_data_path}/atm/tc-analysis_{c['ref_year1']}_{c['ref_year2']}"
             )
-        if set(["enso_diags", "qbo", "area_mean_time_series"]) & set(c["sets"]):
+        if set(["enso_diags", "qbo", "area_mean_time_series", "mp_partition"]) & set(
+            c["sets"]
+        ):
             set_value_of_parameter_if_undefined(
                 c,
                 "reference_data_path_ts",
                 f"{reference_data_path}/atm/{c['grid']}/ts/monthly",
                 ParameterInferenceType.PATH_INFERENCE,
             )
-        if "tropical_subseasonal" in c["sets"]:
+        if set(["tropical_subseasonal", "precip_pdf"]) & set(c["sets"]):
             set_value_of_parameter_if_undefined(
                 c,
                 "reference_data_path_ts_daily",
@@ -288,7 +302,9 @@ def add_ts_dependencies(
     ts_daily_sub = get_value_from_parameter(
         c, "ts_daily_subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
     )
-    depend_on_ts: Set[str] = set(["enso_diags", "qbo", "area_mean_time_series"])
+    depend_on_ts: Set[str] = set(
+        ["enso_diags", "qbo", "area_mean_time_series", "mp_partition"]
+    )
     if depend_on_ts & set(c["sets"]):
         # ts task
         add_dependencies(
@@ -310,7 +326,7 @@ def add_ts_dependencies(
             end_yr,
             c["ts_num_years"],
         )
-    if "tropical_subseasonal" in c["sets"]:
+    if set(["tropical_subseasonal", "precip_pdf"]) & set(c["sets"]):
         add_dependencies(
             dependencies,
             script_dir,

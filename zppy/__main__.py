@@ -37,6 +37,17 @@ def main():
     template_dir: str = os.path.join(os.path.dirname(__file__), "templates")
     # Subdirectory where defaults are located
     defaults_dir: str = os.path.join(os.path.dirname(__file__), "defaults")
+    # Warn if templateDir is outside the active conda environment. This can
+    # happen when PYTHONPATH points to a local zppy clone and takes precedence
+    # over the conda env's site-packages.
+    conda_prefix: str = os.environ.get("CONDA_PREFIX", "")
+    if conda_prefix and not template_dir.startswith(conda_prefix):
+        logger.warning(
+            f"templateDir '{template_dir}' is outside the active conda environment "
+            f"'{conda_prefix}'. This is likely caused by PYTHONPATH including a local "
+            f"zppy clone. Consider running 'unset PYTHONPATH' before activating the "
+            f"conda environment."
+        )
     # Read configuration file and validate it
     default_config: str = os.path.join(defaults_dir, "default.ini")
     user_config: ConfigObj = ConfigObj(args.config, configspec=default_config)
