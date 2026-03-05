@@ -404,6 +404,8 @@ precip_pdf_param.test_end_yr = end_yr
 {% if run_type == "model_vs_obs" %}
 # Obs
 precip_pdf_param.reference_data_path = '{{ obs_ts }}'
+precip_pdf_param.ref_start_yr = 2001
+precip_pdf_param.ref_end_yr = 2010
 {% elif run_type == "model_vs_model" %}
 # Reference
 precip_pdf_param.reference_data_path = '${ts_daily_dir_ref}'
