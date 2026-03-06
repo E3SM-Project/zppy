@@ -52,6 +52,10 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#example-1">Example 1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#example-2">Example 2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-3">Example 3</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mpas-analysis-model-vs-model">MPAS-Analysis model vs. model</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#debugging-failures">Debugging failures</a></li>
 </ul>
 </li>
@@ -322,6 +326,66 @@ allowing for easy configuration changes. For example, a user could set
 <span class="linenos">75</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">False</span>
 </pre></div>
 </div>
+</section>
+<section id="example-3">
+<h2>Example 3<a class="headerlink" href="#example-3" title="Link to this heading"></a></h2>
+<section id="mpas-analysis-model-vs-model">
+<h3>MPAS-Analysis model vs. model<a class="headerlink" href="#mpas-analysis-model-vs-model" title="Link to this heading"></a></h3>
+<p>MPAS-Analysis supports “main vs. control” (model-vs-model) comparisons.
+In <code class="docutils literal notranslate"><span class="pre">zppy</span></code>, this is configured in the <code class="docutils literal notranslate"><span class="pre">[mpas_analysis]</span></code> section using
+<code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> (and optionally <code class="docutils literal notranslate"><span class="pre">test_data_path</span></code>), consistent with the
+terminology used for <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> model-vs-model runs.</p>
+<p>Unlike <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> (where <code class="docutils literal notranslate"><span class="pre">run_type</span> <span class="pre">=</span> <span class="pre">&quot;model_vs_model&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code>
+points directly at reference climatology output), MPAS-Analysis comparisons are driven
+by MPAS-Analysis config files. For model-vs-model mode, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> locates the matching
+config file(s) from prior MPAS-Analysis output and passes them to MPAS-Analysis.</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="k">[default]</span>
+<span class="linenos"> 2</span><span class="na">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&lt;test simulation input&gt;</span>
+<span class="linenos"> 3</span><span class="c1"># Where the `post/` directory will be written</span>
+<span class="linenos"> 4</span><span class="na">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&lt;test simulation output&gt;</span>
+<span class="linenos"> 5</span><span class="na">case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&lt;test case name&gt;</span>
+<span class="linenos"> 6</span><span class="na">www</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&lt;www&gt;</span>
+<span class="linenos"> 7</span><span class="na">partition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&lt;partition&gt;</span>
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span><span class="c1"># MPAS-Analysis: model vs. model (&quot;test&quot; vs. &quot;reference&quot;)</span>
+<span class="linenos">10</span><span class="k">[mpas_analysis]</span>
+<span class="linenos">11</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="linenos">12</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;4:00:00&quot;</span>
+<span class="linenos">13</span><span class="na">parallelTaskCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">6</span>
+<span class="linenos">14</span><span class="na">mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;EC30to60E2r2&quot;</span>
+<span class="linenos">15</span><span class="na">shortTermArchive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span><span class="c1"># Test run year ranges (these determine the identifier used for the generated</span>
+<span class="linenos">18</span><span class="c1"># MPAS-Analysis cfg: mpas_analysis_ts_&lt;ts&gt;_climo_&lt;climo&gt;.cfg)</span>
+<span class="linenos">19</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1850-2014&quot;</span><span class="na">,</span>
+<span class="linenos">20</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1985-2014&quot;</span><span class="na">,</span>
+<span class="linenos">21</span><span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1850-2014&quot;</span><span class="na">,</span>
+<span class="linenos">22</span>
+<span class="linenos">23</span><span class="c1"># Point at a *previous zppy run output directory* for the reference simulation.</span>
+<span class="linenos">24</span><span class="c1"># zppy will locate the matching MPAS-Analysis cfg file under:</span>
+<span class="linenos">25</span><span class="c1">#   &lt;reference_data_path&gt;/post/analysis/mpas_analysis/cfg/</span>
+<span class="linenos">26</span><span class="na">reference_data_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&lt;reference zppy output directory&gt;</span>
+<span class="linenos">27</span>
+<span class="linenos">28</span><span class="c1"># Required when reference_data_path is not a [[subsection]].</span>
+<span class="linenos">29</span><span class="c1"># Used to build the MVM output directory name.</span>
+<span class="linenos">30</span><span class="na">reference_case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&lt;reference case name&gt;</span>
+<span class="linenos">31</span>
+<span class="linenos">32</span><span class="c1"># Optional: point at a previous zppy output directory for the test simulation,</span>
+<span class="linenos">33</span><span class="c1"># if you want MPAS-Analysis to reuse a completed test run as well.</span>
+<span class="linenos">34</span><span class="c1"># If set to [[subsection]], zppy will use that subsection&#39;s year ranges</span>
+<span class="linenos">35</span><span class="c1"># when ts_years/climo_years/enso_years are not provided.</span>
+<span class="linenos">36</span><span class="c1"># test_data_path = &lt;test zppy output directory&gt;</span>
+<span class="linenos">37</span>
+<span class="linenos">38</span><span class="c1"># Optional: override the reference year ranges (defaults to the test ranges).</span>
+<span class="linenos">39</span><span class="c1"># If reference_data_path points to a prior [mpas_analysis] subsection using</span>
+<span class="linenos">40</span><span class="c1"># the form [[subsection]], these default to that subsection&#39;s year ranges.</span>
+<span class="linenos">41</span><span class="c1"># If you provide a single range, it will be reused for each test range.</span>
+<span class="linenos">42</span><span class="c1"># ref_ts_years = &quot;451-500&quot;,</span>
+<span class="linenos">43</span><span class="c1"># ref_climo_years = &quot;451-500&quot;,</span>
+<span class="linenos">44</span><span class="c1"># ref_enso_years = &quot;451-500&quot;,</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="debugging-failures">
 <h2>Debugging failures<a class="headerlink" href="#debugging-failures" title="Link to this heading"></a></h2>

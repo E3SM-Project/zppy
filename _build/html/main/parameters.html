@@ -139,6 +139,41 @@ You can also view the most up-to-date,
 <ul class="simple">
 <li><p>If <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> (the path to the reference data) is undefined, assume it is the <code class="docutils literal notranslate"><span class="pre">diagnostics_base_path</span></code> from Mache plus <code class="docutils literal notranslate"><span class="pre">/observations/Atm/climatology/</span></code>. (So, it is important to change this for model-vs-model runs).</p></li>
 </ul>
+<p>For the <code class="docutils literal notranslate"><span class="pre">mpas_analysis</span></code> task:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> and <code class="docutils literal notranslate"><span class="pre">test_data_path</span></code> are optional and are only used for model-vs-model comparisons.
+If provided, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> uses them to locate the MPAS-Analysis config files from a <em>previous</em> MPAS-Analysis run and passes those through to MPAS-Analysis as <code class="docutils literal notranslate"><span class="pre">controlRunConfigFile</span></code> (reference) and <code class="docutils literal notranslate"><span class="pre">mainRunConfigFile</span></code> (test).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<blockquote>
+<div><p>These parameter names are intentionally consistent with the terminology used by <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> for model-vs-model runs: in both cases, <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> identifies the <em>reference simulation’s zppy-generated outputs</em>.</p>
+<p>The practical difference is what each downstream tool consumes:
+<code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> needs <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> to be the specific directory containing the reference climatology files (typically under the reference run’s <code class="docutils literal notranslate"><span class="pre">post/.../clim</span></code> tree), whereas <code class="docutils literal notranslate"><span class="pre">mpas_analysis</span></code> needs to find the reference MPAS-Analysis config file.
+For MPAS-Analysis, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> resolves the config file when <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> points to the prior run’s zppy output directory (the one containing <code class="docutils literal notranslate"><span class="pre">post/</span></code>).</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> is intended to point to the prior run’s zppy output directory (the one containing <code class="docutils literal notranslate"><span class="pre">post/</span></code>). <code class="docutils literal notranslate"><span class="pre">zppy</span></code> will then use:
+<code class="docutils literal notranslate"><span class="pre">&lt;reference_data_path&gt;/post/analysis/mpas_analysis/cfg/mpas_analysis_&lt;identifier&gt;.cfg</span></code> (or <code class="docutils literal notranslate"><span class="pre">mpas_analysis_mvm</span></code> if the referenced run was MVM).</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> is set to a non-subsection path, <code class="docutils literal notranslate"><span class="pre">reference_case</span></code> is required so the MVM output directory can include the reference case name. If <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> is set to <code class="docutils literal notranslate"><span class="pre">[[subsection]]</span></code>, <code class="docutils literal notranslate"><span class="pre">reference_case</span></code> is inferred to be the same as the current <code class="docutils literal notranslate"><span class="pre">case</span></code>.</p>
+</div>
+</li>
+</ul>
+<p><strong>MPAS-Analysis model-vs-model year ranges</strong></p>
+<p>MPAS-Analysis comparisons are configured by year ranges, similar to other <code class="docutils literal notranslate"><span class="pre">zppy</span></code> tasks.
+For model-vs-model comparisons, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> supports separate year ranges for the test and reference runs:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">ts_years</span></code>, <code class="docutils literal notranslate"><span class="pre">climo_years</span></code>, <code class="docutils literal notranslate"><span class="pre">enso_years</span></code> define the test run year ranges.</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">test_data_path</span></code> references a prior <code class="docutils literal notranslate"><span class="pre">[mpas_analysis]</span></code> subsection using
+<code class="docutils literal notranslate"><span class="pre">[[subsection]]</span></code>, and these values are not provided, zppy uses that
+subsection’s year ranges instead.</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ref_ts_years</span></code>, <code class="docutils literal notranslate"><span class="pre">ref_climo_years</span></code>, <code class="docutils literal notranslate"><span class="pre">ref_enso_years</span></code> optionally override the reference run year ranges.</p></li>
+</ul>
+<p>If a <code class="docutils literal notranslate"><span class="pre">ref_*_years</span></code> parameter is not provided, it defaults to the corresponding test year ranges.
+If <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> references a prior <code class="docutils literal notranslate"><span class="pre">[mpas_analysis]</span></code> subsection using <code class="docutils literal notranslate"><span class="pre">[[subsection]]</span></code>,
+the defaults come from that subsection’s year ranges instead.
+If a <code class="docutils literal notranslate"><span class="pre">ref_*_years</span></code> parameter contains a single range and multiple test ranges are requested, the single reference range is used for each test range.</p>
 <p>For the <code class="docutils literal notranslate"><span class="pre">ilamb</span></code> task:</p>
 <ul class="simple">
 <li><p>If <code class="docutils literal notranslate"><span class="pre">ilamb_obs</span></code> (the path to observation data for <code class="docutils literal notranslate"><span class="pre">ilamb</span></code>) is undefined, assume it is the <code class="docutils literal notranslate"><span class="pre">diagnostics_base_path</span></code> from Mache plus <code class="docutils literal notranslate"><span class="pre">/ilamb_data</span></code>.</p></li>
