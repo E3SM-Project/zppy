@@ -184,9 +184,12 @@ def determine_and_add_dependencies(
             c["ts_year2"] = ts_year_set[1]
             c["climo_year1"] = climo_year_set[0]
             c["climo_year2"] = climo_year_set[1]
+            mpas_sub_str: str = ""
+            if "mpas_analysis_subsection" in c.keys() and c["mpas_analysis_subsection"]:
+                mpas_sub_str = f"_{c['mpas_analysis_subsection']}"
             dependencies.append(
                 os.path.join(
                     script_dir,
-                    f"mpas_analysis_ts_{c['ts_year1']:04d}-{c['ts_year2']:04d}_climo_{c['climo_year1']:04d}-{c['climo_year2']:04d}.status",
+                    f"mpas_analysis{mpas_sub_str}_ts_{c['ts_year1']:04d}-{c['ts_year2']:04d}_climo_{c['climo_year1']:04d}-{c['climo_year2']:04d}.status",
                 )
             )
