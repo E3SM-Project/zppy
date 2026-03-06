@@ -21,37 +21,39 @@ climY2="{{ '%04d' % (climo_year2) }}"
 
 # Job identifier
 identifier=ts_${tsY1}-${tsY2}_climo_${climY1}-${climY2}
+output_dir_name="{{ output_dir_name }}"
 
 # Set-up work directory structure
 echo
 echo ===== SET UP MPAS-ANALYSIS DIRECTORY STRUCTURE =====
 echo
 
-workdir='../analysis/mpas_analysis'
+workdir="../analysis/{{ analysis_subdir }}"
 mkdir -p ${workdir}
 cd ${workdir}
 
 {% if purge == true %}
 # If purge is on, delete previous directory
-  rm -rf ${identifier}
+  rm -rf ${output_dir_name}
 {% endif %}
 
-mkdir -p ${identifier}
+mkdir -p ${output_dir_name}
 mkdir -p cfg
 
 {% if cache == true %}
 # Restore cached copies of pre-computed files
 cached=( "timeseries/moc" "timeseries/OceanBasins" "timeseries/transport" )
-mkdir -p cache
+cache_dir="{{ scriptDir }}/../analysis/mpas_analysis/cache"
+mkdir -p ${cache_dir}
 for subdir in "${cached[@]}"
 do
-  mkdir -p cache/${subdir} ${identifier}/${subdir}
-  rsync -av cache/${subdir}/ ${identifier}/${subdir}/
+  mkdir -p ${cache_dir}/${subdir} ${output_dir_name}/${subdir}
+  rsync -av ${cache_dir}/${subdir}/ ${output_dir_name}/${subdir}/
 done
 files=( "mpasIndexOcean.nc" "mpasTimeSeriesOcean.nc" "seaIceAreaVolNH.nc" "seaIceAreaVolSH.nc")
 for file in "${files[@]}"
 do
-  cp cache/timeseries/${file} ${identifier}/timeseries/${file}
+  cp ${cache_dir}/timeseries/${file} ${output_dir_name}/timeseries/${file}
 done
 {% endif %}
 
@@ -97,6 +99,15 @@ cat > cfg/mpas_analysis_${identifier}.cfg << EOF
 
 # mainRunName is a name that identifies the simulation being analyzed.
 mainRunName = {{ case }}
+
+{% if controlRunConfigFile %}
+# config file for a control run to which this run will be compared.
+controlRunConfigFile = {{ controlRunConfigFile }}
+{% endif %}
+{% if mainRunConfigFile %}
+# config file for a main run on which the analysis was already run to completion.
+mainRunConfigFile = {{ mainRunConfigFile }}
+{% endif %}
 
 [execute]
 ## options related to executing parallel tasks
@@ -189,7 +200,7 @@ mpasMeshName = {{ mesh }}
 
 # directory where analysis should be written
 # NOTE: This directory path must be specific to each test case.
-baseDirectory = {{ scriptDir }}/${workdir}/${identifier}
+baseDirectory = {{ scriptDir }}/${workdir}/${output_dir_name}
 
 # provide an absolute path to put HTML in an alternative location (e.g. a web
 # portal)
@@ -290,8 +301,8 @@ if [ $? != 0 ]; then
 fi
 
 # Check master log for obvious errors
-size=`wc -c ${identifier}/logs/taskProgress.log | awk '{print $1}'`
-error=`grep ERROR ${identifier}/logs/taskProgress.log | wc -l`
+size=`wc -c ${output_dir_name}/logs/taskProgress.log | awk '{print $1}'`
+error=`grep ERROR ${output_dir_name}/logs/taskProgress.log | wc -l`
 if [ "${size}" = "" ] || [ "${size}" = "0" ] || [ "${error}" != "0" ];then
   echo 'ERROR (2)' > {{ scriptDir }}/{{ prefix }}.status
   exit 2
@@ -304,14 +315,14 @@ echo ===== CACHE OUTPUT FILES =====
 echo
 for file in "${files[@]}"
 do
-  cp ${identifier}/timeseries/${file} cache/timeseries/${file}
+  cp ${output_dir_name}/timeseries/${file} ${cache_dir}/timeseries/${file}
 done
 for subdir in "${cached[@]}"
 do
-  rsync -av ${identifier}/${subdir}/ cache/${subdir}/
+  rsync -av ${output_dir_name}/${subdir}/ ${cache_dir}/${subdir}/
 done
 # Remove one particularly large file which does not need to be cached
-rm ${identifier}/timeseries/mpasTimeSeriesSeaIce.nc
+rm ${output_dir_name}/timeseries/mpasTimeSeriesSeaIce.nc
 {% endif %}
 
 # Copy output to web server
@@ -320,7 +331,7 @@ echo ===== COPY FILES TO WEB SERVER =====
 echo
 
 # Create top-level directory
-f=${www}/${case}/mpas_analysis/${identifier}/
+f=${www}/${case}/{{ analysis_subdir }}/${output_dir_name}/
 mkdir -p ${f}
 if [ $? != 0 ]; then
   echo 'ERROR (3)' > {{ scriptDir }}/{{ prefix }}.status
@@ -342,7 +353,7 @@ done
 {% endif %}
 
 # Copy files
-rsync -a --delete ${identifier}/html/ ${www}/${case}/mpas_analysis/${identifier}/
+rsync -a --delete ${output_dir_name}/html/ ${www}/${case}/{{ analysis_subdir }}/${output_dir_name}/
 if [ $? != 0 ]; then
   echo 'ERROR (4)' > {{ scriptDir }}/{{ prefix }}.status
   exit 4
@@ -350,16 +361,16 @@ fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
 # For NERSC, change permissions of new files
-pushd ${www}/${case}/mpas_analysis/
-chgrp -R e3sm ${identifier}
-chmod -R go+rX,go-w ${identifier}
+pushd ${www}/${case}/{{ analysis_subdir }}/
+chgrp -R e3sm ${output_dir_name}
+chmod -R go+rX,go-w ${output_dir_name}
 popd
 {% endif %}
 
 {% if machine in ['anvil', 'chrysalis'] %}
 # For LCRC, change permissions of new files
-pushd ${www}/${case}/mpas_analysis/
-chmod -R go+rX,go-w ${identifier}
+pushd ${www}/${case}/{{ analysis_subdir }}/
+chmod -R go+rX,go-w ${output_dir_name}
 popd
 {% endif %}
 
