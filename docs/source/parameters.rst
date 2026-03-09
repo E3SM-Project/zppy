@@ -54,6 +54,16 @@ For the ``ilamb`` task:
 * If we are not doing a ``land_only`` run and ``e3sm_to_cmip_atm_subsection`` (the name of the ``e3sm_to_cmip`` atm-specific subtask that this ``ilamb`` task is dependent on), again assume it is ``atm_monthly_180x360_aave``.
 
 
+For the ``livvkit`` task:
+
+* A grid-native climatology must be generated, assumed to be ``land_monthly_climo_native``
+* For each reanalysis comparison to be performed, a corresponding ``land_monthly_climo_GRID`` where ``GRID`` corresponds to the reanalysis grid name
+* Available reanalysis comparisons are
+   * racmo_gis, racmo_ais
+   * merra2
+   * era5
+   * ceres (default cmip6 grid)
+
 **Path inferences**
 
 For the ``e3sm_diags`` task:
