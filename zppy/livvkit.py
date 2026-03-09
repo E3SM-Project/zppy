@@ -82,7 +82,7 @@ def livvkit(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
                         fail_on_dependency_skip=c["fail_on_dependency_skip"],
                     )
                 else:
-                    print("...adding to bundle '{c['bundle']}'")
+                    print(f"...adding to bundle '{c['bundle']}'")
 
             print(f"   environment_commands={c['environment_commands']}")
             print_url(c, "livvkit")

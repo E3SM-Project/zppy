@@ -48,13 +48,13 @@ lex-cfg \
 echo ${workdir}
 echo {{ scriptDir }}
 livv --validate livvkit.yml --out-dir ./${case}.web
-mv livv_log_${case}.web.log ./${case}.web/logs
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (3)' > {{ prefix }}.status
   exit 3
 fi
+mv livv_log_${case}.web.log ./${case}.web/logs
 
 # Copy output to web server
 echo
