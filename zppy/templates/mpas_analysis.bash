@@ -9,6 +9,12 @@ set +e
 export OMP_NUM_THREADS=1
 export HDF5_USE_FILE_LOCKING=FALSE
 
+{% if machine == 'dane' %}
+# MPAS-Analysis workaround on dane: avoid "Too many open files" failures by
+# increasing the per-process open file descriptor limit (within the job's hard limit).
+ulimit -n 65536 2>/dev/null || true
+{% endif %}
+
 # Basic definitions
 case="{{ case }}"
 www="{{ www }}"
