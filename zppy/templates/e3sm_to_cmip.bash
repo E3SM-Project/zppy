@@ -38,7 +38,7 @@ EOF
     do
       if [ -f ${file} ]; then
         #ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev
-        ncremap -p mpi --vrt_ntp=log --vrt_xtr=mss_val --vrt_out='{{cmip_plevdata}}' ${file} ${file}.plev
+        ncremap --vrt_ntp=log --vrt_xtr=mss_val --vrt_out='{{cmip_plevdata}}' ${file} ${file}.plev
         if [ $? != 0 ]; then
           cd {{ scriptDir }}
           echo 'ERROR (1)' > {{ prefix }}.status
