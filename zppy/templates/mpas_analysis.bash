@@ -138,7 +138,7 @@ mapMpiTasks = {{ mapMpiTasks }}
 # "None" if ESMF should perform remapping in serial without a command, or one of
 # "srun" or "mpirun" if it should be run in parallel  (or in serial but with a
 # command)
-{% if machine in ['pm-cpu', 'pm-gpu', 'anvil', 'chrysalis'] %}
+{% if machine in ['pm-cpu', 'pm-gpu', 'anvil', 'chrysalis', 'dane'] %}
 mapParallelExec = srun
 {% elif machine in ['compy'] %}
 mapParallelExec = srun --mpi=pmi2
@@ -148,7 +148,7 @@ mapParallelExec = srun --mpi=pmi2
 # possibly with some flags if it should be run with that command
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
 ncremapParallelExec = None
-{% elif machine in ['anvil', 'chrysalis'] %}
+{% elif machine in ['anvil', 'chrysalis', 'dane'] %}
 ncremapParallelExec = srun -n 1
 {% elif machine in ['compy'] %}
 ncremapParallelExec = srun --mpi=pmi2 -n 1
