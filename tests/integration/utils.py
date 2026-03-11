@@ -43,6 +43,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
         "mpas_analysis",
         "global_time_series",
         "ilamb",
+        "livvkit",
         "pcmdi_diags",
     ],
     "unique_id": "unique_id",
@@ -165,6 +166,7 @@ def get_expansions():
     expansions["active_mpas_analysis"] = "False"
     expansions["active_global_time_series"] = "False"
     expansions["active_ilamb"] = "False"
+    expansions["active_livvkit"] = "False"
     expansions["active_pcmdi_diags"] = "False"
     if "e3sm_diags" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_e3sm_diags"] = "True"
@@ -177,6 +179,8 @@ def get_expansions():
     if "ilamb" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_ilamb"] = "True"
         expansions["active_e3sm_to_cmip"] = "True"
+    if "livvkit" in TEST_SPECIFICS["tasks_to_run"]:
+        expansions["active_livvkit"] = "True"
     if "pcmdi_diags" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_pcmdi_diags"] = "True"
         expansions["active_e3sm_to_cmip"] = "True"
