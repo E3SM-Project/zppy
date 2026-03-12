@@ -46,7 +46,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
         "livvkit",
         # "pcmdi_diags",
     ],
-    "unique_id": "test_livvkit_20260312_try2",
+    "unique_id": "test_livvkit_20260312_try3",
 }
 
 # Multi-machine testing #########################################################
