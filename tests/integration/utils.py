@@ -25,7 +25,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
     "pcmdi_diags_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
     # This is the environment setup for other tasks.
     # Leave as "" to use the latest Unified environment.
-    "environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-livvkit-20260312_try2",
+    "environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
     # For a complete test, run the set of latest cfgs and at least one set of legacy cfgs
     "cfgs_to_run": [
         # "weekly_bundles",
@@ -46,7 +46,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
         "livvkit",
         # "pcmdi_diags",
     ],
-    "unique_id": "test_livvkit_20260312_try1",
+    "unique_id": "test_livvkit_20260312_try2",
 }
 
 # Multi-machine testing #########################################################
