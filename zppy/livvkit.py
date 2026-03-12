@@ -151,7 +151,7 @@ def determine_and_add_dependencies(
             dependencies,
             script_dir,
             "climo",
-            f"land_monthly_climo{_grid}",
+            _c["climo_land_subsection"],
             _c["year1"],
             _c["year2"],
             _c["ts_num_years"],
