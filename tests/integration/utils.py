@@ -19,33 +19,34 @@ TEST_SPECIFICS: Dict[str, Any] = {
     # That is, there will be no environment set.
     # (`environment_commands = ""` only redirects to Unified
     # if specified under the [default] task)
-    "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
-    "mpas_analysis_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
-    "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
-    "pcmdi_diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+    "diags_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
+    "mpas_analysis_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
+    "global_time_series_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
+    "pcmdi_diags_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
     # This is the environment setup for other tasks.
     # Leave as "" to use the latest Unified environment.
-    "environment_commands": "",
+    "environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-livvkit-20260312_try2",
     # For a complete test, run the set of latest cfgs and at least one set of legacy cfgs
     "cfgs_to_run": [
-        "weekly_bundles",
-        "weekly_comprehensive_v2",
+        # "weekly_bundles",
+        # "weekly_comprehensive_v2",
         "weekly_comprehensive_v3",
-        "weekly_legacy_3.1.0_bundles",
-        "weekly_legacy_3.1.0_comprehensive_v2",
-        "weekly_legacy_3.1.0_comprehensive_v3",
+        # "weekly_legacy_3.1.0_bundles",
+        # "weekly_legacy_3.1.0_comprehensive_v2",
+        # "weekly_legacy_3.1.0_comprehensive_v3",
         # "weekly_legacy_3.0.0_bundles",
         # "weekly_legacy_3.0.0_comprehensive_v2",
         # "weekly_legacy_3.0.0_comprehensive_v3",
     ],
     "tasks_to_run": [
-        "e3sm_diags",
-        "mpas_analysis",
-        "global_time_series",
-        "ilamb",
-        "pcmdi_diags",
+        # "e3sm_diags",
+        # "mpas_analysis",
+        # "global_time_series",
+        # "ilamb",
+        "livvkit",
+        # "pcmdi_diags",
     ],
-    "unique_id": "unique_id",
+    "unique_id": "test_livvkit_20260312_try1",
 }
 
 # Multi-machine testing #########################################################
@@ -165,6 +166,7 @@ def get_expansions():
     expansions["active_mpas_analysis"] = "False"
     expansions["active_global_time_series"] = "False"
     expansions["active_ilamb"] = "False"
+    expansions["active_livvkit"] = "False"
     expansions["active_pcmdi_diags"] = "False"
     if "e3sm_diags" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_e3sm_diags"] = "True"
@@ -177,6 +179,8 @@ def get_expansions():
     if "ilamb" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_ilamb"] = "True"
         expansions["active_e3sm_to_cmip"] = "True"
+    if "livvkit" in TEST_SPECIFICS["tasks_to_run"]:
+        expansions["active_livvkit"] = "True"
     if "pcmdi_diags" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_pcmdi_diags"] = "True"
         expansions["active_e3sm_to_cmip"] = "True"
