@@ -1,5 +1,16 @@
 #!/bin/bash
 {% include 'inclusions/slurm_header.bash' %}
+
+{# For SLURM, match CPU allocation to E3SM Diags multiprocessing. #}
+{% set cpus_per_task = (num_workers if multiprocessing else 1) %}
+
+{# Dane enforces step-level CPU/memory limits unless explicitly requested. #}
+{% if machine == 'dane' %}
+#SBATCH  --ntasks=1
+#SBATCH  --cpus-per-task={{ cpus_per_task }}
+#SBATCH  --mem=0
+{% endif %}
+
 {% include 'inclusions/boilerplate.bash' %}
 set -e
 {{ environment_commands }}
@@ -456,10 +467,19 @@ EOF
 cat > e3sm_diags.cfg << EOF
 {% include cfg %}
 EOF
+{% if machine == 'dane' %}
+command="srun --ntasks=1 --cpus-per-task={{ cpus_per_task }} --cpu-bind=cores python -u e3sm.py -d e3sm_diags.cfg"
+{% else %}
 command="srun -n 1 python -u e3sm.py -d e3sm_diags.cfg"
+{% endif %}
+{% else %}
+{% if machine == 'dane' %}
+command="srun --ntasks=1 --cpus-per-task={{ cpus_per_task }} --cpu-bind=cores python -u e3sm.py"
 {% else %}
 command="srun -n 1 python -u e3sm.py"
 {% endif %}
+{% endif %}
+
 
 # Run diagnostics
 time ${command}
