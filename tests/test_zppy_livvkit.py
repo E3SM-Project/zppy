@@ -24,6 +24,7 @@ def test_add_climo_dependency():
 def test_determine_and_add_dependencies():
     c = {
         "e3sm_to_cmip_land_subsection": "land_monthly",
+        "infer_section_parameters": True,
         "land_only": True,
         "ts_land_subsection": "land_monthly",
         "year1": 1980,
