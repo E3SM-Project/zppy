@@ -22,6 +22,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
     "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     "mpas_analysis_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
+    "livvkit_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     "pcmdi_diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     # This is the environment setup for other tasks.
     # Leave as "" to use the latest Unified environment.
@@ -43,6 +44,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
         "mpas_analysis",
         "global_time_series",
         "ilamb",
+        "livvkit",
         "pcmdi_diags",
     ],
     "unique_id": "unique_id",
@@ -154,6 +156,9 @@ def get_expansions():
     expansions["global_time_series_environment_commands"] = TEST_SPECIFICS[
         "global_time_series_environment_commands"
     ]
+    expansions["livvkit_environment_commands"] = TEST_SPECIFICS[
+        "livvkit_environment_commands"
+    ]
     expansions["pcmdi_diags_environment_commands"] = TEST_SPECIFICS[
         "pcmdi_diags_environment_commands"
     ]
@@ -165,6 +170,7 @@ def get_expansions():
     expansions["active_mpas_analysis"] = "False"
     expansions["active_global_time_series"] = "False"
     expansions["active_ilamb"] = "False"
+    expansions["active_livvkit"] = "False"
     expansions["active_pcmdi_diags"] = "False"
     if "e3sm_diags" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_e3sm_diags"] = "True"
@@ -174,6 +180,8 @@ def get_expansions():
         expansions["active_global_time_series"] = "True"
         expansions["active_mpas_analysis"] = "True"  # For ocn plots
         expansions["active_e3sm_to_cmip"] = "True"  # For lnd plots
+    if "livvkit" in TEST_SPECIFICS["tasks_to_run"]:
+        expansions["active_livvkit"] = "True"
     if "ilamb" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_ilamb"] = "True"
         expansions["active_e3sm_to_cmip"] = "True"
@@ -322,6 +330,7 @@ def generate_cfgs(dry_run=False):
     print(
         f"global_time_series_environment_commands={expansions['global_time_series_environment_commands']}"
     )
+    print(f"livvkit_environment_commands={expansions['livvkit_environment_commands']}")
     print(
         f"pcmdi_diags_environment_commands={expansions['pcmdi_diags_environment_commands']}"
     )

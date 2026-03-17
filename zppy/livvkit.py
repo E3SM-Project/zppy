@@ -6,6 +6,7 @@ from configobj import ConfigObj
 from zppy.bundle import handle_bundles
 from zppy.utils import (
     ParameterInferenceType,
+    ParameterNotProvidedError,
     add_dependencies,
     check_status,
     get_file_names,
@@ -128,30 +129,36 @@ def determine_and_add_dependencies(
         _c["year2"],
         _c["ts_num_years"],
     )
-    grids = ["_native"]
-    for data_source in ["cmb", "smb", "racmo", "merra2", "ceres", "era5"]:
-        if data_source in _c["sets"]:
-            if data_source == "racmo" or data_source in ["cmb", "smb"]:
-                for _icesheet in _c["icesheets"].split(","):
-                    grids.append(f"_racmo_{_icesheet}")
-            elif data_source == "ceres":
-                # CERES grid is the CMIP6 grid, has no grid name in the task
-                grids.append("")
-            else:
-                grids.append(f"_{data_source}")
-        grids = list(set(grids))
-    for _grid in grids:
-        set_value_of_parameter_if_undefined(
-            _c,
-            "climo_land_subsection",
-            f"land_monthly_climo{_grid}",
-            ParameterInferenceType.SECTION_INFERENCE,
+
+    climo_subsections: List[str] = []
+    if "climo_subsections" in _c.keys():
+        climo_subsections = _c["climo_subsections"]
+    elif ("infer_section_parameters" in _c.keys()) and _c["infer_section_parameters"]:
+        grids = ["_native"]
+        for data_source in ["cmb", "smb", "racmo", "merra2", "ceres", "era5"]:
+            if data_source in _c["sets"]:
+                if data_source == "racmo" or data_source in ["cmb", "smb"]:
+                    for _icesheet in _c["icesheets"].split(","):
+                        grids.append(f"_racmo_{_icesheet}")
+                elif data_source == "ceres":
+                    # CERES grid is the CMIP6 grid, has no grid name in the task
+                    grids.append("")
+                else:
+                    grids.append(f"_{data_source}")
+            grids = list(set(grids))
+        for _grid in grids:
+            climo_subsections.append(f"land_monthly_climo{_grid}")
+    else:
+        raise ParameterNotProvidedError(
+            f"{climo_subsections} was not provided, and inferring is turned off. Turn on inferring by setting infer_section_parameters to True."
         )
+
+    for climo_subsection in climo_subsections:
         add_climo_dependency(
             dependencies,
             script_dir,
             "climo",
-            f"land_monthly_climo{_grid}",
+            climo_subsection,
             _c["year1"],
             _c["year2"],
             _c["ts_num_years"],
