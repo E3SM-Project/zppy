@@ -47,7 +47,7 @@ lex-cfg \
 
 echo ${workdir}
 echo {{ scriptDir }}
-livv --validate livvkit.yml --out-dir ./${case}.web
+livv --validate livvkit_template.yml --out-dir ./${case}.web
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}

@@ -141,12 +141,6 @@ def determine_and_add_dependencies(
                 grids.append(f"_{data_source}")
         grids = list(set(grids))
     for _grid in grids:
-        set_value_of_parameter_if_undefined(
-            _c,
-            "climo_land_subsection",
-            f"land_monthly_climo{_grid}",
-            ParameterInferenceType.SECTION_INFERENCE,
-        )
         add_climo_dependency(
             dependencies,
             script_dir,
