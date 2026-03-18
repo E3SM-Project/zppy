@@ -22,6 +22,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
     "diags_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
     "mpas_analysis_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
     "global_time_series_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
+    "livvkit_environment_commands": "source /lcrc/group/e3sm/livvkit/software/load_e3sm_unified_1.12.1_lex.sh",
     "pcmdi_diags_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
     # This is the environment setup for other tasks.
     # Leave as "" to use the latest Unified environment.
@@ -154,6 +155,9 @@ def get_expansions():
     ]
     expansions["global_time_series_environment_commands"] = TEST_SPECIFICS[
         "global_time_series_environment_commands"
+    ]
+    expansions["livvkit_environment_commands"] = TEST_SPECIFICS[
+        "livvkit_environment_commands"
     ]
     expansions["pcmdi_diags_environment_commands"] = TEST_SPECIFICS[
         "pcmdi_diags_environment_commands"
@@ -326,6 +330,7 @@ def generate_cfgs(dry_run=False):
     print(
         f"global_time_series_environment_commands={expansions['global_time_series_environment_commands']}"
     )
+    print(f"livvkit_environment_commands={expansions['livvkit_environment_commands']}")
     print(
         f"pcmdi_diags_environment_commands={expansions['pcmdi_diags_environment_commands']}"
     )
