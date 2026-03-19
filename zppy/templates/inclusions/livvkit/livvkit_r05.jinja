@@ -33,16 +33,16 @@ common_smb: &common_smb
     clim_even: 1
     units: mm w. e. yr^-1
     References:
-      - {{ livvproj_dir }}/data/smb/smb_icecores.bib
-      - {{ livvproj_dir }}/data/livvkit.bib
+      - {{ livvproj_dir }}/smb/smb_icecores.bib
+      - {{ livvproj_dir }}/livvkit.bib
 
 common_energy: &common_energy
   desc: Surface energy balance component {component}{comment} from {data_var_names}
   references:
-    - {{ livvproj_dir }}/data/racmo/Noel2015.bib
-    - {{ livvproj_dir }}/data/cism/glissade/cism-glissade.bib
-    - {{ livvproj_dir }}/data/e3sm/Evans2019.bib
-    - {{ livvproj_dir }}/data/livvkit.bib
+    - {{ livvproj_dir }}/racmo/Noel2015.bib
+    - {{ livvproj_dir }}/cism/glissade/cism-glissade.bib
+    - {{ livvproj_dir }}/e3sm/Evans2019.bib
+    - {{ livvproj_dir }}/livvkit.bib
   cmap: plasma
   cmap_diff: RdBu_r
 
@@ -115,7 +115,7 @@ common_racmo_gis: &common_racmo_gis
   ib_year_e: 1987-1976
   ib_year_s: 2014-2004
   preprocess: []
-  preproc_dir: {{ livvproj_dir }}/data/smb/processed
+  preproc_dir: {{ livvproj_dir }}/smb/processed
   zwally_file: model_zwally_basins_elm_r05.csv
   ib_file: IceBridge_modelXY_elm{}_r05.csv
   smb_cf_file: SMB_CoreFirnEstimates_elm{}_r05.csv
