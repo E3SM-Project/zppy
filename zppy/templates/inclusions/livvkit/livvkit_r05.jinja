@@ -110,16 +110,6 @@ common_ceres: &common_ceres
     model_native: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
 
 common_racmo_gis: &common_racmo_gis
-  core_year_s: 1980
-  core_year_e: 2021
-  ib_year_e: 1987-1976
-  ib_year_s: 2014-2004
-  preprocess: []
-  preproc_dir: {{ livvproj_dir }}/smb/processed
-  zwally_file: model_zwally_basins_elm_r05.csv
-  ib_file: IceBridge_modelXY_elm{}_r05.csv
-  smb_cf_file: SMB_CoreFirnEstimates_elm{}_r05.csv
-  smb_mo_file: SMB_Obs_Model_elm{}_r05.csv
   climo_remap: {{ dir_racmo_gis }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
   icesheet: gis
 
@@ -639,6 +629,16 @@ Climatic_Mass_Balance_GIS:
 Surface_Mass_Balance_GIS:
   module: {{ livvext_root }}/smb/smb_icecores.py
   data_vars: *common_racmo_smb_vars
+  core_year_s: 1980
+  core_year_e: 2021
+  ib_year_e: 1987-1976
+  ib_year_s: 2014-2004
+  preprocess: []
+  preproc_dir: {{ livvproj_dir }}/smb/processed
+  zwally_file: model_zwally_basins_elm_r05.csv
+  ib_file: IceBridge_modelXY_elm{}_r05.csv
+  smb_cf_file: SMB_CoreFirnEstimates_elm{}_r05.csv
+  smb_mo_file: SMB_Obs_Model_elm{}_r05.csv
   <<: [*common, *common_smb, *common_racmo, *common_racmo_gis]
   scales:
     { model: 365 * 24 * 3600, dset_a: 365 * 24 * 3600 }
