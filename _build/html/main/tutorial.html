@@ -222,6 +222,17 @@ must be changed for use on other machines. These include the paths for
 <span class="linenos">120</span><span class="na">experiment_name</span><span class="o">=</span><span class="s">20210122.v2_test01.piControl.chrysalis</span>
 <span class="linenos">121</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1-50&quot;</span><span class="na">, &quot;1-100&quot;,</span>
 <span class="linenos">122</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;21-50&quot;</span><span class="na">, &quot;51-100&quot;,</span>
+<span class="linenos">123</span>
+<span class="linenos">124</span><span class="c1"># LIVVkit (Ice sheet analysis)</span>
+<span class="linenos">125</span><span class="k">[livvkit]</span>
+<span class="linenos">126</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="linenos">127</span><span class="na">nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1</span>
+<span class="linenos">128</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0:30:00&quot;</span>
+<span class="linenos">129</span><span class="c1"># qos = &quot;debug&quot;</span>
+<span class="linenos">130</span><span class="na">icesheets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;gis,ais&quot;</span>
+<span class="linenos">131</span><span class="na">sets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;cmb,smb,energy_racmo,energy_era5,energy_merra2,energy_ceres&quot;</span>
+<span class="linenos">132</span><span class="na">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;inclusions/livvkit/livvkit_r05.jinja&quot;</span>
+<span class="linenos">133</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1:100:50&quot;</span>
 </pre></div>
 </div>
 <p>Now we can run <code class="docutils literal notranslate"><span class="pre">zppy</span> <span class="pre">-c</span> <span class="pre">post.mysimulation.cfg</span></code>.</p>

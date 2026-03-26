@@ -134,6 +134,21 @@ You can also view the most up-to-date,
 <li><p>If we are not doing a <code class="docutils literal notranslate"><span class="pre">land_only</span></code> run and <code class="docutils literal notranslate"><span class="pre">ts_atm_subsection</span></code> (the name of the <code class="docutils literal notranslate"><span class="pre">ts</span></code> atm-specific subtask that this <code class="docutils literal notranslate"><span class="pre">ilamb</span></code> task is dependent on), assume it is <code class="docutils literal notranslate"><span class="pre">atm_monthly_180x360_aave</span></code>.</p></li>
 <li><p>If we are not doing a <code class="docutils literal notranslate"><span class="pre">land_only</span></code> run and <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip_atm_subsection</span></code> (the name of the <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip</span></code> atm-specific subtask that this <code class="docutils literal notranslate"><span class="pre">ilamb</span></code> task is dependent on), again assume it is <code class="docutils literal notranslate"><span class="pre">atm_monthly_180x360_aave</span></code>.</p></li>
 </ul>
+<p>For the <code class="docutils literal notranslate"><span class="pre">livvkit</span></code> task:</p>
+<ul class="simple">
+<li><p>A grid-native climatology must be generated, assumed to be <code class="docutils literal notranslate"><span class="pre">land_monthly_climo_native</span></code></p></li>
+<li><p>For each reanalysis comparison to be performed, a corresponding <code class="docutils literal notranslate"><span class="pre">land_monthly_climo_GRID</span></code> where <code class="docutils literal notranslate"><span class="pre">GRID</span></code> corresponds to the reanalysis grid name</p></li>
+<li><dl class="simple">
+<dt>Available reanalysis comparisons are</dt><dd><ul>
+<li><p>racmo_gis, racmo_ais</p></li>
+<li><p>merra2</p></li>
+<li><p>era5</p></li>
+<li><p>ceres (default cmip6 grid)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
 <p><strong>Path inferences</strong></p>
 <p>For the <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> task:</p>
 <ul class="simple">
