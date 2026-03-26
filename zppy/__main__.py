@@ -18,6 +18,7 @@ from zppy.e3sm_diags import e3sm_diags
 from zppy.e3sm_to_cmip import e3sm_to_cmip
 from zppy.global_time_series import global_time_series
 from zppy.ilamb import ilamb
+from zppy.livvkit import livvkit
 from zppy.logger import _setup_custom_logger
 from zppy.mpas_analysis import mpas_analysis
 from zppy.pcmdi_diags import pcmdi_diags
@@ -281,6 +282,9 @@ def _launch_scripts(config: ConfigObj, script_dir, job_ids_file, plugins) -> Non
 
     # ilamb tasks
     existing_bundles = ilamb(config, script_dir, existing_bundles, job_ids_file)
+
+    # livvkit tasks
+    existing_bundles = livvkit(config, script_dir, existing_bundles, job_ids_file)
 
     # pcmdi_diags tasks
     existing_bundles = pcmdi_diags(config, script_dir, existing_bundles, job_ids_file)
