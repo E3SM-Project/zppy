@@ -1,8 +1,12 @@
+import os
 from typing import Any, Dict, List
 
 import pytest
+from configobj import ConfigObj
+from validate import Validator
 
 from zppy.global_time_series import determine_and_add_dependencies, determine_components
+from zppy.mpas_analysis import get_mpas_analysis_prefixes
 
 
 def test_determine_components():
@@ -127,6 +131,28 @@ def test_determine_and_add_dependencies():
         "use_atm": False,
         "use_lnd": False,
         "use_ocn": True,
+        "mpas_analysis_subsections": ["reference", "test"],
+    }
+    dependencies = []
+    determine_and_add_dependencies(
+        c,
+        dependencies,
+        "script_dir",
+        mpas_analysis_prefixes={
+            "reference": ["mpas_analysis_reference_ts_1980-1989_climo_1980-1989"],
+            "test": ["mpas_analysis_test_ts_1980-1999_climo_1990-1999"],
+        },
+    )
+    expected = [
+        "script_dir/mpas_analysis_reference_ts_1980-1989_climo_1980-1989.status",
+        "script_dir/mpas_analysis_test_ts_1980-1999_climo_1990-1999.status",
+    ]
+    assert dependencies == expected
+
+    c = {
+        "use_atm": False,
+        "use_lnd": False,
+        "use_ocn": True,
         "ts_years": "",
         "climo_years": "1980:1990:10",
     }
@@ -144,3 +170,67 @@ def test_determine_and_add_dependencies():
     dependencies = []
     with pytest.raises(Exception):
         determine_and_add_dependencies(c, dependencies, "script_dir")
+
+    c = {
+        "use_atm": False,
+        "use_lnd": False,
+        "use_ocn": True,
+        "mpas_analysis_subsections": ["missing"],
+    }
+    dependencies = []
+    with pytest.raises(ValueError):
+        determine_and_add_dependencies(
+            c,
+            dependencies,
+            "script_dir",
+            mpas_analysis_prefixes={
+                "reference": ["mpas_analysis_reference_ts_1980-1989_climo_1980-1989"]
+            },
+        )
+
+
+def test_get_mpas_analysis_prefixes(tmp_path):
+    config_path = tmp_path / "mpas_analysis.cfg"
+    config_path.write_text(
+        """
+[default]
+case = "case_name"
+input = "input_dir"
+output = "output_dir"
+www = "www_dir"
+
+[mpas_analysis]
+active = True
+mesh = "EC30to60E2r2"
+
+  [[ reference ]]
+  ts_years = "1985-1989",
+  climo_years = "1985-1989",
+  enso_years = "1985-1989",
+
+  [[ test ]]
+  ts_years = "1985-1995",
+  climo_years = "1990-1995",
+  enso_years = "1990-1995",
+
+  [[ mvm ]]
+  reference_data_path = [[ reference ]]
+  test_data_path = [[ test ]]
+""".strip()
+    )
+
+    config = ConfigObj(
+        str(config_path), configspec=os.path.join("zppy", "defaults", "default.ini")
+    )
+    validator = Validator()
+    assert config.validate(validator)
+
+    prefixes = get_mpas_analysis_prefixes(config)
+
+    assert prefixes == {
+        "reference": ["mpas_analysis_reference_ts_1985-1989_climo_1985-1989"],
+        "test": ["mpas_analysis_test_ts_1985-1995_climo_1990-1995"],
+        "mvm": [
+            "mpas_analysis_mvm_ts_1985-1995_climo_1990-1995_vs_ref_ts_1985-1989_climo_1985-1989"
+        ],
+    }
