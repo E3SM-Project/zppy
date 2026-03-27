@@ -170,7 +170,92 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
     return existing_bundles
 
 
-def _get_identifier(
+def get_mpas_analysis_prefixes(config: ConfigObj) -> Dict[str, List[str]]:
+    tasks: List[Dict[str, Any]] = get_tasks(config, "mpas_analysis")
+    if len(tasks) == 0:
+        return {}
+
+    prior_subsection_outputs: Dict[str, str] = {}
+    prior_subsection_year_sets: Dict[str, Dict[str, List[Tuple[int, int]]]] = {}
+    prior_subsection_analysis_subdirs: Dict[str, str] = {}
+    prefixes_by_subsection: Dict[str, List[str]] = {}
+
+    for c in tasks:
+        set_subdirs(config, c)
+        (
+            reference_data_path,
+            test_data_path,
+            reference_subsection,
+            test_subsection,
+        ) = _resolve_subsection_paths(c, prior_subsection_outputs)
+        ts_year_sets, climo_year_sets, enso_year_sets = _resolve_test_year_sets(
+            c, test_subsection, prior_subsection_year_sets
+        )
+        ref_ts_year_sets, ref_climo_year_sets, ref_enso_year_sets = (
+            _resolve_reference_year_sets(
+                c, reference_subsection, prior_subsection_year_sets, ts_year_sets
+            )
+        )
+
+        prefixes: List[str] = []
+        for ts, climo, enso, ctrl_ts, ctrl_climo, ctrl_enso in zip(
+            ts_year_sets,
+            climo_year_sets,
+            enso_year_sets,
+            ref_ts_year_sets,
+            ref_climo_year_sets,
+            ref_enso_year_sets,
+        ):
+            if _set_run_years(c, ts, climo, enso):
+                continue
+
+            identifier, ref_identifier = _set_identifiers(
+                c, script_dir="", ctrl_ts=ctrl_ts, ctrl_climo=ctrl_climo
+            )
+            reference_analysis_subdir = _get_subsection_analysis_subdir(
+                reference_subsection, prior_subsection_analysis_subdirs
+            )
+            test_analysis_subdir = _get_subsection_analysis_subdir(
+                test_subsection, prior_subsection_analysis_subdirs
+            )
+            _set_run_config_files(
+                c,
+                reference_data_path,
+                test_data_path,
+                ref_identifier,
+                identifier,
+                reference_analysis_subdir,
+                test_analysis_subdir,
+            )
+            _set_output_paths(
+                c,
+                reference_data_path,
+                reference_subsection,
+                identifier,
+                ref_identifier,
+            )
+            prefixes.append(_build_prefix(c, ref_identifier, identifier))
+
+        prefixes_by_subsection[c.get("subsection") or ""] = prefixes
+
+        if c.get("subsection"):
+            output_dir = os.path.abspath(
+                os.path.expandvars(os.path.expanduser(c["output"]))
+            )
+            prior_subsection_outputs[c["subsection"]] = output_dir
+            prior_subsection_year_sets[c["subsection"]] = {
+                "ts": ts_year_sets,
+                "climo": climo_year_sets,
+                "enso": enso_year_sets,
+            }
+            prior_subsection_analysis_subdirs[c["subsection"]] = c.get(
+                "analysis_subdir", "mpas_analysis"
+            )
+
+    return prefixes_by_subsection
+
+
+def get_mpas_analysis_identifier(
     *, ts_year1: int, ts_year2: int, climo_year1: int, climo_year2: int
 ) -> str:
     # Must match identifier in zppy/templates/mpas_analysis.bash
@@ -321,7 +406,7 @@ def _set_identifiers(
     ctrl_climo: Tuple[int, int],
 ) -> Tuple[str, str]:
     c["scriptDir"] = script_dir
-    identifier = _get_identifier(
+    identifier = get_mpas_analysis_identifier(
         ts_year1=c["ts_year1"],
         ts_year2=c["ts_year2"],
         climo_year1=c["climo_year1"],
@@ -329,7 +414,7 @@ def _set_identifiers(
     )
     c["identifier"] = identifier
 
-    ref_identifier = _get_identifier(
+    ref_identifier = get_mpas_analysis_identifier(
         ts_year1=ctrl_ts[0],
         ts_year2=ctrl_ts[1],
         climo_year1=ctrl_climo[0],
