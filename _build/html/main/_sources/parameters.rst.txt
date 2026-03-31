@@ -76,6 +76,11 @@ For the ``mpas_analysis`` task:
 * ``reference_data_path`` and ``test_data_path`` are optional and are only used for model-vs-model comparisons.
   If provided, ``zppy`` uses them to locate the MPAS-Analysis config files from a *previous* MPAS-Analysis run and passes those through to MPAS-Analysis as ``controlRunConfigFile`` (reference) and ``mainRunConfigFile`` (test).
 
+  The comparison type of the *current* MPAS-Analysis run is inferred implicitly:
+  if ``reference_data_path`` is set, the run is treated as model-vs-model (``mvm``);
+  otherwise it is treated as model-vs-observations (``mvo``). Users normally do
+  not need to set a comparison type for the current run.
+
   .. note::
      These parameter names are intentionally consistent with the terminology used by ``e3sm_diags`` for model-vs-model runs: in both cases, ``reference_data_path`` identifies the *reference simulation's zppy-generated outputs*.
 
@@ -84,7 +89,16 @@ For the ``mpas_analysis`` task:
      For MPAS-Analysis, ``zppy`` resolves the config file when ``reference_data_path`` points to the prior run's zppy output directory (the one containing ``post/``).
 
    ``reference_data_path`` is intended to point to the prior run's zppy output directory (the one containing ``post/``). ``zppy`` will then use:
-   ``<reference_data_path>/post/analysis/mpas_analysis/cfg/mpas_analysis_<identifier>.cfg`` (or ``mpas_analysis_mvm`` if the referenced run was MVM).
+   ``<reference_data_path>/post/analysis/mpas_analysis/<comparison_type>/cfg/mpas_analysis_<identifier>.cfg``
+   where ``<comparison_type>`` is ``mvo`` or ``mvm``.
+
+   For referenced prior runs, ``reference_comparison_type`` and
+   ``test_comparison_type`` can be set to ``"auto"``, ``"mvo"``, or ``"mvm"``.
+   The default is ``"auto"``. In auto mode:
+
+   * if the path points to ``[[subsection]]``, zppy uses the referenced subsection's actual comparison type
+   * if the path points to an external zppy output directory, zppy looks for the matching cfg under ``mvo`` and ``mvm``
+   * if both exist for the same identifier, zppy raises an error and the user should set ``reference_comparison_type`` or ``test_comparison_type`` explicitly
 
    When ``reference_data_path`` is set to a non-subsection path, ``reference_case`` is required so the MVM output directory can include the reference case name. If ``reference_data_path`` is set to ``[[subsection]]``, ``reference_case`` is inferred to be the same as the current ``case``.
 

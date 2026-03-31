@@ -74,6 +74,10 @@ Unlike ``e3sm_diags`` (where ``run_type = "model_vs_model"`` and ``reference_dat
 points directly at reference climatology output), MPAS-Analysis comparisons are driven
 by MPAS-Analysis config files. For model-vs-model mode, ``zppy`` locates the matching
 config file(s) from prior MPAS-Analysis output and passes them to MPAS-Analysis.
+The current run's type is inferred automatically: setting ``reference_data_path``
+makes it an ``mvm`` run, otherwise it is an ``mvo`` run. If a referenced prior
+run could resolve to either ``mvo`` or ``mvm``, use ``reference_comparison_type``
+or ``test_comparison_type`` to disambiguate.
 
 .. literalinclude:: post.mpas_analysis_model_vs_model.cfg
    :language: cfg

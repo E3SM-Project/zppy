@@ -158,6 +158,10 @@ You can also view the most up-to-date,
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> and <code class="docutils literal notranslate"><span class="pre">test_data_path</span></code> are optional and are only used for model-vs-model comparisons.
 If provided, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> uses them to locate the MPAS-Analysis config files from a <em>previous</em> MPAS-Analysis run and passes those through to MPAS-Analysis as <code class="docutils literal notranslate"><span class="pre">controlRunConfigFile</span></code> (reference) and <code class="docutils literal notranslate"><span class="pre">mainRunConfigFile</span></code> (test).</p>
+<p>The comparison type of the <em>current</em> MPAS-Analysis run is inferred implicitly:
+if <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> is set, the run is treated as model-vs-model (<code class="docutils literal notranslate"><span class="pre">mvm</span></code>);
+otherwise it is treated as model-vs-observations (<code class="docutils literal notranslate"><span class="pre">mvo</span></code>). Users normally do
+not need to set a comparison type for the current run.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <blockquote>
@@ -167,7 +171,16 @@ If provided, <code class="docutils literal notranslate"><span class="pre">zppy</
 For MPAS-Analysis, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> resolves the config file when <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> points to the prior run’s zppy output directory (the one containing <code class="docutils literal notranslate"><span class="pre">post/</span></code>).</p>
 </div></blockquote>
 <p><code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> is intended to point to the prior run’s zppy output directory (the one containing <code class="docutils literal notranslate"><span class="pre">post/</span></code>). <code class="docutils literal notranslate"><span class="pre">zppy</span></code> will then use:
-<code class="docutils literal notranslate"><span class="pre">&lt;reference_data_path&gt;/post/analysis/mpas_analysis/cfg/mpas_analysis_&lt;identifier&gt;.cfg</span></code> (or <code class="docutils literal notranslate"><span class="pre">mpas_analysis_mvm</span></code> if the referenced run was MVM).</p>
+<code class="docutils literal notranslate"><span class="pre">&lt;reference_data_path&gt;/post/analysis/mpas_analysis/&lt;comparison_type&gt;/cfg/mpas_analysis_&lt;identifier&gt;.cfg</span></code>
+where <code class="docutils literal notranslate"><span class="pre">&lt;comparison_type&gt;</span></code> is <code class="docutils literal notranslate"><span class="pre">mvo</span></code> or <code class="docutils literal notranslate"><span class="pre">mvm</span></code>.</p>
+<p>For referenced prior runs, <code class="docutils literal notranslate"><span class="pre">reference_comparison_type</span></code> and
+<code class="docutils literal notranslate"><span class="pre">test_comparison_type</span></code> can be set to <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mvo&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;mvm&quot;</span></code>.
+The default is <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>. In auto mode:</p>
+<ul class="simple">
+<li><p>if the path points to <code class="docutils literal notranslate"><span class="pre">[[subsection]]</span></code>, zppy uses the referenced subsection’s actual comparison type</p></li>
+<li><p>if the path points to an external zppy output directory, zppy looks for the matching cfg under <code class="docutils literal notranslate"><span class="pre">mvo</span></code> and <code class="docutils literal notranslate"><span class="pre">mvm</span></code></p></li>
+<li><p>if both exist for the same identifier, zppy raises an error and the user should set <code class="docutils literal notranslate"><span class="pre">reference_comparison_type</span></code> or <code class="docutils literal notranslate"><span class="pre">test_comparison_type</span></code> explicitly</p></li>
+</ul>
 <p>When <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> is set to a non-subsection path, <code class="docutils literal notranslate"><span class="pre">reference_case</span></code> is required so the MVM output directory can include the reference case name. If <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> is set to <code class="docutils literal notranslate"><span class="pre">[[subsection]]</span></code>, <code class="docutils literal notranslate"><span class="pre">reference_case</span></code> is inferred to be the same as the current <code class="docutils literal notranslate"><span class="pre">case</span></code>.</p>
 </div>
 </li>
