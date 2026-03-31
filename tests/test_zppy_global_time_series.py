@@ -6,7 +6,11 @@ from configobj import ConfigObj
 from validate import Validator
 
 from zppy.global_time_series import determine_and_add_dependencies, determine_components
-from zppy.mpas_analysis import get_mpas_analysis_prefixes
+from zppy.mpas_analysis import (
+    _get_referenced_comparison_type,
+    _resolve_mpas_analysis_config_file,
+    get_mpas_analysis_prefixes,
+)
 
 
 def test_determine_components():
@@ -234,3 +238,93 @@ mesh = "EC30to60E2r2"
             "mpas_analysis_mvm_ts_1985-1995_climo_1990-1995_vs_ref_ts_1985-1989_climo_1985-1989"
         ],
     }
+
+
+def test_resolve_mpas_analysis_config_file_uses_comparison_type(tmp_path):
+    config_file = _resolve_mpas_analysis_config_file(
+        str(tmp_path), "ts_1985-1989_climo_1985-1989", comparison_type="mvm"
+    )
+
+    assert config_file == os.path.join(
+        str(tmp_path.resolve()),
+        "post",
+        "analysis",
+        "mpas_analysis",
+        "mvm",
+        "cfg",
+        "mpas_analysis_ts_1985-1989_climo_1985-1989.cfg",
+    )
+
+
+def test_get_referenced_comparison_type_infers_from_subsection():
+    comparison_type = _get_referenced_comparison_type(
+        "auto",
+        "/unused",
+        "reference",
+        "ts_1985-1989_climo_1985-1989",
+        {"reference": "mvm"},
+        "reference_data_path",
+    )
+
+    assert comparison_type == "mvm"
+
+
+def test_get_referenced_comparison_type_raises_on_subsection_mismatch():
+    with pytest.raises(ValueError, match="which is a mvo run, not mvm"):
+        _get_referenced_comparison_type(
+            "mvm",
+            "/unused",
+            "reference",
+            "ts_1985-1989_climo_1985-1989",
+            {"reference": "mvo"},
+            "reference_data_path",
+        )
+
+
+def test_get_referenced_comparison_type_auto_prefers_mvo_if_cfg_missing(tmp_path):
+    comparison_type = _get_referenced_comparison_type(
+        "auto",
+        str(tmp_path),
+        "",
+        "ts_1985-1989_climo_1985-1989",
+        {},
+        "reference_data_path",
+    )
+
+    assert comparison_type == "mvo"
+
+
+def test_get_referenced_comparison_type_auto_detects_mvm(tmp_path):
+    cfg_dir = tmp_path / "post" / "analysis" / "mpas_analysis" / "mvm" / "cfg"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "mpas_analysis_ts_1985-1989_climo_1985-1989.cfg").write_text("")
+
+    comparison_type = _get_referenced_comparison_type(
+        "auto",
+        str(tmp_path),
+        "",
+        "ts_1985-1989_climo_1985-1989",
+        {},
+        "reference_data_path",
+    )
+
+    assert comparison_type == "mvm"
+
+
+def test_get_referenced_comparison_type_auto_raises_if_ambiguous(tmp_path):
+    for comparison_type in ["mvo", "mvm"]:
+        cfg_dir = (
+            tmp_path / "post" / "analysis" / "mpas_analysis" / comparison_type / "cfg"
+        )
+        cfg_dir.mkdir(parents=True, exist_ok=True)
+        (cfg_dir / "mpas_analysis_ts_1985-1989_climo_1985-1989.cfg").write_text("")
+
+    with pytest.raises(ValueError, match="reference_comparison_type"):
+        _get_referenced_comparison_type(
+            "auto",
+            str(tmp_path),
+            "",
+            "ts_1985-1989_climo_1985-1989",
+            {},
+            "reference_data_path",
+        )

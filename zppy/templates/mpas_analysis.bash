@@ -28,7 +28,7 @@ echo
 echo ===== SET UP MPAS-ANALYSIS DIRECTORY STRUCTURE =====
 echo
 
-workdir="../analysis/{{ analysis_subdir }}"
+workdir="../analysis/{{ analysis_subdir }}/{{ comparison_type }}"
 mkdir -p ${workdir}
 cd ${workdir}
 
