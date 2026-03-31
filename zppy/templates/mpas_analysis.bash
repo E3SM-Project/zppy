@@ -34,7 +34,7 @@ echo
 echo ===== SET UP MPAS-ANALYSIS DIRECTORY STRUCTURE =====
 echo
 
-workdir="../analysis/{{ analysis_subdir }}"
+workdir="../analysis/{{ analysis_subdir }}/{{ comparison_type }}"
 mkdir -p ${workdir}
 cd ${workdir}
 
@@ -337,7 +337,7 @@ echo ===== COPY FILES TO WEB SERVER =====
 echo
 
 # Create top-level directory
-f=${www}/${case}/{{ analysis_subdir }}/${output_dir_name}/
+f=${www}/${case}/{{ analysis_subdir }}/{{ comparison_type }}/${output_dir_name}/
 mkdir -p ${f}
 if [ $? != 0 ]; then
   echo 'ERROR (3)' > {{ scriptDir }}/{{ prefix }}.status
@@ -359,7 +359,7 @@ done
 {% endif %}
 
 # Copy files
-rsync -a --delete ${output_dir_name}/html/ ${www}/${case}/{{ analysis_subdir }}/${output_dir_name}/
+rsync -a --delete ${output_dir_name}/html/ ${www}/${case}/{{ analysis_subdir }}/{{ comparison_type }}/${output_dir_name}/
 if [ $? != 0 ]; then
   echo 'ERROR (4)' > {{ scriptDir }}/{{ prefix }}.status
   exit 4
@@ -367,7 +367,7 @@ fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
 # For NERSC, change permissions of new files
-pushd ${www}/${case}/{{ analysis_subdir }}/
+pushd ${www}/${case}/{{ analysis_subdir }}/{{ comparison_type }}/
 chgrp -R e3sm ${output_dir_name}
 chmod -R go+rX,go-w ${output_dir_name}
 popd
@@ -375,7 +375,7 @@ popd
 
 {% if machine in ['anvil', 'chrysalis'] %}
 # For LCRC, change permissions of new files
-pushd ${www}/${case}/{{ analysis_subdir }}/
+pushd ${www}/${case}/{{ analysis_subdir }}/{{ comparison_type }}/
 chmod -R go+rX,go-w ${output_dir_name}
 popd
 {% endif %}

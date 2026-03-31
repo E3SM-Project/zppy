@@ -42,8 +42,8 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
     prior_subsection_outputs: Dict[str, str] = {}
     # Track year sets for previously defined subsections so later tasks can reference them.
     prior_subsection_year_sets: Dict[str, Dict[str, List[Tuple[int, int]]]] = {}
-    # Track analysis subdirectories (mpas_analysis vs mpas_analysis_mvm) for subsections.
-    prior_subsection_analysis_subdirs: Dict[str, str] = {}
+    # Track comparison types (mvo vs mvm) for subsections.
+    prior_subsection_comparison_types: Dict[str, str] = {}
     # Track identifiers used by MVM runs to avoid cfg name collisions.
     mvm_identifiers: Dict[str, str] = {}
 
@@ -79,11 +79,21 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
             identifier, ref_identifier = _set_identifiers(
                 c, script_dir, ctrl_ts, ctrl_climo
             )
-            reference_analysis_subdir = _get_subsection_analysis_subdir(
-                reference_subsection, prior_subsection_analysis_subdirs
+            reference_comparison_type = _get_referenced_comparison_type(
+                c.get("reference_comparison_type", "auto"),
+                reference_data_path,
+                reference_subsection,
+                ref_identifier,
+                prior_subsection_comparison_types,
+                "reference_data_path",
             )
-            test_analysis_subdir = _get_subsection_analysis_subdir(
-                test_subsection, prior_subsection_analysis_subdirs
+            test_comparison_type = _get_referenced_comparison_type(
+                c.get("test_comparison_type", "auto"),
+                test_data_path,
+                test_subsection,
+                identifier,
+                prior_subsection_comparison_types,
+                "test_data_path",
             )
             _set_run_config_files(
                 c,
@@ -91,8 +101,8 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
                 test_data_path,
                 ref_identifier,
                 identifier,
-                reference_analysis_subdir,
-                test_analysis_subdir,
+                reference_comparison_type,
+                test_comparison_type,
             )
             _set_output_paths(
                 c,
@@ -163,14 +173,105 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
                 "climo": climo_year_sets,
                 "enso": enso_year_sets,
             }
-            prior_subsection_analysis_subdirs[c["subsection"]] = c.get(
-                "analysis_subdir", "mpas_analysis"
-            )
+            prior_subsection_comparison_types[c["subsection"]] = c["comparison_type"]
 
     return existing_bundles
 
 
-def _get_identifier(
+def get_mpas_analysis_prefixes(config: ConfigObj) -> Dict[str, List[str]]:
+    tasks: List[Dict[str, Any]] = get_tasks(config, "mpas_analysis")
+    if len(tasks) == 0:
+        return {}
+
+    prior_subsection_outputs: Dict[str, str] = {}
+    prior_subsection_year_sets: Dict[str, Dict[str, List[Tuple[int, int]]]] = {}
+    prior_subsection_comparison_types: Dict[str, str] = {}
+    prefixes_by_subsection: Dict[str, List[str]] = {}
+
+    for c in tasks:
+        set_subdirs(config, c)
+        (
+            reference_data_path,
+            test_data_path,
+            reference_subsection,
+            test_subsection,
+        ) = _resolve_subsection_paths(c, prior_subsection_outputs)
+        ts_year_sets, climo_year_sets, enso_year_sets = _resolve_test_year_sets(
+            c, test_subsection, prior_subsection_year_sets
+        )
+        ref_ts_year_sets, ref_climo_year_sets, ref_enso_year_sets = (
+            _resolve_reference_year_sets(
+                c, reference_subsection, prior_subsection_year_sets, ts_year_sets
+            )
+        )
+
+        prefixes: List[str] = []
+        for ts, climo, enso, ctrl_ts, ctrl_climo, ctrl_enso in zip(
+            ts_year_sets,
+            climo_year_sets,
+            enso_year_sets,
+            ref_ts_year_sets,
+            ref_climo_year_sets,
+            ref_enso_year_sets,
+        ):
+            if _set_run_years(c, ts, climo, enso):
+                continue
+
+            identifier, ref_identifier = _set_identifiers(
+                c, script_dir="", ctrl_ts=ctrl_ts, ctrl_climo=ctrl_climo
+            )
+            reference_comparison_type = _get_referenced_comparison_type(
+                c.get("reference_comparison_type", "auto"),
+                reference_data_path,
+                reference_subsection,
+                ref_identifier,
+                prior_subsection_comparison_types,
+                "reference_data_path",
+            )
+            test_comparison_type = _get_referenced_comparison_type(
+                c.get("test_comparison_type", "auto"),
+                test_data_path,
+                test_subsection,
+                identifier,
+                prior_subsection_comparison_types,
+                "test_data_path",
+            )
+            _set_run_config_files(
+                c,
+                reference_data_path,
+                test_data_path,
+                ref_identifier,
+                identifier,
+                reference_comparison_type,
+                test_comparison_type,
+            )
+            _set_output_paths(
+                c,
+                reference_data_path,
+                reference_subsection,
+                identifier,
+                ref_identifier,
+            )
+            prefixes.append(_build_prefix(c, ref_identifier, identifier))
+
+        prefixes_by_subsection[c.get("subsection") or ""] = prefixes
+
+        if c.get("subsection"):
+            output_dir = os.path.abspath(
+                os.path.expandvars(os.path.expanduser(c["output"]))
+            )
+            prior_subsection_outputs[c["subsection"]] = output_dir
+            prior_subsection_year_sets[c["subsection"]] = {
+                "ts": ts_year_sets,
+                "climo": climo_year_sets,
+                "enso": enso_year_sets,
+            }
+            prior_subsection_comparison_types[c["subsection"]] = c["comparison_type"]
+
+    return prefixes_by_subsection
+
+
+def get_mpas_analysis_identifier(
     *, ts_year1: int, ts_year2: int, climo_year1: int, climo_year2: int
 ) -> str:
     # Must match identifier in zppy/templates/mpas_analysis.bash
@@ -321,7 +422,7 @@ def _set_identifiers(
     ctrl_climo: Tuple[int, int],
 ) -> Tuple[str, str]:
     c["scriptDir"] = script_dir
-    identifier = _get_identifier(
+    identifier = get_mpas_analysis_identifier(
         ts_year1=c["ts_year1"],
         ts_year2=c["ts_year2"],
         climo_year1=c["climo_year1"],
@@ -329,7 +430,7 @@ def _set_identifiers(
     )
     c["identifier"] = identifier
 
-    ref_identifier = _get_identifier(
+    ref_identifier = get_mpas_analysis_identifier(
         ts_year1=ctrl_ts[0],
         ts_year2=ctrl_ts[1],
         climo_year1=ctrl_climo[0],
@@ -345,21 +446,23 @@ def _set_run_config_files(
     test_data_path: str,
     ref_identifier: str,
     identifier: str,
-    reference_analysis_subdir: str,
-    test_analysis_subdir: str,
+    reference_comparison_type: str,
+    test_comparison_type: str,
 ) -> None:
     c["controlRunConfigFile"] = (
         _resolve_mpas_analysis_config_file(
             reference_data_path,
             ref_identifier,
-            analysis_subdir=reference_analysis_subdir,
+            comparison_type=reference_comparison_type,
         )
         if reference_data_path
         else ""
     )
     c["mainRunConfigFile"] = (
         _resolve_mpas_analysis_config_file(
-            test_data_path, identifier, analysis_subdir=test_analysis_subdir
+            test_data_path,
+            identifier,
+            comparison_type=test_comparison_type,
         )
         if test_data_path
         else ""
@@ -382,12 +485,58 @@ def _build_prefix(c: Dict[str, Any], ref_identifier: str, identifier: str) -> st
     return prefix
 
 
-def _get_subsection_analysis_subdir(
-    subsection: str, prior_subsection_analysis_subdirs: Dict[str, str]
+def _get_referenced_comparison_type(
+    requested_comparison_type: str,
+    run_output_dir: str,
+    subsection: str,
+    identifier: str,
+    prior_subsection_comparison_types: Dict[str, str],
+    parameter_name: str,
 ) -> str:
-    if subsection and (subsection in prior_subsection_analysis_subdirs):
-        return prior_subsection_analysis_subdirs[subsection]
-    return "mpas_analysis"
+    if not run_output_dir:
+        return "mvo"
+
+    if subsection:
+        actual_comparison_type = prior_subsection_comparison_types[subsection]
+        if (
+            requested_comparison_type != "auto"
+            and requested_comparison_type != actual_comparison_type
+        ):
+            raise ValueError(
+                f"{parameter_name} refers to mpas_analysis subsection '{subsection}', "
+                f"which is a {actual_comparison_type} run, not {requested_comparison_type}."
+            )
+        return actual_comparison_type
+
+    if requested_comparison_type in {"mvo", "mvm"}:
+        return requested_comparison_type
+
+    return _infer_referenced_comparison_type(run_output_dir, identifier, parameter_name)
+
+
+def _infer_referenced_comparison_type(
+    run_output_dir: str, identifier: str, parameter_name: str
+) -> str:
+    path = Path(os.path.expandvars(os.path.expanduser(run_output_dir))).resolve()
+    file_name = f"mpas_analysis_{identifier}.cfg"
+
+    mvo_cfg = path / "post" / "analysis" / "mpas_analysis" / "mvo" / "cfg" / file_name
+    mvm_cfg = path / "post" / "analysis" / "mpas_analysis" / "mvm" / "cfg" / file_name
+
+    has_mvo_cfg = mvo_cfg.exists()
+    has_mvm_cfg = mvm_cfg.exists()
+
+    if has_mvo_cfg and has_mvm_cfg:
+        raise ValueError(
+            f"{parameter_name} is ambiguous for identifier '{identifier}'. Found both "
+            f"{mvo_cfg} and {mvm_cfg}. Set {parameter_name.replace('_data_path', '_comparison_type')} "
+            "to 'mvo' or 'mvm'."
+        )
+    if has_mvo_cfg:
+        return "mvo"
+    if has_mvm_cfg:
+        return "mvm"
+    return "mvo"
 
 
 def _set_output_paths(
@@ -398,14 +547,13 @@ def _set_output_paths(
     ref_identifier: str,
 ) -> None:
     is_mvm = bool(reference_data_path)
+    c["analysis_subdir"] = "mpas_analysis"
+    c["comparison_type"] = "mvm" if is_mvm else "mvo"
+    c["analysis_task_name"] = f"{c['analysis_subdir']}/{c['comparison_type']}"
+
     if not is_mvm:
-        c["analysis_subdir"] = "mpas_analysis"
-        c["analysis_task_name"] = "mpas_analysis"
         c["output_dir_name"] = identifier
         return
-
-    c["analysis_subdir"] = "mpas_analysis_mvm"
-    c["analysis_task_name"] = "mpas_analysis_mvm"
 
     if reference_subsection:
         c["reference_case"] = c["case"]
@@ -517,7 +665,7 @@ def _parse_subsection_reference(value: str) -> str:
 
 
 def _resolve_mpas_analysis_config_file(
-    run_output_dir: str, identifier: str, *, analysis_subdir: str = "mpas_analysis"
+    run_output_dir: str, identifier: str, *, comparison_type: str = "mvo"
 ) -> str:
     """
     Resolve the MPAS-Analysis config file path for a prior run.
@@ -541,7 +689,7 @@ def _resolve_mpas_analysis_config_file(
 
     file_name = f"mpas_analysis_{identifier}.cfg"
 
-    cfg_dir = path / "post" / "analysis" / analysis_subdir / "cfg"
+    cfg_dir = path / "post" / "analysis" / "mpas_analysis" / comparison_type / "cfg"
     return str(cfg_dir / file_name)
 
 

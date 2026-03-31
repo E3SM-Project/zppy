@@ -1,8 +1,9 @@
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from zppy.bundle import handle_bundles
 from zppy.logger import _setup_custom_logger
+from zppy.mpas_analysis import get_mpas_analysis_identifier, get_mpas_analysis_prefixes
 from zppy.utils import (
     add_dependencies,
     check_status,
@@ -23,6 +24,7 @@ logger = _setup_custom_logger(__name__)
 def global_time_series(config, script_dir, existing_bundles, job_ids_file):
 
     template, template_env = initialize_template(config, "global_time_series.bash")
+    mpas_analysis_prefixes = get_mpas_analysis_prefixes(config)
 
     # --- List of global_time_series tasks ---
     tasks: List[Dict[str, Any]] = get_tasks(config, "global_time_series")
@@ -59,7 +61,9 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
             # List of dependencies
             dependencies: List[str] = []
             # Add Global Time Series dependencies
-            determine_and_add_dependencies(c, dependencies, script_dir)
+            determine_and_add_dependencies(
+                c, dependencies, script_dir, mpas_analysis_prefixes
+            )
             c["dependencies"] = dependencies
             write_settings_file(settings_file, c, s)
             export = "NONE"
@@ -144,7 +148,10 @@ def determine_components(c: Dict[str, Any]) -> None:
 
 
 def determine_and_add_dependencies(
-    c: Dict[str, Any], dependencies: List[str], script_dir: str
+    c: Dict[str, Any],
+    dependencies: List[str],
+    script_dir: str,
+    mpas_analysis_prefixes: Optional[Dict[str, List[str]]] = None,
 ) -> None:
     if c["use_atm"]:
         # Iterate from year1 to year2 incrementing by the number of years per time series file.
@@ -174,19 +181,43 @@ def determine_and_add_dependencies(
                 c["ts_num_years"],
             )
     if c["use_ocn"]:
+        mpas_analysis_prefixes = (
+            {} if mpas_analysis_prefixes is None else mpas_analysis_prefixes
+        )
+        mpas_sub_list = _get_mpas_analysis_subsections(c)
+        if len(mpas_sub_list) > 0:
+            for mpas_sub in mpas_sub_list:
+                if mpas_sub not in mpas_analysis_prefixes:
+                    raise ValueError(
+                        f'global_time_series mpas_analysis_subsections contains "{mpas_sub}", '
+                        "but no such mpas_analysis subsection was found."
+                    )
+                for prefix in mpas_analysis_prefixes[mpas_sub]:
+                    dependencies.append(os.path.join(script_dir, f"{prefix}.status"))
+            return
+
         # Add MPAS Analysis dependencies
         ts_year_sets = get_years(c["ts_years"])
         climo_year_sets = get_years(c["climo_years"])
         if (not ts_year_sets) or (not climo_year_sets):
             raise Exception("ts_years and climo_years must both be set for ocn plots.")
         for ts_year_set, climo_year_set in zip(ts_year_sets, climo_year_sets):
-            c["ts_year1"] = ts_year_set[0]
-            c["ts_year2"] = ts_year_set[1]
-            c["climo_year1"] = climo_year_set[0]
-            c["climo_year2"] = climo_year_set[1]
-            dependencies.append(
-                os.path.join(
-                    script_dir,
-                    f"mpas_analysis_ts_{c['ts_year1']:04d}-{c['ts_year2']:04d}_climo_{c['climo_year1']:04d}-{c['climo_year2']:04d}.status",
-                )
+            identifier = get_mpas_analysis_identifier(
+                ts_year1=ts_year_set[0],
+                ts_year2=ts_year_set[1],
+                climo_year1=climo_year_set[0],
+                climo_year2=climo_year_set[1],
             )
+            dependencies.append(
+                os.path.join(script_dir, f"mpas_analysis_{identifier}.status")
+            )
+
+
+def _get_mpas_analysis_subsections(c: Dict[str, Any]) -> List[str]:
+    mpas_analysis_subsections_input = c.get("mpas_analysis_subsections", [])
+    if isinstance(mpas_analysis_subsections_input, str):
+        if mpas_analysis_subsections_input == "":
+            return []
+        # This will be the case if mpas_analysis_subsections is missing a trailing comma
+        return [mpas_analysis_subsections_input]
+    return [subsection for subsection in mpas_analysis_subsections_input if subsection]
