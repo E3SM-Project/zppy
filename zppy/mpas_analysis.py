@@ -483,14 +483,16 @@ def _set_output_paths(
     ref_identifier: str,
 ) -> None:
     is_mvm = bool(reference_data_path)
+    c["analysis_subdir"] = "mpas_analysis"
+
     if not is_mvm:
-        c["analysis_subdir"] = "mpas_analysis"
         c["analysis_task_name"] = "mpas_analysis"
+        c["comparison_type"] = "mvo"
         c["output_dir_name"] = identifier
         return
 
-    c["analysis_subdir"] = "mpas_analysis_mvm"
-    c["analysis_task_name"] = "mpas_analysis_mvm"
+    c["analysis_task_name"] = "mpas_analysis"
+    c["comparison_type"] = "mvm"
 
     if reference_subsection:
         c["reference_case"] = c["case"]
