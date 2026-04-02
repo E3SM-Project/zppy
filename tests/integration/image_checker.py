@@ -185,10 +185,7 @@ def _check_mismatched_images(
         print(f"Reading expected images file {parameters.expected_images_list}")
         for line in f:
             image_name = line.strip("./").strip("\n")
-            proceed = False
-            if image_name.startswith(prefix):
-                proceed = True
-            if proceed:
+            if image_name.startswith(f"{prefix}/"):
                 counter += 1
                 if counter % 250 == 0:
                     print("On line #", counter)

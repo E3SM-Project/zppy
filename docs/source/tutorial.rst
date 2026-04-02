@@ -58,6 +58,31 @@ This is another example of a configuration file, this time using a RRM simulatio
    :language: cfg
    :linenos:
 
+
+Example 3
+=========
+
+MPAS-Analysis model vs. model
+-----------------------------
+
+MPAS-Analysis supports "main vs. control" (model-vs-model) comparisons.
+In ``zppy``, this is configured in the ``[mpas_analysis]`` section using
+``reference_data_path`` (and optionally ``test_data_path``), consistent with the
+terminology used for ``e3sm_diags`` model-vs-model runs.
+
+Unlike ``e3sm_diags`` (where ``run_type = "model_vs_model"`` and ``reference_data_path``
+points directly at reference climatology output), MPAS-Analysis comparisons are driven
+by MPAS-Analysis config files. For model-vs-model mode, ``zppy`` locates the matching
+config file(s) from prior MPAS-Analysis output and passes them to MPAS-Analysis.
+The current run's type is inferred automatically: setting ``reference_data_path``
+makes it an ``mvm`` run, otherwise it is an ``mvo`` run. If a referenced prior
+run could resolve to either ``mvo`` or ``mvm``, use ``reference_comparison_type``
+or ``test_comparison_type`` to disambiguate.
+
+.. literalinclude:: post.mpas_analysis_model_vs_model.cfg
+   :language: cfg
+   :linenos:
+
 Debugging failures
 ==================
 

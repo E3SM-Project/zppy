@@ -20,7 +20,11 @@ cd ${workdir}
 {%- else -%}
 --case={{ case }} \
 {%- endif %}
+{% if climo_jobs > 0 -%}
+--jobs={{ climo_jobs }} \
+{%- else -%}
 --jobs=${SLURM_NNODES} \
+{%- endif %}
 --thr=1 \
 {%- if exclude %}
 -n '-x' \

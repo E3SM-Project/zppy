@@ -18,6 +18,7 @@ from zppy.e3sm_diags import e3sm_diags
 from zppy.e3sm_to_cmip import e3sm_to_cmip
 from zppy.global_time_series import global_time_series
 from zppy.ilamb import ilamb
+from zppy.livvkit import livvkit
 from zppy.logger import _setup_custom_logger
 from zppy.mpas_analysis import mpas_analysis
 from zppy.pcmdi_diags import pcmdi_diags
@@ -37,6 +38,17 @@ def main():
     template_dir: str = os.path.join(os.path.dirname(__file__), "templates")
     # Subdirectory where defaults are located
     defaults_dir: str = os.path.join(os.path.dirname(__file__), "defaults")
+    # Warn if templateDir is outside the active conda environment. This can
+    # happen when PYTHONPATH points to a local zppy clone and takes precedence
+    # over the conda env's site-packages.
+    conda_prefix: str = os.environ.get("CONDA_PREFIX", "")
+    if conda_prefix and not template_dir.startswith(conda_prefix):
+        logger.warning(
+            f"templateDir '{template_dir}' is outside the active conda environment "
+            f"'{conda_prefix}'. This is likely caused by PYTHONPATH including a local "
+            f"zppy clone. Consider running 'unset PYTHONPATH' before activating the "
+            f"conda environment."
+        )
     # Read configuration file and validate it
     default_config: str = os.path.join(defaults_dir, "default.ini")
     user_config: ConfigObj = ConfigObj(args.config, configspec=default_config)
@@ -270,6 +282,9 @@ def _launch_scripts(config: ConfigObj, script_dir, job_ids_file, plugins) -> Non
 
     # ilamb tasks
     existing_bundles = ilamb(config, script_dir, existing_bundles, job_ids_file)
+
+    # livvkit tasks
+    existing_bundles = livvkit(config, script_dir, existing_bundles, job_ids_file)
 
     # pcmdi_diags tasks
     existing_bundles = pcmdi_diags(config, script_dir, existing_bundles, job_ids_file)
