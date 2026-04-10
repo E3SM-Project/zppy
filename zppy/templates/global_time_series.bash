@@ -10,7 +10,11 @@ set +e
 
 results_dir={{ prefix }}_results
 zi-global-time-series --use_ocn {{ use_ocn }} --input {{ input }} --input_subdir {{ input_subdir }} --moc_file {{ moc_file }} --case_dir {{ output }} --experiment_name {{ experiment_name }} --figstr {{ figstr }} --color {{ color }} --ts_num_years {{ ts_num_years }} --plots_original {{ plots_original }} --plots_atm {{ plots_atm }} --plots_ice {{ plots_ice }} --plots_lnd {{ plots_lnd }} --plots_ocn {{ plots_ocn }} --nrows {{ nrows }} --ncols {{ ncols }} --results_dir ${results_dir} --regions {{ regions }} --make_viewer {{ make_viewer }} --start_yr {{ year1 }} --end_yr {{ year2 }}
-
+if [ $? != 0 ]; then
+    cd {{ scriptDir }}
+    echo 'ERROR (1)' > {{ prefix }}.status
+    exit 1
+fi
 
 
 results_dir_absolute_path={{ scriptDir }}/${results_dir}
@@ -31,8 +35,8 @@ if [ -d "${results_dir_absolute_path}/ocn" ]; then
     rsync -av ${results_dir_absolute_path}/ocn/ ${case_dir}/post/ocn/
     if [ $? != 0 ]; then
         cd {{ scriptDir }}
-        echo 'ERROR (6)' > {{ prefix }}.status
-        exit 6
+        echo 'ERROR (2)' > {{ prefix }}.status
+        exit 2
     fi
     echo "Ocean results copied to ${case_dir}/post/ocn/"
 else
@@ -50,8 +54,8 @@ results_level=${top_level}/${results_dir}
 mkdir -p ${results_level}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (7)' > {{ prefix }}.status
-  exit 7
+  echo 'ERROR (3)' > {{ prefix }}.status
+  exit 3
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
@@ -72,8 +76,8 @@ done
 rsync -a --delete --exclude='ocn' ${results_dir_absolute_path} ${top_level}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (8)' > {{ prefix }}.status
-  exit 8
+  echo 'ERROR (4)' > {{ prefix }}.status
+  exit 4
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}

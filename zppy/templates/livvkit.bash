@@ -51,8 +51,8 @@ livv --validate livvkit.yml --out-dir ./${case}.web
 
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (3)' > {{ prefix }}.status
-  exit 3
+  echo 'ERROR (1)' > {{ prefix }}.status
+  exit 1
 fi
 mv livv_log_${case}.web.log ./${case}.web/logs
 
@@ -66,8 +66,8 @@ web_dir=${www}/${case}/livvkit/${Y1}-${Y2}
 mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (4)' > {{ prefix }}.status
-  exit 4
+  echo 'ERROR (2)' > {{ prefix }}.status
+  exit 2
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
@@ -89,8 +89,8 @@ results_dir=./${case}.web/
 rsync -a --delete ${results_dir} ${web_dir}/
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (5)' > {{ prefix }}.status
-  exit 5
+  echo 'ERROR (3)' > {{ prefix }}.status
+  exit 3
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}

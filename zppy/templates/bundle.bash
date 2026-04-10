@@ -25,7 +25,7 @@ echo ==============================================
 echo "Elapsed time: $ELAPSEDTIME seconds"
 echo ==============================================
 if [ ${error} = true ]; then
-  echo 'ERROR' > {{ prefix }}.status
+  echo 'ERROR (1)' > {{ prefix }}.status
   exit 1
 else
   rm -f {{ prefix }}.status

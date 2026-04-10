@@ -523,8 +523,8 @@ time eval "${command}"
 
 if [ $? -ne 0 ]; then
   cd {{ scriptDir }}
-  echo "ERROR (6)" > {{ prefix }}.status
-  exit 6
+  echo "ERROR (5)" > {{ prefix }}.status
+  exit 5
 fi
 
 set -e
@@ -539,10 +539,10 @@ ts_dir_ref_source="{{ scriptDir }}/${workdir}/${obstmp_dir}"
 
 {% if current_set == "mean_climate" %}
 climo_dir_ref=climo_ref
-create_links_acyc_climo_obs "${ts_dir_ref_source}" "${climo_dir_ref}" ${ref_Y1} ${ref_Y2} 7
+create_links_acyc_climo_obs "${ts_dir_ref_source}" "${climo_dir_ref}" ${ref_Y1} ${ref_Y2} 6
 {% elif current_set in ["variability_modes_cpl", "variability_modes_atm", "enso"] %}
 ts_dir_ref=ts_ref
-create_links_ts_obs "${ts_dir_ref_source}" "${ts_dir_ref}" ${ref_Y1} ${ref_Y2} 8
+create_links_ts_obs "${ts_dir_ref_source}" "${ts_dir_ref}" ${ref_Y1} ${ref_Y2} 7
 {% endif %}
 
 {% endif %}
@@ -908,8 +908,8 @@ echo "The current directory is: $PWD" # This will be of the form .../post/script
 time ${command}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (11)' > {{ prefix }}.status
-  exit 11
+  echo 'ERROR (8)' > {{ prefix }}.status
+  exit 8
 fi
 
 set -e
@@ -926,8 +926,8 @@ echo
 mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (13)' > {{ prefix }}.status
-  exit 13
+  echo 'ERROR (9)' > {{ prefix }}.status
+  exit 9
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
@@ -951,8 +951,8 @@ done
 rsync -a ${results_dir} ${web_dir}/
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (14)' > {{ prefix }}.status
-  exit 14
+  echo 'ERROR (10)' > {{ prefix }}.status
+  exit 10
 fi
 {% endif %}
 

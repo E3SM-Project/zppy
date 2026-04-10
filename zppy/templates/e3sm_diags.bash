@@ -105,12 +105,12 @@ climo_dir_primary=climo_test
 {%- endif %}
 # Create local links to input climo files
 climo_dir_source={{ output }}/post/atm/{{ grid }}/clim/{{ '%dyr' % (year2-year1+1) }}
-create_links_climo ${climo_dir_source} ${climo_dir_primary} ${case} ${Y1} ${Y2} 1
+create_links_climo ${climo_dir_source} ${climo_dir_primary} ${case} ${Y1} ${Y2} 3
 {% if run_type == "model_vs_model" %}
 # Create local links to input climo files (ref model)
 climo_dir_source={{ reference_data_path }}/{{ '%dyr' % (ref_year2-ref_year1+1) }}
 climo_dir_ref=climo_ref
-create_links_climo ${climo_dir_source} ${climo_dir_ref} {{ ref_name }} ${ref_Y1} ${ref_Y2} 2
+create_links_climo ${climo_dir_source} ${climo_dir_ref} {{ ref_name }} ${ref_Y1} ${ref_Y2} 4
 {%- endif %}
 {%- endif %}
 
@@ -123,12 +123,12 @@ climo_diurnal_dir_primary=climo_{{ climo_diurnal_frequency }}_test
 {%- endif %}
 # Create local links to input diurnal cycle climo files
 climo_diurnal_dir_source={{ output }}/post/atm/{{ grid }}/clim_{{ climo_diurnal_frequency }}/{{ '%dyr' % (year2-year1+1) }}
-create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_primary} ${case} ${Y1} ${Y2} 3
+create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_primary} ${case} ${Y1} ${Y2} 5
 {% if run_type == "model_vs_model" %}
 # Create local links to input climo files (ref model)
 climo_diurnal_dir_source={{ reference_data_path_climo_diurnal }}/{{ '%dyr' % (ref_year2-ref_year1+1) }}
 climo_diurnal_dir_ref=climo_diurnal_ref
-create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_ref} {{ ref_name }} ${ref_Y1} ${ref_Y2} 4
+create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_ref} {{ ref_name }} ${ref_Y1} ${ref_Y2} 6
 {%- endif %}
 {%- endif %}
 
@@ -542,8 +542,8 @@ command="srun -n 1 python -u e3sm.py"
 time ${command}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (9)' > {{ prefix }}.status
-  exit 9
+  echo 'ERROR (7)' > {{ prefix }}.status
+  exit 7
 fi
 
 # Copy output to web server
@@ -556,8 +556,8 @@ web_dir=${www}/${case}/e3sm_diags/{{ sub }}
 mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (10)' > {{ prefix }}.status
-  exit 10
+  echo 'ERROR (8)' > {{ prefix }}.status
+  exit 8
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
@@ -578,8 +578,8 @@ done
 rsync -a --delete ${results_dir} ${web_dir}/
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (11)' > {{ prefix }}.status
-  exit 11
+  echo 'ERROR (9)' > {{ prefix }}.status
+  exit 9
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
