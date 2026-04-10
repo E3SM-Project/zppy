@@ -58,6 +58,7 @@ def get_chyrsalis_expansions(config):
     # Note: `os.environ.get("USER")` also works. Here we're already using mache but not os, so using mache.
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
+    # Not used: diagnostics_base_path = config.get("diagnostics", "base_path")
     d = {
         "bundles_walltime": "07:00:00",
         "case_name": "v3.LR.historical_0051",
@@ -65,6 +66,8 @@ def get_chyrsalis_expansions(config):
         "constraint": "",
         "diags_walltime": "5:00:00",
         "expected_dir": "/lcrc/group/e3sm/public_html/zppy_test_resources/",
+        "livvkit_mapping_file_path": "/lcrc/group/e3sm/public_html/diagnostics/maps",
+        "livvkit_mapping_file_path_alternative": "/lcrc/group/e3sm/ac.forsyth2/maps",
         "mpas_analysis_walltime": "00:30:00",
         "partition_long": "compute",
         "partition_short": "debug",
@@ -85,6 +88,7 @@ def get_chyrsalis_expansions(config):
 def get_compy_expansions(config):
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
+    diagnostics_base_path = config.get("diagnostics", "base_path")
     d = {
         "bundles_walltime": "02:00:00",
         "case_name": "v3.LR.historical_0051",
@@ -92,11 +96,13 @@ def get_compy_expansions(config):
         "constraint": "",
         "diags_walltime": "03:00:00",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
+        "livvkit_mapping_file_path": f"{diagnostics_base_path}/maps",
+        "livvkit_mapping_file_path_alternative": f"{diagnostics_base_path}/maps",
         "mpas_analysis_walltime": "02:00:00",
         "partition_long": "slurm",
         "partition_short": "short",
-        "path_dc_obs_climo": "/compyfs/diagnostics/observations/Atm/climatology/",
-        "path_pcmdi_diags_obs_ts": "/compyfs/diagnostics/observations/Atm/time-series/",
+        "path_dc_obs_climo": f"{diagnostics_base_path}/observations/Atm/climatology/",
+        "path_pcmdi_diags_obs_ts": f"{diagnostics_base_path}/observations/Atm/time-series/",
         "qos_long": "regular",
         "qos_short": "regular",
         "user_input_v2": "/compyfs/fors729/",
@@ -110,6 +116,7 @@ def get_compy_expansions(config):
 def get_perlmutter_expansions(config):
     username = config.get("web_portal", "username")
     web_base_path = config.get("web_portal", "base_path")
+    diagnostics_base_path = config.get("diagnostics", "base_path")
     d = {
         "bundles_walltime": "6:00:00",
         "case_name": "v3.LR.historical_0051",
@@ -117,11 +124,13 @@ def get_perlmutter_expansions(config):
         "constraint": "cpu",
         "diags_walltime": "6:00:00",
         "expected_dir": "/global/cfs/cdirs/e3sm/www/zppy_test_resources/",
+        "livvkit_mapping_file_path": f"{diagnostics_base_path}/maps",
+        "livvkit_mapping_file_path_alternative": f"{diagnostics_base_path}/maps",
         "mpas_analysis_walltime": "03:00:00",
         "partition_long": "",
         "partition_short": "",
-        "path_dc_obs_climo": "/global/cfs/cdirs/e3sm/diagnostics/observations/Atm/climatology/",
-        "path_pcmdi_diags_obs_ts": "/global/cfs/cdirs/e3sm/diagnostics/observations/Atm/time-series/",
+        "path_dc_obs_climo": f"{diagnostics_base_path}/observations/Atm/climatology/",
+        "path_pcmdi_diags_obs_ts": f"{diagnostics_base_path}/observations/Atm/time-series/",
         "qos_long": "regular",
         "qos_short": "regular",  # debug walltime too short?
         # Use CFS for large datasets
