@@ -57,8 +57,8 @@ common_racmo: &common_racmo
     model: "{{ dir_ts_native }}"
     dset_a: "{{ racmo_root_dir }}/ts"
   ts_file_patterns:
-    model: "{_var}_{year_s}01_{year_e}12.nc"
-    dset_a: "{_var}_{icesheet}_{year_s}01_{year_e}12.nc"
+    model: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+    dset_a: "{_var}_{icesheet}_{year_s:04d}01_{year_e:04d}12.nc"
   masks:
     dset_a: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_rcm.nc
     model: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_rcm.nc
@@ -77,8 +77,8 @@ common_era5: &common_era5
     model: "{{ dir_ts_native }}"
     dset_a: "{{ e3sm_diags_data_dir }}/observations/Atm/time-series/ERA5"
   ts_file_patterns:
-    model: "{_var}_{year_s}01_{year_e}12.nc"
-    dset_a: "{_var}_{year_s}01_{year_e}12.nc"
+    model: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+    dset_a: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
   masks:
     dset_a: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_remap_era5.traave.nc
     model_remap: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_remap_era5.traave.nc
@@ -92,8 +92,8 @@ common_merra: &common_merra
     model: "{{ dir_ts_native }}"
     dset_a: "{{ e3sm_diags_data_dir }}/observations/Atm/time-series/MERRA2"
   ts_file_patterns:
-    model: "{_var}_{year_s}01_{year_e}12.nc"
-    dset_a: "{_var}_{year_s}01_{year_e}12.nc"
+    model: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+    dset_a: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
   masks:
     dset_a: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_remap_merra2.traave.nc
     model_remap: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_remap_merra2.traave.nc
@@ -116,8 +116,8 @@ common_ceres: &common_ceres
     model: "{{ dir_ts_native }}"
     dset_a: "{{ e3sm_diags_data_dir }}/observations/Atm/time-series/ceres_ebaf_surface_v4.1"
   ts_file_patterns:
-    model: "{_var}_{year_s}01_{year_e}12.nc"
-    dset_a: "{_var}_{year_s}01_{year_e}12.nc"
+    model: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+    dset_a: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
   in_dirs:
     dset_a: {{ e3sm_diags_data_dir }}/observations/Atm/climatology/ceres_ebaf_surface_v4.1
   file_patterns:
