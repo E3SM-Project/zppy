@@ -131,7 +131,7 @@ def determine_and_add_dependencies(
     )
 
     climo_subsections: List[str] = []
-    if ("climo_subsections" in _c.keys()) and _c["climo_subsections"]:
+    if ("climo_subsections" in _c.keys()) and _c["climo_subsections"] != [""]:
         climo_subsections = _c["climo_subsections"]
     elif ("infer_section_parameters" in _c.keys()) and _c["infer_section_parameters"]:
         grids = ["_native"]
