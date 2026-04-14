@@ -93,7 +93,7 @@ def get_compy_expansions(config):
         "case_name": "v3.LR.historical_0051",
         "case_name_v2": "v2.LR.historical_0201",
         "constraint": "",
-        "diags_walltime": "03:00:00",
+        "diags_walltime": "06:00:00",
         "expected_dir": "/compyfs/www/zppy_test_resources/",
         "livvkit_mapping_file_path": f"{diagnostics_base_path}/maps",
         "mpas_analysis_walltime": "02:00:00",
