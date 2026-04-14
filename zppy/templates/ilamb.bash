@@ -5,6 +5,18 @@ set -e
 {{ environment_commands }}
 set +e
 
+# Detect whether to use pixi or conda based on environment_commands
+if echo {{ environment_commands }} | grep -q "conda"; then
+    pkg_manager="conda"
+else
+    pkg_manager="pixi"
+fi
+
+echo "${pkg_manager} list python:"
+${pkg_manager} list python || true # If we can't print this, just continue on.
+echo "${pkg_manager} list ilamb:"
+${pkg_manager} list ilamb || true # If we can't print this, just continue on.
+
 # Point to observation data
 export ILAMB_ROOT={{ ilamb_obs }}
 

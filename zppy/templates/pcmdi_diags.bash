@@ -5,6 +5,20 @@ set -e
 {{ environment_commands }}
 set +e
 
+# Detect whether to use pixi or conda based on environment_commands
+if echo {{ environment_commands }} | grep -q "conda"; then
+    pkg_manager="conda"
+else
+    pkg_manager="pixi"
+fi
+
+echo "${pkg_manager} list python:"
+${pkg_manager} list python || true # If we can't print this, just continue on.
+echo "${pkg_manager} list zppy-interfaces:"
+${pkg_manager} list zppy-interfaces || true # If we can't print this, just continue on.
+echo "${pkg_manager} list pcmdi_metrics:"
+${pkg_manager} list pcmdi_metrics || true # If we can't print this, just continue on.
+
 # Turn on debug output if needed
 debug={{ debug }}
 if [[ "${debug,,}" == "true" ]]; then

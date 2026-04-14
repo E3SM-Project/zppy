@@ -8,6 +8,18 @@ set -e
 {{ environment_commands }}
 set +e
 
+# Detect whether to use pixi or conda based on environment_commands
+if echo {{ environment_commands }} | grep -q "conda"; then
+    pkg_manager="conda"
+else
+    pkg_manager="pixi"
+fi
+
+echo "${pkg_manager} list python:"
+${pkg_manager} list python || true # If we can't print this, just continue on.
+echo "${pkg_manager} list livvkit:"
+${pkg_manager} list livvkit || true # If we can't print this, just continue on.
+
 # Basic definitions
 case="{{ case }}"
 short="{{ short_name }}"

@@ -5,6 +5,18 @@ set -e
 {{ environment_commands }}
 set +e
 
+# Detect whether to use pixi or conda based on environment_commands
+if echo {{ environment_commands }} | grep -q "conda"; then
+    pkg_manager="conda"
+else
+    pkg_manager="pixi"
+fi
+
+echo "${pkg_manager} list python:"
+${pkg_manager} list python || true # If we can't print this, just continue on.
+echo "${pkg_manager} list nco:"
+${pkg_manager} list nco || true # If we can't print this, just continue on.
+
 # Create temporary workdir
 hash=`mktemp --dry-run -d XXXX`
 workdir=tmp.{{ prefix }}.${id}.${hash}
