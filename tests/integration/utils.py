@@ -19,6 +19,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
     # That is, there will be no environment set.
     # (`environment_commands = ""` only redirects to Unified
     # if specified under the [default] task)
+    "e3sm_to_cmip_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     "diags_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     "mpas_analysis_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
     "global_time_series_environment_commands": "source <INSERT PATH TO CONDA>/conda.sh; conda activate <INSERT ENV NAME>",
@@ -153,6 +154,9 @@ def get_expansions():
         raise ValueError(f"Unsupported machine={machine}")
 
     # Set up environments
+    expansions["e3sm_to_cmip_environment_commands"] = TEST_SPECIFICS[
+        "e3sm_to_cmip_environment_commands"
+    ]
     expansions["diags_environment_commands"] = TEST_SPECIFICS[
         "diags_environment_commands"
     ]
@@ -329,6 +333,9 @@ def generate_cfgs(dry_run=False):
         substitute_expansions(expansions, script_template, script_generated)
     print("CFG FILES HAVE BEEN GENERATED FROM TEMPLATES WITH THESE SETTINGS:")
     print(f"UNIQUE_ID={TEST_SPECIFICS['unique_id']}")
+    print(
+        f"e3sm_to_cmip_environment_commands={expansions['e3sm_to_cmip_environment_commands']}"
+    )
     print(f"diags_environment_commands={expansions['diags_environment_commands']}")
     print(
         f"mpas_analysis_environment_commands={expansions['mpas_analysis_environment_commands']}"
