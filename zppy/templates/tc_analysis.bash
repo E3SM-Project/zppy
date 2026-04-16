@@ -29,7 +29,7 @@ input_files={{ input_files }}
 # Determine res and pg2
 first_file=`echo $(ls ${drc_in}/${caseid}.{{ input_files }}.*.nc | head -n 1)`
 echo "first_file=${first_file}"
-topography_file=`echo $(ncks --trd -M -m ${first_file} | grep -E -i "^global attribute [0-9]+: topography_file" | cut -f 11- -d ' ' | sort)`
+topography_file=`echo $(run_nco ncks --trd -M -m ${first_file} | grep -E -i "^global attribute [0-9]+: topography_file" | cut -f 11- -d ' ' | sort)`
 echo "topography_file=${topography_file}"
 filename="${topography_file##*/}"
 echo "filename=${filename}"

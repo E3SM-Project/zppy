@@ -35,6 +35,8 @@ run_nco() {
   # nco_cmd=ncclimo (passed in directly)
   # Runs `/global/cfs/cdirs/e3sm/zender/bin/ncclimo --npo` on the original arguments
 
+  # Full list of NCO commands: https://nco.sourceforge.net/nco.html#Reference-Manual
+
   local environment_path="{{ nco_path }}"
   local nco_cmd=$1
   shift # Remove nco_cmd from the argument list
