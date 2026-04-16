@@ -12,6 +12,10 @@ from mache import MachineInfo
 # pytest tests/integration/test_*.py
 
 TEST_SPECIFICS: Dict[str, Any] = {
+    # This is the NCO path.
+    # Keep as "" to use the production-version NCO commands.
+    # Set to a specific path to use development-version NCO commands.
+    "nco_path": "",
     # These are custom environment_commands for specific tasks.
     # Never set these to "", because they will print the line
     # `environment_commands = ""` for the corresponding task,
@@ -154,6 +158,7 @@ def get_expansions():
         raise ValueError(f"Unsupported machine={machine}")
 
     # Set up environments
+    expansions["nco_path"] = TEST_SPECIFICS["nco_path"]
     expansions["e3sm_to_cmip_environment_commands"] = TEST_SPECIFICS[
         "e3sm_to_cmip_environment_commands"
     ]
@@ -333,6 +338,8 @@ def generate_cfgs(dry_run=False):
         substitute_expansions(expansions, script_template, script_generated)
     print("CFG FILES HAVE BEEN GENERATED FROM TEMPLATES WITH THESE SETTINGS:")
     print(f"UNIQUE_ID={TEST_SPECIFICS['unique_id']}")
+    print(f"nco_path={expansions['nco_path']}")
+    print("Reminder: `nco_path=''` => the production-version NCO commands will be used")
     print(
         f"e3sm_to_cmip_environment_commands={expansions['e3sm_to_cmip_environment_commands']}"
     )
