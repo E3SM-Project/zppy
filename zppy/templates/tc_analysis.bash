@@ -5,15 +5,7 @@ set -e # Stop running script on error.
 # This means we don't make as much use of the ERROR > status blocks in this file.
 {{ environment_commands }}
 
-# Detect whether to use pixi or conda based on environment_commands
-if echo {{ environment_commands }} | grep -q "conda"; then
-    pkg_manager="conda"
-else
-    pkg_manager="pixi"
-fi
-
-echo "${pkg_manager} list python:"
-${pkg_manager} list python || true # If we can't print this, just continue on.
+set_pkg_manager
 
 # A Bash script to post-process E3SM 6 hourly (h2) instantaneous output to generate a text file storing Tropical Cyclone tracks
 # tempestremap and tempestextremes are built in e3sm-unified from version 1.5.0.
