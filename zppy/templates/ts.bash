@@ -5,6 +5,10 @@ set -e
 {{ environment_commands }}
 set +e
 
+set_pkg_manager
+echo "${pkg_manager} list nco:"
+${pkg_manager} list nco || true # If we can't print this, just continue on.
+
 # Create temporary workdir
 hash=`mktemp --dry-run -d XXXX`
 workdir=tmp.{{ prefix }}.${id}.${hash}

@@ -5,6 +5,10 @@ set -e
 {{ environment_commands }}
 set +e
 
+set_pkg_manager
+echo "${pkg_manager} list ilamb:"
+${pkg_manager} list ilamb || true # If we can't print this, just continue on.
+
 # Point to observation data
 export ILAMB_ROOT={{ ilamb_obs }}
 

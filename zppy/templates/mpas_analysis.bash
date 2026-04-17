@@ -5,6 +5,10 @@ set -e
 {{ environment_commands }}
 set +e
 
+set_pkg_manager
+echo "${pkg_manager} list mpas-analysis:"
+${pkg_manager} list mpas-analysis || true # If we can't print this, just continue on.
+
 # Additional settings for MPAS-Analysis
 export OMP_NUM_THREADS=1
 export HDF5_USE_FILE_LOCKING=FALSE
