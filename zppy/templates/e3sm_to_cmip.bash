@@ -41,8 +41,8 @@ EOF
     for file in ${input_dir}/${var}_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc
     do
       if [ -f ${file} ]; then
-        #ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev
-        ncremap {% if machine == 'dane' %}--mpi_pfx='srun -n {{ nodes }}'{% else %}-p mpi{% endif %} --vrt_ntp=log --vrt_xtr=mss_val --vrt_out='{{cmip_plevdata}}' ${file} ${file}.plev
+        #run_nco ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev
+        run_nco ncremap {% if machine == 'dane' %}--mpi_pfx='srun -n {{ nodes }}'{% else %}-p mpi{% endif %} --vrt_ntp=log --vrt_xtr=mss_val --vrt_out='{{cmip_plevdata}}' ${file} ${file}.plev
         if [ $? != 0 ]; then
           cd {{ scriptDir }}
           echo 'ERROR (1)' > {{ prefix }}.status

@@ -182,12 +182,12 @@ create_links_acyc_climo() {
     for month in $(seq 1 12); do
       local MM
       MM=$(printf "%02d" "${month}")
-      ncra -O -h -F -d time,"${month}",,12 $(< "${v}_files.txt") "${v}_clm_${MM}.nc"
+      run_nco ncra -O -h -F -d time,"${month}",,12 $(< "${v}_files.txt") "${v}_clm_${MM}.nc"
     done
 
     # Combine to form full annual cycle file
     local combined_name="${name_key}.${v}.${begin_year}01-${end_year}12.AC.${case_id}.nc"
-    ncrcat -O -d time,0, "${v}_clm_"*.nc "${combined_name}"
+    run_nco ncrcat -O -d time,0, "${v}_clm_"*.nc "${combined_name}"
 
     # Adjust time metadata for PCMDI diagnostics
     local cmdfix1='time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5}'
@@ -195,7 +195,7 @@ create_links_acyc_climo() {
     local cmdfix3='time@units="days since 1850-01-01 00:00:00"'
     local cmdfix4='time@calendar="noleap"'
     local cmdfix5='time@bounds="time_bnds"'
-    ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
+    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
 
     rm -vf "${v}_clm_"*.nc
 
@@ -261,28 +261,28 @@ create_links_acyc_climo_obs() {
     ttag="$(printf "%04d" "${YYYYS}")01-$(printf "%04d" "${YYYYE}")12"
     tmp_file="tmp_combine_${ttag}.nc"
 
-    ncrcat -O -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${tmp_file}"
+    run_nco ncrcat -O -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${tmp_file}"
 
     # Derive monthly climatology
     for month in $(seq 1 12); do
       MM=$(printf "%02d" ${month})
-      ncra -O -h -F -d time,"${month}",,12 "${tmp_file}" "tmp_clm_${MM}.nc"
+      run_nco ncra -O -h -F -d time,"${month}",,12 "${tmp_file}" "tmp_clm_${MM}.nc"
     done
 
     combined_name="${SUBSTR}.${ttag}.AC.${case_id}.nc"
-    ncrcat -O tmp_clm_*.nc "${combined_name}"
+    run_nco ncrcat -O tmp_clm_*.nc "${combined_name}"
 
     # Adjust time metadata
     local cmdfix1='time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5}'
     local cmdfix2='time@units="days since 1850-01-01 00:00:00"'
     local cmdfix3='time@calendar="noleap"'
-    ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3}" "${combined_name}" "${combined_name}"
+    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3}" "${combined_name}" "${combined_name}"
 
     local cmdfix4='defdim("bnds",2)'
     local cmdfix5='time_bnds=make_bounds(time,$bnds,"time_bnds")'
     local cmdfix6='time_bnds@units=time@units'
     local cmdfix7='time_bnds@calendar=time@calendar'
-    ncap2 -O -h -s "${cmdfix4};${cmdfix5};${cmdfix6};${cmdfix7}" "${combined_name}" "${combined_name}"
+    run_nco ncap2 -O -h -s "${cmdfix4};${cmdfix5};${cmdfix6};${cmdfix7}" "${combined_name}" "${combined_name}"
 
     rm -vf tmp_*.nc
 
@@ -339,12 +339,12 @@ create_links_ts() {
 
     combined_name="${subname}.${v}.${begin_year}01-${end_year}12.nc"
     if [[ -s "${v}_files.txt" ]]; then
-      ncrcat -O -v "${v}" -d time,"${begin_year}-01-01","${end_year}-12-31" $(< "${v}_files.txt") "${combined_name}"
+      run_nco ncrcat -O -v "${v}" -d time,"${begin_year}-01-01","${end_year}-12-31" $(< "${v}_files.txt") "${combined_name}"
 
       # Add calendar attribute if missing
-      if ! ncks -m "${combined_name}" | grep -q "calendar"; then
+      if ! run_nco ncks -m "${combined_name}" | grep -q "calendar"; then
         echo "Adding missing calendar attribute to time..."
-        ncatted -a calendar,time,o,c,"standard" "${combined_name}"
+        run_nco ncatted -a calendar,time,o,c,"standard" "${combined_name}"
       fi
 
       # Add time bounds
@@ -352,7 +352,7 @@ create_links_ts() {
       local cmdfix2='time_bnds=make_bounds(time,$bnds,"time_bnds")'
       local cmdfix3='time_bnds@units=time@units'
       local cmdfix4='time_bnds@calendar=time@calendar'
-      ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4}" "${combined_name}" "${combined_name}"
+      run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4}" "${combined_name}" "${combined_name}"
 
       if [[ $? -ne 0 ]]; then
         cd "${script_dir}" || exit
@@ -421,7 +421,7 @@ create_links_ts_obs() {
     combined_name="${SUBSTR}.${ttag}.nc"
 
     # Extract subset of time series
-    ncrcat -O -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${combined_name}"
+    run_nco ncrcat -O -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${combined_name}"
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
       echo "ERROR (${error_num})" > "${prefix}.status"
@@ -430,9 +430,9 @@ create_links_ts_obs() {
     echo "ncrcat successful"
 
     # Ensure time has calendar attribute
-    if ! ncks -m "${combined_name}" | grep -q "calendar"; then
+    if ! run_nco ncks -m "${combined_name}" | grep -q "calendar"; then
       echo "Adding missing calendar attribute to time..."
-      ncatted -a calendar,time,o,c,"standard" "${combined_name}"
+      run_nco ncatted -a calendar,time,o,c,"standard" "${combined_name}"
       if [[ $? -ne 0 ]]; then
         cd "${script_dir}" || exit
         echo "ERROR (${error_num})" > "${prefix}.status"
@@ -446,7 +446,7 @@ create_links_ts_obs() {
     local cmdfix2='time_bnds=make_bounds(time,$bnds,"time_bnds")'
     local cmdfix3='time_bnds@units=time@units'
     local cmdfix4='time_bnds@calendar=time@calendar'
-    ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4}" "${combined_name}" "${combined_name}"
+    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4}" "${combined_name}" "${combined_name}"
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
       echo "ERROR (${error_num})" > "${prefix}.status"

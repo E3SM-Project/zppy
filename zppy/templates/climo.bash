@@ -17,7 +17,7 @@ cd ${workdir}
 
 {% if frequency == 'monthly' %}
 # --- Monthly climatologies ---
-{{ ncclimo_cmd }} \
+run_nco ncclimo \
 {% if prc_typ == 'eamxx' -%}
 --case={{ case }}.{{ input_files }}.0001-01-01-00000.nc \
 --fml_nm={{ case }} \
@@ -95,7 +95,7 @@ if grep -q "*" input.txt; then
   exit 1
 fi
 # Now, call ncclimo
-cat input.txt | {{ ncclimo_cmd }} \
+cat input.txt | run_nco ncclimo \
 --case={{ case }}.{{ input_files }} \
 --jobs=${SLURM_NNODES} \
 --thr=1 \

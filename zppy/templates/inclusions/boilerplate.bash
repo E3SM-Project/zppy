@@ -28,3 +28,26 @@ set_pkg_manager() {
   echo "${pkg_manager} list python:"
   ${pkg_manager} list python || true # If we can't print this, just continue on.
 }
+
+run_nco() {
+  # Example:
+  # environment_path=/global/cfs/cdirs/e3sm/zender/bin_perlmutter/ (set with jinja2 substitution from config file)
+  # nco_cmd=ncclimo (passed in directly)
+  # Runs `/global/cfs/cdirs/e3sm/zender/bin_perlmutter/ncclimo --npo` on the original arguments
+
+  # Full list of NCO commands: https://nco.sourceforge.net/nco.html#Reference-Manual
+
+  local environment_path="{{ nco_path }}"
+  local nco_cmd=$1
+  shift # Remove nco_cmd from the argument list
+
+  if [[ -n "$environment_path" && ( "$nco_cmd" == "ncclimo" || "$nco_cmd" == "ncremap" ) ]]; then
+    # nco_path is non-empty AND nco_cmd is a script (either ncclimo or ncremap),
+    # so use the full development setup:
+    "${environment_path%/}/$nco_cmd" --npo "$@"
+  else
+    # nco_path is empty OR nco_cmd is a binary executable (not a script),
+    # so use just the nco_cmd itself:
+    "$nco_cmd" "$@"
+  fi
+}
