@@ -1,0 +1,67 @@
+{
+  "Amazon dry bias": {
+    "description": "Amazon rainforest precipitation and soil moisture",
+    "variables": ["PRECT", "PRECL", "PRECC", "PRECSC", "PRECSL", "QSOIL", "QRUNOFF",
+                 "SOILWATER_10CM", "SOILLIQ", "SOILICE", "H2OSNO"],
+    "regions": ["Amazon", "South America", "tropical"],
+    "diagnostics": ["lat_lon", "zonal_mean_xy", "annual_cycle_zonal_mean"],
+    "components": ["atm", "land"]
+  },
+  "AMOC": {
+    "description": "Atlantic Meridional Overturning Circulation",
+    "variables": ["max_moc", "mocTimeSeries"],
+    "regions": ["Atlantic"],
+    "diagnostics": ["meridional_mean_2d"],
+    "components": ["ocn"],
+    "tasks": ["mpas_analysis", "global_time_series"]
+  },
+  "precipitation": {
+    "description": "Precipitation diagnostics",
+    "variables": ["PRECT", "PRECL", "PRECC", "PRECSC", "PRECSL"],
+    "diagnostics": ["lat_lon", "zonal_mean_xy", "diurnal_cycle"],
+    "components": ["atm"]
+  },
+  "temperature": {
+    "description": "Temperature diagnostics",
+    "variables": ["TREFHT", "TS", "TSA", "T"],
+    "diagnostics": ["lat_lon", "zonal_mean_xy", "zonal_mean_2d"],
+    "components": ["atm", "land"]
+  },
+  "carbon cycle": {
+    "description": "Carbon cycle and ecosystem",
+    "variables": ["GPP", "NBP", "HR", "AR", "TOTVEGC", "TOTSOMC", "TOTLITC",
+                 "SOIL1C", "SOIL2C", "SOIL3C", "SOIL4C", "NEP"],
+    "diagnostics": ["lat_lon", "annual_cycle_zonal_mean"],
+    "components": ["land"],
+    "tasks": ["ilamb"]
+  },
+  "clouds": {
+    "description": "Cloud diagnostics",
+    "variables": ["CLDTOT", "CLDLOW", "CLDMED", "CLDHGH", "TGCLDLWP", "TGCLDIWP",
+                 "CLOUD", "CLWMODIS", "CLIMODIS"],
+    "diagnostics": ["lat_lon", "zonal_mean_xy", "cosp_histogram"],
+    "components": ["atm"]
+  },
+  "radiation": {
+    "description": "Radiative fluxes",
+    "variables": ["FSNT", "FLNT", "FSNS", "FLNS", "SWCF", "LWCF", "SOLIN",
+                 "FSNTOA", "FSNTOAC"],
+    "diagnostics": ["lat_lon", "zonal_mean_xy", "annual_cycle_zonal_mean"],
+    "components": ["atm"]
+  },
+  "aerosol": {
+    "description": "Aerosol optical depth and composition",
+    "variables": ["AODVIS", "AODDUST", "AODABS", "AODSO4", "AODBC", "AODPOM", "AODSOA"],
+    "diagnostics": ["lat_lon", "aerosol_aeronet"],
+    "components": ["atm"]
+  },
+  "Labrador Sea cold bias": {
+    "description": "Labrador Sea temperature, convection, and circulation",
+    "variables": ["TS", "T", "TREFHT", "PSL", "U", "V", "SHFLX", "LHFLX",
+                 "FLNS", "FSNS", "PRECL", "PRECC", "CLDTOT", "ICEFRAC"],
+    "regions": ["Labrador Sea", "North Atlantic", "Arctic"],
+    "diagnostics": ["lat_lon", "zonal_mean_xy", "polar", "meridional_mean_2d"],
+    "components": ["atm", "ocn"],
+    "tasks": ["mpas_analysis", "e3sm_diags"]
+  }
+}
