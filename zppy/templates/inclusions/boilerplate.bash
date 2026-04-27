@@ -16,12 +16,21 @@ echo "RUNNING ${id}" > {{ prefix }}.status
 
 set_pkg_manager() {
   # Detect whether to use pixi or conda based on environment_commands
+  # Example environment commands:
+
+  # These would indicate pixi is the package manager:
+  # source /share/apps/E3SM/conda_envs/test_e3sm_unified_1.13.0rc7_compy.sh
+  # source /share/apps/E3SM/conda_envs/load_latest_e3sm_unified_compy.sh
+
+  # This would indicate conda is the package manager:
+  # source /qfs/people/fors729/miniforge3/etc/profile.d/conda.sh; conda activate e3sm_to_cmip_20260415
+
   # Important: we need the quotes since environment_commands might
   # include multiple commands, separated by semi-colon.
-  if echo "{{ environment_commands }}" | grep -q "conda"; then
-      pkg_manager="conda"
+  if echo "{{ environment_commands }}" | grep -Eq 'test_e3sm_unified|load_latest_e3sm_unified'; then
+    pkg_manager="pixi"
   else
-      pkg_manager="pixi"
+    pkg_manager="conda"
   fi
 
   # We always want to know what the python version is.
