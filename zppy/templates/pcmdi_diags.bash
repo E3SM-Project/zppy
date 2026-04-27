@@ -1,5 +1,6 @@
 #!/bin/bash
 {% include 'inclusions/slurm_header.bash' %}
+{% include 'inclusions/boilerplate.bash' %}
 
 set -e
 {{ environment_commands }}
@@ -11,27 +12,11 @@ ${pkg_manager} list zppy-interfaces || true # If we can't print this, just conti
 echo "${pkg_manager} list pcmdi_metrics:"
 ${pkg_manager} list pcmdi_metrics || true # If we can't print this, just continue on.
 
-# Turn on debug output if needed
-debug={{ debug }}
-if [[ "${debug,,}" == "true" ]]; then
-  set -x
-fi
-
 # Need this setup as otherwise can not generate diagnostics
 export UCX_SHM_DEVICES=all # or not set UCX_NET_DEVICES at all
 
 # Make sure UVCDAT doesn't prompt us about anonymous logging
 export UVCDAT_ANONYMOUS_LOG=False
-
-# Script dir
-cd {{ scriptDir }}
-
-# Get jobid
-id=${SLURM_JOBID}
-
-# Update status file
-STARTTIME=$(date +%s)
-echo "RUNNING ${id}" > {{ prefix }}.status
 
 # Basic definitions
 case="{{ case }}"
