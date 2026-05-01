@@ -160,7 +160,6 @@ create_links_acyc_climo() {
   local script_dir="{{ scriptDir }}"
   local prefix="{{ prefix }}"
   local ts_step="{{ ts_num_years }}"
-  local dofm=(15.5 45 74.5 105 125.5 166 196.5 227.5 258 288.5 319 349.5)
 
   for v in ${variables//,/ }; do
     > "${v}_files.txt"  # Start fresh
@@ -194,13 +193,13 @@ create_links_acyc_climo() {
     local cmdfix5='time@bounds="time_bnds"'
     run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
 
-    rm -vf "${v}_clm_"*.nc
-
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
       echo "ERROR (${error_num})" > "${prefix}.status"
       exit "${error_num}"
     fi
+
+    rm -vf "${v}_clm_"*.nc
   done
 
   if [ -z "$( ls . )" ]; then
@@ -220,7 +219,6 @@ create_links_acyc_climo_obs() {
 
   local script_dir="{{ scriptDir }}"
   local prefix="{{ prefix }}"
-  local dofm=(15.5 45 74.5 105 125.5 166 196.5 227.5 258 288.5 319 349.5)
 
   echo "create_links_acyc_climo_obs: linking from ${ts_dir_source} to ${ts_dir_destination}"
 
@@ -234,7 +232,7 @@ create_links_acyc_climo_obs() {
     local ttag tmp_file MM combined_name
 
     fname=$(basename "${file}")
-    if [[ ! ${fname} =~ ".nc" ]]; then
+    if [[ ${fname} != *.nc ]]; then
       # Skip non-.nc files
       continue
     fi
@@ -412,7 +410,7 @@ create_links_ts_obs() {
   for file in ${ts_dir_source}/*; do
     fname=$(basename "$file")
     echo "create_links_ts_obs: checking if nc file: ${fname}"
-    if [[ ! ${fname} =~ ".nc" ]]; then
+    if [[ ${fname} != *.nc ]]; then
       # Skip non-.nc files
       continue
     fi
@@ -876,7 +874,7 @@ source_dirs="--climo_ts_dir_primary ${ts_dir_primary} --climo_ts_dir_ref ${ts_di
 # So, it's a good idea to make sure they can't be (or at least are unlikely to be) empty.
 # run_type == "model_vs_obs" only: obs_sets (default value is NOT "")
 # run_type == "model_vs_model" only: model_name_ref, tableID_ref (default values are NOT "")
-core_parameters="--num_workers {{ num_workers }} --multiprocessing {{ multiprocessing }} --subsection {{ subsection }} ${source_dirs} --model_name ${model_name} --model_tableID {{model_tableID }} --figure_format {{ figure_format }}  --run_type {{ run_type }} --obs_sets {{ obs_sets }} --model_name_ref ${model_name_ref} --vars ${source_vars} --tableID_ref ${tableID_ref} --generate_sftlf {{ generate_sftlf }} --case_id ${case_id} --results_dir ${results_dir} --debug ${debug,,}"
+core_parameters="--num_workers {{ num_workers }} --multiprocessing {{ multiprocessing }} --subsection {{ subsection }} ${source_dirs} --model_name ${model_name} --model_tableID {{ model_tableID }} --figure_format {{ figure_format }} --run_type {{ run_type }} --obs_sets {{ obs_sets }} --model_name_ref ${model_name_ref} --vars ${source_vars} --tableID_ref ${tableID_ref} --generate_sftlf {{ generate_sftlf }} --case_id ${case_id} --results_dir ${results_dir} --debug ${debug,,}"
 {% endif %}
 
 {% if current_set == "mean_climate" %}
@@ -891,7 +889,7 @@ var_modes={{ movc_modes }}
 command="zi-pcmdi-variability-modes ${core_parameters} --var_modes ${var_modes}"
 {% endif %}
 {% if current_set == "enso" %}
-command="zi-pcmdi-enso ${core_parameters}  --enso_groups {{ enso_groups }}"
+command="zi-pcmdi-enso ${core_parameters} --enso_groups {{ enso_groups }}"
 {% endif %}
 {% if current_set == "synthetic_plots" %}
 
@@ -914,7 +912,7 @@ echo "Done checking. There should be a list of files above, if they exist."
 {% endif %}
 
 #add command for enso viewer
-enso_keys="--enso_viewer {{enso_viewer}} --cmip_enso_dir {{ cmip_enso_dir }} --cmip_enso_set {{ cmip_enso_set }} --enso_vars {{enso_vars}} --enso_years {{enso_years}}"
+enso_keys="--enso_viewer {{ enso_viewer }} --cmip_enso_dir {{ cmip_enso_dir }} --cmip_enso_set {{ cmip_enso_set }} --enso_vars {{ enso_vars }} --enso_years {{ enso_years }}"
 {% if enso_viewer %}
 echo "Checking if var_mode_*.json files exist in variability_modes_dir:"
 enso_dir=${web_dir}/model_vs_obs/metrics_data/enso_metric/*
@@ -922,7 +920,7 @@ find ${enso_dir} -name "*.${case_id}*.json"
 echo "Done checking. There should be a list of files above, if they exist."
 {% endif %}
 
-command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure_format {{ figure_format }} --www ${www} --results_dir ${results_dir} --case {{ case }} --model_name {{ model_name }} --model_tableID {{model_tableID }} --web_dir=${web_dir} --pcmdi_webtitle {{ pcmdi_webtitle }} --pcmdi_version {{ pcmdi_version }} --run_type ${run_type} --pcmdi_external_prefix {{ diagnostics_base_path }} --pcmdi_viewer_template {{ pcmdi_viewer_template }} --save_all_data {{save_all_data}} ${clim_keys} ${movs_keys} ${enso_keys} --debug ${debug,,}"
+command="zi-pcmdi-synthetic-plots --synthetic_sets {{ synthetic_sets }} --figure_format {{ figure_format }} --www ${www} --results_dir ${results_dir} --case {{ case }} --model_name {{ model_name }} --model_tableID {{ model_tableID }} --web_dir=${web_dir} --pcmdi_webtitle {{ pcmdi_webtitle }} --pcmdi_version {{ pcmdi_version }} --run_type ${run_type} --pcmdi_external_prefix {{ diagnostics_base_path }} --pcmdi_viewer_template {{ pcmdi_viewer_template }} --save_all_data {{ save_all_data }} ${clim_keys} ${movs_keys} ${enso_keys} --debug ${debug,,}"
 
 {% endif %}
 
