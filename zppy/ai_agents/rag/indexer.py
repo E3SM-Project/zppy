@@ -61,16 +61,7 @@ class ZppyRAGIndexer:
 
         # Lazy-loaded components
         self._client = None
-
-        # TODO: Switch back to sentence-transformers embeddings when e3sm-unified
-        # includes PyTorch. sentence-transformers provides higher quality embeddings
-        # (model: all-MiniLM-L6-v2) but pulls in PyTorch (~2GB) which is not yet
-        # available in e3sm-unified. For now, we use ChromaDB's built-in default
-        # embedding function (ONNX-based) to avoid this heavy dependency.
-        #
-        # To revert, restore the `embedder` property and pass explicit
-        # `embeddings=self.embedder.encode(texts).tolist()` to collection.add().
-        # See git history for the original sentence-transformers implementation.
+        self._embedding_fn = None
 
     @property
     def client(self):
@@ -86,6 +77,20 @@ class ZppyRAGIndexer:
                     "Install with: pip install chromadb"
                 )
         return self._client
+
+    @property
+    def embedding_fn(self):
+        """Lazy-load the ONNX embedding function.
+
+        Severity 4 (Fatal) suppresses ONNX Runtime's Error-level thread-affinity
+        warnings that appear on HPC login nodes when pthread_setaffinity_np fails.
+        """
+        if self._embedding_fn is None:
+            import onnxruntime as ort
+            ort.set_default_logger_severity(4)
+            from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
+            self._embedding_fn = ONNXMiniLM_L6_V2()
+        return self._embedding_fn
 
     def index_all(self, force_reindex: bool = False) -> IndexingStats:
         """
@@ -129,7 +134,8 @@ class ZppyRAGIndexer:
         """
         collection = self.client.get_or_create_collection(
             name="zppy_parameters",
-            metadata={"description": "zppy configuration parameters"}
+            embedding_function=self.embedding_fn,
+            metadata={"description": "zppy configuration parameters"},
         )
 
         ini_path = self.zppy_root / "zppy" / "defaults" / "default.ini"
@@ -159,6 +165,7 @@ class ZppyRAGIndexer:
         Extracts parameter definitions along with their preceding comments.
         """
         documents = []
+        seen_ids: set = set()
         current_section = "default"
         comment_buffer = []
 
@@ -202,8 +209,17 @@ class ZppyRAGIndexer:
                         f"Description: {comment_text}"
                     )
 
+                    # Ensure unique ID — [__many__] sections repeat in default.ini
+                    base_id = f"param_{current_section}_{param_name}"
+                    doc_id = base_id
+                    counter = 1
+                    while doc_id in seen_ids:
+                        counter += 1
+                        doc_id = f"{base_id}_{counter}"
+                    seen_ids.add(doc_id)
+
                     documents.append(Document(
-                        id=f"param_{current_section}_{param_name}",
+                        id=doc_id,
                         text=doc_text,
                         metadata={
                             "parameter": param_name,
@@ -230,7 +246,8 @@ class ZppyRAGIndexer:
         """
         collection = self.client.get_or_create_collection(
             name="zppy_examples",
-            metadata={"description": "zppy example configurations"}
+            embedding_function=self.embedding_fn,
+            metadata={"description": "zppy example configurations"},
         )
 
         cfg_dir = self.zppy_root / "tests" / "integration"
@@ -412,7 +429,8 @@ class ZppyRAGIndexer:
         """
         collection = self.client.get_or_create_collection(
             name="zppy_docs",
-            metadata={"description": "zppy documentation"}
+            embedding_function=self.embedding_fn,
+            metadata={"description": "zppy documentation"},
         )
 
         docs_dir = self.zppy_root / "docs" / "source"

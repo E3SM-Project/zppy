@@ -43,11 +43,10 @@ Repository = "https://github.com/E3SM-Project/zppy.git"
 ai = [
     "anthropic>=0.39.0",
     "chromadb>=0.4.0",
+    "openai>=1.0.0",        # OpenAI-compatible backend (Groq, NVIDIA NIM, Ollama)
 ]
-# TODO: Add sentence-transformers to the ai dependencies when e3sm-unified
-# includes PyTorch. sentence-transformers provides higher quality embeddings
-# but pulls in PyTorch (~2GB). For now, we use ChromaDB's built-in default
-# embedding function (ONNX-based) to avoid this heavy dependency.
+# TODO: Add sentence-transformers when e3sm-unified includes PyTorch.
+# For now we use ChromaDB's built-in ONNX embeddings to avoid the ~2GB dependency.
 
 [project.scripts]
 zppy = "zppy.__main__:main"

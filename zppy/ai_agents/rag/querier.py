@@ -61,6 +61,7 @@ class ZppyRAGQuerier:
 
         # Lazy-loaded components
         self._client = None
+        self._embedding_fn = None
 
     @property
     def client(self):
@@ -76,6 +77,21 @@ class ZppyRAGQuerier:
                     "Install with: pip install chromadb"
                 )
         return self._client
+
+    @property
+    def embedding_fn(self):
+        """Lazy-load the ONNX embedding function.
+
+        Must match the function used in ZppyRAGIndexer so query vectors
+        are comparable to indexed vectors. Severity 4 (Fatal) suppresses
+        ONNX Runtime's Error-level thread-affinity warnings on HPC login nodes.
+        """
+        if self._embedding_fn is None:
+            import onnxruntime as ort
+            ort.set_default_logger_severity(4)
+            from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
+            self._embedding_fn = ONNXMiniLM_L6_V2()
+        return self._embedding_fn
 
     def query(
         self,
@@ -99,7 +115,9 @@ class ZppyRAGQuerier:
         all_results = []
         for col_name in target_collections:
             try:
-                collection = self.client.get_collection(col_name)
+                collection = self.client.get_collection(
+                    col_name, embedding_function=self.embedding_fn
+                )
             except Exception:
                 continue  # Collection not yet indexed
 
@@ -184,7 +202,9 @@ class ZppyRAGQuerier:
         """Check if the vector database has been populated."""
         for col_name in COLLECTION_NAMES:
             try:
-                collection = self.client.get_collection(col_name)
+                collection = self.client.get_collection(
+                    col_name, embedding_function=self.embedding_fn
+                )
                 if collection.count() > 0:
                     return True
             except Exception:
@@ -196,7 +216,9 @@ class ZppyRAGQuerier:
         stats = {}
         for name in COLLECTION_NAMES:
             try:
-                collection = self.client.get_collection(name)
+                collection = self.client.get_collection(
+                    name, embedding_function=self.embedding_fn
+                )
                 stats[name] = collection.count()
             except Exception:
                 stats[name] = 0

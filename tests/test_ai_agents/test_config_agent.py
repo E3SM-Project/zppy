@@ -47,10 +47,14 @@ class TestConfigAgent:
         # Should have validation errors for wrong types
         assert len(errors) > 0
 
-    def test_generate_config_not_implemented(self):
+    def test_generate_config_returns_string(self):
+        from unittest.mock import patch
+
         agent = ConfigAgent()
-        with pytest.raises(NotImplementedError):
-            agent.generate_config("run e3sm_diags for my simulation")
+        with patch.object(agent, "_call_llm", return_value="[default]\ncase = test\n"):
+            result = agent.generate_config("run e3sm_diags for my simulation")
+        assert isinstance(result, str)
+        assert len(result) > 0
 
     def test_collect_validation_errors_nested(self):
         """Test the recursive error collection helper."""

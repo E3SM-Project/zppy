@@ -12,6 +12,32 @@ from typing import List, Optional
 from configobj import ConfigObj
 from validate import Validator
 
+_GENERATE_SYSTEM = """\
+You are an expert in zppy, the E3SM post-processing toolchain.
+Generate a valid zppy .cfg configuration file from the user's requirements.
+
+zppy .cfg files use ConfigObj INI syntax:
+- [default] sets global parameters (case, input, output, www, account, partition, walltime, etc.)
+- Task sections [climo], [ts], [e3sm_diags], [mpas_analysis], [global_time_series], etc.
+  enable specific post-processing tasks
+- Subsections use [[name]] for multiple instances of the same task type
+- active = True must be set in each task section
+- years format: "start:end:chunk",  e.g. "1985:1989:5", processes 1985-1989 in 5-yr chunks
+- walltime format: "HH:MM:SS"
+- String lists: comma-separated quoted values with trailing comma, e.g. "val1", "val2",
+- Boolean values: True or False (capitalised)
+
+Use the provided context (parameters, examples) to set sensible defaults.
+Return ONLY the raw .cfg file content — no explanation, no markdown fences.
+"""
+
+_ASK_SYSTEM = """\
+You are an expert assistant for zppy, the E3SM post-processing toolchain.
+Answer questions accurately using the provided context from the zppy knowledge base.
+If the context does not contain enough information, say so clearly.
+Be concise and practical — users are HPC scientists who want direct answers.
+"""
+
 
 class ConfigAgent:
     """
@@ -54,6 +80,7 @@ class ConfigAgent:
         )
         self._defaults_path = self.zppy_pkg_dir / "defaults" / "default.ini"
         self._rag_querier = None
+        self._llm_client = None
 
     @property
     def rag_querier(self):
@@ -63,6 +90,19 @@ class ConfigAgent:
 
             self._rag_querier = ZppyRAGQuerier()
         return self._rag_querier
+
+    @property
+    def llm_client(self):
+        """Lazy-initialize the LLM client."""
+        if self._llm_client is None:
+            from zppy.ai_agents.llm_client import LLMClient
+
+            self._llm_client = LLMClient(api_key=self.anthropic_api_key)
+        return self._llm_client
+
+    def _call_llm(self, system: str, user: str, max_tokens: int = 4096) -> str:
+        """Delegate to the LLM client. Single place to swap backends."""
+        return self.llm_client.call(system=system, user=user, max_tokens=max_tokens)
 
     def validate_config(self, config_path: str) -> List[str]:
         """
@@ -148,16 +188,39 @@ class ConfigAgent:
         """
         Generate a zppy configuration file from natural language requirements.
 
-        This will be implemented in Phase 2 with Claude API integration.
+        Retrieves relevant parameter definitions and example configs via RAG,
+        then calls the LLM to produce a valid .cfg file.
 
         Args:
             requirements: Natural language description of desired configuration
 
-        Raises:
-            NotImplementedError: This feature requires Phase 2 implementation
+        Returns:
+            Raw .cfg file content as a string
         """
-        raise NotImplementedError(
-            "Interactive config generation requires Phase 2 implementation. "
-            "Use 'zppy-ai validate' to check existing configs, or "
-            "'zppy-ai query' to look up parameter documentation."
+        context = self.rag_querier.get_context_for_llm(
+            requirements, max_tokens=3000, n_results=5
         )
+        user_msg = (
+            f"<context>\n{context}\n</context>\n\n"
+            f"Generate a zppy config for:\n{requirements}"
+        )
+        return self._call_llm(_GENERATE_SYSTEM, user_msg)
+
+    def ask(self, question: str) -> str:
+        """
+        Answer a natural language question about zppy using RAG + LLM.
+
+        Args:
+            question: Any zppy-related question
+
+        Returns:
+            Answer string from the LLM
+        """
+        context = self.rag_querier.get_context_for_llm(
+            question, max_tokens=3000, n_results=5
+        )
+        user_msg = (
+            f"<context>\n{context}\n</context>\n\n"
+            f"Question: {question}"
+        )
+        return self._call_llm(_ASK_SYSTEM, user_msg)
