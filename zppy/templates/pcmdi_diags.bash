@@ -297,7 +297,7 @@ create_links_acyc_climo_obs() {
       exit "$((error_num + 1))"
     fi
 
-    local cmdfix4='defdim("bnds",2)'
+    local cmdfix4='if(!exists("bnds")) defdim("bnds",2)'
     local cmdfix5='time_bnds=make_bounds(time,$bnds,"time_bnds")'
     local cmdfix6='time_bnds@units=time@units'
     local cmdfix7='time_bnds@calendar=time@calendar'
@@ -365,12 +365,19 @@ create_links_ts() {
         run_nco ncatted -a calendar,time,o,c,"standard" "${combined_name}"
       fi
 
+      # Normalize time to the nearest second to prevent floating-point precision
+      # artifacts (e.g., cftime decoding a value as second=60 instead of
+      # second=0 of the next day) that arise from ncrcat time subsetting.
+      local cmdfix_t='time=double(round(time*86400.0)/86400.0)'
+      run_nco ncap2 -O -h -s "${cmdfix_t}" "${combined_name}" "${combined_name}"
+
       # Add time bounds
-      local cmdfix1='defdim("bnds",2)'
+      local cmdfix1='if(!exists("bnds")) defdim("bnds",2)'
       local cmdfix2='time_bnds=make_bounds(time,$bnds,"time_bnds")'
       local cmdfix3='time_bnds@units=time@units'
       local cmdfix4='time_bnds@calendar=time@calendar'
-      run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4}" "${combined_name}" "${combined_name}"
+      local cmdfix5='time_bnds=double(round(time_bnds*86400.0)/86400.0)'
+      run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
 
       if [[ $? -ne 0 ]]; then
         cd "${script_dir}" || exit
@@ -459,12 +466,25 @@ create_links_ts_obs() {
       echo "ncatted successful"
     fi
 
+    # Normalize time to the nearest second to prevent floating-point precision
+    # artifacts (e.g., cftime decoding a value as second=60 instead of
+    # second=0 of the next day) that arise from ncrcat time subsetting.
+    local cmdfix_t='time=double(round(time*86400.0)/86400.0)'
+    run_nco ncap2 -O -h -s "${cmdfix_t}" "${combined_name}" "${combined_name}"
+    if [[ $? -ne 0 ]]; then
+      cd "${script_dir}" || exit
+      echo "ERROR (${error_num})" > "${prefix}.status"
+      exit "${error_num}"
+    fi
+    echo "time normalization successful"
+
     # Add time bounds
-    local cmdfix1='defdim("bnds",2)'
+    local cmdfix1='if(!exists("bnds")) defdim("bnds",2)'
     local cmdfix2='time_bnds=make_bounds(time,$bnds,"time_bnds")'
     local cmdfix3='time_bnds@units=time@units'
     local cmdfix4='time_bnds@calendar=time@calendar'
-    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4}" "${combined_name}" "${combined_name}"
+    local cmdfix5='time_bnds=double(round(time_bnds*86400.0)/86400.0)'
+    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
       echo "ERROR (${error_num})" > "${prefix}.status"
