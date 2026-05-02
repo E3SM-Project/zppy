@@ -18,11 +18,22 @@ export UCX_SHM_DEVICES=all # or not set UCX_NET_DEVICES at all
 # Make sure UVCDAT doesn't prompt us about anonymous logging
 export UVCDAT_ANONYMOUS_LOG=False
 
+# Script dir
+cd {{ scriptDir }}
+
+# Get jobid
+id=${SLURM_JOBID}
+
+# Update status file
+STARTTIME=$(date +%s)
+echo "RUNNING ${id}" > {{ prefix }}.status
+
 # Basic definitions
 case="{{ case }}"
 www="{{ www }}"
 run_type="{{ run_type }}"
 results_dir="{{ run_type }}"
+error_key=0
 
 {% if current_set != "synthetic_plots" %}
 
@@ -34,14 +45,9 @@ ref_y2={{ ref_year2 }}
 ref_start_yr={{ ref_start_yr }}
 ref_final_yr={{ ref_final_yr }}
 
-# Formatted versions
+# Formatted versions (analysis window only; ref formatted after refinement below)
 Y1="$(printf "%04d" ${y1})"
 Y2="$(printf "%04d" ${y2})"
-ref_Y1="$(printf "%04d" ${ref_y1})"
-ref_Y2="$(printf "%04d" ${ref_y2})"
-
-num_years=$((y2 - y1 + 1))
-ref_end_yr=$((ref_y1 + num_years - 1))
 
 # Keep originals for fallback
 orig_ref_y1=${ref_y1}
@@ -79,6 +85,10 @@ else
       fi
    fi
 fi
+
+# Format reference years after refinement
+ref_Y1="$(printf "%04d" ${ref_y1})"
+ref_Y2="$(printf "%04d" ${ref_y2})"
 
 {% if current_set == "mean_climate"%}
 source_vars="{{ clim_vars }}"
@@ -124,7 +134,7 @@ case_id=v$(date '+%Y%m%d')
 {% endif %}
 
 # Create temporary workdir
-workdir=`mktemp -d tmp.{{ prefix }}.${id}.XXXX`
+workdir=$(mktemp -d tmp.{{ prefix }}.${id}.XXXX)
 cd ${workdir}
 
 # files for definition of regions for regional mean
@@ -149,7 +159,7 @@ create_links_acyc_climo() {
   local begin_year="$3"
   local end_year="$4"
   local name_key="$5"
-  local error_num="$6"
+  local error_num="$6" # Will use error_num +0,+1,+2
 
   echo "create_links_acyc_climo: linking from ${ts_dir_source} to ${ts_dir_destination}"
 
@@ -174,16 +184,51 @@ create_links_acyc_climo() {
     done
     shopt -u nullglob
 
+    if [[ ! -s "${v}_files.txt" ]]; then
+      echo "WARNING: No input files found for variable ${v}, skipping climatology. \
+            This variable may not have been processed or output by e3sm_to_cmip."
+      continue
+    fi
+
+    first_file=$(head -n 1 "${v}_files.txt")
+    if ! run_nco ncks -m "${first_file}" >/dev/null 2>&1; then
+      echo "WARNING: First file is not a valid NetCDF for ${v}: ${first_file}, skipping climatology. \
+            This variable may not have been processed or output by e3sm_to_cmip."
+      continue
+    fi
+
     # Derive monthly climatology files
     for month in $(seq 1 12); do
       local MM
       MM=$(printf "%02d" "${month}")
       run_nco ncra -O -h -F -d time,"${month}",,12 $(< "${v}_files.txt") "${v}_clm_${MM}.nc"
+      if [[ $? -ne 0 ]]; then
+        cd "${script_dir}" || exit
+        echo "ERROR ($((error_num + 1)))" > "${prefix}.status"
+        exit "$((error_num + 1))"
+      fi
     done
 
     # Combine to form full annual cycle file
     local combined_name="${name_key}.${v}.${begin_year}01-${end_year}12.AC.${case_id}.nc"
-    run_nco ncrcat -O -d time,0, "${v}_clm_"*.nc "${combined_name}"
+    run_nco ncrcat -O -h -d time,0, "${v}_clm_"*.nc "${combined_name}"
+    if [[ $? -ne 0 ]]; then
+      cd "${script_dir}" || exit
+      echo "ERROR ($((error_num + 2)))" > "${prefix}.status"
+      exit "$((error_num + 2))"
+    fi
+
+    # Add bnds dimension if missing
+    if ! run_nco ncks -m "${combined_name}" | grep -q "bnds = 2"; then
+      echo "Adding missing bnds dimension..."
+      run_nco ncap2 -O -h -s 'defdim("bnds",2)' \
+        "${combined_name}" "${combined_name}"
+      if [[ $? -ne 0 ]]; then
+        cd "${script_dir}" || exit
+	echo "ERROR ($((error_num + 3)))" > "${prefix}.status"
+        exit "$((error_num + 3))"
+      fi
+    fi
 
     # Adjust time metadata for PCMDI diagnostics
     local cmdfix1='time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5}'
@@ -191,19 +236,25 @@ create_links_acyc_climo() {
     local cmdfix3='time@units="days since 1850-01-01 00:00:00"'
     local cmdfix4='time@calendar="noleap"'
     local cmdfix5='time@bounds="time_bnds"'
-    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
+    local cmdfix6='time_bnds@units=time@units'
+    local cmdfix7='time_bnds@calendar=time@calendar'
+    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5};${cmdfix6};${cmdfix7}" \
+      "${combined_name}" "${combined_name}"
 
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
-      echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "${error_num}"
+      echo "ERROR ($((error_num + 4)))" > "${prefix}.status"
+      exit "$((error_num + 4))"
     fi
 
     rm -vf "${v}_clm_"*.nc
   done
 
-  if [ -z "$( ls . )" ]; then
+  if [ -z "$(ls ./*.nc 2>/dev/null)" ]; then
     echo "create_links_acyc_climo: ${ts_dir_destination} was not updated!"
+    cd "${script_dir}" || exit
+    echo "ERROR (${error_num})" > "${prefix}.status"
+    exit "${error_num}"
   fi
 
   cd ..
@@ -225,7 +276,7 @@ create_links_acyc_climo_obs() {
   mkdir -p "${ts_dir_destination}"
   cd "${ts_dir_destination}" || exit
 
-  for file in ${ts_dir_source}/*; do
+  for file in "${ts_dir_source}"/*; do
     local fname
     local YYYYS YYYYE
     local SUBSTR
@@ -246,31 +297,47 @@ create_links_acyc_climo_obs() {
       continue
     fi
 
-    # Clip to specified year range
-    if [[ ${YYYYS} -lt ${begin_year} ]]; then YYYYS=${begin_year}; fi
-    if [[ ${YYYYE} -gt ${end_year} ]]; then YYYYE=${end_year}; fi
+    # Clip to specified year range if no overlap use full range covered by file
+    orig_YYYYS="${YYYYS}"
+    file_start_year=${YYYYS:0:4}
+    file_end_year=${YYYYE:0:4}
+
+    if (( file_end_year < begin_year || file_start_year > end_year )); then
+      echo "WARNING: ${fname} does not overlap requested range ${begin_year}-${end_year}; using file range ${file_start_year}-${file_end_year}."
+      YYYYS="${file_start_year}"
+      YYYYE="${file_end_year}"
+    else
+      # Clip to specified year range
+      (( file_start_year < begin_year )) && YYYYS="${begin_year}" || YYYYS="${file_start_year}"
+      (( file_end_year > end_year )) && YYYYE="${end_year}" || YYYYE="${file_end_year}"
+    fi
 
     # Extract prefix before the date range (removes from .${YYYYS} or -${YYYYS})
-    SUBSTR="${fname%%[._-]${YYYYS}*}"
+    SUBSTR="${fname%%[._-]${orig_YYYYS}*}"
 
     ttag="$(printf "%04d" "${YYYYS}")01-$(printf "%04d" "${YYYYE}")12"
     tmp_file="tmp_combine_${ttag}.nc"
 
-    run_nco ncrcat -O -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${tmp_file}"
+    run_nco ncrcat -O -h -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${tmp_file}"
     if [[ $? -ne 0 ]]; then
-      echo "WARNING: ncrcat failed for ${fname} (date range ${YYYYS}-${YYYYE}), skipping."
+      echo "ERROR: ncrcat failed for ${fname} (date range ${YYYYS}-${YYYYE})"
       rm -f "${tmp_file}"
-      continue
+      cd "${script_dir}" || exit
+      echo "ERROR ($((error_num + 1)))" > "${prefix}.status"
+      exit "$((error_num + 1))"
     fi
 
     # Derive monthly climatology
     for month in $(seq 1 12); do
+      local MM
       MM=$(printf "%02d" ${month})
       run_nco ncra -O -h -F -d time,"${month}",,12 "${tmp_file}" "tmp_clm_${MM}.nc"
       if [[ $? -ne 0 ]]; then
-        echo "WARNING: ncra failed for ${fname} month ${MM}, skipping file."
+        echo "ERROR: ncra failed for ${fname} month ${MM}."
         rm -f tmp_clm_*.nc "${tmp_file}"
-        break  # exit the month loop
+        cd "${script_dir}" || exit
+        echo "ERROR ($((error_num + 2)))" > "${prefix}.status"
+        exit "$((error_num + 2))"
       fi
     done
     # If any month failed, the tmp_clm files were cleaned up — skip to next file
@@ -279,11 +346,11 @@ create_links_acyc_climo_obs() {
     fi
 
     combined_name="${SUBSTR}.${ttag}.AC.${case_id}.nc"
-    run_nco ncrcat -O tmp_clm_*.nc "${combined_name}"
+    run_nco ncrcat -O -h tmp_clm_*.nc "${combined_name}"
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
-      echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "${error_num}"
+      echo "ERROR ($((error_num + 3)))" > "${prefix}.status"
+      exit "$((error_num + 3))"
     fi
 
     # Adjust time metadata
@@ -293,19 +360,31 @@ create_links_acyc_climo_obs() {
     run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3}" "${combined_name}" "${combined_name}"
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
-      echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "$((error_num + 1))"
+      echo "ERROR ($((error_num + 4)))" > "${prefix}.status"
+      exit "$((error_num + 4))"
     fi
 
-    local cmdfix4='if(!exists("bnds")) defdim("bnds",2)'
-    local cmdfix5='time_bnds=make_bounds(time,$bnds,"time_bnds")'
-    local cmdfix6='time_bnds@units=time@units'
-    local cmdfix7='time_bnds@calendar=time@calendar'
+    # Add bnds dimension if missing
+    if ! run_nco ncks -m "${combined_name}" | grep -q "bnds = 2"; then
+      echo "Adding missing bnds dimension..."
+      run_nco ncap2 -O -h -s 'defdim("bnds",2)' \
+        "${combined_name}" "${combined_name}"
+      if [[ $? -ne 0 ]]; then
+        cd "${script_dir}" || exit
+        echo "ERROR ($((error_num + 5)))" > "${prefix}.status"
+        exit "$((error_num + 5))"
+      fi
+    fi
+
+    local cmdfix4='time_bnds=make_bounds(time,$bnds,"time_bnds")'
+    local cmdfix5='time_bnds@units=time@units'
+    local cmdfix6='time_bnds@calendar=time@calendar'
+    local cmdfix7='time@bounds="time_bnds"'
     run_nco ncap2 -O -h -s "${cmdfix4};${cmdfix5};${cmdfix6};${cmdfix7}" "${combined_name}" "${combined_name}"
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
-      echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "$((error_num + 2))"
+      echo "ERROR ($((error_num + 6)))" > "${prefix}.status"
+      exit "$((error_num + 6))"
     fi
 
     rm -vf tmp_*.nc
@@ -313,6 +392,9 @@ create_links_acyc_climo_obs() {
 
   if [ -z "$( ls . )" ]; then
     echo "create_links_acyc_climo_obs: ${ts_dir_destination} was not updated!"
+    cd "${script_dir}" || exit
+    echo "ERROR (${error_num})" > "${prefix}.status"
+    exit "${error_num}"
   fi
 
   cd ..
@@ -357,40 +439,80 @@ create_links_ts() {
 
     combined_name="${subname}.${v}.${begin_year}01-${end_year}12.nc"
     if [[ -s "${v}_files.txt" ]]; then
-      run_nco ncrcat -O -v "${v}" -d time,"${begin_year}-01-01","${end_year}-12-31" $(< "${v}_files.txt") "${combined_name}"
+      # Ensure input files have time calendar before string-based subsetting
+      while IFS= read -r file; do
+        [[ -z "${file}" ]] && continue
 
-      # Add calendar attribute if missing
-      if ! run_nco ncks -m "${combined_name}" | grep -q "calendar"; then
-        echo "Adding missing calendar attribute to time..."
-        run_nco ncatted -a calendar,time,o,c,"standard" "${combined_name}"
+        if ! run_nco ncks -m "${file}" | grep -q "time:calendar"; then
+          echo "Adding missing calendar attribute to input time: ${file}"
+          run_nco ncatted -O -h -a calendar,time,o,c,"standard" "${file}"
+          if [[ $? -ne 0 ]]; then
+            cd "${script_dir}" || exit
+	    echo "ERROR ($((error_num + 1)))" > "${prefix}.status"
+	    exit "$((error_num + 1))"
+          fi
+        fi
+      done < "${v}_files.txt"
+
+      # Extract subset of time series
+      run_nco ncrcat -O -h \
+        -v "${v},time" \
+        -d time,"${begin_year}-01-01","${end_year}-12-31" $(< "${v}_files.txt") "${combined_name}"
+
+      if [[ $? -ne 0 ]]; then
+        cd "${script_dir}" || exit
+        echo "ERROR ($((error_num + 2)))" > "${prefix}.status"
+	exit "$((error_num + 2))"
+      fi
+      echo "ncrcat subset successful"
+
+      # Add bnds dimension if missing
+      if ! run_nco ncks -m "${combined_name}" | grep -q "bnds = 2"; then
+        echo "Adding missing bnds dimension..."
+        run_nco ncap2 -O -h -s 'defdim("bnds",2)' "${combined_name}" "${combined_name}"
+        if [[ $? -ne 0 ]]; then
+          cd "${script_dir}" || exit
+          echo "ERROR ($((error_num + 3)))" > "${prefix}.status"
+	  exit "$((error_num + 3))"
+        fi
+        echo "ncap2 defdim successful"
       fi
 
-      # Normalize time to the nearest second to prevent floating-point precision
-      # artifacts (e.g., cftime decoding a value as second=60 instead of
-      # second=0 of the next day) that arise from ncrcat time subsetting.
-      local cmdfix_t='time=double(round(time*86400.0)/86400.0)'
-      run_nco ncap2 -O -h -s "${cmdfix_t}" "${combined_name}" "${combined_name}"
+      # Always overwrite time bounds
+      local cmdfix1='time_bnds=make_bounds(time,$bnds,"time_bnds")'
+      local cmdfix2='time_bnds@units=time@units'
+      local cmdfix3='time_bnds@calendar=time@calendar'
+      local cmdfix4='time@bounds="time_bnds"'
+      run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4}" \
+        "${combined_name}" "${combined_name}"
+      if [[ $? -ne 0 ]]; then
+        cd "${script_dir}" || exit
+        echo "ERROR ($((error_num + 4)))" > "${prefix}.status"
+        exit "$((error_num + 4))"
+      fi
+      echo "ncap2 time_bnds successful"
 
-      # Add time bounds
-      local cmdfix1='if(!exists("bnds")) defdim("bnds",2)'
-      local cmdfix2='time_bnds=make_bounds(time,$bnds,"time_bnds")'
-      local cmdfix3='time_bnds@units=time@units'
-      local cmdfix4='time_bnds@calendar=time@calendar'
-      local cmdfix5='time_bnds=double(round(time_bnds*86400.0)/86400.0)'
-      run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
-
+      # Add CF metadata
+      run_nco ncatted -O \
+        -a axis,time,o,c,"T" \
+        -a standard_name,time,o,c,"time" \
+        "${combined_name}" "${combined_name}"
       if [[ $? -ne 0 ]]; then
         cd "${script_dir}" || exit
         echo "ERROR (${error_num})" > "${prefix}.status"
         exit "${error_num}"
       fi
+      echo "ncatted CF metadata successful"
     else
       echo "Warning: No input files found for variable ${v} in ${ts_dir_source}. Skipping."
     fi
   done
 
-  if [ -z "$( ls . )" ]; then
+  if [ -z "$(ls ./*.nc 2>/dev/null)" ]; then
     echo "create_links_ts: ${ts_dir_destination} was not updated!"
+    cd "${script_dir}" || exit
+    echo "ERROR (${error_num})" > "${prefix}.status"
+    exit "${error_num}"
   fi
 
   cd ..
@@ -414,7 +536,7 @@ create_links_ts_obs() {
 
   local file fname SUBSTR YYYYS YYYYE ttag combined_name
 
-  for file in ${ts_dir_source}/*; do
+  for file in "${ts_dir_source}"/*; do
     fname=$(basename "$file")
     echo "create_links_ts_obs: checking if nc file: ${fname}"
     if [[ ${fname} != *.nc ]]; then
@@ -422,82 +544,94 @@ create_links_ts_obs() {
       continue
     fi
     echo "create_links_ts_obs: processing ${file}"
+
     # Match two time patterns (YYYYMM or YYYYMMDD) separated by _ or -
     if [[ $fname =~ ^(.+)\.([0-9]{4})([0-9]{2}){1,2}[-_]([0-9]{4})([0-9]{2}){1,2}\.nc$ ]]; then
       SUBSTR="${BASH_REMATCH[1]}"   # everything before the .YYYY...
-      YYYYS="${BASH_REMATCH[2]}"    # start year
-      YYYYE="${BASH_REMATCH[4]}"    # end year
+      file_start_year="${BASH_REMATCH[2]}"  # file start year
+      file_end_year="${BASH_REMATCH[4]}"    # file end year
     else
-
       echo "Warning: Could not extract dates from ${fname}, basename of ${file}"
       continue
     fi
 
-    # Optional: clip years if needed
-    if [[ ${YYYYS} -lt ${begin_year} ]]; then
-      YYYYS="${begin_year}"
-    fi
-
-    if [[ ${YYYYE} -gt ${end_year} ]]; then
-      YYYYE="${end_year}"
+    # Clip years to be in the selected range
+    if (( file_end_year < begin_year || file_start_year > end_year )); then
+      echo "WARNING: ${fname} does not overlap requested range ${begin_year}-${end_year}; using file range ${file_start_year}-${file_end_year}."
+      YYYYS="${file_start_year}"
+      YYYYE="${file_end_year}"
+    else
+      (( file_start_year < begin_year )) && YYYYS="${begin_year}" || YYYYS="${file_start_year}"
+      (( file_end_year > end_year )) && YYYYE="${end_year}" || YYYYE="${file_end_year}"
     fi
 
     ttag="$(printf "%04d" "${YYYYS}")01-$(printf "%04d" "${YYYYE}")12"
     combined_name="${SUBSTR}.${ttag}.nc"
 
-    # Extract subset of time series
-    run_nco ncrcat -O -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${combined_name}"
-    if [[ $? -ne 0 ]]; then
-      cd "${script_dir}" || exit
-      echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "${error_num}"
-    fi
-    echo "ncrcat successful"
-
-    # Ensure time has calendar attribute
-    if ! run_nco ncks -m "${combined_name}" | grep -q "calendar"; then
-      echo "Adding missing calendar attribute to time..."
-      run_nco ncatted -a calendar,time,o,c,"standard" "${combined_name}"
+    # Ensure input time has calendar attribute before string-based time subsetting
+    if ! run_nco ncks -m "${file}" | grep -q "time:calendar"; then
+      echo "Adding missing calendar attribute to input time..."
+      run_nco ncatted -O -h -a calendar,time,o,c,"standard" "${file}"
       if [[ $? -ne 0 ]]; then
         cd "${script_dir}" || exit
-        echo "ERROR (${error_num})" > "${prefix}.status"
+	echo "ERROR ($((error_num + 1)))" > "${prefix}.status"
         exit "$((error_num + 1))"
       fi
       echo "ncatted successful"
     fi
 
-    # Normalize time to the nearest second to prevent floating-point precision
-    # artifacts (e.g., cftime decoding a value as second=60 instead of
-    # second=0 of the next day) that arise from ncrcat time subsetting.
-    local cmdfix_t='time=double(round(time*86400.0)/86400.0)'
-    run_nco ncap2 -O -h -s "${cmdfix_t}" "${combined_name}" "${combined_name}"
+    # Extract subset of time series
+    run_nco ncrcat -O -h -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${combined_name}"
+    if [[ $? -ne 0 ]]; then
+      cd "${script_dir}" || exit
+      echo "ERROR ($((error_num + 2)))" > "${prefix}.status"
+      exit "$((error_num + 2))"
+    fi
+    echo "ncrcat subset successful"
+
+    # Add bnds dimension if missing
+    if ! run_nco ncks -m "${combined_name}" | grep -q "bnds = 2"; then
+      echo "Adding missing bnds dimension..."
+      run_nco ncap2 -O -h -s 'defdim("bnds",2)' "${combined_name}" "${combined_name}"
+      if [[ $? -ne 0 ]]; then
+        cd "${script_dir}" || exit
+        echo "ERROR ($((error_num + 3)))" > "${prefix}.status"
+        exit "$((error_num + 3))"
+      fi
+      echo "ncap2 defdim successful"
+    fi
+
+    # Add time bounds
+    local cmdfix1='time_bnds=make_bounds(time,$bnds,"time_bnds")'
+    local cmdfix2='time_bnds@units=time@units'
+    local cmdfix3='time_bnds@calendar=time@calendar'
+    local cmdfix4='time@bounds="time_bnds"'
+    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4}" "${combined_name}" "${combined_name}"
+    if [[ $? -ne 0 ]]; then
+      cd "${script_dir}" || exit
+      echo "ERROR ($((error_num + 4)))" > "${prefix}.status"
+      exit "$((error_num + 4))"
+    fi
+    echo "ncap2 successful"
+
+    # Add CF metadata
+    run_nco ncatted -O \
+      -a axis,time,o,c,"T" \
+      -a standard_name,time,o,c,"time" \
+      "${combined_name}" "${combined_name}"
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
       echo "ERROR (${error_num})" > "${prefix}.status"
       exit "${error_num}"
     fi
-    echo "time normalization successful"
-
-    # Add time bounds
-    local cmdfix1='if(!exists("bnds")) defdim("bnds",2)'
-    local cmdfix2='time_bnds=make_bounds(time,$bnds,"time_bnds")'
-    local cmdfix3='time_bnds@units=time@units'
-    local cmdfix4='time_bnds@calendar=time@calendar'
-    local cmdfix5='time_bnds=double(round(time_bnds*86400.0)/86400.0)'
-    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
-    if [[ $? -ne 0 ]]; then
-      cd "${script_dir}" || exit
-      echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "$((error_num + 2))"
-    fi
-    echo "ncap2 successful"
+    echo "ncatted CF metadata successful"
   done
 
   if [ -z "$( ls . )" ]; then
     echo "create_links_ts_obs: ${ts_dir_destination} was not updated!"
     cd "${script_dir}" || exit
-    echo "ERROR (${error_num})" > "${prefix}.status"
-    exit "${error_num}"
+    echo "ERROR ($((error_num + 5)))" > "${prefix}.status"
+    exit "$((error_num + 5))"
   fi
 
   cd ..
@@ -515,13 +649,13 @@ climo_dir_primary="climo"
 # This cmip_ts path is created via zppy/templates/e3sm_to_cmip.bash
 climo_dir_source="{{ output }}/post/atm/{{ grid }}/cmip_ts/monthly"
 # Link and process primary model climo data
-create_links_acyc_climo "${climo_dir_source}" "${climo_dir_primary}" "${Y1}" "${Y2}" "${model_name}.${tableID}" 1
+create_links_acyc_climo "${climo_dir_source}" "${climo_dir_primary}" "${Y1}" "${Y2}" "${model_name}.${tableID}" 10
 {% if run_type == "model_vs_model" %}
 # Path to reference model's climatology files
 climo_dir_source_ref="{{ reference_data_path_ts }}"
 climo_dir_ref="climo_ref"
 # Link and process reference model climo data
-create_links_acyc_climo "${climo_dir_source_ref}" "${climo_dir_ref}" "${ref_Y1}" "${ref_Y2}" "${model_name_ref}.${tableID_ref}" 2
+create_links_acyc_climo "${climo_dir_source_ref}" "${climo_dir_ref}" "${ref_Y1}" "${ref_Y2}" "${model_name_ref}.${tableID_ref}" 20
 {% endif %}
 {% endif %}
 
@@ -531,13 +665,13 @@ create_links_acyc_climo "${climo_dir_source_ref}" "${climo_dir_ref}" "${ref_Y1}"
 ts_dir_primary="ts"
 ts_dir_source="{{ output }}/post/atm/{{ ts_grid }}/cmip_ts/monthly"
 # Create local links and combine time series NetCDF files for the primary model
-create_links_ts "${ts_dir_source}" "${ts_dir_primary}" "${Y1}" "${Y2}" "${model_name}.${tableID}" 3
+create_links_ts "${ts_dir_source}" "${ts_dir_primary}" "${Y1}" "${Y2}" "${model_name}.${tableID}" 30
 {% if run_type == "model_vs_model" %}
 # Define time series path for reference model (adjust for different year spans)
 ts_dir_source_ref="{{ reference_data_path_ts }}"
 ts_dir_ref="ts_ref"
 # Create local links and combine ts files for the reference model
-create_links_ts "${ts_dir_source_ref}" "${ts_dir_ref}" "${ref_Y1}" "${ref_Y2}" "${model_name_ref}.${tableID_ref}" 4
+create_links_ts "${ts_dir_source_ref}" "${ts_dir_ref}" "${ref_Y1}" "${ref_Y2}" "${model_name_ref}.${tableID_ref}" 40
 {% endif %}
 {% endif %}
 
@@ -563,12 +697,12 @@ set -e
 {{ environment_commands_secondary }}
 set +e
 
-time eval "${command}"
+time ${command}
 
 if [ $? -ne 0 ]; then
   cd {{ scriptDir }}
-  echo "ERROR (5)" > {{ prefix }}.status
-  exit 5
+  echo "ERROR (50)" > {{ prefix }}.status
+  exit 50
 fi
 
 set -e
@@ -583,12 +717,12 @@ ts_dir_ref_source="{{ scriptDir }}/${workdir}/${obstmp_dir}"
 
 {% if current_set == "mean_climate" %}
 climo_dir_ref=climo_ref
-# This will use errors code 6,7,8:
-create_links_acyc_climo_obs "${ts_dir_ref_source}" "${climo_dir_ref}" ${ref_Y1} ${ref_Y2} 6
+# This will use errors code 61,62,63...:
+create_links_acyc_climo_obs "${ts_dir_ref_source}" "${climo_dir_ref}" ${ref_Y1} ${ref_Y2} 60
 {% elif current_set in ["variability_modes_cpl", "variability_modes_atm", "enso"] %}
 ts_dir_ref=ts_ref
-# This will use error codes 9,10,11:
-create_links_ts_obs "${ts_dir_ref_source}" "${ts_dir_ref}" ${ref_Y1} ${ref_Y2} 9
+# This will use error codes 71,72,73...:
+create_links_ts_obs "${ts_dir_ref_source}" "${ts_dir_ref}" ${ref_Y1} ${ref_Y2} 70
 {% endif %}
 
 {% endif %}
@@ -890,11 +1024,54 @@ source_dirs="--climo_ts_dir_primary ${climo_dir_primary} --climo_ts_dir_ref ${cl
 {% elif current_set in ["variability_modes_cpl", "variability_modes_atm", "enso"] %}
 source_dirs="--climo_ts_dir_primary ${ts_dir_primary} --climo_ts_dir_ref ${ts_dir_ref}"
 {% endif %}
+
+# -------------------------------------------------------
+# Adaptive safeguard for resource-intensive diagnostics
+# -------------------------------------------------------
+requested_workers={{ num_workers }}
+effective_workers=${requested_workers}
+subsection="{{ subsection }}"
+
+# Each zppy subset is a separate SLURM job, so num_workers spans the entire
+# job allocation.  The relevant CPU budget is the total across all nodes.
+# {{ nodes }} is the compile-time node count (same value as --nodes={{ nodes }}),
+# so multiplying by it is simpler and more portable than relying on the
+# runtime variable SLURM_JOB_NUM_NODES.
+if [[ -n "${SLURM_CPUS_ON_NODE}" ]]; then
+  allocated_cpus=$(( SLURM_CPUS_ON_NODE * {{ nodes }} ))
+elif command -v nproc >/dev/null 2>&1; then
+  allocated_cpus=$(nproc)
+else
+  allocated_cpus=1
+fi
+
+# Guard against zero or empty (should not happen, but be safe)
+if [[ -z "${allocated_cpus}" || "${allocated_cpus}" -lt 1 ]]; then
+  allocated_cpus=1
+fi
+
+# EOF / variability modes are heavy because each subprocess may call
+# threaded LAPACK/BLAS routines and allocate large arrays.
+if [[ "${subsection}" == "variability_modes_atm" || "${subsection}" == "variability_modes_cpl" ]]; then
+  safe_cap=$(( allocated_cpus / 4 ))
+
+  if [[ ${safe_cap} -lt 1 ]]; then
+    safe_cap=1
+  fi
+
+  if [[ ${requested_workers} -gt ${safe_cap} ]]; then
+    echo "WARNING: Reducing num_workers from ${requested_workers} to ${safe_cap} for ${subsection} because EOF diagnostics are resource-intensive."
+    effective_workers=${safe_cap}
+  fi
+fi
+
+echo "PCMDI worker policy: requested_workers=${requested_workers}, allocated_cpus=${allocated_cpus}, effective_workers=${effective_workers}, subsection=${subsection}"
+
 # Parameter passing can encounter errors if parameters are empty.
 # So, it's a good idea to make sure they can't be (or at least are unlikely to be) empty.
 # run_type == "model_vs_obs" only: obs_sets (default value is NOT "")
 # run_type == "model_vs_model" only: model_name_ref, tableID_ref (default values are NOT "")
-core_parameters="--num_workers {{ num_workers }} --multiprocessing {{ multiprocessing }} --subsection {{ subsection }} ${source_dirs} --model_name ${model_name} --model_tableID {{ model_tableID }} --figure_format {{ figure_format }} --run_type {{ run_type }} --obs_sets {{ obs_sets }} --model_name_ref ${model_name_ref} --vars ${source_vars} --tableID_ref ${tableID_ref} --generate_sftlf {{ generate_sftlf }} --case_id ${case_id} --results_dir ${results_dir} --debug ${debug,,}"
+core_parameters="--num_workers ${effective_workers} --multiprocessing {{ multiprocessing }} --subsection {{ subsection }} ${source_dirs} --model_name ${model_name} --model_tableID {{ model_tableID }} --figure_format {{ figure_format }} --run_type {{ run_type }} --obs_sets {{ obs_sets }} --model_name_ref ${model_name_ref} --vars ${source_vars} --tableID_ref ${tableID_ref} --generate_sftlf {{ generate_sftlf }} --case_id ${case_id} --results_dir ${results_dir} --debug ${debug,,}"
 {% endif %}
 
 {% if current_set == "mean_climate" %}
@@ -954,8 +1131,8 @@ echo "The current directory is: $PWD" # This will be of the form .../post/script
 time ${command}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (12)' > {{ prefix }}.status
-  exit 12
+  echo 'ERROR (80)' > {{ prefix }}.status
+  exit 80
 fi
 
 set -e
@@ -972,8 +1149,8 @@ echo
 mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (13)' > {{ prefix }}.status
-  exit 13
+  echo 'ERROR (90)' > {{ prefix }}.status
+  exit 90
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
@@ -997,8 +1174,8 @@ done
 rsync -a ${results_dir} ${web_dir}/
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (14)' > {{ prefix }}.status
-  exit 14
+  echo 'ERROR (100)' > {{ prefix }}.status
+  exit 100
 fi
 {% endif %}
 
