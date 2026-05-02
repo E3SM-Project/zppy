@@ -18,7 +18,6 @@ export UCX_SHM_DEVICES=all # or not set UCX_NET_DEVICES at all
 # Make sure UVCDAT doesn't prompt us about anonymous logging
 export UVCDAT_ANONYMOUS_LOG=False
 
-
 # Use a non-interactive Matplotlib backend for batch diagnostics.
 # Safe for workflows that save figures to files and avoids GUI/Tkinter errors
 # on systems without a display.
@@ -585,7 +584,6 @@ create_links_ts_obs() {
       echo "ncatted successful"
     fi
 
-<<<<<<< HEAD
     # Extract subset of time series
     run_nco ncrcat -O -h -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${combined_name}"
     if [[ $? -ne 0 ]]; then
@@ -613,27 +611,6 @@ create_links_ts_obs() {
     local cmdfix3='time_bnds@calendar=time@calendar'
     local cmdfix4='time@bounds="time_bnds"'
     run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4}" "${combined_name}" "${combined_name}"
-=======
-    # Normalize time to the nearest second to prevent floating-point precision
-    # artifacts (e.g., cftime decoding a value as second=60 instead of
-    # second=0 of the next day) that arise from ncrcat time subsetting.
-    local cmdfix_t='time=double(round(time*86400.0)/86400.0)'
-    run_nco ncap2 -O -h -s "${cmdfix_t}" "${combined_name}" "${combined_name}"
-    if [[ $? -ne 0 ]]; then
-      cd "${script_dir}" || exit
-      echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "${error_num}"
-    fi
-    echo "time normalization successful"
-
-    # Add time bounds
-    local cmdfix1='if(!exists("bnds")) defdim("bnds",2)'
-    local cmdfix2='time_bnds=make_bounds(time,$bnds,"time_bnds")'
-    local cmdfix3='time_bnds@units=time@units'
-    local cmdfix4='time_bnds@calendar=time@calendar'
-    local cmdfix5='time_bnds=double(round(time_bnds*86400.0)/86400.0)'
-    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
->>>>>>> 759c924 (Claude-augument enhancement: fix time precision and bnds dimension warnings)
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
       echo "ERROR ($((error_num + 4)))" > "${prefix}.status"
@@ -646,19 +623,23 @@ create_links_ts_obs() {
       -a axis,time,o,c,"T" \
       -a standard_name,time,o,c,"time" \
       "${combined_name}" "${combined_name}"
-    if [[ $? -ne 0 ]]; then
-      cd "${script_dir}" || exit
-      echo "ERROR ($((error_num + 5)))" > "${prefix}.status"
-      exit "$((error_num + 5))"
-    fi
+    echo "time normalization successful"
+
+    # Add time bounds
+    local cmdfix1='if(!exists("bnds")) defdim("bnds",2)'
+    local cmdfix2='time_bnds=make_bounds(time,$bnds,"time_bnds")'
+    local cmdfix3='time_bnds@units=time@units'
+    local cmdfix4='time_bnds@calendar=time@calendar'
+    local cmdfix5='time_bnds=double(round(time_bnds*86400.0)/86400.0)'
+    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
     echo "ncatted CF metadata successful"
   done
 
   if [ -z "$( ls . )" ]; then
     echo "create_links_ts_obs: ${ts_dir_destination} was not updated!"
     cd "${script_dir}" || exit
-    echo "ERROR ($((error_num + 6)))" > "${prefix}.status"
-    exit "$((error_num + 6))"
+    echo "ERROR ($((error_num + 5)))" > "${prefix}.status"
+    exit "$((error_num + 5))"
   fi
 
   cd ..
