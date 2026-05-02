@@ -463,6 +463,45 @@ create_links_ts() {
       run_nco ncrcat -O -h \
         -v "${v},time" \
         -d time,"${begin_year}-01-01","${end_year}-12-31" $(< "${v}_files.txt") "${combined_name}"
+
+      if [[ $? -ne 0 ]]; then
+        cd "${script_dir}" || exit
+        echo "ERROR ($((error_num + 2)))" > "${prefix}.status"
+	exit "$((error_num + 2))"
+      fi
+      echo "ncrcat subset successful"
+
+      # Add bnds dimension if missing
+      if ! run_nco ncks -m "${combined_name}" | grep -q "bnds = 2"; then
+        echo "Adding missing bnds dimension..."
+        run_nco ncap2 -O -h -s 'defdim("bnds",2)' "${combined_name}" "${combined_name}"
+        if [[ $? -ne 0 ]]; then
+          cd "${script_dir}" || exit
+          echo "ERROR ($((error_num + 3)))" > "${prefix}.status"
+	  exit "$((error_num + 3))"
+        fi
+        echo "ncap2 defdim successful"
+      fi
+
+      # Always overwrite time bounds
+      local cmdfix1='time_bnds=make_bounds(time,$bnds,"time_bnds")'
+      local cmdfix2='time_bnds@units=time@units'
+      local cmdfix3='time_bnds@calendar=time@calendar'
+      local cmdfix4='time@bounds="time_bnds"'
+      run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4}" \
+        "${combined_name}" "${combined_name}"
+      if [[ $? -ne 0 ]]; then
+        cd "${script_dir}" || exit
+        echo "ERROR ($((error_num + 4)))" > "${prefix}.status"
+        exit "$((error_num + 4))"
+      fi
+      echo "ncap2 time_bnds successful"
+
+      # Add CF metadata
+      run_nco ncatted -O \
+        -a axis,time,o,c,"T" \
+        -a standard_name,time,o,c,"time" \
+        "${combined_name}" "${combined_name}"
       if [[ $? -ne 0 ]]; then
         cd "${script_dir}" || exit
         echo "ERROR ($((error_num + 2)))" > "${prefix}.status"
