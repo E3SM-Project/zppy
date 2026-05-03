@@ -248,6 +248,7 @@ create_links_acyc_climo() {
     fi
 
     rm -vf "${v}_clm_"*.nc
+    rm -f "${v}_files.txt"
   done
 
   if [ -z "$(ls ./*.nc 2>/dev/null)" ]; then
@@ -506,6 +507,7 @@ create_links_ts() {
     else
       echo "Warning: No input files found for variable ${v} in ${ts_dir_source}. Skipping."
     fi
+    rm -f "${v}_files.txt"
   done
 
   if [ -z "$(ls ./*.nc 2>/dev/null)" ]; then
