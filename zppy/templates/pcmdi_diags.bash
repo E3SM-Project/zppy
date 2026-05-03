@@ -187,6 +187,7 @@ create_links_acyc_climo() {
     if [[ ! -s "${v}_files.txt" ]]; then
       echo "WARNING: No input files found for variable ${v}, skipping climatology. \
             This variable may not have been processed or output by e3sm_to_cmip."
+      rm -f "${v}_files.txt"
       continue
     fi
 
@@ -194,6 +195,7 @@ create_links_acyc_climo() {
     if ! run_nco ncks -m "${first_file}" >/dev/null 2>&1; then
       echo "WARNING: First file is not a valid NetCDF for ${v}: ${first_file}, skipping climatology. \
             This variable may not have been processed or output by e3sm_to_cmip."
+      rm -f "${v}_files.txt"
       continue
     fi
 
