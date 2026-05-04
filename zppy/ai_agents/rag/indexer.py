@@ -237,7 +237,11 @@ class ZppyRAGIndexer:
 
     def _index_examples(self) -> int:
         """
-        Index example configurations from tests/integration/.
+        Index example configurations from examples/ and tests/integration/.
+
+        Priority order:
+        1. examples/ - Official user-facing examples (higher priority)
+        2. tests/integration/ - Test configurations (lower priority)
 
         Each config is chunked by section to allow more precise retrieval.
 
@@ -250,19 +254,39 @@ class ZppyRAGIndexer:
             metadata={"description": "zppy example configurations"},
         )
 
-        cfg_dir = self.zppy_root / "tests" / "integration"
-        if not cfg_dir.exists():
-            return 0
-
         documents = []
 
-        for cfg_file in cfg_dir.glob("*.cfg"):
-            try:
-                content = cfg_file.read_text()
-                docs = self._parse_config_file(cfg_file.name, content)
-                documents.extend(docs)
-            except Exception as e:
-                print(f"Warning: Could not parse {cfg_file}: {e}")
+        # Index official examples first (higher priority)
+        examples_dir = self.zppy_root / "examples"
+        if examples_dir.exists():
+            for cfg_file in examples_dir.glob("*.cfg"):
+                try:
+                    content = cfg_file.read_text()
+                    docs = self._parse_config_file(
+                        cfg_file.name,
+                        content,
+                        priority="high",
+                        source="examples"
+                    )
+                    documents.extend(docs)
+                except Exception as e:
+                    print(f"Warning: Could not parse {cfg_file}: {e}")
+
+        # Index test integration configs (lower priority)
+        cfg_dir = self.zppy_root / "tests" / "integration"
+        if cfg_dir.exists():
+            for cfg_file in cfg_dir.glob("*.cfg"):
+                try:
+                    content = cfg_file.read_text()
+                    docs = self._parse_config_file(
+                        cfg_file.name,
+                        content,
+                        priority="low",
+                        source="tests/integration"
+                    )
+                    documents.extend(docs)
+                except Exception as e:
+                    print(f"Warning: Could not parse {cfg_file}: {e}")
 
         if not documents:
             return 0
@@ -277,12 +301,24 @@ class ZppyRAGIndexer:
 
         return len(documents)
 
-    def _parse_config_file(self, filename: str, content: str) -> List[Document]:
+    def _parse_config_file(
+        self,
+        filename: str,
+        content: str,
+        priority: str = "low",
+        source: str = "tests/integration"
+    ) -> List[Document]:
         """
         Parse a config file into indexable documents.
 
         Splits config into sections and creates a document for each,
         plus a document for the entire config.
+
+        Args:
+            filename: Name of the config file
+            content: Content of the config file
+            priority: Priority level ("high" for examples/, "low" for tests/)
+            source: Source directory (e.g., "examples", "tests/integration")
         """
         documents = []
 
@@ -296,9 +332,13 @@ class ZppyRAGIndexer:
         # Determine config purpose from filename
         purpose = self._infer_config_purpose(filename)
 
+        # Add priority indicator to text for better retrieval
+        priority_marker = "[OFFICIAL EXAMPLE] " if priority == "high" else ""
+
         # Index the full config
         full_doc_text = (
-            f"Example zppy configuration: {filename}. "
+            f"{priority_marker}Example zppy configuration: {filename}. "
+            f"Source: {source}. "
             f"Purpose: {purpose}. "
             f"Tasks: {', '.join(task_types) if task_types else 'none'}. "
             f"Content:\n{content}"
@@ -308,7 +348,7 @@ class ZppyRAGIndexer:
         if len(full_doc_text) > 8000:
             full_doc_text = full_doc_text[:8000] + "... [truncated]"
 
-        doc_id = f"cfg_{hashlib.md5(filename.encode()).hexdigest()[:8]}"
+        doc_id = f"cfg_{hashlib.md5((source + filename).encode()).hexdigest()[:8]}"
         documents.append(Document(
             id=doc_id,
             text=full_doc_text,
@@ -316,7 +356,8 @@ class ZppyRAGIndexer:
                 "filename": filename,
                 "purpose": purpose,
                 "task_types": ",".join(task_types),
-                "source": "example_config",
+                "source": source,
+                "priority": priority,
                 "chunk_type": "full"
             }
         ))
@@ -328,7 +369,8 @@ class ZppyRAGIndexer:
                 continue  # Skip default section, not very informative
 
             section_text = (
-                f"Config section [{section['name']}] from {filename}. "
+                f"{priority_marker}Config section [{section['name']}] from {filename}. "
+                f"Source: {source}. "
                 f"Purpose: {purpose}. "
                 f"Content:\n{section['content']}"
             )
@@ -340,7 +382,8 @@ class ZppyRAGIndexer:
                     "filename": filename,
                     "section": section['name'],
                     "purpose": purpose,
-                    "source": "example_config",
+                    "source": source,
+                    "priority": priority,
                     "chunk_type": "section"
                 }
             ))
