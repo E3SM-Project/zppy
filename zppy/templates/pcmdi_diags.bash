@@ -259,35 +259,59 @@ create_links_acyc_climo_obs() {
     tmp_file="tmp_combine_${ttag}.nc"
 
     run_nco ncrcat -O -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${tmp_file}"
+    if [[ $? -ne 0 ]]; then
+      echo "WARNING: ncrcat failed for ${fname} (date range ${YYYYS}-${YYYYE}), skipping."
+      rm -f "${tmp_file}"
+      continue
+    fi
 
     # Derive monthly climatology
     for month in $(seq 1 12); do
       MM=$(printf "%02d" ${month})
       run_nco ncra -O -h -F -d time,"${month}",,12 "${tmp_file}" "tmp_clm_${MM}.nc"
+      if [[ $? -ne 0 ]]; then
+        echo "WARNING: ncra failed for ${fname} month ${MM}, skipping file."
+        rm -f tmp_clm_*.nc "${tmp_file}"
+        break  # exit the month loop
+      fi
+    done
+    # If any month failed, the tmp_clm files were cleaned up — skip to next file
+    if ! ls tmp_clm_*.nc &>/dev/null; then
+      continue
+    fi
     done
 
     combined_name="${SUBSTR}.${ttag}.AC.${case_id}.nc"
     run_nco ncrcat -O tmp_clm_*.nc "${combined_name}"
+    if [[ $? -ne 0 ]]; then
+      cd "${script_dir}" || exit
+      echo "ERROR (${error_num})" > "${prefix}.status"
+      exit "${error_num}"
+    fi
 
     # Adjust time metadata
     local cmdfix1='time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5}'
     local cmdfix2='time@units="days since 1850-01-01 00:00:00"'
     local cmdfix3='time@calendar="noleap"'
     run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3}" "${combined_name}" "${combined_name}"
+    if [[ $? -ne 0 ]]; then
+      cd "${script_dir}" || exit
+      echo "ERROR (${error_num})" > "${prefix}.status"
+      exit "${error_num}"
+    fi
 
     local cmdfix4='defdim("bnds",2)'
     local cmdfix5='time_bnds=make_bounds(time,$bnds,"time_bnds")'
     local cmdfix6='time_bnds@units=time@units'
     local cmdfix7='time_bnds@calendar=time@calendar'
     run_nco ncap2 -O -h -s "${cmdfix4};${cmdfix5};${cmdfix6};${cmdfix7}" "${combined_name}" "${combined_name}"
-
-    rm -vf tmp_*.nc
-
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
       echo "ERROR (${error_num})" > "${prefix}.status"
       exit "${error_num}"
     fi
+
+    rm -vf tmp_*.nc
   done
 
   if [ -z "$( ls . )" ]; then
