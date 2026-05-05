@@ -216,7 +216,7 @@ create_links_acyc_climo_obs() {
   local ts_dir_destination="$2"
   local begin_year="$3"
   local end_year="$4"
-  local error_num="$5"
+  local error_num="$5" # Will use error_num +0,+1,+2
 
   local script_dir="{{ scriptDir }}"
   local prefix="{{ prefix }}"
@@ -297,7 +297,7 @@ create_links_acyc_climo_obs() {
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
       echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "${error_num}"
+      exit "$((error_num + 1))"
     fi
 
     local cmdfix4='defdim("bnds",2)'
@@ -308,7 +308,7 @@ create_links_acyc_climo_obs() {
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
       echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "${error_num}"
+      exit "$((error_num + 2))"
     fi
 
     rm -vf tmp_*.nc
@@ -398,7 +398,7 @@ create_links_ts_obs() {
   local ts_dir_destination="$2"
   local begin_year="$3"
   local end_year="$4"
-  local error_num="$5"
+  local error_num="$5" # Will use error_num +0,+1,+2
 
   local script_dir="{{ scriptDir }}"
   local prefix="{{ prefix }}"
@@ -457,7 +457,7 @@ create_links_ts_obs() {
       if [[ $? -ne 0 ]]; then
         cd "${script_dir}" || exit
         echo "ERROR (${error_num})" > "${prefix}.status"
-        exit "${error_num}"
+        exit "$((error_num + 1))"
       fi
       echo "ncatted successful"
     fi
@@ -471,7 +471,7 @@ create_links_ts_obs() {
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
       echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "${error_num}"
+      exit "$((error_num + 2))"
     fi
     echo "ncap2 successful"
   done
@@ -566,10 +566,12 @@ ts_dir_ref_source="{{ scriptDir }}/${workdir}/${obstmp_dir}"
 
 {% if current_set == "mean_climate" %}
 climo_dir_ref=climo_ref
+# This will use errors code 6,7,8:
 create_links_acyc_climo_obs "${ts_dir_ref_source}" "${climo_dir_ref}" ${ref_Y1} ${ref_Y2} 6
 {% elif current_set in ["variability_modes_cpl", "variability_modes_atm", "enso"] %}
 ts_dir_ref=ts_ref
-create_links_ts_obs "${ts_dir_ref_source}" "${ts_dir_ref}" ${ref_Y1} ${ref_Y2} 7
+# This will use error codes 9,10,11:
+create_links_ts_obs "${ts_dir_ref_source}" "${ts_dir_ref}" ${ref_Y1} ${ref_Y2} 9
 {% endif %}
 
 {% endif %}
@@ -935,8 +937,8 @@ echo "The current directory is: $PWD" # This will be of the form .../post/script
 time ${command}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (8)' > {{ prefix }}.status
-  exit 8
+  echo 'ERROR (12)' > {{ prefix }}.status
+  exit 12
 fi
 
 set -e
@@ -953,8 +955,8 @@ echo
 mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (9)' > {{ prefix }}.status
-  exit 9
+  echo 'ERROR (13)' > {{ prefix }}.status
+  exit 13
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
@@ -978,8 +980,8 @@ done
 rsync -a ${results_dir} ${web_dir}/
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (10)' > {{ prefix }}.status
-  exit 10
+  echo 'ERROR (14)' > {{ prefix }}.status
+  exit 14
 fi
 {% endif %}
 
