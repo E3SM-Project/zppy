@@ -109,7 +109,19 @@ tableID_ref=${tableID}
 model_name_ref='{{ model_name_ref }}'
 tableID_ref='{{ model_tableID_ref }}'
 {%- endif %}
+{% if current_set == "synthetic_plots" %}
+# For synthetic_plots, discover the case_id from files written by upstream jobs,
+# since those jobs may have run on a different calendar date.
+clim_dir_discover=${www}/${case}/pcmdi_diags/model_vs_obs/metrics_data/mean_climate/
+case_id=$(find "${clim_dir_discover}" -name "*.v*.json" 2>/dev/null \
+           | grep -oP '\.v\d{8}\.' | head -1 | tr -d '.')
+if [[ -z "${case_id}" ]]; then
+  echo "WARNING: Could not discover case_id from upstream output; falling back to today's date."
+  case_id=v$(date '+%Y%m%d')
+fi
+{% else %}
 case_id=v$(date '+%Y%m%d')
+{% endif %}
 
 # Create temporary workdir
 workdir=`mktemp -d tmp.{{ prefix }}.${id}.XXXX`
