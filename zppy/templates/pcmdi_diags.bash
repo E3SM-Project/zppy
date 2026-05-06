@@ -109,7 +109,19 @@ tableID_ref=${tableID}
 model_name_ref='{{ model_name_ref }}'
 tableID_ref='{{ model_tableID_ref }}'
 {%- endif %}
+{% if current_set == "synthetic_plots" %}
+# For synthetic_plots, discover the case_id from files written by upstream jobs,
+# since those jobs may have run on a different calendar date.
+clim_dir_discover=${www}/${case}/pcmdi_diags/model_vs_obs/metrics_data/mean_climate/
+case_id=$(find "${clim_dir_discover}" -name "*.v*.json" 2>/dev/null \
+           | grep -oP '\.v\d{8}\.' | head -1 | tr -d '.')
+if [[ -z "${case_id}" ]]; then
+  echo "WARNING: Could not discover case_id from upstream output; falling back to today's date."
+  case_id=v$(date '+%Y%m%d')
+fi
+{% else %}
 case_id=v$(date '+%Y%m%d')
+{% endif %}
 
 # Create temporary workdir
 workdir=`mktemp -d tmp.{{ prefix }}.${id}.XXXX`
@@ -204,7 +216,7 @@ create_links_acyc_climo_obs() {
   local ts_dir_destination="$2"
   local begin_year="$3"
   local end_year="$4"
-  local error_num="$5"
+  local error_num="$5" # Will use error_num +0,+1,+2
 
   local script_dir="{{ scriptDir }}"
   local prefix="{{ prefix }}"
@@ -247,35 +259,58 @@ create_links_acyc_climo_obs() {
     tmp_file="tmp_combine_${ttag}.nc"
 
     run_nco ncrcat -O -d time,"${YYYYS}-01-01","${YYYYE}-12-31" "${file}" "${tmp_file}"
+    if [[ $? -ne 0 ]]; then
+      echo "WARNING: ncrcat failed for ${fname} (date range ${YYYYS}-${YYYYE}), skipping."
+      rm -f "${tmp_file}"
+      continue
+    fi
 
     # Derive monthly climatology
     for month in $(seq 1 12); do
       MM=$(printf "%02d" ${month})
       run_nco ncra -O -h -F -d time,"${month}",,12 "${tmp_file}" "tmp_clm_${MM}.nc"
+      if [[ $? -ne 0 ]]; then
+        echo "WARNING: ncra failed for ${fname} month ${MM}, skipping file."
+        rm -f tmp_clm_*.nc "${tmp_file}"
+        break  # exit the month loop
+      fi
     done
+    # If any month failed, the tmp_clm files were cleaned up — skip to next file
+    if ! ls tmp_clm_*.nc &>/dev/null; then
+      continue
+    fi
 
     combined_name="${SUBSTR}.${ttag}.AC.${case_id}.nc"
     run_nco ncrcat -O tmp_clm_*.nc "${combined_name}"
+    if [[ $? -ne 0 ]]; then
+      cd "${script_dir}" || exit
+      echo "ERROR (${error_num})" > "${prefix}.status"
+      exit "${error_num}"
+    fi
 
     # Adjust time metadata
     local cmdfix1='time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5}'
     local cmdfix2='time@units="days since 1850-01-01 00:00:00"'
     local cmdfix3='time@calendar="noleap"'
     run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3}" "${combined_name}" "${combined_name}"
+    if [[ $? -ne 0 ]]; then
+      cd "${script_dir}" || exit
+      echo "ERROR (${error_num})" > "${prefix}.status"
+      exit "$((error_num + 1))"
+    fi
 
     local cmdfix4='defdim("bnds",2)'
     local cmdfix5='time_bnds=make_bounds(time,$bnds,"time_bnds")'
     local cmdfix6='time_bnds@units=time@units'
     local cmdfix7='time_bnds@calendar=time@calendar'
     run_nco ncap2 -O -h -s "${cmdfix4};${cmdfix5};${cmdfix6};${cmdfix7}" "${combined_name}" "${combined_name}"
-
-    rm -vf tmp_*.nc
-
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
       echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "${error_num}"
+      exit "$((error_num + 2))"
     fi
+
+    rm -vf tmp_*.nc
   done
 
   if [ -z "$( ls . )" ]; then
@@ -362,7 +397,7 @@ create_links_ts_obs() {
   local ts_dir_destination="$2"
   local begin_year="$3"
   local end_year="$4"
-  local error_num="$5"
+  local error_num="$5" # Will use error_num +0,+1,+2
 
   local script_dir="{{ scriptDir }}"
   local prefix="{{ prefix }}"
@@ -421,7 +456,7 @@ create_links_ts_obs() {
       if [[ $? -ne 0 ]]; then
         cd "${script_dir}" || exit
         echo "ERROR (${error_num})" > "${prefix}.status"
-        exit "${error_num}"
+        exit "$((error_num + 1))"
       fi
       echo "ncatted successful"
     fi
@@ -435,7 +470,7 @@ create_links_ts_obs() {
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
       echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "${error_num}"
+      exit "$((error_num + 2))"
     fi
     echo "ncap2 successful"
   done
@@ -530,10 +565,12 @@ ts_dir_ref_source="{{ scriptDir }}/${workdir}/${obstmp_dir}"
 
 {% if current_set == "mean_climate" %}
 climo_dir_ref=climo_ref
+# This will use errors code 6,7,8:
 create_links_acyc_climo_obs "${ts_dir_ref_source}" "${climo_dir_ref}" ${ref_Y1} ${ref_Y2} 6
 {% elif current_set in ["variability_modes_cpl", "variability_modes_atm", "enso"] %}
 ts_dir_ref=ts_ref
-create_links_ts_obs "${ts_dir_ref_source}" "${ts_dir_ref}" ${ref_Y1} ${ref_Y2} 7
+# This will use error codes 9,10,11:
+create_links_ts_obs "${ts_dir_ref_source}" "${ts_dir_ref}" ${ref_Y1} ${ref_Y2} 9
 {% endif %}
 
 {% endif %}
@@ -899,8 +936,8 @@ echo "The current directory is: $PWD" # This will be of the form .../post/script
 time ${command}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (8)' > {{ prefix }}.status
-  exit 8
+  echo 'ERROR (12)' > {{ prefix }}.status
+  exit 12
 fi
 
 set -e
@@ -917,8 +954,8 @@ echo
 mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (9)' > {{ prefix }}.status
-  exit 9
+  echo 'ERROR (13)' > {{ prefix }}.status
+  exit 13
 fi
 
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
@@ -942,8 +979,8 @@ done
 rsync -a ${results_dir} ${web_dir}/
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (10)' > {{ prefix }}.status
-  exit 10
+  echo 'ERROR (14)' > {{ prefix }}.status
+  exit 14
 fi
 {% endif %}
 
