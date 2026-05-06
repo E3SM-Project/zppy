@@ -279,7 +279,6 @@ create_links_acyc_climo_obs() {
     if ! ls tmp_clm_*.nc &>/dev/null; then
       continue
     fi
-    done
 
     combined_name="${SUBSTR}.${ttag}.AC.${case_id}.nc"
     run_nco ncrcat -O tmp_clm_*.nc "${combined_name}"
