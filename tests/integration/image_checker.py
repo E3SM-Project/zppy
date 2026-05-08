@@ -256,6 +256,10 @@ def _compare_actual_and_expected(
     except FileNotFoundError:
         missing_images.append(image_name)
         return
+    except Exception as e:
+        print(f"Warning: could not open actual image {path_to_actual_png}: {e}")
+        missing_images.append(image_name)
+        return
     expected_png = Image.open(path_to_expected_png).convert("RGB")
     diff = ImageChops.difference(actual_png, expected_png)
 
