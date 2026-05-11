@@ -623,23 +623,19 @@ create_links_ts_obs() {
       -a axis,time,o,c,"T" \
       -a standard_name,time,o,c,"time" \
       "${combined_name}" "${combined_name}"
-    echo "time normalization successful"
-
-    # Add time bounds
-    local cmdfix1='if(!exists("bnds")) defdim("bnds",2)'
-    local cmdfix2='time_bnds=make_bounds(time,$bnds,"time_bnds")'
-    local cmdfix3='time_bnds@units=time@units'
-    local cmdfix4='time_bnds@calendar=time@calendar'
-    local cmdfix5='time_bnds=double(round(time_bnds*86400.0)/86400.0)'
-    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
+    if [[ $? -ne 0 ]]; then
+      cd "${script_dir}" || exit
+      echo "ERROR ($((error_num + 5)))" > "${prefix}.status"
+      exit "$((error_num + 5))"
+    fi
     echo "ncatted CF metadata successful"
   done
 
   if [ -z "$( ls . )" ]; then
     echo "create_links_ts_obs: ${ts_dir_destination} was not updated!"
     cd "${script_dir}" || exit
-    echo "ERROR ($((error_num + 5)))" > "${prefix}.status"
-    exit "$((error_num + 5))"
+    echo "ERROR ($((error_num + 6)))" > "${prefix}.status"
+    exit "$((error_num + 6))"
   fi
 
   cd ..
