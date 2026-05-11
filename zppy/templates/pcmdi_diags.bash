@@ -253,8 +253,8 @@ create_links_acyc_climo() {
   if [ -z "$(ls ./*.nc 2>/dev/null)" ]; then
     echo "create_links_acyc_climo: ${ts_dir_destination} was not updated!"
     cd "${script_dir}" || exit
-    echo "ERROR (${error_num})" > "${prefix}.status"
-    exit "${error_num}"
+    echo "ERROR ($((error_num + 5)))" > "${prefix}.status"
+    exit "$((error_num + 5))"
   fi
 
   cd ..
@@ -499,8 +499,8 @@ create_links_ts() {
         "${combined_name}" "${combined_name}"
       if [[ $? -ne 0 ]]; then
         cd "${script_dir}" || exit
-        echo "ERROR (${error_num})" > "${prefix}.status"
-        exit "${error_num}"
+        echo "ERROR ($((error_num + 5)))" > "${prefix}.status"
+        exit "$((error_num + 5))"
       fi
       echo "ncatted CF metadata successful"
     else
@@ -511,8 +511,8 @@ create_links_ts() {
   if [ -z "$(ls ./*.nc 2>/dev/null)" ]; then
     echo "create_links_ts: ${ts_dir_destination} was not updated!"
     cd "${script_dir}" || exit
-    echo "ERROR (${error_num})" > "${prefix}.status"
-    exit "${error_num}"
+    echo "ERROR ($((error_num + 6)))" > "${prefix}.status"
+    exit "$((error_num + 6))"
   fi
 
   cd ..
@@ -621,8 +621,8 @@ create_links_ts_obs() {
       "${combined_name}" "${combined_name}"
     if [[ $? -ne 0 ]]; then
       cd "${script_dir}" || exit
-      echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "${error_num}"
+      echo "ERROR ($((error_num + 5)))" > "${prefix}.status"
+      exit "$((error_num + 5))"
     fi
     echo "ncatted CF metadata successful"
   done
@@ -630,8 +630,8 @@ create_links_ts_obs() {
   if [ -z "$( ls . )" ]; then
     echo "create_links_ts_obs: ${ts_dir_destination} was not updated!"
     cd "${script_dir}" || exit
-    echo "ERROR ($((error_num + 5)))" > "${prefix}.status"
-    exit "$((error_num + 5))"
+    echo "ERROR ($((error_num + 6)))" > "${prefix}.status"
+    exit "$((error_num + 6))"
   fi
 
   cd ..
