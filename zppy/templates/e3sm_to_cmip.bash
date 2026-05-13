@@ -33,7 +33,7 @@ EOF
   dest_cmip={{ output }}/post/{{ component }}/{{ ts_grid }}/cmip_ts/{{ frequency }}
   mkdir -p ${dest_cmip}
 
-  {% if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' -%}
+  {% if interp_vars | default('') | trim -%}
   #add code to do vertical interpolation variables at model levels before e3sm_to_cmip
   IFS=',' read -ra mlvars <<< "{{ interp_vars }}"
   for var in "${mlvars[@]}"
@@ -42,7 +42,16 @@ EOF
     do
       if [ -f ${file} ]; then
         #run_nco ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev
-        run_nco ncremap {% if machine == 'dane' %}--mpi_pfx='srun -n {{ nodes }}'{% else %}-p mpi{% endif %} --vrt_ntp=log --vrt_xtr=mss_val --vrt_out='{{cmip_plevdata}}' ${file} ${file}.plev
+        if [ "{{ input_component }}" = "eamxx" ]; then
+          # NCO vertical interpolation expects P0 for hybrid-coordinate pressure.
+          # Add P0 = 100000 Pa if it is missing.
+          if ! run_nco ncks -m "${file}" | grep -q ' P0'; then
+            run_nco ncap2 -O -s 'P0=100000.; P0@units="Pa"; P0@long_name="reference pressure"' \
+              "${file}" "${file}.tmp_p0"
+            mv "${file}.tmp_p0" "${file}"
+          fi
+        fi
+        run_nco ncremap {% if machine == 'dane' %}--mpi_pfx='srun -n {{ nodes }}'{% else %}-p mpi{% endif %} {% if input_component == 'eamxx' %}--ps_nm='ps' {% else %}--ps_nm='PS'{% endif %} --vrt_ntp=log --vrt_xtr=mss_val --vrt_out='{{cmip_plevdata}}' ${file} ${file}.plev
         if [ $? != 0 ]; then
           cd {{ scriptDir }}
           echo 'ERROR (1)' > {{ prefix }}.status
