@@ -33,18 +33,7 @@ EOF
   dest_cmip={{ output }}/post/{{ component }}/{{ ts_grid }}/cmip_ts/{{ frequency }}
   mkdir -p ${dest_cmip}
 
-  # If the [ts] task vert-remapped some vars (sibling directory ts_vrt_remap/),
-  # replace the corresponding ts/ symlinks with ts_vrt_remap/ ones. The inline
-  # regrid loop below will detect these (via readlink) and skip them.
-  dest_plev={{ output }}/post/{{ component }}/{{ ts_grid }}/ts_vrt_remap/{{ frequency }}/{{ '%dyr' % (ypf) }}
-  if [ -d "${dest_plev}" ]; then
-    cp -sf ${dest_plev}/*_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc $input_dir 2>/dev/null || true
-  fi
-
-  # Gate on prc_typ (atm processing type) rather than fragile input_files
-  # prefix parsing — fixes #820 where input_component="eamxx" with non-eamxx
-  # input_files (e.g., "AVERAGE.nmonths_x1") caused this block to be skipped.
-  {% if prc_typ in ('cam', 'eam', 'eamxx') -%}
+  {% if interp_vars | default('') | trim -%}
   #add code to do vertical interpolation variables at model levels before e3sm_to_cmip
   IFS=',' read -ra mlvars <<< "{{ interp_vars }}"
   for var in "${mlvars[@]}"
@@ -63,7 +52,16 @@ EOF
           continue
         fi
         #run_nco ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev
-        run_nco ncremap {% if machine == 'dane' %}--mpi_pfx='srun -n {{ nodes }}'{% else %}-p mpi{% endif %} --vrt_ntp=log --vrt_xtr=mss_val{% if prc_typ == 'eamxx' %} --ps_nm=${file}/ps --vrt_in='{{ vrt_in_file }}'{% endif %} --vrt_out='{{cmip_plevdata}}' ${file} ${file}.plev
+        if [ "{{ input_component }}" = "eamxx" ]; then
+          # NCO vertical interpolation expects P0 for hybrid-coordinate pressure.
+          # Add P0 = 100000 Pa if it is missing.
+          if ! run_nco ncks -m "${file}" | grep -q ' P0'; then
+            run_nco ncap2 -O -s 'P0=100000.; P0@units="Pa"; P0@long_name="reference pressure"' \
+              "${file}" "${file}.tmp_p0"
+            mv "${file}.tmp_p0" "${file}"
+          fi
+        fi
+        run_nco ncremap {% if machine == 'dane' %}--mpi_pfx='srun -n {{ nodes }}'{% else %}-p mpi{% endif %} {% if input_component == 'eamxx' %}--ps_nm='ps' {% else %}--ps_nm='PS'{% endif %} --vrt_ntp=log --vrt_xtr=mss_val --vrt_out='{{cmip_plevdata}}' ${file} ${file}.plev
         if [ $? != 0 ]; then
           cd {{ scriptDir }}
           echo 'ERROR (1)' > {{ prefix }}.status
