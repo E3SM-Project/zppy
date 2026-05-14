@@ -15,6 +15,7 @@ from zppy.utils import (
     set_component_and_prc_typ,
     set_grid,
     set_mapping_file,
+    set_value_of_parameter_if_undefined,
     submit_script,
     write_settings_file,
 )
@@ -35,6 +36,23 @@ def ts(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
         set_mapping_file(c)
         set_grid(c)
         set_component_and_prc_typ(c)
+        # Defaults for vertical regrid params (only used when vert_remap_vars is set)
+        if c["vert_remap_vars"] != "":
+            default_vrt_remap_file = f"{c['diagnostics_base_path']}/e3sm_to_cmip_data/maps/vrt_remap_plev19.nc"
+            set_value_of_parameter_if_undefined(
+                c,
+                "vrt_remap_file",
+                default_vrt_remap_file,
+                ParameterInferenceType.PATH_INFERENCE,
+            )
+            if c["prc_typ"] == "eamxx":
+                default_vrt_in_file = f"{c['diagnostics_base_path']}/e3sm_to_cmip_data/grids/vert_L128.nc"
+                set_value_of_parameter_if_undefined(
+                    c,
+                    "vrt_in_file",
+                    default_vrt_in_file,
+                    ParameterInferenceType.PATH_INFERENCE,
+                )
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
         # Loop over year sets
         for s in year_sets:
