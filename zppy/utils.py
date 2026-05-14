@@ -229,10 +229,10 @@ def set_component_and_prc_typ(c: Dict[str, Any]) -> None:
         prc_typ = tmp
     elif tmp in ("mpaso",):
         component = "ocn"
-        prc_typ = tmp
+        prc_typ = "mpasocean"
     elif tmp in ("mpassi",):
         component = "ice"
-        prc_typ = tmp
+        prc_typ = "mpasseaice"
     else:
         raise ValueError(
             f"Cannot extract output component name from {c['input_component']} or {c['input_files']}."
