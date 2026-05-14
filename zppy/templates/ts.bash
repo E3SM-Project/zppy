@@ -54,7 +54,7 @@ vars={{ vars }}
 # https://unix.stackexchange.com/questions/237297/the-fastest-way-to-remove-a-string-in-a-variable
 # https://stackoverflow.com/questions/26457052/remove-a-substring-from-a-bash-variable
 # Remove U, since it is a 3D variable and thus will not work with rgn_avg
-vars=${vars//,U}
+# vars=${vars//,U}
 {%- else %}
 vars={{ vars }}
 {%- endif %}
