@@ -49,7 +49,9 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
             # EAMxx needs an explicit source vertical grid file (L128);
             # EAM/CAM have vertical coord info embedded in the file already.
             if c["prc_typ"] == "eamxx":
-                default_vrt_in_file = f"{c['diagnostics_base_path']}/e3sm_to_cmip_data/grids/vert_L128.nc"
+                default_vrt_in_file = (
+                    f"{c['diagnostics_base_path']}/e3sm_to_cmip_data/grids/vert_L128.nc"
+                )
                 set_value_of_parameter_if_undefined(
                     c,
                     "vrt_in_file",
