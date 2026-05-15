@@ -52,8 +52,14 @@ EOF
     for file in ${input_dir}/${var}_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc
     do
       if [ -f ${file} ]; then
+        # Skip if file is no longer a symlink — a prior run of this script already
+        # vert-remapped it in place (mv ${file}.plev ${file} replaced the symlink).
+        # Re-running ncremap on the resulting plev file would fail (no lev/ilev dim).
+        if [ ! -L "${file}" ]; then
+          continue
+        fi
         # Skip if [ts] already vert-remapped this var (symlink points into ts_vert_remap/)
-        if [ -L "${file}" ] && [[ "$(readlink ${file})" == *ts_vert_remap* ]]; then
+        if [[ "$(readlink ${file})" == *ts_vert_remap* ]]; then
           continue
         fi
         #run_nco ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev
