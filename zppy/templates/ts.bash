@@ -141,8 +141,8 @@ do
       ${file} ${out_file}
     if [ $? != 0 ]; then
       cd {{ scriptDir }}
-      echo 'ERROR (4)' > {{ prefix }}.status
-      exit 4
+      echo 'ERROR (6)' > {{ prefix }}.status
+      exit 6
     fi
   done
 done
