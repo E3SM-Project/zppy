@@ -556,7 +556,7 @@ echo ===== COPY FILES TO WEB SERVER =====
 echo
 
 # Create top-level directory
-web_dir=${www}/${case}/e3sm_diags/{{ sub }}
+web_dir=${www}/{{ default_case }}/e3sm_diags/{{ sub }}
 mkdir -p ${web_dir}
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
