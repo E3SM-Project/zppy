@@ -66,7 +66,7 @@ if grep -q "*" input.txt; then
   echo 'ERROR (1)' > {{ prefix }}.status
   exit 1
 fi
-# Generate time series files
+# Generate time series files.
 # If the user-defined parameter "vars" is "", then ${vars}, defined above, will be too.
 cat input.txt | run_nco ncclimo \
 -c {{ case }} \
@@ -86,16 +86,20 @@ cat input.txt | run_nco ncclimo \
 --yr_srt={{ yr_start }} \
 --yr_end={{ yr_end }} \
 --ypf={{ ypf }} \
-{% if mapping_file == '' -%}
+{%- if mapping_file == '' %}
 -o output \
-{%- elif mapping_file == 'glb' -%}
+{%- elif mapping_file == 'glb' %}
 -o output \
 --rgn_avg \
 --area={{ area_nm }} \
-{%- else -%}
+{%- else %}
+{%- if prc_typ in ['mpasocean', 'mpasseaice'] %}
+-o trash \
+{%- else %}
 --map={{ mapping_file }} \
 -o trash \
 -O output \
+{%- endif %}
 {%- endif %}
 {%- if frequency != 'monthly' %}
 --clm_md=hfs \
@@ -104,8 +108,7 @@ cat input.txt | run_nco ncclimo \
 {%- endif %}
 --prc_typ={{ prc_typ }}
 
-
-
+# Check ncclimo status before any optional separate regridding.
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'ERROR (2)' > {{ prefix }}.status
@@ -156,8 +159,8 @@ done
 }
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
-  echo 'ERROR (3)' > {{ prefix }}.status
-  exit 3
+  echo 'ERROR (5)' > {{ prefix }}.status
+  exit 5
 fi
 
 {%- if vrt_remap_vars != '' %}
