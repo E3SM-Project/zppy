@@ -18,6 +18,12 @@ export UCX_SHM_DEVICES=all # or not set UCX_NET_DEVICES at all
 # Make sure UVCDAT doesn't prompt us about anonymous logging
 export UVCDAT_ANONYMOUS_LOG=False
 
+
+# Use a non-interactive Matplotlib backend for batch diagnostics.
+# Safe for workflows that save figures to files and avoids GUI/Tkinter errors
+# on systems without a display.
+export MPLBACKEND=Agg
+
 # Script dir
 cd {{ scriptDir }}
 
