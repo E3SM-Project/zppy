@@ -54,9 +54,9 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
         define_current_set(c)
         if c["current_set"] == "enso":
             logger.warning(
-                "The 'enso' set is not yet supported in PCMDI Diags. Skipping launching of associated jobs."
+                "The 'enso' set is currently a testing mode in PCMDI Diags. Turn on it with care."
             )
-            break  # Skip this task
+        #    continue  # Skip this task
         c["sub"] = get_value_from_parameter(
             c, "subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
         )
@@ -89,7 +89,7 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
             if c["current_set"] != "synthetic_plots":
                 check_and_define_parameters(c)
-                print(c["prefix"])
+                logger.debug(c["prefix"])
                 define_relevant_years(c)
             else:
                 prefix = f"pcmdi_diags_{c['sub']}_{c['run_type']}"
@@ -119,21 +119,8 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
             if c["current_set"] != "synthetic_plots":
                 for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
                     add_ts_dependencies(c, dependencies, script_dir, yr)
-                    set_value_of_parameter_if_undefined(
-                        c,
-                        "e3sm_to_cmip_atm_subsection",
-                        "atm_monthly_180x360_aave",
-                        ParameterInferenceType.SECTION_INFERENCE,
-                    )
-                add_dependencies(
-                    dependencies,
-                    script_dir,
-                    "e3sm_to_cmip",
-                    c["e3sm_to_cmip_atm_subsection"],
-                    c["year1"],
-                    c["year2"],
-                    c["ts_num_years"],
-                )
+                for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
+                    add_e3sm_to_cmip_dependencies(c, dependencies, script_dir, yr)
             else:
                 if i < len(year_sets) - 1:
                     continue
@@ -345,21 +332,78 @@ def define_relevant_years_for_synthetic_plots(c: Dict[str, Any]) -> None:
         c["enso_years"] = year_str
 
 
+def _as_subsection_list(subsection: str) -> List[str]:
+    return [item.strip() for item in subsection.split(",") if item.strip()]
+
+
 def add_ts_dependencies(
     c: Dict[str, Any], dependencies: List[str], script_dir: str, yr: int
 ):
     start_yr = yr
     end_yr = yr + c["ts_num_years"] - 1
+
     if c["current_set"] in BASE_PCMDI_SETS:
-        add_dependencies(
-            dependencies,
-            script_dir,
-            "ts",
+        # Ensure the key exists because set_value_of_parameter_if_undefined()
+        # only fills values for existing keys with an empty string.
+        if "ts_subsection" not in c:
+            c["ts_subsection"] = ""
+
+        set_value_of_parameter_if_undefined(
+            c,
+            "ts_subsection",
             "atm_monthly_180x360_aave",
-            start_yr,
-            end_yr,
-            c["ts_num_years"],
+            ParameterInferenceType.SECTION_INFERENCE,
         )
+
+        ts_subsections = [
+            item.strip() for item in c["ts_subsection"].split(",") if item.strip()
+        ]
+
+        for ts_subsection in ts_subsections:
+            add_dependencies(
+                dependencies,
+                script_dir,
+                "ts",
+                ts_subsection,
+                start_yr,
+                end_yr,
+                c["ts_num_years"],
+            )
+
+
+def add_e3sm_to_cmip_dependencies(
+    c: Dict[str, Any], dependencies: List[str], script_dir: str, yr: int
+):
+    start_yr = yr
+    end_yr = yr + c["ts_num_years"] - 1
+
+    if c["current_set"] in BASE_PCMDI_SETS:
+        if "e3sm_to_cmip_atm_subsection" not in c:
+            c["e3sm_to_cmip_atm_subsection"] = ""
+
+        set_value_of_parameter_if_undefined(
+            c,
+            "e3sm_to_cmip_atm_subsection",
+            "atm_monthly_180x360_aave",
+            ParameterInferenceType.SECTION_INFERENCE,
+        )
+
+        e3sm_to_cmip_atm_subsections = [
+            item.strip()
+            for item in c["e3sm_to_cmip_atm_subsection"].split(",")
+            if item.strip()
+        ]
+
+        for e3sm_to_cmip_atm_subsection in e3sm_to_cmip_atm_subsections:
+            add_dependencies(
+                dependencies,
+                script_dir,
+                "e3sm_to_cmip",
+                e3sm_to_cmip_atm_subsection,
+                start_yr,
+                end_yr,
+                c["ts_num_years"],
+            )
 
 
 def add_pcmdi_dependencies(
@@ -370,6 +414,8 @@ def add_pcmdi_dependencies(
         status_suffix = f"_{c['year1']:04d}-{c['year2']:04d}"
     elif c["run_type"] == "model_vs_model":
         status_suffix = f"_{c['year1']:04d}-{c['year2']:04d}_vs_{c['ref_year1']:04d}-{c['ref_year2']:04d}"
+    else:
+        raise ValueError(f"Invalid run_type={c['run_type']}")
 
     if c["clim_viewer"]:
         status_file = os.path.join(
