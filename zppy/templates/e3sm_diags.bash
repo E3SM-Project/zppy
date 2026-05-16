@@ -40,6 +40,16 @@ tag="{{ tag }}"
 
 results_dir=${tag}_${Y1}-${Y2}
 
+
+# Flexible file keys for climatology and diurnal climatology.
+# If not defined, None, or empty string, fall back to case.
+clim_fkey="{{ clim_fkey if clim_fkey else case }}"
+clim_diurnal_fkey="{{ clim_diurnal_fkey if clim_diurnal_fkey else case }}"
+{% if run_type == "model_vs_model" %}
+ref_clim_fkey="{{ ref_clim_fkey if ref_clim_fkey else ref_name }}"
+ref_clim_diurnal_fkey="{{ ref_clim_diurnal_fkey if ref_clim_diurnal_fkey else ref_name }}"
+{%- endif %}
+
 # Create temporary workdir
 hash=`mktemp --dry-run -d XXXX`
 workdir=tmp.{{ prefix }}.${id}.${hash}
@@ -50,10 +60,12 @@ create_links_climo()
 {
   climo_dir_source=$1
   climo_dir_destination=$2
-  nc_prefix=$3
-  begin_year=$4
-  end_year=$5
-  error_num=$6
+  nc_prefix=$3       # raw/source file prefix
+  out_prefix=$4      # desired linked-file prefix
+  begin_year=$5
+  end_year=$6
+  error_num=$7
+
   mkdir -p ${climo_dir_destination}
   cd ${climo_dir_destination}
   # Glob covers both EAM monthly (${case}_VAR_*) and EAMxx monthly (${case}.{stream}_VAR_*).
@@ -63,6 +75,17 @@ create_links_climo()
     echo "ERROR (${error_num})" > {{ prefix }}.status
     exit ${error_num}
   fi
+
+  # Rename linked files only when the raw/source prefix differs from
+  # the desired output prefix.
+  if [ "${nc_prefix}" != "${out_prefix}" ]; then
+    for f in ${nc_prefix}_*_${begin_year}??_${end_year}??_climo.nc; do
+      if [ -e "${f}" ]; then
+        mv "${f}" "${f/${nc_prefix}/${out_prefix}}"
+      fi
+    done
+  fi
+
   cd ..
 }
 
@@ -70,18 +93,33 @@ create_links_climo_diurnal()
 {
   climo_diurnal_dir_source=$1
   climo_diurnal_dir_destination=$2
-  nc_prefix=$3
-  begin_year=$4
-  end_year=$5
-  error_num=$6
+  nc_prefix=$3       # raw/source file prefix
+  out_prefix=$4      # desired linked-file prefix
+  begin_year=$5
+  end_year=$6
+  error_num=$7
+
   mkdir -p ${climo_diurnal_dir_destination}
   cd ${climo_diurnal_dir_destination}
+
   cp -s ${climo_diurnal_dir_source}/${nc_prefix}.*_*_${begin_year}??_${end_year}??_climo.nc .
+
   if [ $? != 0 ]; then
     cd {{ scriptDir }}
     echo "ERROR (${error_num})" > {{ prefix }}.status
     exit ${error_num}
   fi
+
+  # Rename linked files only when the raw/source prefix differs from
+  # the desired output prefix.
+  if [ "${nc_prefix}" != "${out_prefix}" ]; then
+    for f in ${nc_prefix}.*_*_${begin_year}??_${end_year}??_climo.nc; do
+      if [ -e "${f}" ]; then
+        mv "${f}" "${f/${nc_prefix}/${out_prefix}}"
+      fi
+    done
+  fi
+
   cd ..
 }
 
@@ -93,12 +131,13 @@ climo_dir_primary_land=climo_test_land
 {%- endif %}
 # Create local links to input climo files
 climo_dir_source={{ output }}/post/lnd/{{ grid }}/clim/{{ '%dyr' % (year2-year1+1) }}
-create_links_climo ${climo_dir_source} ${climo_dir_primary_land} ${case} ${Y1} ${Y2} 1
+create_links_climo ${climo_dir_source} ${climo_dir_primary_land} ${clim_fkey} ${case} ${Y1} ${Y2} 1
+
 {% if run_type == "model_vs_model" %}
 # Create local links to input climo files (ref model)
 climo_dir_source={{ reference_data_path }}/{{ '%dyr' % (ref_year2-ref_year1+1) }}
 climo_dir_ref_land=climo_ref_land
-create_links_climo ${climo_dir_source} ${climo_dir_ref_land} {{ ref_name }} ${ref_Y1} ${ref_Y2} 2
+create_links_climo ${climo_dir_source} ${climo_dir_ref_land} ${ref_clim_fkey} {{ ref_name }} ${ref_Y1} ${ref_Y2} 2
 {%- endif %}
 {%- endif %}
 
@@ -110,12 +149,12 @@ climo_dir_primary=climo_test
 {%- endif %}
 # Create local links to input climo files
 climo_dir_source={{ output }}/post/atm/{{ grid }}/clim/{{ '%dyr' % (year2-year1+1) }}
-create_links_climo ${climo_dir_source} ${climo_dir_primary} ${case} ${Y1} ${Y2} 3
+create_links_climo ${climo_dir_source} ${climo_dir_primary} ${clim_fkey} ${case} ${Y1} ${Y2} 3
 {% if run_type == "model_vs_model" %}
 # Create local links to input climo files (ref model)
 climo_dir_source={{ reference_data_path }}/{{ '%dyr' % (ref_year2-ref_year1+1) }}
 climo_dir_ref=climo_ref
-create_links_climo ${climo_dir_source} ${climo_dir_ref} {{ ref_name }} ${ref_Y1} ${ref_Y2} 4
+create_links_climo ${climo_dir_source} ${climo_dir_ref} ${ref_clim_fkey} {{ ref_name }} ${ref_Y1} ${ref_Y2} 4
 {%- endif %}
 {%- endif %}
 
@@ -128,12 +167,12 @@ climo_diurnal_dir_primary=climo_{{ climo_diurnal_frequency }}_test
 {%- endif %}
 # Create local links to input diurnal cycle climo files
 climo_diurnal_dir_source={{ output }}/post/atm/{{ grid }}/clim_{{ climo_diurnal_frequency }}/{{ '%dyr' % (year2-year1+1) }}
-create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_primary} ${case} ${Y1} ${Y2} 5
+create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_primary} ${clim_diurnal_fkey}  ${case} ${Y1} ${Y2} 5
 {% if run_type == "model_vs_model" %}
 # Create local links to input climo files (ref model)
 climo_diurnal_dir_source={{ reference_data_path_climo_diurnal }}/{{ '%dyr' % (ref_year2-ref_year1+1) }}
 climo_diurnal_dir_ref=climo_diurnal_ref
-create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_ref} {{ ref_name }} ${ref_Y1} ${ref_Y2} 6
+create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_ref} ${ref_clim_diurnal_fkey}  {{ ref_name }} ${ref_Y1} ${ref_Y2} 6
 {%- endif %}
 {%- endif %}
 
