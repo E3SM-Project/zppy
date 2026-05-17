@@ -331,9 +331,6 @@ def define_relevant_years_for_synthetic_plots(c: Dict[str, Any]) -> None:
     if c["enso_years"] == "":
         c["enso_years"] = year_str
 
-def _as_subsection_list(subsection: str) -> List[str]:
-    return [item.strip() for item in subsection.split(",") if item.strip()]
-
 
 def _as_subsection_list(subsection: str) -> List[str]:
     return [item.strip() for item in subsection.split(",") if item.strip()]
@@ -359,9 +356,7 @@ def add_ts_dependencies(
         )
 
         ts_subsections = [
-            item.strip()
-            for item in c["ts_subsection"].split(",")
-            if item.strip()
+            item.strip() for item in c["ts_subsection"].split(",") if item.strip()
         ]
 
         for ts_subsection in ts_subsections:
@@ -374,6 +369,7 @@ def add_ts_dependencies(
                 end_yr,
                 c["ts_num_years"],
             )
+
 
 def add_e3sm_to_cmip_dependencies(
     c: Dict[str, Any], dependencies: List[str], script_dir: str, yr: int
@@ -408,6 +404,7 @@ def add_e3sm_to_cmip_dependencies(
                 end_yr,
                 c["ts_num_years"],
             )
+
 
 def add_pcmdi_dependencies(
     c: Dict[str, Any], dependencies: List[str], script_dir: str
