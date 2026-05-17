@@ -338,6 +338,10 @@ def _as_subsection_list(subsection: str) -> List[str]:
     return [item.strip() for item in subsection.split(",") if item.strip()]
 
 
+def _as_subsection_list(subsection: str) -> List[str]:
+    return [item.strip() for item in subsection.split(",") if item.strip()]
+
+
 def add_ts_dependencies(
     c: Dict[str, Any], dependencies: List[str], script_dir: str, yr: int
 ):
