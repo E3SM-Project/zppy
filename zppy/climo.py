@@ -35,6 +35,15 @@ def climo(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
         set_mapping_file(c)
         set_grid(c)
         set_component_and_prc_typ(c)
+        # Compose the climo output filename prefix. For EAMxx, subsection-level
+        # `case` (e.g., "1ma_ne30pg2") is the stream id ncclimo needs to find
+        # input files; prefixing with the top-level case keeps output names
+        # unified across streams so a single e3sm_diags subsection can consume
+        # both monthly and diurnal climo via one `case` setting.
+        if c["prc_typ"] == "eamxx" and c["case"] != c["default_case"]:
+            c["fml_nm"] = f"{c['default_case']}.{c['case']}"
+        else:
+            c["fml_nm"] = c["case"]
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
         # Loop over year sets
         for s in year_sets:
