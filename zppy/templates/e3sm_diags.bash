@@ -56,7 +56,8 @@ create_links_climo()
   error_num=$6
   mkdir -p ${climo_dir_destination}
   cd ${climo_dir_destination}
-  cp -s ${climo_dir_source}/${nc_prefix}_*_${begin_year}??_${end_year}??_climo.nc .
+  # Glob covers both EAM monthly (${case}_VAR_*) and EAMxx monthly (${case}.{stream}_VAR_*).
+  cp -s ${climo_dir_source}/${nc_prefix}*_${begin_year}??_${end_year}??_climo.nc .
   if [ $? != 0 ]; then
     cd {{ scriptDir }}
     echo "ERROR (${error_num})" > {{ prefix }}.status

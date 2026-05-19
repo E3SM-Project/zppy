@@ -20,7 +20,7 @@ cd ${workdir}
 run_nco ncclimo \
 {% if prc_typ == 'eamxx' -%}
 --case={{ case }}.{{ input_files }}.0001-01-01-00000.nc \
---fml_nm={{ case }} \
+--fml_nm={{ fml_nm }} \
 {%- else -%}
 --case={{ case }} \
 {%- endif %}
@@ -97,6 +97,9 @@ fi
 # Now, call ncclimo
 cat input.txt | run_nco ncclimo \
 --case={{ case }}.{{ input_files }} \
+{%- if prc_typ == 'eamxx' %}
+--fml_nm={{ fml_nm }} \
+{%- endif %}
 --jobs=${SLURM_NNODES} \
 --thr=1 \
 {%- if exclude %}
