@@ -48,7 +48,9 @@ def parse_env_case_xml(input_dir: str) -> Dict[str, str]:
 
     values: Dict[str, str] = {}
     for field, entry_id in _ENV_CASE_FIELDS.items():
-        entry = root.find(f"./entry[@id='{entry_id}']")
+        # CIME nests <entry> elements inside <group id="..."> wrappers, so we
+        # need a descendant search rather than a direct-child lookup.
+        entry = root.find(f".//entry[@id='{entry_id}']")
         if entry is None or entry.get("value") is None:
             logger.warning(
                 f"env_case.xml at {xml_path} has no '{entry_id}' entry; "

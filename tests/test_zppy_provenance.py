@@ -17,20 +17,27 @@ from zppy.provenance import (
 def _write_env_case_xml(input_dir: str, entries: Dict[str, Optional[str]]) -> str:
     """Create <input_dir>/case_scripts/env_case.xml with the given entries.
 
+    Mirrors the real CIME structure where every <entry> is nested inside a
+    <group id="..."> wrapper rather than being a direct child of <file>.
     If a value is None, write the entry tag without a value= attribute so we
     can exercise the missing-attribute branch.
     """
     case_scripts = os.path.join(input_dir, "case_scripts")
     os.makedirs(case_scripts, exist_ok=True)
     xml_path = os.path.join(case_scripts, "env_case.xml")
-    lines = ['<?xml version="1.0"?>', "<file>"]
+    lines = [
+        '<?xml version="1.0"?>',
+        '<file id="env_case.xml" version="2.0">',
+        '  <group id="case_last">',
+    ]
     for entry_id, value in entries.items():
         if value is None:
-            lines.append(f'  <entry id="{entry_id}"><type>char</type></entry>')
+            lines.append(f'    <entry id="{entry_id}"><type>char</type></entry>')
         else:
             lines.append(
-                f'  <entry id="{entry_id}" value="{value}"><type>char</type></entry>'
+                f'    <entry id="{entry_id}" value="{value}"><type>char</type></entry>'
             )
+    lines.append("  </group>")
     lines.append("</file>")
     with open(xml_path, "w") as f:
         f.write("\n".join(lines))
