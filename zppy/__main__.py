@@ -70,11 +70,10 @@ def main():
     provenance = os.path.join(script_dir, f"provenance.{ts_utc}.cfg")
     try:
         os.makedirs(script_dir)
-        shutil.copy(args.config, provenance)
     except OSError as exc:
         if exc.errno != errno.EEXIST:
             raise OSError("Cannot create script directory")
-        pass
+    shutil.copy(args.config, provenance)
     # Web output directory
     www = config["default"]["www"]
     username = os.environ.get("USER")
@@ -83,11 +82,10 @@ def main():
     provenance = os.path.join(www_case_dir, f"provenance.{ts_utc}.cfg")
     try:
         os.makedirs(www_case_dir)
-        shutil.copy(args.config, provenance)
     except OSError as exc:
         if exc.errno != errno.EEXIST:
             raise OSError("Cannot create www case directory")
-        pass
+    shutil.copy(args.config, provenance)
     machine_info = _get_machine_info(config)
     config = _determine_parameters(machine_info, config)
     if args.last_year:
