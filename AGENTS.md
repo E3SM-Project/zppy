@@ -27,11 +27,11 @@ Your goal is to leave review comments on the following topics:
 These instructions apply if your task is analysis-only. This happens when a request mentions that it is "analysis-only" or otherwise does not require a commit to be made.
 
 - Your goal is to produce a Markdown comment answering the request.
-- If you are not able to produce a Markdown comment, add a commit to the package including your analysis in a new file called `ANALYSIS.md`.
+- If you are not able to produce a Markdown comment, it's ok to add a commit to the package including your analysis in a new file called `ANALYSIS.md`.
 
 ### (3) Specific instructions for agents adding commits
 
-These instructions apply if you task is to make changes in the repository. This happens when someone marks Copilot as an assignee on an issue, when someone tags Copilot in a comment, or when someone interacts with Copilot via the "Agents" tab.
+These instructions apply if your task is to make changes in the repository. This happens when someone marks Copilot as an assignee on an issue, when someone tags Copilot in a comment, or when someone interacts with Copilot via the "Agents" tab.
 
 - Your goal is to produce a commit that can be reviewed and tested manually by the developer.
 - Changes should be as minimal as possible. For example, if increasing the version of Python breaks something, check if there's a way to default to previous working behavior before implementing a big fix. Small changes should always be preferred over large changes.
@@ -55,7 +55,7 @@ When _not_ to modify tests:
 When to add dependencies:
 - Do so only if absolutely necessary or specifically requested.
 - Record the dependency updates in the appropriate repository dependency files
-  (for example, in `conda/dev.yml` ), not only as imports.
+  (for example, in `conda/dev.yml`), not only as imports.
 
 ## Context for all agents
 
@@ -91,7 +91,7 @@ Each task type has a corresponding Python file in `zppy/`:
 
 ### Configuration
 
-The configuration file given by the user in `zppy -c config_file.cfg` contains all the user-specified values to use. If the user specifies a campaign, values from `zppy/defaults/campaign_name.cfg` may also be used. The final default for any paramter is `zppy/defaults/default.ini`.
+The configuration file given by the user in `zppy -c config_file.cfg` contains all the user-specified values to use. If the user specifies a campaign, values from `zppy/defaults/campaign_name.cfg` may also be used. The final default for any parameter is `zppy/defaults/default.ini`.
 
 Configuration files are set up hierarchically. Parameters defined in `[default]` apply to all tasks, unless overridden. Parameters defined for a task apply to all subtasks, unless overridden.
 
@@ -234,7 +234,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
     "livvkit_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
     "pcmdi_diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-zi-main-yyyymmdd",
     # This is the environment setup for other tasks.
-    # Leave as "" to use the latest Unified environment.
+    # Leave as "" to use the latest Unified environment. (Or specify Unified path directly, as below).
     "environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
     # For a complete test, run the set of latest cfgs and at least one set of legacy cfgs
     "cfgs_to_run": [
