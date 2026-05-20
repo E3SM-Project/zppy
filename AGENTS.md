@@ -2,10 +2,14 @@
 
 ## Instructions
 
-You are an agent responding to a request about the `zppy` package. First, determine which of the following three categories you match, and then follow the corresponding instructions.
+You are an agent responding to a request about the `zppy` package. First, determine which of the following three categories you match, and then follow the corresponding instructions:
+
+1. Agents doing code review
+2. Agents performing analysis
+3. Agents adding commits
 
 In all cases:
-- Do _not_ install packages, run tests, run pre-commit, or run the code in any way. Assume permission is _not_ granted to do any installations or runs yourself. Please proceed as best you can without these.
+- Do _not_ install packages, run tests, run `pre-commit`, or run the `zppy` codebase in any way. Assume permission is _not_ granted to do any installations or runs yourself. Please proceed as best you can with these limitations.
 
 ### (1) Specific instructions for agents doing code review
 
@@ -31,7 +35,7 @@ These instructions apply if you task is to make changes in the repository. This 
 
 - Your goal is to produce a commit that can be reviewed and tested manually by the developer.
 - Changes should be as minimal as possible. For example, if increasing the version of Python breaks something, check if there's a way to default to previous working behavior before implementing a big fix. Small changes should always be preferred over large changes.
-- All code changes should be done based on (1) the request from the person who launching the agent and (2) the code logic of the `zppy` package.
+- All code changes should be done based on (1) the request from the person who launched the agent and (2) the code logic of the `zppy` package.
 - Type annotations should _always_ be used.
 
 When to add tests:
@@ -43,7 +47,7 @@ When to add tests:
 When to modify tests:
 - Modifying existing features or internal functions.
 
-When not to modify tests:
+When _not_ to modify tests:
 - Non-functional changes that should not change behavior (for example,
   documentation-only updates, formatting-only changes, or compatibility updates
   for new Python versions).
@@ -76,13 +80,14 @@ Before merging, a human runs `pre-commit run --all-files` to make sure the code 
 Each task type has a corresponding Python file in `zppy/`:
 - `ts.py` — time series (uses `ncclimo`)
 - `climo.py` — climatologies (uses `ncclimo`)
-- `e3sm_to_cmip.py` — CMIP variable conversion (uses `e3sm_to_cmip`)
+- `e3sm_to_cmip.py` — CMIP variable conversion (uses [e3sm_to_cmip](https://github.com/E3SM-Project/e3sm_to_cmip))
 - `tc_analysis.py` — tropical cyclone analysis
-- `e3sm_diags.py` — E3SM Diags diagnostic plots (uses `e3sm_diags`)
-- `mpas_analysis.py` — MPAS ocean/sea-ice analysis (uses `mpas_analysis`)
-- `global_time_series.py` — global time series plots (uses `zppy-interfaces`)
-- `ilamb.py` — ILAMB land model benchmarking (uses `ilamb`)
-- `pcmdi_diags.py` — PCMDI diagnostics (uses `zppy-interfaces`)
+- `e3sm_diags.py` — E3SM Diags diagnostic plots (uses [e3sm_diags](https://github.com/e3sm-project/e3sm_diags))
+- `mpas_analysis.py` — MPAS ocean/sea-ice analysis (uses [MPAS-Analysis](https://github.com/MPAS-Dev/MPAS-Analysis))
+- `global_time_series.py` — global time series plots (uses [zppy-interfaces](https://github.com/E3SM-Project/zppy-interfaces))
+- `ilamb.py` — ILAMB land model benchmarking (uses [ILAMB](https://github.com/rubisco-sfa/ILAMB))
+- `livvkit.py` — LIVVkit land ice plots (uses [LIVVkit](https://github.com/LIVVkit/LIVVkit))
+- `pcmdi_diags.py` — PCMDI diagnostics (uses [zppy-interfaces](https://github.com/E3SM-Project/zppy-interfaces))
 
 ### Configuration
 
@@ -92,7 +97,7 @@ Configuration files are set up hierarchically. Parameters defined in `[default]`
 
 ### Inclusions
 
-Some tasks (`e3sm_diags`, `e3sm_to_cmip`, `ilamb`, `pcmdi_diags`) have extended configuration files that can be specified. These can be found in `zppy/templates/inclusions`. The entire text of these files is used in the bash scripts. For example, `ilamb.bash` has the following code block where `cfg` is a parameter that is passed in.
+Some tasks (`e3sm_to_cmip`, `e3sm_diags`, `ilamb`, `livvkit`, `pcmdi_diags`) have additional files that can be specified, with defaults in `zppy/templates/inclusions`. For example, `ilamb.bash` has the following code block where `cfg` is a parameter that is passed in:
 
 ```bash
 # include cfg file
@@ -131,7 +136,20 @@ You should _not_ run tests. However, it is important for you to understand how h
 Step 1: Set up environments for tasks and run `zppy-interfaces` unit tests
 
 ```bash
-lcrc_conda # Bash function to activate conda
+lcrc_conda # Bash function to activate conda.
+
+# Set up e3sm_to_cmip env
+cd ~/ez/e3sm_to_cmip
+git status # Check that branch is `master`, and for "nothing to commit, working tree clean"
+git fetch upstream master
+git checkout master
+git reset --hard upstream/master
+git log --oneline # Check that last commit matches https://github.com/E3SM-Project/e3sm_to_cmip/commits/master/
+rm -rf build
+conda clean --all --y
+conda env create -f conda-env/dev.yml -n test-e3sm-to-cmip-master-yyyymmdd # Use today's date
+conda activate test-e3sm-to-cmip-master-yyyymmdd
+python -m pip install .
 
 # Set up e3sm_diags env
 cd ~/ez/e3sm_diags
@@ -142,8 +160,21 @@ git reset --hard upstream/main
 git log --oneline # Check that last commit matches https://github.com/E3SM-Project/e3sm_diags/commits/main
 rm -rf build
 conda clean --all --y
-conda env create -f conda-env/dev.yml -n test-diags-main-yyyymmdd # Use today's date
+conda env create -f conda-env/dev.yml -n test-e3sm-diags-main-yyyymmdd # Use today's date
 conda activate test-diags-main-yyyymmdd
+python -m pip install .
+
+# Set up MPAS-Analysis env
+cd ~/ez/MPAS-Analysis
+git status # Check that branch is `develop`, and for "nothing to commit, working tree clean"
+git fetch upstream develop
+git checkout develop
+git reset --hard upstream/develop
+git log --oneline # Check that last commit matches https://github.com/MPAS-Dev/MPAS-Analysis/commits/develop/
+rm -rf build
+conda clean --all --y
+conda env create -f conda-env/dev.yml -n test-mpas-analysis-develop-yyyymmdd # Use today's date
+conda activate test-mpas-analysis-develop-yyyymmdd
 python -m pip install .
 
 # Set up zppy-interfaces env
@@ -158,6 +189,8 @@ conda clean --all --y
 conda env create -f conda/dev.yml -n test-zi-main-yyyymmdd # Use today's date
 conda activate test-zi-main-yyyymmdd
 python -m pip install .
+
+# Run zppy-interfaces tests
 pytest tests/unit/global_time_series/test_*.py
 pytest tests/unit/pcmdi_diags/test_*.py
 ```
@@ -183,6 +216,10 @@ Step 3: Edit `tests/integration/utils.py` to properly set up integration tests
 
 ```python
 TEST_SPECIFICS: Dict[str, Any] = {
+    # This is the NCO path.
+    # Keep as "" to use the production-version NCO commands.
+    # Set to a specific path to use development-version NCO commands.
+    "nco_path": "",
     # These are custom environment_commands for specific tasks.
     # Never set these to "", because they will print the line
     # `environment_commands = ""` for the corresponding task,
@@ -190,9 +227,11 @@ TEST_SPECIFICS: Dict[str, Any] = {
     # That is, there will be no environment set.
     # (`environment_commands = ""` only redirects to Unified
     # if specified under the [default] task)
-    "diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-diags-main-yyyymmdd",
-    "mpas_analysis_environment_commands": "source /home/ac.xylar/chrysalis/miniforge3/etc/profile.d/conda.sh && conda activate mpas_analysis_dev",
+    "e3sm_to_cmip_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-e3sm-to-cmip-master-yyyymmdd",
+    "diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-e3sm-diags-main-yyyymmdd",
+    "mpas_analysis_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-mpas-analysis-develop-yyyymmdd",
     "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-zi-main-yyyymmdd",
+    "livvkit_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
     "pcmdi_diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-zi-main-yyyymmdd",
     # This is the environment setup for other tasks.
     # Leave as "" to use the latest Unified environment.
@@ -214,15 +253,15 @@ TEST_SPECIFICS: Dict[str, Any] = {
         "mpas_analysis",
         "global_time_series",
         "ilamb",
+        "livvkit",
         "pcmdi_diags",
     ],
-    "unique_id": "zppy_main_branch_test_yyyymmdd",
+    "unique_id": "test_zppy_main_branch_yyyymmdd",
 }
-
 ```
 
 A few things are worth pointing out here:
-- The environment `zppy` runs in can, and often is, distinct from the environment that the tasks run in. Each task's `.bash` file begins with `{{ environment_commands }}`, which specifies the environment to use. That is why we had to create a fresh environment for `e3sm_diags` and `zppy_interfaces` earlier. Soon, we will run `tests/integration/utils.py`, which will set the proper `environment_commands` value for each task.
+- The environment `zppy` runs in can, and often is, distinct from the environment that the tasks run in. Each task's `.bash` file begins with `{{ environment_commands }}`, which specifies the environment to use. That is why we had to create a fresh environment for some packages earlier. In the next step, we will run `tests/integration/utils.py`, which will set the proper `environment_commands` value for each task.
 - There are 3 main test configuration files: `bundles`, `comprehensive_v2`, `comprehensive_v3`. There are also 3 versions of these tests: the most recent ones, the files as they existed when `v3.1.0` was released, and as they existed when `v3.0.0` were released. The latter two categories are "legacy" tests in the sense that they allow us to test backwards compatibility.
 - Specific tasks to run can be toggled on/off so that only relevant jobs will be launched during testing.
 
@@ -232,9 +271,9 @@ Step 4: Launch jobs
 git diff # Check the diff of tests/integration/utils.py
 python tests/integration/utils.py # Generate the actual cfgs we'll use for testing
 
-zppy -c tests/integration/generated/test_weekly_comprehensive_v3_chrysalis.cfg
 zppy -c tests/integration/generated/test_weekly_bundles_chrysalis.cfg
 zppy -c tests/integration/generated/test_weekly_comprehensive_v2_chrysalis.cfg
+zppy -c tests/integration/generated/test_weekly_comprehensive_v3_chrysalis.cfg
 
 zppy -c tests/integration/generated/test_weekly_legacy_3.1.0_bundles_chrysalis.cfg
 zppy -c tests/integration/generated/test_weekly_legacy_3.1.0_comprehensive_v2_chrysalis.cfg
@@ -249,11 +288,11 @@ Step 5: Once bundles jobs finish, rerun them to launch any remaining jobs
 
 ```bash
 # Check bundles status
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_bundles_output/zppy_main_branch_test_yyyymmdd/v3.LR.historical_0051/post/scripts
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_bundles_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
 grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.1.0_bundles_output/zppy_main_branch_test_yyyymmdd/v3.LR.historical_0051/post/scripts
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.1.0_bundles_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
 grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.0.0_bundles_output/zppy_main_branch_test_yyyymmdd/v3.LR.historical_0051/post/scripts
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.0.0_bundles_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
 grep -v "OK" *status # Check for any errors. No results is good.
 
 # Now, run bundles part 2 (bundles tests require a second run):
@@ -268,27 +307,27 @@ Step 6: Review finished runs
 
 ```bash
 ### v2  ###
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_comprehensive_v2_output/zppy_main_branch_test_yyyymmdd/v2.LR.historical_0201/post/scripts
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_comprehensive_v2_output/test_zppy_main_branch_yyyymmdd/v2.LR.historical_0201/post/scripts
 grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.1.0_comprehensive_v2_output/zppy_main_branch_test_yyyymmdd/v2.LR.historical_0201/post/scripts
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.1.0_comprehensive_v2_output/test_zppy_main_branch_yyyymmdd/v2.LR.historical_0201/post/scripts
 grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.0.0_comprehensive_v2_output/zppy_main_branch_test_yyyymmdd/v2.LR.historical_0201/post/scripts
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.0.0_comprehensive_v2_output/test_zppy_main_branch_yyyymmdd/v2.LR.historical_0201/post/scripts
 grep -v "OK" *status # Check for any errors. No results is good.
 
 ### v3 ###
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_comprehensive_v3_output/zppy_main_branch_test_yyyymmdd/v3.LR.historical_0051/post/scripts
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_comprehensive_v3_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
 grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.1.0_comprehensive_v3_output/zppy_main_branch_test_yyyymmdd/v3.LR.historical_0051/post/scripts
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.1.0_comprehensive_v3_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
 grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.0.0_comprehensive_v3_output/zppy_main_branch_test_yyyymmdd/v3.LR.historical_0051/post/scripts
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.0.0_comprehensive_v3_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
 grep -v "OK" *status # Check for any errors. No results is good.
 
 ### bundles ###
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_bundles_output/zppy_main_branch_test_yyyymmdd/v3.LR.historical_0051/post/scripts
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_bundles_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
 grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.1.0_bundles_output/zppy_main_branch_test_yyyymmdd/v3.LR.historical_0051/post/scripts
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.1.0_bundles_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
 grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.0.0_bundles_output/zppy_main_branch_test_yyyymmdd/v3.LR.historical_0051/post/scripts
+cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.0.0_bundles_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
 grep -v "OK" *status # Check for any errors. No results is good.
 ```
 
