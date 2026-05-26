@@ -198,7 +198,7 @@ cd "${drc_in}" || {
     exit 7
 }
 
-eval ls "${drc_in}/${caseid}.${input_files}."*{${start}..${end}}*"*.nc" > "${result_dir}inputfile_${file_name}.txt"
+eval ls ${drc_in}/${caseid}.${input_files}.*{${start}..${end}}*.nc > "${result_dir}inputfile_${file_name}.txt"
 if [ $? != 0 ] || [ ! -s "${result_dir}inputfile_${file_name}.txt" ]; then
     echo "ERROR: no input files found for ${caseid}.${input_files} between ${start} and ${end}."
     cd {{ scriptDir }}
@@ -206,7 +206,7 @@ if [ $? != 0 ] || [ ! -s "${result_dir}inputfile_${file_name}.txt" ]; then
     exit 8
 fi
 
-eval ls "${caseid}.${input_files}."*{${start}..${end}}*"*.nc" > "${result_dir}outputfile_${file_name}.txt"
+eval ls ${caseid}.${input_files}.*{${start}..${end}}*.nc > "${result_dir}outputfile_${file_name}.txt"
 if [ $? != 0 ] || [ ! -s "${result_dir}outputfile_${file_name}.txt" ]; then
     echo "ERROR: no output file names generated for ${caseid}.${input_files} between ${start} and ${end}."
     cd {{ scriptDir }}
