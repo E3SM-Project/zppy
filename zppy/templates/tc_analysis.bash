@@ -1,9 +1,9 @@
 #!/bin/bash
 {% include 'inclusions/slurm_header.bash' %}
 {% include 'inclusions/boilerplate.bash' %}
-set -e # Stop running script on error.
-# This means we don't make as much use of the ERROR > status blocks in this file.
+set -e
 {{ environment_commands }}
+set +e
 
 set_pkg_manager
 
