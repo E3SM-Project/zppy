@@ -26,22 +26,46 @@ rm -rf ${result_dir}
 atm_name={{ atm_name }}
 input_files={{ input_files }}
 
-# Derive numeric res and pg2 from grid.
-# Expected forms: ne30pg2, ne30np4, ne120pg2, ne120np4
-grid="{{ ts_grid }}"
-if [[ "${grid}" =~ ^ne([0-9]+)(pg2|np4)$ ]]; then
-    res="${BASH_REMATCH[1]}"
-    grid_suffix="${BASH_REMATCH[2]}"
-else
-    echo "ERROR: unsupported grid='${grid}'. Expected forms like ne30pg2, ne30np4, ne120pg2, or ne120np4."
-    cd {{ scriptDir }}
-    echo 'ERROR (1)' > {{ prefix }}.status
-    exit 1
-fi
-
+# Determine grid resolution (res) and whether grid uses pg2.
+# Preferred path (EAM + EAMxx): set input_grid in [tc_analysis], e.g. "ne30pg2".
+# Legacy path (EAM-only):       set res, or rely on topography-file inference.
+input_grid="{{ input_grid }}"
+res="{{ res }}"
 pg2=false
-if [[ "${grid_suffix}" == "pg2" ]]; then
-    pg2=true
+
+if [[ -n "${input_grid}" ]]; then
+    if [[ "${input_grid}" =~ ^ne([0-9]+)(pg2|np4)$ ]]; then
+        res="${BASH_REMATCH[1]}"
+        [[ "${BASH_REMATCH[2]}" == "pg2" ]] && pg2=true
+    else
+        echo "ERROR: unsupported input_grid='${input_grid}'. Expected ne30pg2, ne30np4, ne120pg2, or ne120np4."
+        cd {{ scriptDir }}
+        echo 'ERROR (1)' > {{ prefix }}.status
+        exit 1
+    fi
+else
+    # Legacy: infer pg2 (and possibly res) from the topography_file global
+    # attribute of a sample input file. EAM only; EAMxx sets topography_file="NONE".
+    first_file=$(ls ${drc_in}/${caseid}.{{ input_files }}.*.nc 2>/dev/null | head -n 1)
+    if [[ -n "${first_file}" ]]; then
+        topography_file=$(run_nco ncks --trd -M -m "${first_file}" \
+            | grep -E -i "^global attribute [0-9]+: topography_file" \
+            | cut -f 11- -d ' ' | sort)
+        filename="${topography_file##*/}"
+        echo "topography_file=${topography_file}"
+        if [[ "${filename}" =~ ne([0-9]+)np4pg2 ]]; then
+            [[ -z "${res}" ]] && res="${BASH_REMATCH[1]}"
+            pg2=true
+        elif [[ "${filename}" =~ ne([0-9]+)np4 ]]; then
+            [[ -z "${res}" ]] && res="${BASH_REMATCH[1]}"
+        fi
+    fi
+    if [[ -z "${res}" ]]; then
+        echo "ERROR: could not determine grid. Set input_grid (e.g. \"ne30pg2\") in [tc_analysis]."
+        cd {{ scriptDir }}
+        echo 'ERROR (1)' > {{ prefix }}.status
+        exit 1
+    fi
 fi
 
 echo "res=${res}"
