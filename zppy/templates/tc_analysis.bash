@@ -223,9 +223,9 @@ cd "${result_dir}" || {
 
 # ------------------------------------------------------------
 # TC candidate detection. Detection threshold including:
-# 1. The sea-level pressure (SLP) must be a local minimum; 
-# 2. SLP must have a sufficient decrease (300 Pa) compared to surrounding nodes within 4 degree radius; 
-# 3. The average of the 200 hPa and 500 hPa level temperature decreases by 0.6 K in all directions 
+# 1. The sea-level pressure (SLP) must be a local minimum;
+# 2. SLP must have a sufficient decrease (300 Pa) compared to surrounding nodes within 4 degree radius;
+# 3. The average of the 200 hPa and 500 hPa level temperature decreases by 0.6 K in all directions
 #    within a 4 degree radius from the location to fSLP minima
 # ------------------------------------------------------------
 if [ "${res}" == 120 ]; then
