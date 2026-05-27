@@ -36,8 +36,8 @@ def ts(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
         set_mapping_file(c)
         set_grid(c)
         set_component_and_prc_typ(c)
-        # Defaults for vertical regrid params (only used when vert_remap_vars is set)
-        if c["vert_remap_vars"] != "":
+        # Defaults for vertical regrid params (only used when vrt_remap_vars is set)
+        if c["vrt_remap_vars"] != "":
             default_vrt_remap_file = f"{c['diagnostics_base_path']}/e3sm_to_cmip_data/maps/vrt_remap_plev19.nc"
             set_value_of_parameter_if_undefined(
                 c,

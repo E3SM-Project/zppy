@@ -112,13 +112,13 @@ if [ $? != 0 ]; then
   exit 2
 fi
 
-{%- if vert_remap_vars != '' %}
+{%- if vrt_remap_vars != '' %}
 
 # Vertical regrid (model levels → pressure levels)
-# When vert_remap_vars is set, regrid the listed vars and write to a sibling
-# directory ts_vert_remap/ alongside the standard ts/ output.
+# When vrt_remap_vars is set, regrid the listed vars and write to a sibling
+# directory ts_vrt_remap/ alongside the standard ts/ output.
 mkdir output_plev
-IFS=',' read -ra vremap_vars <<< "{{ vert_remap_vars }}"
+IFS=',' read -ra vremap_vars <<< "{{ vrt_remap_vars }}"
 for var in "${vremap_vars[@]}"
 do
   for file in output/${var}_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc
@@ -160,10 +160,10 @@ if [ $? != 0 ]; then
   exit 3
 fi
 
-{%- if vert_remap_vars != '' %}
+{%- if vrt_remap_vars != '' %}
 # Move vertically regridded ts files to sibling destination
 {
-  dest_plev={{ output }}/post/{{ component }}/{{ grid }}/ts_vert_remap/{{ frequency }}/{{ '%dyr' % (ypf) }}
+  dest_plev={{ output }}/post/{{ component }}/{{ grid }}/ts_vrt_remap/{{ frequency }}/{{ '%dyr' % (ypf) }}
   mkdir -p ${dest_plev}
   mv output_plev/*.nc ${dest_plev}
 }

@@ -33,10 +33,10 @@ EOF
   dest_cmip={{ output }}/post/{{ component }}/{{ ts_grid }}/cmip_ts/{{ frequency }}
   mkdir -p ${dest_cmip}
 
-  # If the [ts] task vert-remapped some vars (sibling directory ts_vert_remap/),
-  # replace the corresponding ts/ symlinks with ts_vert_remap/ ones. The inline
+  # If the [ts] task vert-remapped some vars (sibling directory ts_vrt_remap/),
+  # replace the corresponding ts/ symlinks with ts_vrt_remap/ ones. The inline
   # regrid loop below will detect these (via readlink) and skip them.
-  dest_plev={{ output }}/post/{{ component }}/{{ ts_grid }}/ts_vert_remap/{{ frequency }}/{{ '%dyr' % (ypf) }}
+  dest_plev={{ output }}/post/{{ component }}/{{ ts_grid }}/ts_vrt_remap/{{ frequency }}/{{ '%dyr' % (ypf) }}
   if [ -d "${dest_plev}" ]; then
     cp -sf ${dest_plev}/*_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc $input_dir 2>/dev/null || true
   fi
@@ -58,8 +58,8 @@ EOF
         if [ ! -L "${file}" ]; then
           continue
         fi
-        # Skip if [ts] already vert-remapped this var (symlink points into ts_vert_remap/)
-        if [[ "$(readlink ${file})" == *ts_vert_remap* ]]; then
+        # Skip if [ts] already vert-remapped this var (symlink points into ts_vrt_remap/)
+        if [[ "$(readlink ${file})" == *ts_vrt_remap* ]]; then
           continue
         fi
         #run_nco ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev
