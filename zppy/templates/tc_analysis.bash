@@ -14,6 +14,7 @@ set_pkg_manager
 start="{{ '%04d' % (year1) }}"
 end="{{ '%04d' % (year2) }}"
 caseid="{{ case }}"
+default_caseid="{{ default_case }}"
 drc_in={{ input }}/{{ input_subdir }}
 y1={{ year1 }}
 y2={{ year2 }}
@@ -109,7 +110,7 @@ echo "  V@850hPa     = ${var_v850}"
 
 
 mkdir -p "${result_dir}"
-file_name=${caseid}_${start}_${end}
+file_name=${default_caseid}_${start}_${end}
 
 # ------------------------------------------------------------
 # Generate mesh files (.g)
