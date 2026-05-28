@@ -38,6 +38,7 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
         dependencies: List[str] = []
         check_parameters_for_bash(c)
         c["scriptDir"] = script_dir
+        c["default_case"] = config["default"]["case"]
         if "ts_num_years" in c.keys():
             c["ts_num_years"] = int(c["ts_num_years"])
         # Loop over year sets

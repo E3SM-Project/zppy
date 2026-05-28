@@ -123,6 +123,8 @@ def get_tasks(config: ConfigObj, section_name: str) -> List[Dict[str, Any]]:
         # Merge current section with default. Work with copies to avoid contamination
         task = config["default"].copy()
         task.update(config[section_name].copy())
+        # Preserve top-level case (see comment in the sub-section branch below).
+        task["default_case"] = config["default"]["case"]
         # Set 'subsection' in dictionary to None
         task["subsection"] = None
         # Add to list of tasks if it is active
@@ -141,6 +143,10 @@ def get_tasks(config: ConfigObj, section_name: str) -> List[Dict[str, Any]]:
             sub: Dict[str, Any] = {k: v for k, v in tmp.items() if v is not None}
             # Merge content of sub-secton into section
             task.update(sub)
+            # Preserve top-level case so subsections can still reference it
+            # after their own `case` override has shadowed it (used by climo's
+            # fml_nm composition for EAMxx).
+            task["default_case"] = config["default"]["case"]
             # At this point, task will still include dictionary entries for
             # all sub-sections. Remove them to clean up.
             for s in sub_section_names:

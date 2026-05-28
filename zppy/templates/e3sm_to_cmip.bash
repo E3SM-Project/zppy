@@ -33,7 +33,18 @@ EOF
   dest_cmip={{ output }}/post/{{ component }}/{{ ts_grid }}/cmip_ts/{{ frequency }}
   mkdir -p ${dest_cmip}
 
-  {% if input_files.split(".")[0] == 'cam' or input_files.split(".")[0] == 'eam' -%}
+  # If the [ts] task vert-remapped some vars (sibling directory ts_vrt_remap/),
+  # replace the corresponding ts/ symlinks with ts_vrt_remap/ ones. The inline
+  # regrid loop below will detect these (via readlink) and skip them.
+  dest_plev={{ output }}/post/{{ component }}/{{ ts_grid }}/ts_vrt_remap/{{ frequency }}/{{ '%dyr' % (ypf) }}
+  if [ -d "${dest_plev}" ]; then
+    cp -sf ${dest_plev}/*_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc $input_dir 2>/dev/null || true
+  fi
+
+  # Gate on prc_typ (atm processing type) rather than fragile input_files
+  # prefix parsing — fixes #820 where input_component="eamxx" with non-eamxx
+  # input_files (e.g., "AVERAGE.nmonths_x1") caused this block to be skipped.
+  {% if prc_typ in ('cam', 'eam', 'eamxx') -%}
   #add code to do vertical interpolation variables at model levels before e3sm_to_cmip
   IFS=',' read -ra mlvars <<< "{{ interp_vars }}"
   for var in "${mlvars[@]}"
@@ -41,8 +52,18 @@ EOF
     for file in ${input_dir}/${var}_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc
     do
       if [ -f ${file} ]; then
+        # Skip if file is no longer a symlink — a prior run of this script already
+        # vert-remapped it in place (mv ${file}.plev ${file} replaced the symlink).
+        # Re-running ncremap on the resulting plev file would fail (no lev/ilev dim).
+        if [ ! -L "${file}" ]; then
+          continue
+        fi
+        # Skip if [ts] already vert-remapped this var (symlink points into ts_vrt_remap/)
+        if [[ "$(readlink ${file})" == *ts_vrt_remap* ]]; then
+          continue
+        fi
         #run_nco ncks --rgr xtr_mth=mss_val --vrt_fl='{{cmip_plevdata}}' ${file} ${file}.plev
-        run_nco ncremap {% if machine == 'dane' %}--mpi_pfx='srun -n {{ nodes }}'{% else %}-p mpi{% endif %} --vrt_ntp=log --vrt_xtr=mss_val --vrt_out='{{cmip_plevdata}}' ${file} ${file}.plev
+        run_nco ncremap {% if machine == 'dane' %}--mpi_pfx='srun -n {{ nodes }}'{% else %}-p mpi{% endif %} --vrt_ntp=log --vrt_xtr=mss_val{% if prc_typ == 'eamxx' %} --ps_nm=${file}/ps --vrt_in='{{ vrt_in_file }}'{% endif %} --vrt_out='{{cmip_plevdata}}' ${file} ${file}.plev
         if [ $? != 0 ]; then
           cd {{ scriptDir }}
           echo 'ERROR (1)' > {{ prefix }}.status

@@ -112,6 +112,42 @@ if [ $? != 0 ]; then
   exit 2
 fi
 
+{%- if vrt_remap_vars != '' %}
+
+# Vertical regrid (model levels → pressure levels)
+# When vrt_remap_vars is set, regrid the listed vars and write to a sibling
+# directory ts_vrt_remap/ alongside the standard ts/ output.
+mkdir output_plev
+IFS=',' read -ra vremap_vars <<< "{{ vrt_remap_vars }}"
+for var in "${vremap_vars[@]}"
+do
+  for file in output/${var}_{{ '%04d' % (yr_start) }}??_{{ '%04d' % (yr_end) }}??.nc
+  do
+    if [ ! -f "${file}" ]; then continue; fi
+    out_file=output_plev/$(basename "${file}")
+    run_nco ncremap \
+      {%- if machine == 'dane' %}
+      --mpi_pfx='srun -n {{ nodes }}' \
+      {%- else %}
+      -p mpi \
+      {%- endif %}
+      --vrt_ntp=log \
+      --vrt_xtr=mss_val \
+      --vrt_out='{{ vrt_remap_file }}' \
+      {%- if prc_typ == 'eamxx' %}
+      --ps_nm=${file}/ps \
+      --vrt_in='{{ vrt_in_file }}' \
+      {%- endif %}
+      ${file} ${out_file}
+    if [ $? != 0 ]; then
+      cd {{ scriptDir }}
+      echo 'ERROR (6)' > {{ prefix }}.status
+      exit 6
+    fi
+  done
+done
+{%- endif %}
+
 # Move output ts files to final destination
 {
   dest={{ output }}/post/{{ component }}/{{ grid }}/ts/{{ frequency }}/{{ '%dyr' % (ypf) }}
@@ -123,6 +159,20 @@ if [ $? != 0 ]; then
   echo 'ERROR (3)' > {{ prefix }}.status
   exit 3
 fi
+
+{%- if vrt_remap_vars != '' %}
+# Move vertically regridded ts files to sibling destination
+{
+  dest_plev={{ output }}/post/{{ component }}/{{ grid }}/ts_vrt_remap/{{ frequency }}/{{ '%dyr' % (ypf) }}
+  mkdir -p ${dest_plev}
+  mv output_plev/*.nc ${dest_plev}
+}
+if [ $? != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'ERROR (5)' > {{ prefix }}.status
+  exit 5
+fi
+{%- endif %}
 
 # Delete temporary workdir
 cd ..
