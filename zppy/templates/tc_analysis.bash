@@ -261,52 +261,43 @@ if [ $? != 0 ]; then
 fi
 
 cat "${result_dir}"out.dat0* > "${result_dir}cyclones_${file_name}.txt" 2>/dev/null
+echo "Completed DetectNodes"
 
-if [ ! -s "${result_dir}cyclones_${file_name}.txt" ]; then
-    echo "WARNING: TC DetectNodes produced no candidate nodes. Skipping TC StitchNodes and HistogramNodes."
-else
-    echo "Completed DetectNodes"
-    # Stitch all candidate nodes in time to form tracks.
-    # Criteria:
-    #   - maximum distance between candidates: 6.0 degrees
-    #   - minimum track duration: 6 time steps
-    #   - maximum gap size: 1 time step
-    #   - wind speed threshold: >= 17.5 m/s for at least 6 time steps
-    #   - latitude range: 40S–40N for at least 6 time steps
-    StitchNodes \
-        --in_fmt "lon,lat,slp,wind" \
-        --in_connect "${connect_file}" \
-        --range 6.0 \
-        --mintime 6 \
-        --maxgap 1 \
-        --in "${result_dir}cyclones_${file_name}.txt" \
-        --out "${result_dir}cyclones_stitch_${file_name}.dat" \
-        --threshold "wind,>=,17.5,6;lat,<=,40.0,6;lat,>=,-40.0,6"
+# Stitch all candidate nodes in time to form tracks.
+# Criteria:
+#   - maximum distance between candidates: 6.0 degrees
+#   - minimum track duration: 6 time steps
+#   - maximum gap size: 1 time step
+#   - wind speed threshold: >= 17.5 m/s for at least 6 time steps
+#   - latitude range: 40S–40N for at least 6 time steps
+StitchNodes \
+    --in_fmt "lon,lat,slp,wind" \
+    --in_connect "${connect_file}" \
+    --range 6.0 \
+    --mintime 6 \
+    --maxgap 1 \
+    --in "${result_dir}cyclones_${file_name}.txt" \
+    --out "${result_dir}cyclones_stitch_${file_name}.dat" \
+    --threshold "wind,>=,17.5,6;lat,<=,40.0,6;lat,>=,-40.0,6"
+echo "Completed StitchNodes"
 
-    if [ $? != 0 ] || [ ! -s "${result_dir}cyclones_stitch_${file_name}.dat" ]; then
-        echo "WARNING: No cyclone tracks found. Skipping cyclone histogram."
-    else
-        echo "Completed StitchNodes"
-        # ------------------------------------------------------------
-        # TC histogram
-        # ------------------------------------------------------------
-        HistogramNodes \
-            --in "${result_dir}cyclones_stitch_${file_name}.dat" \
-            --iloncol 2 \
-            --ilatcol 3 \
-            --out "${result_dir}cyclones_hist_${file_name}.nc"
+# ------------------------------------------------------------
+# TC histogram
+# ------------------------------------------------------------
+HistogramNodes \
+    --in "${result_dir}cyclones_stitch_${file_name}.dat" \
+    --iloncol 2 \
+    --ilatcol 3 \
+    --out "${result_dir}cyclones_hist_${file_name}.nc"
 
-
-        if [ $? != 0 ]; then
-            echo "ERROR: Cyclone HistogramNodes failed."
-            cd {{ scriptDir }}
-            echo 'ERROR (13)' > {{ prefix }}.status
-            exit 13
-        fi
-
-        echo "Completed HistogramNodes"
-    fi
+if [ $? != 0 ]; then
+    echo "ERROR: Cyclone HistogramNodes failed."
+    cd {{ scriptDir }}
+    echo 'ERROR (13)' > {{ prefix }}.status
+    exit 13
 fi
+
+echo "Completed HistogramNodes"
 
 rm -f "${result_dir}cyclones_${file_name}.txt"
 
@@ -360,54 +351,44 @@ fi
 
 
 cat "${result_dir}"aew_out.dat0* > "${result_dir}aew_${file_name}.txt" 2>/dev/null
+echo "Completed DetectNodes"
 
-if [ ! -s "${result_dir}aew_${file_name}.txt" ]; then
-    echo "WARNING: AEW DetectNodes produced no candidate nodes. Skipping AEW StitchNodes and HistogramNodes."
-else
-    echo "Completed DetectNodes"
+# ------------------------------------------------------------
+# AEW stitching
+# ------------------------------------------------------------
 
-    # ------------------------------------------------------------
-    # AEW stitching
-    # ------------------------------------------------------------
+StitchNodes \
+    --in_fmt "lon,lat,VORT" \
+    --in_connect "${connect_file}" \
+    --range 3.0 \
+    --mintime 8 \
+    --maxgap 0 \
+    --min_endpoint_dist 10.0 \
+    --in "${result_dir}aew_${file_name}.txt" \
+    --out "${result_dir}aew_stitch_5e-6_${file_name}.dat" \
+    --threshold "lat,<=,25.0,8;lat,>=,0.0,8"
+echo "Completed StitchNodes"
 
-    StitchNodes \
-        --in_fmt "lon,lat,VORT" \
-        --in_connect "${connect_file}" \
-        --range 3.0 \
-        --mintime 8 \
-        --maxgap 0 \
-        --min_endpoint_dist 10.0 \
-        --in "${result_dir}aew_${file_name}.txt" \
-        --out "${result_dir}aew_stitch_5e-6_${file_name}.dat" \
-        --threshold "lat,<=,25.0,8;lat,>=,0.0,8"
+# ------------------------------------------------------------
+# AEW histogram
+# ------------------------------------------------------------
 
-    if [ $? != 0 ] || [ ! -s "${result_dir}aew_stitch_5e-6_${file_name}.dat" ]; then
-        echo "WARNING: No AEW tracks found. Skipping AEW histogram."
-    else
-        echo "Completed StitchNodes"
+HistogramNodes \
+    --in "${result_dir}aew_stitch_5e-6_${file_name}.dat" \
+    --iloncol 2 \
+    --ilatcol 3 \
+    --nlat 256 \
+    --nlon 512 \
+    --out "${result_dir}aew_hist_${file_name}.nc"
 
-        # ------------------------------------------------------------
-        # AEW histogram
-        # ------------------------------------------------------------
-
-        HistogramNodes \
-            --in "${result_dir}aew_stitch_5e-6_${file_name}.dat" \
-            --iloncol 2 \
-            --ilatcol 3 \
-            --nlat 256 \
-            --nlon 512 \
-            --out "${result_dir}aew_hist_${file_name}.nc"
-
-        if [ $? != 0 ]; then
-            echo "ERROR: AEW HistogramNodes failed."
-            cd {{ scriptDir }}
-            echo 'ERROR (16)' > {{ prefix }}.status
-            exit 16
-        fi
-
-        echo "Completed HistogramNodes"
-    fi
+if [ $? != 0 ]; then
+    echo "ERROR: AEW HistogramNodes failed."
+    cd {{ scriptDir }}
+    echo 'ERROR (16)' > {{ prefix }}.status
+    exit 16
 fi
+
+echo "Completed HistogramNodes"
 
 rm -f "${result_dir}aew_${file_name}.txt"
 
