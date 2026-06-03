@@ -20,4 +20,4 @@ It will only work if you:
 - have access to the `bigmem nodes on NERSC Cori <https://docs.nersc.gov/systems/cori-largemem/#access-to-the-large-memory-nodes>`_
 - first load the necessary module with ``module load cmem``.
 
-# TODO: supported on Perlmutter?
+Support for Perlmutter has not been confirmed for this campaign type.

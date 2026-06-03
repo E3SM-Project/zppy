@@ -84,7 +84,7 @@ Update ``zppy-interfaces`` to the latest main branch:
 
    bash  # isolated subshell
    source ~/.bashrc
-   source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_<VERSION>_chrysalis.sh
+   source /lcrc/soft/climate/e3sm-unified/test_e3sm_unified_<VERSION>_chrysalis.sh  # e.g., 1.13.0rc10
 
    # Verify zppy-interfaces tests
    pytest tests/unit/global_time_series/test_*.py

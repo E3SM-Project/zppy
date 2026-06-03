@@ -35,7 +35,7 @@ Parameter checking & inferring -- for users
 
 There are two types of inferences, each with their own parameter in ``default.ini``:
 
-* ``infer_path_parameters``: infer paths that are not explicitly provided in the configuraiton file. Default is ``True``.
+* ``infer_path_parameters``: infer paths that are not explicitly provided in the configuration file. Default is ``True``.
 * ``infer_section_parameters``: infer subtask dependency names that are not explicitly provided in the configuration file. Default is ``True``.
 
 **Section inferences**
@@ -137,8 +137,8 @@ There are many parameter-handling functions.
 
 In ``utils.py``:
 
-* ``get_value_from_parameter``: check if parameter is in the configuration dictionary. If not, if inference is turned on (the default), then just use the value of ``second_choice_parameter``. If inferenceis turned off, raise a ``ParameterNotProvidedError``. Use this function if the backup option
-* ``set_value_of_parameter_if_undefined``: check if parameter is in the configuration dictionary. If not, if inferenceis turned on (the default), then just set the parameter's value to the ``backup_option``. If inferenceis turned off, raise a ``ParameterNotProvidedError``.
+* ``get_value_from_parameter``: check if parameter is in the configuration dictionary. If not, if inference is turned on (the default), then just use the value of ``second_choice_parameter``. If inference is turned off, raise a ``ParameterNotProvidedError``. Use this function if the backup option is another parameter (rather than a fixed value).
+* ``set_value_of_parameter_if_undefined``: check if parameter is in the configuration dictionary. If not, if inference is turned on (the default), then just set the parameter's value to the ``backup_option``. If inference is turned off, raise a ``ParameterNotProvidedError``.
 
 In ``e3sm_diags.py``:
 
