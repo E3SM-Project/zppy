@@ -8,14 +8,13 @@ This guide covers everything needed to develop, test, and release ``zppy``.
    :maxdepth: 2
 
    project-standards
-   ci
    contributing
+   parameters
    tasks/index
    testing
    release_testing
-   release
+   releases/index.rst
    new_task
    new_diags_set
-   new_glb_plot
    tutorial_testing_e3sm_unified
-   archive
+   archive/index

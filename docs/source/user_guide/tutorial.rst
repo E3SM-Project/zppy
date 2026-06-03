@@ -38,8 +38,7 @@ Once the ``[ts]`` subsection ``[[ atm_monthly_glb ]]`` and the ``[mpas_analysis]
 section finish, ``[global_time_series]`` will run.
 
 Post-processing results will be located in ``output`` and ``www``. Some machines have
-a web server. ``www`` should be pointed to that so that E3SM Diags, MPAS-Analysis, and
-the global time series plots will be visible online.
+a web server. ``www`` should be pointed to that so that the plotting tasks (here: ``e3sm_diags`` ``mpas_analysis``, ``global_time_series``, ``livvkit``) will be visible online.
 
 Because we have specified ``campaign = "water_cycle"``, some parameters will
 be automatically set. ``zppy/templates/water_cycle.cfg`` specifies what
@@ -86,15 +85,24 @@ or ``test_comparison_type`` to disambiguate.
 Debugging failures
 ==================
 
-    .. code::
+    ::
 
-        $ cd <output directory from cfg>/post/scripts
-	$ grep -v "OK" *status # See what failed
-	# Review `.o` files corresponding to failed `.status` files.
-	# If an error is obvious, make a fix in the bash file and rerun:
-	$ sbatch <failed job>.bash
-	# If the error is not obvious, do the following:
-	$ emacs <failed job>.bash
-	# In this file, set `debug = True`. This will provide more information.
-	# Note: another option is to set `debug = True` in your `cfg` and rerun `zppy`.
-	$ sbatch <failed job>.bash
+        grep "output=" your_zppy_config.cfg # Easy way to remember your output directory
+		cd your_output_dir/post/scripts
+		grep -v "OK" *status # See what failed
+
+		# Say failing_task.status is showing a non-OK status, then:
+		ls failing_task* # See everything associated with it
+
+		# Say its job ID was 123456, then:
+		emacs failing_task.o123456 # Review the output
+		emacs failing_task.settings # Review how each of its parameters was set/configured.
+
+		# If an error is obvious, make a fix in the bash file and rerun:
+		sbatch failing_task.bash
+		
+		# If the error is not obvious, do the following:
+		emacs failing_task.bash
+		# In this file, set `debug = True`. This will provide more information.
+		# Note: another option is to set `debug = True` in your `cfg` and rerun `zppy -c`.
+		sbatch <failed job>.bash

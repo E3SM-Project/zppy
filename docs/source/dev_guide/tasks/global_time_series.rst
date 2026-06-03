@@ -7,22 +7,10 @@ Implementation
 --------------
 
 - **Python module**: ``zppy/global_time_series.py``
-- **Template**: ``zppy/templates/global_time_series.bash`` and
-  ``zppy/templates/coupled_global.py``
+- **Template**: ``zppy/templates/global_time_series.bash``
 
-Unlike ``e3sm_diags`` and ``mpas_analysis``, the Global Time Series
-functionality is **built into** ``zppy`` rather than calling an external
-package. The main plotting logic lives in ``coupled_global.py``.
 
-Adding new plots
-~~~~~~~~~~~~~~~~
-
-See :doc:`../new_glb_plot` for a step-by-step guide to adding new global
-time series plots.
-
-The plot registry is in ``PLOT_DICT`` in ``coupled_global.py``. Each entry
-maps a short name (used in ``plots_original``) to a function named
-``plot_<name>``.
+``global_time_series`` is called through the ``zppy-interfaces`` entry-point.
 
 Dependencies
 ------------

@@ -1,5 +1,5 @@
 *********************************************
-Adding a new set to the E3SM Diagnostics task
+Examples: Adding a new set to the E3SM Diagnostics task
 *********************************************
 
 This guide gives a general list of things to consider when adding a new

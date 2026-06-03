@@ -13,25 +13,16 @@ Some key parts, however, are displayed below:
     .. code::
 
         #!/bin/bash
-        {% include 'slurm_header.sh' %}
+        {% include 'inclusions/slurm_header.sh' %}
+        {% include 'inclusions/boilerplate.bash' %}
 
+        set -e
         {{ environment_commands }}
+        set +e
 
-        # Turn on debug output if needed
-        debug={{ debug }}
-        if [[ "${debug,,}" == "true" ]]; then
-          set -x
-        fi
-
-        # Script dir
-        cd {{ scriptDir }}
-
-        # Get jobid
-        id=${SLURM_JOBID}
-
-        # Update status file
-        STARTTIME=$(date +%s)
-        echo "RUNNING ${id}" > {{ prefix }}.status
+        set_pkg_manager
+        echo "${pkg_manager} list package-this-task-calls:"
+        ${pkg_manager} list package-this-task-calls || true # If we can't print this, just continue on.
 
     .. code::
 
@@ -159,8 +150,8 @@ Add the task to ``zppy/__main__.py``:
 
     .. code::
 
-        # <task-name> tasks
-        <task-name>(config, scriptDir)
+        # task-name tasks
+        existing_bundles = task-name(config, script_dir, existing_bundles, job_ids_file)
 
 Update defaults
 ===============

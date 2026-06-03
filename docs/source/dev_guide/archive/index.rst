@@ -8,6 +8,11 @@ This page collects documentation that is obsolete or refers to older
 versions of ``zppy`` or the E3SM Unified environment. It is retained for
 historical reference.
 
+.. toctree::
+   :maxdepth: 1
+
+   initial_docs
+
 Old testing tutorial (E3SM Unified 1.5.0)
 ==========================================
 

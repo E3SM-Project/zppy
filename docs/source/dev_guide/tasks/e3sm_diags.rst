@@ -44,7 +44,7 @@ The specific subtasks to depend on are set via:
 
 **Downstream:**
 
-- :doc:`global_time_series` — optionally
+- None.
 
 Adding a new diagnostic set
 -----------------------------

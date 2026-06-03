@@ -9,7 +9,7 @@ Zppy documentation
 What is zppy?
 =============
 
-``zppy`` (pronounced "zippee") is a **workflow manager** for post-processing
+``zppy`` (pronounced "/ˈzɪpi/") is a **workflow manager** for post-processing
 E3SM simulations, written in Python. The goal of ``zppy`` is to speed up
 post-processing by automating commonly performed tasks.
 
@@ -22,13 +22,13 @@ these tools, especially for long simulations.
 ``zppy`` is controlled entirely from a single user-provided configuration file
 (e.g., ``mysimulation.cfg``). This configuration file specifies input and
 output directories, as well as the list of tasks to run. Each task operates
-for a specific model component and over a specified number of years—for
+over a specified number of years—for
 example, generating atmosphere climatology files every 20 and 50 years.
 
 ``zppy`` parses the configuration file and generates batch jobs that are
 submitted for execution by SLURM. Dependencies between tasks are handled and
 passed to SLURM. Internally, each batch job is created by instantiating
-`Jinja <https://jinja.palletsprojects.com>`_ template scripts (usually
+Jinja2 template scripts (usually
 written in bash, but other languages are supported as well).
 
 .. toctree::
