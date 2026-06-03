@@ -2,15 +2,20 @@
 Developer Guide
 ###############
 
+This guide covers everything needed to develop, test, and release ``zppy``.
+
 .. toctree::
    :maxdepth: 2
 
    project-standards
    ci
+   contributing
+   tasks/index
    testing
    release_testing
    release
-   tutorial_testing_e3sm_unified
+   new_task
    new_diags_set
    new_glb_plot
-   new_task
+   tutorial_testing_e3sm_unified
+   archive

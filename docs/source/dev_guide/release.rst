@@ -1,158 +1,298 @@
+.. _release-zppy:
+
 How to Prepare a Release
 ========================
 
-In this guide, we'll cover:
+This guide covers the full release process for both release candidates (RCs)
+and production releases. It includes:
 
-* Preparing the Documentation
-* Bumping the Version
-* Releasing On GitHub
-* Releasing The Software On Anaconda
-* Creating a New Version of the Documentation
+- `Preparing the Documentation`_
+- `Bumping the Version`_
+- `Releasing on GitHub: production releases`_
+- `Releasing on conda-forge: production releases`_
+- `Creating a New Version of the Documentation`_
+
+References:
+
+- Release notes are tracked in `GitHub Discussions
+  <https://github.com/E3SM-Project/zppy/discussions>`_
+- Releases page: https://github.com/E3SM-Project/zppy/releases
+- Tags page: https://github.com/E3SM-Project/zppy/tags
 
 Preparing the Documentation
 ---------------------------
 
-This step is only required for production releases, not release candidates.
+This step is **only required for production releases**, not release
+candidates.
 
-1. Checkout a branch
+1. Checkout a branch:
 
+   .. code-block:: bash
+
+      cd ~/ez/zppy
+      git status  # confirm no uncommitted changes
+      git fetch upstream main
+      git checkout -b prepare-docs-for-<version> upstream/main
+
+2. Update ``docs/source/user_guide/parameters.rst``: find the link to
+   ``this release's parameter defaults`` and replace the commit hash in
+   the URL with the hash of the latest commit on ``main``. You can find
+   this at https://github.com/E3SM-Project/zppy/commits/main.
+
+   Before:
    ::
 
-      git fetch upstream main
-      git checkout -b versioned-docs upstream/main
+      See `this release's parameter defaults <https://github.com/E3SM-Project/zppy/blob/<OLD_HASH>/zppy/defaults/default.ini>`_
 
-2. Edit ``docs/source/parameters.rst``: in ``https://github.com/E3SM-Project/zppy/blob/main/zppy/templates/default.ini``, replace ``main`` with the hash of the latest commit.
-3. Create a pull request to the main repo and merge it. Now, when the next version of the documentation is created (see last part of this page), it will point to the relevant defaults. Mark yourself as the assignee, and mark "Documentation" as the label.
+   After:
+   ::
+
+      See `this release's parameter defaults <https://github.com/E3SM-Project/zppy/blob/<NEW_HASH>/zppy/defaults/default.ini>`_
+
+3. Run pre-commit and commit:
+
+   .. code-block:: bash
+
+      conda activate <any-zppy-dev-env>
+      pre-commit run --all-files  # should pass
+      git add -A
+      git commit -m "Update parameter documentation pointer for <version>"
+      git push upstream prepare-docs-for-<version>
+
+4. Create a PR, add the **Documentation** label, merge, and delete the
+   branch on GitHub.
 
 Bumping the Version
 -------------------
 
-1. Checkout a branch with the name of the version.
+Determining the new version number
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    ::
+Review commits since the last release at
+https://github.com/E3SM-Project/zppy/commits/main to determine whether the
+bump should be major, minor, or patch:
 
-        git fetch upstream main
-        # Prepend "v" to <version>
-        # For release candidates, append "rc" to <version>
-        git checkout -b v<version> upstream/main
+- **Major** (X.0.0): breaking changes to the user-facing API
+- **Minor** (x.Y.0): new features that are backward-compatible
+- **Patch** (x.y.Z): bug fixes only
 
-2. Bump version using tbump. Example, bumping to v1.1.0:
+Also update the E3SM Unified package table on `Confluence
+<https://e3sm.atlassian.net/wiki/spaces/DOC/pages/129732419/Packages+in+the+E3SM+Unified+conda+environment>`_:
 
-    ::
+.. code-block:: text
 
-        # Exclude "v" and <version> should match the above step.
-        # --no-tag is required since tagging is handled in "Releasing on GitHub"
-        $ tbump <version> --no-tag
+   E3SM Unified <NEW_UNIFIED_VERSION>: zppy v<NEW_ZPPY_VERSION>
 
-        :: Bumping from 1.0.0 to 1.1.0
-        => Would patch these files
-        - pyproject.toml: version = "1.0.0"
-        + pyproject.toml: version = "1.1.0"
-        - zppy/__init__.py:1 __version__ = "v1.0.0"
-        + zppy/__init__.py:1 __version__ = "v1.1.0"
-        - conda/meta.yaml:2 {% set version = "1.0.0" %}
-        + conda/meta.yaml:2 {% set version = "1.1.0" %}
-        - tbump.toml:5 current = "1.0.0"
-        + tbump.toml:5 current = "1.1.0"
-        => Would run these git commands
-        $ git add --update
-        $ git commit --message Bump to 1.1.0
-        $ git push origin v1.1.0
-        :: Looking good? (y/N)
-        >
+.. _release-candidates:
 
-3. If you encounter ``Error: Command `git push upstream main` failed``, as in `issue 470 <https://github.com/E3SM-Project/zppy/issues/470>`_, you can run ``git push upstream <branch>`` yourself.
+Release candidates (zppy repo)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-4. Create a pull request to the main repo and merge it. Mark yourself as the assignee, and mark "Update version" as the label.
+1. Checkout a branch named after the new version:
+
+   .. code-block:: bash
+
+      cd ~/ez/zppy
+      git status  # confirm no uncommitted changes
+      git fetch upstream main
+      git checkout -b v<version>rc<N> upstream/main
+      git log --oneline | head -n 3
+      # Verify matches https://github.com/E3SM-Project/zppy/commits/main
+
+2. Bump the version using ``tbump``:
+
+   .. code-block:: bash
+
+      conda activate <any-zppy-dev-env>  # must have tbump installed
+      tbump <version>rc<N> --no-tag
+      # "Error: Command `git push upstream main` failed" is expected
+      # (we are not on main)
+
+3. Push and create a PR:
+
+   .. code-block:: bash
+
+      git push upstream v<version>rc<N>
+
+   Create a PR, add the **Update version** label, merge, and delete the
+   branch on GitHub.
+
+4. Create the tag on ``main``:
+
+   .. code-block:: bash
+
+      git checkout main
+      git fetch upstream
+      git reset --hard upstream/main
+      git tag -a v<version>rc<N> -m "v<version>rc<N>"
+      # Delete the local branch first (avoids push conflicts)
+      git branch -D v<version>rc<N>
+      git push upstream v<version>rc<N>
+
+   The tag will appear on https://github.com/E3SM-Project/zppy/tags but
+   **not** on Releases. This is expected for RCs.
+
+Production releases (zppy repo)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. Complete `Preparing the Documentation`_ first.
+
+2. Checkout a branch:
+
+   .. code-block:: bash
+
+      cd ~/ez/zppy
+      git status  # confirm no uncommitted changes
+      git fetch upstream main
+      git checkout -b v<version> upstream/main
+      git log --oneline | head -n 3
+
+3. Bump the version:
+
+   .. code-block:: bash
+
+      tbump <version> --no-tag
+      # "Error: Command `git push upstream main` failed" is expected
+      git push upstream v<version>
+
+4. Create a PR, compare the diff against the last RC's bump PR to verify
+   correctness, add the **Update version** label, wait for CI checks to
+   pass, merge, and delete the branch.
 
 .. _github-release:
 
 Releasing on GitHub: release candidates
----------------------------------------
+-----------------------------------------
 
-1. Create a tag for the release candidate at https://github.com/E3SM-Project/zppy/tags. Example, bumping to v1.1.0rc1:
-
-     ::
-
-	$ git checkout main
-	$ git fetch upstream
-	$ git reset --hard upstream/main
-	$ git tag -a v1.1.0rc1 -m "v1.1.0rc1"
-	# Delete the branch from the tbump step. Otherwise, the push command won't work.
-	$ git branch -D v1.1.0rc1
-	$ git push upstream v1.1.0rc1
+See the tagging step above in `Release candidates (zppy repo)`_. RC tags
+appear on Tags but not on Releases.
 
 Releasing on GitHub: production releases
-----------------------------------------
+------------------------------------------
 
-1. Draft a new release `here <https://github.com/E3SM-Project/zppy/releases>`_. You can save this and come back to it later, if need be.
-2. Set `Tag version` to ``v<version>``, **including the "v"**. `@Target` should be ``main``.
-3. Set `Release title` to ``v<version>``, **including the "v"**.
-4. Use `Describe this release` to summarize the changelog.
+1. Go to https://github.com/E3SM-Project/zppy/releases and click **Draft a
+   new release**.
+2. Set **Tag version** to ``v<version>`` (include the ``v``). Set
+   **@ Target** to ``main``.
+3. Set **Release title** to ``v<version>`` (include the ``v``).
+4. Write the release description:
 
-   * You can scroll through `zppy commits <https://github.com/E3SM-Project/zppy/commits/main>`_ for a list of changes.
-   * You can look at the last release to get an idea of how to format the description.
+   - **Summary of changes**: a high-level summary of what changed
+   - **Full list of changes**: categorized log of commits, organized by
+     type (new features, bug fixes, documentation, etc.)
 
-5. Click `Publish release`.
-6. CI/CD release workflow is automatically triggered.
+   You can use https://github.com/E3SM-Project/zppy/commits/main to find
+   all commits since the last release.
+
+5. Ensure **Set as the latest release** is checked.
+6. Click **Publish release**.
+
+   - The CI/CD release workflow is automatically triggered. It publishes
+     new docs and, for conda-forge, triggers a bot PR.
+   - Unlike RCs, the production version now appears on both
+     `Tags <https://github.com/E3SM-Project/zppy/tags>`_ and
+     `Releases <https://github.com/E3SM-Project/zppy/releases>`_.
 
 Releasing on conda-forge: release candidates
---------------------------------------------
+---------------------------------------------
 
-1. If you don't have a local version of the conda-forge repo, run: ::
+The conda-forge bot does **not** handle RCs automatically. Do this manually:
 
-     git clone git@github.com:conda-forge/zppy-feedstock.git
-     git remote add upstream git@github.com:conda-forge/zppy-feedstock.git
+1. If you don't have a local clone of the feedstock:
 
-2. If you don't have a fork of the conda-forge repo, on `conda-forge <https://github.com/conda-forge/zppy-feedstock/>`_, click the "Fork" button in the upper right hand corner. Then, on your fork, click the green "Code" button, and copy the SSH path. Run: ::
+   .. code-block:: bash
 
-     git remote add <your fork name> <SSH path for your fork>
+      git clone git@github.com:conda-forge/zppy-feedstock.git
+      git remote add upstream git@github.com:conda-forge/zppy-feedstock.git
 
-3. Get the sha256 of the tag you made in "Releasing on GitHub: release candidates": ::
+2. If you don't have a fork, create one on
+   https://github.com/conda-forge/zppy-feedstock, then:
 
-     curl -sL https://github.com/E3SM-Project/zppy/archive/v1.1.0rc1.tar.gz | openssl sha256
+   .. code-block:: bash
 
-4. Make changes on a local branch. Example, bumping to v1.1.0rc1: ::
+      git remote add <your-fork-name> <SSH path for your fork>
 
-     $ git fetch upstream dev
-     $ git checkout -b v1.1.0rc1 upstream/dev # You can name the branch anything you want
-     # In `recipe/meta.yaml`, update the version and sha256 (and the build number if needed):
-     {% set version = "1.1.0rc1" %} # Set to your version
-     sha256: ... # The sha256 from the previous step
-     number: 0 # build > number should always be 0
-     $ git add -A
-     $ git commit -m "v1.1.0rc1"
-     $ git push <your fork name> v1.1.0rc1
+3. Get the sha256 hash of the RC tarball:
 
-5. Note that the conda-forge bot does not work for release candidates. So, make a PR manually from your fork of the feedstock to the ``dev`` branch of `conda-forge <https://github.com/conda-forge/zppy-feedstock/>`_. Then, the package build on conda-forge will end up with the ``zppy_dev`` label. You can add the "automerge" label to have the PR automatically merge once CI checks pass.
+   .. code-block:: bash
 
-6. After merging, CI runs again (in a slightly different way). Then, check the https://anaconda.org/conda-forge/zppy page to view the newly updated package. Release candidates are assigned the ``zppy_dev`` label. Note that it takes about 15 minutes for the files to propagate across conda-forge's mirroring services, which must happen before you can use the files.
+      curl -sL https://github.com/E3SM-Project/zppy/archive/v<version>rc<N>.tar.gz | openssl sha256
+
+4. Make changes on a branch:
+
+   .. code-block:: bash
+
+      git fetch upstream dev
+      git checkout -b v<version>rc<N> upstream/dev
+
+   In ``recipe/recipe.yaml`` (or ``recipe/meta.yaml`` if it still exists),
+   update:
+
+   .. code-block:: yaml
+
+      version: <version>rc<N>
+      sha256: <hash-from-step-3>
+      number: 0  # build number should always be 0 for a new version
+
+   Also update any changed dependencies (compare
+   ``https://github.com/E3SM-Project/zppy/compare/v<LAST>...v<NEW>``
+   for changes in ``dev.yml`` or ``pyproject.toml``).
+
+   .. code-block:: bash
+
+      git add -A
+      git commit -m "v<version>rc<N>"
+      git push <your-fork-name> v<version>rc<N>
+
+5. Open a PR from your fork to the ``dev`` branch of
+   https://github.com/conda-forge/zppy-feedstock. RC packages get the
+   ``zppy_dev`` label.
+
+6. After merging and CI completes, check
+   https://anaconda.org/conda-forge/zppy for the new package (allow ~15
+   minutes for mirroring).
 
 Releasing on conda-forge: production releases
 ---------------------------------------------
 
-1. Be sure to have already completed :ref:`Releasing On GitHub <github-release>`. This triggers the CI/CD workflow that handles Anaconda releases.
-2. Wait for a bot PR to come up automatically on conda-forge after the GitHub release. This can happen anywhere from 1 hour to 1 day later.
-3. Re-render the PR (see `docs <https://conda-forge.org/docs/maintainer/updating_pkgs.html#rerendering-feedstocks>`_).
-4. Merge the PR on conda-forge.
-5. Check the https://anaconda.org/conda-forge/zppy page to view the newly updated package. Production releases are assigned the ``main`` label.
-6. Notify the maintainers of the unified E3SM environment about the new release on the `E3SM Confluence site <https://acme-climate.atlassian.net/wiki/spaces/WORKFLOW/pages/129732419/E3SM+Unified+Anaconda+Environment>`_.
+1. Complete :ref:`Releasing On GitHub <github-release>` first. This
+   triggers the CI/CD workflow that opens the bot PR on conda-forge.
 
-   * Be sure to only update the ``zppy`` version number in the correct version(s) of the E3SM Unified environment.
-   * This is almost certainly one of the E3SM Unified versions listed under “Next versions”. If you are uncertain of which to update, leave a comment on the page asking.
+2. Wait for the bot PR at https://github.com/conda-forge/zppy-feedstock/pulls
+   (can take 1 hour to 1 day). Alternatively, post an issue with
+   ``@conda-forge-admin, please update version``.
+
+3. Complete any requirements to merge the PR (re-render if requested, etc.).
+
+4. Check https://anaconda.org/conda-forge/zppy/files to confirm the new
+   package has the ``main`` label.
+
+5. Notify maintainers of the E3SM Unified environment on the `Confluence
+   packages page
+   <https://e3sm.atlassian.net/wiki/spaces/WORKFLOW/pages/129732419/E3SM+Unified+Anaconda+Environment>`_
+   about the new release. Update the version number for the correct E3SM
+   Unified version(s) under "Next versions".
 
 Creating a New Version of the Documentation
 -------------------------------------------
 
-1. Be sure to have already completed :ref:`Releasing On GitHub <github-release>`. This triggers the CI/CD workflow that handles publishing documentation versions.
-2. Wait until the CI/CD build is successful. You can view all workflows at `All Workflows <https://github.com/E3SM-Project/zppy/actions>`_.
-3. Changes will be available on the `zppy documentation page <https://e3sm-project.github.io/zppy/>`_. You can check if it really is the latest version, by going to https://e3sm-project.github.io/zppy/_build/html/main/parameters.html, then checking if the "paramter defaults" link includes the proper hash. It should match the commit before "Update defaults in docs" on https://github.com/E3SM-Project/zppy/commits/main.
+1. Complete :ref:`Releasing On GitHub <github-release>`. This triggers
+   the CI/CD release workflow, which publishes new versioned docs.
+
+2. Wait for the CI/CD build to succeed at
+   https://github.com/E3SM-Project/zppy/actions.
+
+3. Verify the documentation is available at
+   https://docs.e3sm.org/zppy/_build/html/main/
+
+4. Check that the "parameter defaults" link on the parameters page points
+   to the correct commit hash (should match the commit before "Update
+   parameter documentation pointer" on
+   https://github.com/E3SM-Project/zppy/commits/main).
 
 Extra Resources
 ---------------
 
-Conda-forge:
-
-* https://conda-forge.org/docs/user/introduction.html#why-conda-forge
-* https://conda-forge.org/docs/maintainer/infrastructure.html#admin-web-services
-* https://acme-climate.atlassian.net/wiki/spaces/IPD/pages/3616735236/Releasing+E3SM+Software+on+Anaconda+conda-forge+channel
+- Conda-forge docs: https://conda-forge.org/docs/user/introduction.html
+- Admin web services: https://conda-forge.org/docs/maintainer/infrastructure.html#admin-web-services
+- E3SM Anaconda release guide: https://acme-climate.atlassian.net/wiki/spaces/IPD/pages/3616735236/Releasing+E3SM+Software+on+Anaconda+conda-forge+channel

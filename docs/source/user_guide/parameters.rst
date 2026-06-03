@@ -14,7 +14,9 @@ be overridden by parameters set in a ``[[subsection]``.
 See `this release's parameter defaults <https://github.com/E3SM-Project/zppy/blob/885d53cb989119d77a21b4f25fe6109fc74a043e/zppy/defaults/default.ini>`_
 on GitHub for a complete list of parameters and their default values.
 You can also view the most up-to-date,
-`unreleased parameter defaults <https://github.com/E3SM-Project/zppy/blob/main/zppy/templates/default.ini>`_.
+`unreleased parameter defaults <https://github.com/E3SM-Project/zppy/blob/main/zppy/defaults/default.ini>`_.
+
+For per-task parameter tables, see the :ref:`Tasks <user-tasks>` section.
 
 Deprecated parameters
 =====================

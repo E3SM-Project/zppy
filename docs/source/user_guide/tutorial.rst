@@ -18,7 +18,7 @@ Let's say we want to post-process 100 years of an existing simulation.
 
 Copy and paste the following into ``post.mysimulation.cfg``
 
-.. literalinclude:: post.mysimulation.cfg
+.. literalinclude:: ../post.mysimulation.cfg
    :language: cfg
    :linenos:
 
@@ -54,7 +54,7 @@ Example 2
 
 This is another example of a configuration file, this time using a RRM simulation.
 
-.. literalinclude:: post.rrm_simulation.cfg
+.. literalinclude:: ../post.rrm_simulation.cfg
    :language: cfg
    :linenos:
 
@@ -79,7 +79,7 @@ makes it an ``mvm`` run, otherwise it is an ``mvo`` run. If a referenced prior
 run could resolve to either ``mvo`` or ``mvm``, use ``reference_comparison_type``
 or ``test_comparison_type`` to disambiguate.
 
-.. literalinclude:: post.mpas_analysis_model_vs_model.cfg
+.. literalinclude:: ../post.mpas_analysis_model_vs_model.cfg
    :language: cfg
    :linenos:
 
