@@ -64,8 +64,8 @@ else
     if [[ -z "${res}" ]]; then
         echo "ERROR: could not determine grid. Set input_grid (e.g. \"ne30pg2\") in [tc_analysis]."
         cd {{ scriptDir }}
-        echo 'ERROR (1)' > {{ prefix }}.status
-        exit 1
+        echo 'ERROR (2)' > {{ prefix }}.status
+        exit 2
     fi
 fi
 
@@ -87,8 +87,8 @@ if [ "${#var_array[@]}" -ne 7 ]; then
     echo "Example for EAMxx:"
     echo "       tc_vars=\"SeaLevelPressure,T_mid_at_200hPa,T_mid_at_500hPa,U_at_model_bot,V_at_model_bot,U_at_850hPa,V_at_850hPa\""
     cd {{ scriptDir }}
-    echo 'ERROR (2)' > {{ prefix }}.status
-    exit 2
+    echo 'ERROR (3)' > {{ prefix }}.status
+    exit 3
 fi
 
 var_psl="${var_array[0]}"
@@ -125,8 +125,8 @@ if ${pg2}; then
     if [ $? != 0 ]; then
         echo "ERROR: GenerateCSMesh failed."
         cd {{ scriptDir }}
-        echo 'ERROR (3)' > {{ prefix }}.status
-        exit 3
+        echo 'ERROR (4)' > {{ prefix }}.status
+        exit 4
     fi
     echo "Completed GenerateCSMesh"
 
@@ -139,8 +139,8 @@ if ${pg2}; then
     if [ $? != 0 ]; then
         echo "ERROR: GenerateVolumetricMesh failed."
         cd {{ scriptDir }}
-        echo 'ERROR (4)' > {{ prefix }}.status
-        exit 4
+        echo 'ERROR (5)' > {{ prefix }}.status
+        exit 5
     fi
     echo "Completed GenerateVolumetricMesh"
 
@@ -155,8 +155,8 @@ else
     if [ $? != 0 ]; then
         echo "ERROR: GenerateCSMesh failed."
         cd {{ scriptDir }}
-        echo 'ERROR (3)' > {{ prefix }}.status
-        exit 3
+        echo 'ERROR (6)' > {{ prefix }}.status
+        exit 6
     fi
     echo "Completed GenerateCSMesh"
 
@@ -171,8 +171,8 @@ connect_file="${result_dir}connect_CSne${res}_v2.dat"
 if [ ! -s "${mesh_file}" ]; then
     echo "ERROR: mesh file '${mesh_file}' does not exist or is empty."
     cd {{ scriptDir }}
-    echo 'ERROR (5)' > {{ prefix }}.status
-    exit 5
+    echo 'ERROR (7)' > {{ prefix }}.status
+    exit 7
 fi
 
 GenerateConnectivityFile \
@@ -183,8 +183,8 @@ GenerateConnectivityFile \
 if [ $? != 0 ]; then
     echo "ERROR: GenerateConnectivityFile failed."
     cd {{ scriptDir }}
-    echo 'ERROR (6)' > {{ prefix }}.status
-    exit 6
+    echo 'ERROR (8)' > {{ prefix }}.status
+    exit 8
 fi
 
 echo "Completed GenerateConnectivityFile"
@@ -195,31 +195,31 @@ echo "Completed GenerateConnectivityFile"
 cd "${drc_in}" || {
     echo "ERROR: cannot cd to input directory '${drc_in}'."
     cd {{ scriptDir }}
-    echo 'ERROR (7)' > {{ prefix }}.status
-    exit 7
+    echo 'ERROR (9)' > {{ prefix }}.status
+    exit 9
 }
 
 eval ls ${drc_in}/${caseid}.${input_files}.*{${start}..${end}}*.nc > "${result_dir}inputfile_${file_name}.txt"
 if [ $? != 0 ] || [ ! -s "${result_dir}inputfile_${file_name}.txt" ]; then
     echo "ERROR: no input files found for ${caseid}.${input_files} between ${start} and ${end}."
     cd {{ scriptDir }}
-    echo 'ERROR (8)' > {{ prefix }}.status
-    exit 8
+    echo 'ERROR (10)' > {{ prefix }}.status
+    exit 10
 fi
 
 eval ls ${caseid}.${input_files}.*{${start}..${end}}*.nc > "${result_dir}outputfile_${file_name}.txt"
 if [ $? != 0 ] || [ ! -s "${result_dir}outputfile_${file_name}.txt" ]; then
     echo "ERROR: no output file names generated for ${caseid}.${input_files} between ${start} and ${end}."
     cd {{ scriptDir }}
-    echo 'ERROR (9)' > {{ prefix }}.status
-    exit 9
+    echo 'ERROR (11)' > {{ prefix }}.status
+    exit 11
 fi
 
 cd "${result_dir}" || {
     echo "ERROR: cannot cd to result directory '${result_dir}'."
     cd {{ scriptDir }}
-    echo 'ERROR (10)' > {{ prefix }}.status
-    exit 10
+    echo 'ERROR (12)' > {{ prefix }}.status
+    exit 12
 }
 
 # ------------------------------------------------------------
@@ -238,8 +238,8 @@ elif [ "${res}" == 30 ]; then
 else
     echo "ERROR: ${res} value not supported"
     cd {{ scriptDir }}
-    echo 'ERROR (11)' > {{ prefix }}.status
-    exit 11
+    echo 'ERROR (13)' > {{ prefix }}.status
+    exit 13
 fi
 
 DetectNodes \
@@ -256,8 +256,8 @@ DetectNodes \
 if [ $? != 0 ]; then
     echo "ERROR: TC DetectNodes failed."
     cd {{ scriptDir }}
-    echo 'ERROR (12)' > {{ prefix }}.status
-    exit 12
+    echo 'ERROR (14)' > {{ prefix }}.status
+    exit 14
 fi
 
 cat "${result_dir}"out.dat0* > "${result_dir}cyclones_${file_name}.txt" 2>/dev/null
@@ -293,8 +293,8 @@ HistogramNodes \
 if [ $? != 0 ]; then
     echo "ERROR: Cyclone HistogramNodes failed."
     cd {{ scriptDir }}
-    echo 'ERROR (13)' > {{ prefix }}.status
-    exit 13
+    echo 'ERROR (15)' > {{ prefix }}.status
+    exit 15
 fi
 
 echo "Completed HistogramNodes"
@@ -321,8 +321,8 @@ if [ $? != 0 ]; then
     echo "ERROR: VariableProcessor failed while computing VORT from ${var_u850},${var_v850}."
     echo "       Check that these variables exist in the input files."
     cd {{ scriptDir }}
-    echo 'ERROR (14)' > {{ prefix }}.status
-    exit 14
+    echo 'ERROR (16)' > {{ prefix }}.status
+    exit 16
 fi
 
 echo "Completed VariableProcessor"
@@ -345,8 +345,8 @@ DetectNodes \
 if [ $? != 0 ]; then
     echo "ERROR: AEW DetectNodes failed."
     cd {{ scriptDir }}
-    echo 'ERROR (15)' > {{ prefix }}.status
-    exit 15
+    echo 'ERROR (17)' > {{ prefix }}.status
+    exit 17
 fi
 
 
@@ -384,8 +384,8 @@ HistogramNodes \
 if [ $? != 0 ]; then
     echo "ERROR: AEW HistogramNodes failed."
     cd {{ scriptDir }}
-    echo 'ERROR (16)' > {{ prefix }}.status
-    exit 16
+    echo 'ERROR (18)' > {{ prefix }}.status
+    exit 18
 fi
 
 echo "Completed HistogramNodes"
