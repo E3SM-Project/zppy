@@ -12,17 +12,11 @@ Implementation
 Dependencies
 ------------
 
-**Upstream (required):**
+**Upstream (what e3sm_to_cmip depends on):**
 
-- :doc:`ts` — depends on one or more ``[ts]`` subtasks to provide
-  input time-series files
-
-The ``ts_subsection``, ``ts_atm_subsection``, and ``ts_land_subsection``
-parameters specify which ``[ts]`` subtasks to depend on. With
-``infer_section_parameters = True``, these default to the subsection name,
-``atm_monthly_180x360_aave``, and ``land_monthly`` respectively.
+- :doc:`ts` — Monthly-atm ts: monthly-atm e3sm_to_cmip. Monthly-lnd ts: monthly-lnd e3sm_to_cmip.
 
 **Downstream (what depends on e3sm_to_cmip):**
 
-- :doc:`ilamb` — requires CMIP-format land and atmosphere data
-- :doc:`pcmdi_diags` — requires CMIP-format atmosphere data
+- :doc:`ilamb` — Monthly-lnd e3sm_to_cmip: required. Monthly-atm e3sm_to_cmip: optional.
+- :doc:`pcmdi_diags` — Monthly-atm e3sm_to_cmip: mean_climate, variability_modes_atm,variability_modes_cpl, enso

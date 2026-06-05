@@ -15,16 +15,11 @@ Implementation
 Dependencies
 ------------
 
-**Upstream (required):**
+**Upstream (what global_time_series depends on):**
 
-- :doc:`ts` — depends on ``[ts]`` global-mean subtasks for atmospheric,
-  land, and (optionally) ocean/sea-ice data
+- :doc:`ts` — Monthly-atm-glb ts: the 5 classic atm plots, plots for specific atm variables. Monthly-lnd-glb ts: plots for specific lnd variables.
+- :doc:`mpas_analysis` — Monthly-atm-glb ts: the 3 classic ocn plots, plots for specific ocn variables.
 
-**Upstream (optional):**
-
-- :doc:`mpas_analysis` — depends on MPAS-Analysis output for ocean and
-  sea-ice time series plots. Specified via ``mpas_analysis_subsections``.
-
-**Downstream:**
+**Downstream (what depends on global_time_series):**
 
 - None.

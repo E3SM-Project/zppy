@@ -17,12 +17,12 @@ name) determines which set to run.
 Dependencies
 ------------
 
-**Upstream (required):**
+**Upstream (what pcmdi_diags depends on):**
 
-- :doc:`e3sm_to_cmip` — depends on a ``[e3sm_to_cmip]`` atmosphere subtask
-  to provide CMIP-format input data. Specified via
-  ``e3sm_to_cmip_atm_subsection``.
+- :doc:`ts` — Monthly-atm ts: mean_climate, variability_modes_atm,variability_modes_cpl, enso
+- :doc:`e3sm_to_cmip` — Monthly-atm e3sm_to_cmip: mean_climate, variability_modes_atm,variability_modes_cpl, enso
+- Note that the synthetic_plots set depends on the other sets.
 
-**Downstream:**
+**Downstream (what depends on pcmdi_diags):**
 
 - None.

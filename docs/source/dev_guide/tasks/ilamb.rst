@@ -12,22 +12,11 @@ Implementation
 Dependencies
 ------------
 
-**Upstream (required):**
+**Upstream (what ilamb depends on):**
 
-- :doc:`e3sm_to_cmip` — depends on CMIP-format land and (for non-land-only
-  runs) atmosphere time-series files
+- :doc:`ts` -- Monthly-lnd ts: required. Monthly-atm ts: optional.
+- :doc:`e3sm_to_cmip` — Monthly-lnd e3sm_to_cmip: required. Monthly-atm e3sm_to_cmip: optional.
 
-  - Land subtask: ``e3sm_to_cmip_land_subsection`` (inferred as
-    ``land_monthly`` if not set)
-  - Atmosphere subtask: ``e3sm_to_cmip_atm_subsection`` (inferred as
-    ``atm_monthly_180x360_aave`` if not set, skipped for land-only runs)
-
-- :doc:`ts` — also depends on ``ts`` subtasks:
-
-  - Land subtask: ``ts_land_subsection`` (inferred as ``land_monthly``)
-  - Atmosphere subtask: ``ts_atm_subsection`` (inferred as
-    ``atm_monthly_180x360_aave``, skipped for land-only runs)
-
-**Downstream:**
+**Downstream (what depends on ilamb):**
 
 - None.

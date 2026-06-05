@@ -35,12 +35,10 @@ locates MPAS-Analysis config files from prior runs:
 Dependencies
 ------------
 
-**Upstream:**
+**Upstream (what mpas_analysis depends on):**
 
-- None required. MPAS-Analysis reads MPAS-Ocean and MPAS-seaice output
-  directly from the simulation archive.
+- None. Note that later year sets will depend on previously completed ones.
 
-**Downstream (optional):**
+**Downstream (what depends on mpas_analysis):**
 
-- :doc:`global_time_series` — can optionally depend on MPAS-Analysis output
-  for ocean/sea-ice time series plots
+- :doc:`global_time_series` — Monthly-atm-glb ts: the 3 classic ocn plots, plots for specific ocn variables.

@@ -15,12 +15,10 @@ to detect and track tropical cyclones.
 Dependencies
 ------------
 
-**Upstream:**
+**Upstream (what tc_analysis depends on):**
 
-- None. Reads high-frequency EAM output directly.
+- None.
 
-**Downstream:**
+**Downstream (what depends on tc_analysis):**
 
-- None within ``zppy``. TC analysis results can be used as input to the
-  ``tc_analysis`` set in ``e3sm_diags`` (model-vs-model), but that
-  dependency is specified separately in the ``[e3sm_diags]`` configuration.
+- :doc:`e3sm_diags` — Required for tc_analysis set.

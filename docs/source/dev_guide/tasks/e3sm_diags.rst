@@ -29,20 +29,13 @@ Key functions in ``e3sm_diags.py``:
 Dependencies
 ------------
 
-**Upstream (required — varies by diagnostic set):**
+**Upstream (what e3sm_diags depends on):**
 
-- :doc:`climo` — required for most sets (``lat_lon``, ``zonal_mean_xy``,
-  etc.)
-- :doc:`ts` — required for time-series sets (``enso_diags``, ``qbo``,
-  ``area_mean_time_series``, ``tropical_subseasonal``, ``streamflow``)
-- Diurnal cycle ``[climo]`` subtask — required for ``diurnal_cycle`` set
-- Daily ``[ts]`` subtask — required for ``tropical_subseasonal`` set
+- :doc:`climo` — Monthly-atm climo: lat_lon, zonal_mean_xy, zonal_mean_2d, polar, cosp_histogram, meridional_mean_2d, annual_cycle_zonal_mean, zonal_mean_2d_stratosphere, aerosol_aeronet, aerosol_budget. Monthly-lnd climo: lat_lon_land. Monthly dirunal-atm climo: diurnal_cycle
+- :doc:`ts` — Monthly-atm ts: enso_diags, qbo, area_mean_time_series, mp_partition. Monthly-rof ts: streamflow. Daily-atm ts: tropical_subseasonal, precip_pdf.
+- :doc:`tc_analysis` — Required for tc_analysis set.
 
-The specific subtasks to depend on are set via:
-``climo_subsection``, ``ts_subsection``, ``climo_diurnal_subsection``,
-``ts_daily_subsection``.
-
-**Downstream:**
+**Downstream (what depends on e3sm_diags):**
 
 - None.
 
