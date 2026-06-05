@@ -100,3 +100,15 @@ Parameters
      - No
      - ``""``
      - Extra sea-ice plots (when ``make_viewer = True``).
+
+Dependencies
+------------
+
+**Upstream (what global_time_series depends on):**
+
+- :doc:`ts` — Monthly-atm-glb ts: the 5 classic atm plots, plots for specific atm variables. Monthly-lnd-glb ts: plots for specific lnd variables.
+- :doc:`mpas_analysis` — Monthly-atm-glb ts: the 3 classic ocn plots, plots for specific ocn variables.
+
+**Downstream (what depends on global_time_series):**
+
+- None.

@@ -97,7 +97,7 @@ The following parameters are specific to the ``ts`` task.
        this is left empty.
 
 Inherited common parameters most relevant to ``ts``
----------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -156,3 +156,19 @@ Inherited common parameters most relevant to ``ts``
      - No
      - ``""``
      - SLURM account to charge.
+
+Dependencies
+------------
+
+**Upstream (what ts depends on):**
+
+- None.
+
+**Downstream (what depends on ts):**
+
+- :doc:`e3sm_to_cmip` — Monthly-atm ts: monthly-atm e3sm_to_cmip. Monthly-lnd ts: monthly-lnd e3sm_to_cmip.
+- :doc:`e3sm_diags` — Monthly-atm ts: enso_diags, qbo, area_mean_time_series, mp_partition. Monthly-rof ts: streamflow. Daily-atm ts: tropical_subseasonal, precip_pdf.
+- :doc:`global_time_series` — Monthly-atm-glb ts: the 5 classic atm plots, plots for specific atm variables. Monthly-lnd-glb ts: plots for specific lnd variables.
+- :doc:`ilamb` -- Monthly-lnd ts: required. Monthly-atm ts: optional.
+- :doc:`livvkit` -- Monthly-lnd ts.
+- :doc:`pcmdi_diags` — Monthly-atm ts: mean_climate, variability_modes_atm,variability_modes_cpl, enso

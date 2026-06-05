@@ -31,14 +31,3 @@ locates MPAS-Analysis config files from prior runs:
   ``reference_comparison_type`` or ``test_comparison_type`` explicitly.
 - If ``reference_data_path`` points to a ``[[subsection]]``, zppy uses
   that subsection's actual comparison type.
-
-Dependencies
-------------
-
-**Upstream (what mpas_analysis depends on):**
-
-- None. Note that later year sets will depend on previously completed ones.
-
-**Downstream (what depends on mpas_analysis):**
-
-- :doc:`global_time_series` — Monthly-atm-glb ts: the 3 classic ocn plots, plots for specific ocn variables.

@@ -78,7 +78,7 @@ all :ref:`common parameters <parameters>` from the ``[default]`` section apply.
        internally.
 
 Inherited common parameters most relevant to ``climo``
-------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -140,3 +140,15 @@ Inherited common parameters most relevant to ``climo``
      - ``""``
      - Shell commands to set up the software environment before running the
        task (e.g., ``source /path/to/e3sm_unified.sh``).
+
+Dependencies
+------------
+
+**Upstream (what climo depends on):**
+
+- None
+
+**Downstream (what depends on climo):**
+
+- :doc:`e3sm_diags` — Monthly-atm climo: lat_lon, zonal_mean_xy, zonal_mean_2d, polar, cosp_histogram, meridional_mean_2d, annual_cycle_zonal_mean, zonal_mean_2d_stratosphere, aerosol_aeronet, aerosol_budget. Monthly-lnd climo: lat_lon_land. Monthly dirunal-atm climo: diurnal_cycle
+- :doc:`livvkit` — Monthly-lnd climo

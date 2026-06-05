@@ -156,3 +156,14 @@ the test and reference runs:
   same cfg, the reference year ranges default to that subsection's values.
 - If a single reference year range is provided and multiple test ranges are
   requested, the single reference range is used for each test range.
+
+Dependencies
+------------
+
+**Upstream (what mpas_analysis depends on):**
+
+- None. Note that later year sets will depend on previously completed ones.
+
+**Downstream (what depends on mpas_analysis):**
+
+- :doc:`global_time_series` — Monthly-atm-glb ts: the 3 classic ocn plots, plots for specific ocn variables.

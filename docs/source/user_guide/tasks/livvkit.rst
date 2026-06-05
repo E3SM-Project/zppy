@@ -40,8 +40,20 @@ Parameters
      - ``"cmb,smb,energy_racmo,energy_era5,energy_merra2,energy_ceres"``
      - Validation sets to perform.
 
+Dependencies
+------------
+
+**Upstream (what livvkit depends on):**
+
+- :doc:`climo` — Monthly-lnd climo
+- :doc:`ts` -- Monthly-lnd ts.
+
+**Downstream (what depends on livvkit):**
+
+- None.
+
 Climo dependency requirements
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``livvkit`` task requires specific ``[climo]`` subtasks to be defined:
 

@@ -34,7 +34,7 @@ Parameters
        attempts to infer it from the topography file.
 
 Inherited common parameters most relevant to ``tc_analysis``
-------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -72,3 +72,14 @@ Inherited common parameters most relevant to ``tc_analysis``
      - No
      - ``"02:00:00"``
      - Maximum wall time for the SLURM job.
+
+Dependencies
+------------
+
+**Upstream (what tc_analysis depends on):**
+
+- None.
+
+**Downstream (what depends on tc_analysis):**
+
+- :doc:`e3sm_diags` — Required for tc_analysis set.

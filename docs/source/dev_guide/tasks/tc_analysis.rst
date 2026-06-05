@@ -11,14 +11,3 @@ Implementation
 
 ``tc_analysis`` processes high-frequency atmospheric output (``eam.h2``)
 to detect and track tropical cyclones.
-
-Dependencies
-------------
-
-**Upstream (what tc_analysis depends on):**
-
-- None.
-
-**Downstream (what depends on tc_analysis):**
-
-- :doc:`e3sm_diags` — Required for tc_analysis set.

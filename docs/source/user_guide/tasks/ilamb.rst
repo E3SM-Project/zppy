@@ -57,8 +57,20 @@ Parameters
      - Name of the ``[ts]`` land subtask to depend on. Inferred as
        ``land_monthly`` if not specified.
 
+Dependencies
+------------
+
+**Upstream (what ilamb depends on):**
+
+- :doc:`ts` -- Monthly-lnd ts: required. Monthly-atm ts: optional.
+- :doc:`e3sm_to_cmip` — Monthly-lnd e3sm_to_cmip: required. Monthly-atm e3sm_to_cmip: optional.
+
+**Downstream (what depends on ilamb):**
+
+- None.
+
 Dependency inference
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 When ``infer_section_parameters = True`` (the default), ``zppy`` will
 automatically determine the following if not explicitly set:

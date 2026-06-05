@@ -15,5 +15,6 @@ post-process E3SM simulations.
    schematics
    campaigns
    parameters
+   dependencies
    tasks/index
    components/index

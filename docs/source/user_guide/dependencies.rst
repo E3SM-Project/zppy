@@ -2,6 +2,6 @@
 Dependencies
 ************
 
-.. literalinclude:: ./dependencies.dot
+.. literalinclude:: ../dependencies.dot
    :language: dot
    :linenos:
