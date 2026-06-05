@@ -1187,22 +1187,22 @@ fi
 {% if current_set == "mean_climate" %}
 # optional, when save_all_data = True, also copy the mean climate nc data
 {% if save_all_data|lower == "true" %}
-  cd ${workdir}
+cd ${workdir}
 
-  clim_dir=${web_dir}/model_vs_obs/metrics_data/mean_climate/
-  mkdir -p ${clim_dir}
+clim_dir=${web_dir}/model_vs_obs/metrics_data/mean_climate/
+mkdir -p ${clim_dir}
 
-  rsync -a climo     ${clim_dir}/
-  rc1=$?
+rsync -a climo     ${clim_dir}/
+rc1=$?
 
-  rsync -a climo_ref ${clim_dir}/
-  rc2=$?
+rsync -a climo_ref ${clim_dir}/
+rc2=$?
 
-  if [ ${rc1} != 0 ] || [ ${rc2} != 0 ]; then
-    cd {{ scriptDir }}
-    echo 'ERROR (110)' > {{ prefix }}.status
-    exit 110
-  fi
+if [ ${rc1} != 0 ] || [ ${rc2} != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'ERROR (110)' > {{ prefix }}.status
+  exit 110
+fi
 {% endif %}
 {% endif %}
 
