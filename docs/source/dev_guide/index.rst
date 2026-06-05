@@ -10,6 +10,7 @@ This guide covers everything needed to develop, test, and release ``zppy``.
    project-standards
    contributing
    parameters
+   dependencies
    tasks/index
    testing
    release_testing
