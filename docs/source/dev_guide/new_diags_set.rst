@@ -32,7 +32,7 @@ In ``zppy/e3sm_diags.py``
 
 Diurnal Cycle: ``e3sm_diags`` had to be set up to depend on a new climatology subtask:
 
-    .. code::
+    .. code-block:: python
 
         if "diurnal_cycle" in c['sets']:
             dependencies.append(os.path.join(scriptDir, 'climo_%s_%04d-%04d.status' % (
@@ -40,7 +40,7 @@ Diurnal Cycle: ``e3sm_diags`` had to be set up to depend on a new climatology su
 
 Streamflow: ``e3sm_diags`` had to be set up to depend on a new time series subtask:
 
-    .. code::
+    .. code-block:: python
 
         if "streamflow" in c["sets"]:
             dependencies.append(

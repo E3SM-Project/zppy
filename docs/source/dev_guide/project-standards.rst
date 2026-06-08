@@ -52,10 +52,10 @@ Helpful ``pre-commit`` Commands
 * **trailing-whitespace** - Trims trailing whitespace from the end of each line.
 * **end-of-file-fixer** - Ensures files end with a single newline character.
 * **check-yaml** - Validates YAML files for correct syntax.
-* **black** - Auto-formats Python code to a consistent style using the `black <https://black.readthedocs.io/en/stable/>`__ formatter.
-* **isort** - Sorts and organizes Python import statements alphabetically and by type using `isort <https://pycqa.github.io/isort/>`__.
-* **flake8** - Lints Python code for style violations and common errors (PEP 8) using `flake8 <https://github.com/PyCQA/flake8#flake8>`__.
-* **mypy** - Runs static type checking on Python code using type annotations using `mypy <http://mypy-lang.org/>`__.
+* **black** - Auto-formats Python code to a consistent style using the `black <https://black.readthedocs.io/en/stable/>`_ formatter.
+* **isort** - Sorts and organizes Python import statements alphabetically and by type using `isort <https://pycqa.github.io/isort/>`_.
+* **flake8** - Lints Python code for style violations and common errors (PEP 8) using `flake8 <https://github.com/PyCQA/flake8#flake8>`_.
+* **mypy** - Runs static type checking on Python code using type annotations using `mypy <http://mypy-lang.org/>`_.
 
 Install into your cloned repo ::
 
@@ -87,7 +87,7 @@ Run individual hook ::
 Continuous Integration / Continuous Delivery (CI/CD)
 ----------------------------------------------------
 
-This project uses `GitHub Actions <https://github.com/E3SM-Project/zppy/actions>`_ to run two CI/CD workflows. The workflows are defined `here <https://github.com/E3SM-Project/zppy/tree/main/.github/workflows>`__.
+This project uses `GitHub Actions <https://github.com/E3SM-Project/zppy/actions>`_ to run two CI/CD workflows. The workflows are defined `here <https://github.com/E3SM-Project/zppy/tree/main/.github/workflows>`_.
 
 1. CI/CD Build Workflow
 

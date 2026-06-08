@@ -21,23 +21,3 @@ other tasks.
    livvkit
    pcmdi_diags
    bundle
-
-Dependency overview
--------------------
-
-The diagram below summarizes the typical dependency relationships between
-tasks. Arrows indicate "depends on":
-
-.. code-block:: text
-
-   climo ──────────────────────────────────────────► e3sm_diags
-   ts ─────────────────────────────────────────────► e3sm_diags
-   ts ─────────────────────────────────────────────► e3sm_to_cmip
-   ts ─────────────────────────────────────────────► global_time_series
-   ts ─────────────────────────────────────────────► pcmdi_diags (via e3sm_to_cmip)
-   mpas_analysis ──────────────────────────────────► global_time_series
-   e3sm_to_cmip ───────────────────────────────────► ilamb
-   e3sm_to_cmip ───────────────────────────────────► pcmdi_diags
-   climo ──────────────────────────────────────────► livvkit
-
-All tasks are independent unless they share the above relationships.

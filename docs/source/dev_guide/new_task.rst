@@ -144,11 +144,11 @@ The main file
 
 Add the task to ``zppy/__main__.py``:
 
-    .. code::
+    .. code-block:: python
 
         from task_name import task_name
 
-    .. code::
+    .. code-block:: python
 
         # task_name tasks
         existing_bundles = task_name(config, script_dir, existing_bundles, job_ids_file)

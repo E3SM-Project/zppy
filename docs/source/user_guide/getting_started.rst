@@ -76,7 +76,8 @@ To install the latest stable release, refer to the following:
 Setting up a development environment
 ====================================
 
-    ::
+.. code-block:: bash
+
         # Get the code ########################################################################
 
         # Set up your fork:

@@ -13,7 +13,7 @@ Step 2: Determine what the new version should be
 
 This step only needs to be done for rc1.
 
-Review `zppy commits <https://github.com/E3SM-Project/zppy/commits/main/>`__. Identify what changes since the last production release would require a patch, minor, or major version update (as in ``vMAJOR.MINOR.PATCH``).
+Review `zppy commits <https://github.com/E3SM-Project/zppy/commits/main/>`_. Identify what changes since the last production release would require a patch, minor, or major version update (as in ``vMAJOR.MINOR.PATCH``).
 
 The highest-level version update will be used. For example, if you found 1 commit requiring a patch update, 1 commit requiring a minor update, and 0 commits requiring a major update, then you'd want to increment the minor version.
 
@@ -22,7 +22,7 @@ Step 3: Confluence
 
 This step only needs to be done for rc1.
 
-Update the `E3SM Unified version tracking page <https://e3sm.atlassian.net/wiki/spaces/DOC/pages/129732419/Packages+in+the+E3SM+Unified+conda+environment>`__ with the new ``zppy`` version number. Be sure to update the section for the next E3SM Unified environment, not the current one.
+Update the `E3SM Unified version tracking page <https://e3sm.atlassian.net/wiki/spaces/DOC/pages/129732419/Packages+in+the+E3SM+Unified+conda+environment>`_ with the new ``zppy`` version number. Be sure to update the section for the next E3SM Unified environment, not the current one.
 
 Step 4: tbump
 -------------
@@ -56,7 +56,7 @@ Step 5: Tag the RC on the zppy repo
         git branch -D v1.2.3rc4
         git push upstream v1.2.3rc4 # Push the new RC tag to GitHub
 
-``v1.2.3rc4`` should now appear on `Tags <https://github.com/E3SM-Project/zppy/tags>`__, but _not_ on `Releases <https://github.com/E3SM-Project/zppy/releases>`__.
+``v1.2.3rc4`` should now appear on `Tags <https://github.com/E3SM-Project/zppy/tags>`__, but _not_ on `Releases <https://github.com/E3SM-Project/zppy/releases>`_.
 
 Step 6: zppy-feedstock repo
 ---------------------------

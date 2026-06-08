@@ -87,22 +87,22 @@ Debugging failures
 
 .. code-block:: bash
 
-        grep "output =" your_zppy_config.cfg # Easy way to remember your output directory
-		cd your_output_dir/post/scripts
-		grep -v "OK" *status # See what failed
+	grep "output =" your_zppy_config.cfg # Easy way to remember your output directory
+	cd your_output_dir/post/scripts
+	grep -v "OK" *status # See what failed
 
-		# Say failing_task.status is showing a non-OK status, then:
-		ls failing_task* # See everything associated with it
+	# Say failing_task.status is showing a non-OK status, then:
+	ls failing_task* # See everything associated with it
 
-		# Say its job ID was 123456, then:
-		emacs failing_task.o123456 # Review the output
-		emacs failing_task.settings # Review how each of its parameters was set/configured.
+	# Say its job ID was 123456, then:
+	emacs failing_task.o123456 # Review the output
+	emacs failing_task.settings # Review how each of its parameters was set/configured.
 
-		# If an error is obvious, make a fix in the bash file and rerun:
-		sbatch failing_task.bash
-		
-		# If the error is not obvious, do the following:
-		emacs failing_task.bash
-		# In this file, set `debug = True`. This will provide more information.
-		# Note: another option is to set `debug = True` in your `cfg` and rerun `zppy -c`.
-		sbatch failing_task.bash
+	# If an error is obvious, make a fix in the bash file and rerun:
+	sbatch failing_task.bash
+	
+	# If the error is not obvious, do the following:
+	emacs failing_task.bash
+	# In this file, set `debug = True`. This will provide more information.
+	# Note: another option is to set `debug = True` in your `cfg` and rerun `zppy -c`.
+	sbatch failing_task.bash

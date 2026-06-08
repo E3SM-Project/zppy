@@ -9,7 +9,7 @@ Zppy documentation
 What is zppy?
 =============
 
-``zppy`` (pronounced "/ˈzɪpi/") is a **workflow manager** for post-processing
+``zppy`` (pronounced as "zippy", or in IPA: /ˈzɪpi/) is a **workflow manager** for post-processing
 E3SM simulations, written in Python. The goal of ``zppy`` is to speed up
 post-processing by automating commonly performed tasks.
 

@@ -84,25 +84,26 @@ For the ``mpas_analysis`` task:
   not need to set a comparison type for the current run.
 
   .. note::
-     These parameter names are intentionally consistent with the terminology used by ``e3sm_diags`` for model-vs-model runs: in both cases, ``reference_data_path`` identifies the *reference simulation's zppy-generated outputs*.
 
-     The practical difference is what each downstream tool consumes:
-     ``e3sm_diags`` needs ``reference_data_path`` to be the specific directory containing the reference climatology files (typically under the reference run's ``post/.../clim`` tree), whereas ``mpas_analysis`` needs to find the reference MPAS-Analysis config file.
-     For MPAS-Analysis, ``zppy`` resolves the config file when ``reference_data_path`` points to the prior run's zppy output directory (the one containing ``post/``).
+      These parameter names are intentionally consistent with the terminology used by ``e3sm_diags`` for model-vs-model runs: in both cases, ``reference_data_path`` identifies the *reference simulation's zppy-generated outputs*.
 
-   ``reference_data_path`` is intended to point to the prior run's zppy output directory (the one containing ``post/``). ``zppy`` will then use:
-   ``<reference_data_path>/post/analysis/mpas_analysis/<comparison_type>/cfg/mpas_analysis_<identifier>.cfg``
-   where ``<comparison_type>`` is ``mvo`` or ``mvm``.
+      The practical difference is what each downstream tool consumes:
+      ``e3sm_diags`` needs ``reference_data_path`` to be the specific directory containing the reference climatology files (typically under the reference run's ``post/.../clim`` tree), whereas ``mpas_analysis`` needs to find the reference MPAS-Analysis config file.
+      For MPAS-Analysis, ``zppy`` resolves the config file when ``reference_data_path`` points to the prior run's zppy output directory (the one containing ``post/``).
 
-   For referenced prior runs, ``reference_comparison_type`` and
-   ``test_comparison_type`` can be set to ``"auto"``, ``"mvo"``, or ``"mvm"``.
-   The default is ``"auto"``. In auto mode:
+      ``reference_data_path`` is intended to point to the prior run's zppy output directory (the one containing ``post/``). ``zppy`` will then use:
+      ``<reference_data_path>/post/analysis/mpas_analysis/<comparison_type>/cfg/mpas_analysis_<identifier>.cfg``
+      where ``<comparison_type>`` is ``mvo`` or ``mvm``.
 
-   * if the path points to ``[[subsection]]``, zppy uses the referenced subsection's actual comparison type
-   * if the path points to an external zppy output directory, zppy looks for the matching cfg under ``mvo`` and ``mvm``
-   * if both exist for the same identifier, zppy raises an error and the user should set ``reference_comparison_type`` or ``test_comparison_type`` explicitly
+      For referenced prior runs, ``reference_comparison_type`` and
+      ``test_comparison_type`` can be set to ``"auto"``, ``"mvo"``, or ``"mvm"``.
+      The default is ``"auto"``. In auto mode:
 
-   When ``reference_data_path`` is set to a non-subsection path, ``reference_case`` is required so the MVM output directory can include the reference case name. If ``reference_data_path`` is set to ``[[subsection]]``, ``reference_case`` is inferred to be the same as the current ``case``.
+      * if the path points to ``[[subsection]]``, zppy uses the referenced subsection's actual comparison type
+      * if the path points to an external zppy output directory, zppy looks for the matching cfg under ``mvo`` and ``mvm``
+      * if both exist for the same identifier, zppy raises an error and the user should set ``reference_comparison_type`` or ``test_comparison_type`` explicitly
+
+      When ``reference_data_path`` is set to a non-subsection path, ``reference_case`` is required so the MVM output directory can include the reference case name. If ``reference_data_path`` is set to ``[[subsection]]``, ``reference_case`` is inferred to be the same as the current ``case``.
 
 
 **MPAS-Analysis model-vs-model year ranges**

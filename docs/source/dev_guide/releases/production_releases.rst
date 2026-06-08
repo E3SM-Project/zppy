@@ -11,7 +11,7 @@ Be sure to run the entire integration test suite before making a production rele
 Step 2: Confluence
 ------------------
 
-This step should already have been completed during the release-candidate phase, however it is good practice to double check that the `E3SM Unified version tracking page <https://e3sm.atlassian.net/wiki/spaces/DOC/pages/129732419/Packages+in+the+E3SM+Unified+conda+environment>`__ has had the next E3SM Unified version updated with the new ``zppy`` version number.
+This step should already have been completed during the release-candidate phase, however it is good practice to double check that the `E3SM Unified version tracking page <https://e3sm.atlassian.net/wiki/spaces/DOC/pages/129732419/Packages+in+the+E3SM+Unified+conda+environment>`_ has had the next E3SM Unified version updated with the new ``zppy`` version number.
 
 Step 3: Prepare documentation
 ------------------------------------------
