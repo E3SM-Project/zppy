@@ -5,8 +5,8 @@ global_time_series — Global Time Series Plots
 
 The ``global_time_series`` task generates global time series plots of
 key climate metrics. It can optionally produce a Viewer page. It depends on
-the :doc:`ts` task (for atmospheric, land, and ocean global-mean time series)
-and optionally on :doc:`mpas_analysis` (for ocean and sea-ice plots).
+ the :doc:`ts` task (for atmospheric and land global-mean time series)
+ and on :doc:`mpas_analysis` when ocean plots are requested.
 
 Parameters
 ----------
@@ -107,7 +107,7 @@ Dependencies
 **Upstream (what global_time_series depends on):**
 
 - :doc:`ts` — Monthly-atm-glb ts: the 5 classic atm plots, plots for specific atm variables. Monthly-lnd-glb ts: plots for specific lnd variables.
-- :doc:`mpas_analysis` — Monthly-atm-glb ts: the 3 classic ocn plots, plots for specific ocn variables.
+- :doc:`mpas_analysis` — the 3 classic ocn plots, plots for specific ocn variables.
 
 **Downstream (what depends on global_time_series):**
 

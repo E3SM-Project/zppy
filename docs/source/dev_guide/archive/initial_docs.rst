@@ -30,7 +30,7 @@ accept suggested default options, except ::
 
   Separate source and build directories (y/N) [n]: y
 
-Edit Makefile and change ``BUILDIR`` ::
+Edit Makefile and change ``BUILDDIR`` ::
 
   BUILDDIR = docs
 
@@ -52,7 +52,7 @@ Try building documentation ::
 
   $ make html
 
-Create an empty .nojekyll file to indicate to Github.com that this
+Create an empty .nojekyll file to indicate to GitHub.com that this
 is not a Jekyll static website: ::
 
   $ touch .nojekyll
@@ -65,7 +65,7 @@ with the following: ::
 
   <meta http-equiv="refresh" content="0; url=./docs/html/index.html" />
 
-Commit and push back to Github: ::
+Commit and push back to GitHub: ::
 
   $ git add .
   $ git commit

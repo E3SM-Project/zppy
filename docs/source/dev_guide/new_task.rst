@@ -146,12 +146,12 @@ Add the task to ``zppy/__main__.py``:
 
     .. code::
 
-        from <task_name> import <task_name>
+        from task_name import task_name
 
     .. code::
 
-        # task-name tasks
-        existing_bundles = task-name(config, script_dir, existing_bundles, job_ids_file)
+        # task_name tasks
+        existing_bundles = task_name(config, script_dir, existing_bundles, job_ids_file)
 
 Update defaults
 ===============

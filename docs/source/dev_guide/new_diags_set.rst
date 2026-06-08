@@ -1,6 +1,6 @@
-*********************************************
+*******************************************************
 Examples: Adding a new set to the E3SM Diagnostics task
-*********************************************
+*******************************************************
 
 This guide gives a general list of things to consider when adding a new
 E3SM Diagnostics set. The exact code changes required will differ amongst sets.

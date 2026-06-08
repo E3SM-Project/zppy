@@ -166,4 +166,4 @@ Dependencies
 
 **Downstream (what depends on mpas_analysis):**
 
-- :doc:`global_time_series` — Monthly-atm-glb ts: the 3 classic ocn plots, plots for specific ocn variables.
+- :doc:`global_time_series` — the 3 classic ocn plots, plots for specific ocn variables.

@@ -38,10 +38,10 @@ Once the ``[ts]`` subsection ``[[ atm_monthly_glb ]]`` and the ``[mpas_analysis]
 section finish, ``[global_time_series]`` will run.
 
 Post-processing results will be located in ``output`` and ``www``. Some machines have
-a web server. ``www`` should be pointed to that so that the plotting tasks (here: ``e3sm_diags`` ``mpas_analysis``, ``global_time_series``, ``livvkit``) will be visible online.
+a web server. ``www`` should be pointed to that so that the plotting tasks (here: ``e3sm_diags``, ``mpas_analysis``, ``global_time_series``, ``livvkit``) will be visible online.
 
 Because we have specified ``campaign = "water_cycle"``, some parameters will
-be automatically set. ``zppy/templates/water_cycle.cfg`` specifies what
+be automatically set. ``zppy/defaults/water_cycle.cfg`` specifies what
 ``[e3sm_diags] > sets``, and
 ``[mpas_analysis] > generate`` should be for the water cycle campaign.
 Users may specify their own values for any of these parameters,
@@ -85,9 +85,9 @@ or ``test_comparison_type`` to disambiguate.
 Debugging failures
 ==================
 
-    ::
+.. code-block:: bash
 
-        grep "output=" your_zppy_config.cfg # Easy way to remember your output directory
+        grep "output =" your_zppy_config.cfg # Easy way to remember your output directory
 		cd your_output_dir/post/scripts
 		grep -v "OK" *status # See what failed
 
@@ -105,4 +105,4 @@ Debugging failures
 		emacs failing_task.bash
 		# In this file, set `debug = True`. This will provide more information.
 		# Note: another option is to set `debug = True` in your `cfg` and rerun `zppy -c`.
-		sbatch <failed job>.bash
+		sbatch failing_task.bash
