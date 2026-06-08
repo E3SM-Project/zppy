@@ -31,8 +31,7 @@ Configuration example
 Parameters
 ----------
 
-The following parameters are specific to the ``climo`` task. In addition,
-all :ref:`common parameters <parameters>` from the ``[default]`` section apply.
+These 3 parameters are specific to the ``climo`` task:
 
 .. list-table::
    :header-rows: 1
@@ -42,14 +41,36 @@ all :ref:`common parameters <parameters>` from the ``[default]`` section apply.
      - Required
      - Default
      - Description
-   * - ``active``
-     - No
-     - ``False``
-     - Set to ``True`` to enable this task.
    * - ``exclude``
      - No
      - ``False``
      - Set to ``True`` to exclude this subtask from running (subsection-level).
+   * - ``climo_jobs``
+     - No
+     - ``0``
+     - Number of simultaneous ``ncclimo`` jobs. ``0`` uses ``ncclimo``'s
+       default.
+   * - ``input_component``
+     - No
+     - ``""``
+     - Model component that generated the input files (e.g., ``eam``,
+       ``eamxx``, ``elm``, ``mosart``). Used to set processing type
+       internally.
+
+
+Parameters at the top-level
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These 3 parameters have ``climo``-specific defaults, which means even if they are set at the top level (``[default]``) section, these default values will be used instead. Therefore, to specify a custom value, these parameters must be defined inside ``[climo]``:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 10 18 50
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
    * - ``parallel``
      - No
      - ``"mpi"``
@@ -59,87 +80,14 @@ all :ref:`common parameters <parameters>` from the ``[default]`` section apply.
      - No
      - ``4``
      - Number of compute nodes. Overrides the ``[default]`` value (``1``).
-   * - ``climo_jobs``
-     - No
-     - ``0``
-     - Number of simultaneous ``ncclimo`` jobs. ``0`` uses ``ncclimo``'s
-       default.
    * - ``vars``
      - No
      - ``""``
      - Variables to process. An empty string processes *all* variables (no
        ``-v`` flag is passed to ``ncclimo``). Overrides the ``[default]``
        value.
-   * - ``input_component``
-     - No
-     - ``""``
-     - Model component that generated the input files (e.g., ``eam``,
-       ``eamxx``, ``elm``, ``mosart``). Used to set processing type
-       internally.
 
-Inherited common parameters most relevant to ``climo``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :header-rows: 1
-   :widths: 22 10 18 50
-
-   * - Parameter
-     - Required
-     - Default
-     - Description
-   * - ``case``
-     - **Yes**
-     - *(none)*
-     - The case name of the simulation.
-   * - ``input``
-     - **Yes**
-     - *(none)*
-     - The top-level directory of the simulation output to post-process.
-   * - ``output``
-     - **Yes**
-     - *(none)*
-     - Where the post-processing results (``post/`` directory) should go.
-   * - ``years``
-     - No
-     - ``[""]``
-     - Year ranges to process. Format: ``"start:end:increment"`` (e.g.,
-       ``"1:100:20"``).
-   * - ``input_files``
-     - No
-     - ``"eam.h0"``
-     - Pattern matching the input history files (e.g., ``eam.h0``,
-       ``eam.h1``).
-   * - ``input_subdir``
-     - No
-     - ``"archive/atm/hist"``
-     - Subdirectory under ``input``/``case`` containing the data files.
-   * - ``mapping_file``
-     - No
-     - ``""``
-     - Path to the mapping (regridding) file. Leave empty for no regridding.
-   * - ``grid``
-     - No
-     - ``""``
-     - Name of the output grid (e.g., ``180x360_aave``). Used for naming
-       output directories.
-   * - ``walltime``
-     - No
-     - ``"02:00:00"``
-     - Maximum wall time for the SLURM job.
-   * - ``partition``
-     - No
-     - ``""``
-     - SLURM partition to submit the job to.
-   * - ``account``
-     - No
-     - ``""``
-     - SLURM account to charge.
-   * - ``environment_commands``
-     - No
-     - ``""``
-     - Shell commands to set up the software environment before running the
-       task (e.g., ``source /path/to/e3sm_unified.sh``).
+For other top-level parameters, see :ref:`top-level parameters <parameters-top-level>`.
 
 Dependencies
 ------------

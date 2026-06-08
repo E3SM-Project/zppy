@@ -10,6 +10,8 @@ detect and track TCs.
 Parameters
 ----------
 
+This parameter is specific to the ``tc_analysis`` task:
+
 .. list-table::
    :header-rows: 1
    :widths: 22 10 18 50
@@ -18,23 +20,16 @@ Parameters
      - Required
      - Default
      - Description
-   * - ``active``
-     - No
-     - ``False``
-     - Set to ``True`` to enable this task.
-   * - ``input_files``
-     - No
-     - ``"eam.h2"``
-     - Input history file pattern. Overrides the ``[default]`` value
-       (``eam.h0``).
    * - ``res``
      - No
      - ``""``
      - Resolution string for the ``--res`` option. If not set, ``zppy``
        attempts to infer it from the topography file.
 
-Inherited common parameters most relevant to ``tc_analysis``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Parameters at the top-level
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This parameter has a ``tc_analysis``-specific default, which means even if it is set at the top level (``[default]``) section, the default value will be used instead. Therefore, to specify a custom value, this parameter must be defined inside ``[tc_analysis]``:
 
 .. list-table::
    :header-rows: 1
@@ -44,34 +39,13 @@ Inherited common parameters most relevant to ``tc_analysis``
      - Required
      - Default
      - Description
-   * - ``case``
-     - **Yes**
-     - *(none)*
-     - The case name of the simulation.
-   * - ``input``
-     - **Yes**
-     - *(none)*
-     - The top-level directory of the simulation output.
-   * - ``output``
-     - **Yes**
-     - *(none)*
-     - Where the post-processing results go.
-   * - ``years``
+   * - ``input_files``
      - No
-     - ``[""]``
-     - Year ranges to process.
-   * - ``input_subdir``
-     - No
-     - ``"archive/atm/hist"``
-     - Subdirectory under ``input``/``case`` containing the data files.
-   * - ``environment_commands``
-     - No
-     - ``""``
-     - Shell commands to activate the software environment.
-   * - ``walltime``
-     - No
-     - ``"02:00:00"``
-     - Maximum wall time for the SLURM job.
+     - ``"eam.h2"``
+     - Input history file pattern. Overrides the ``[default]`` value
+       (``eam.h0``).
+
+For other top-level parameters, see :ref:`top-level parameters <parameters-top-level>`.
 
 Dependencies
 ------------

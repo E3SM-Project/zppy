@@ -35,7 +35,7 @@ Configuration example
 Parameters
 ----------
 
-The following parameters are specific to the ``ts`` task.
+These 9 parameters are specific to the ``ts`` task.
 
 .. list-table::
    :header-rows: 1
@@ -45,10 +45,6 @@ The following parameters are specific to the ``ts`` task.
      - Required
      - Default
      - Description
-   * - ``active``
-     - No
-     - ``False``
-     - Set to ``True`` to enable this task.
    * - ``area_nm``
      - No
      - ``"area"``
@@ -96,66 +92,11 @@ The following parameters are specific to the ``ts`` task.
        ``diagnostics_base_path`` when ``input_component`` is ``eamxx`` and
        this is left empty.
 
-Inherited common parameters most relevant to ``ts``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Parameters at the top-level
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. list-table::
-   :header-rows: 1
-   :widths: 22 10 18 50
+For top-level parameters, see :ref:`top-level parameters <parameters-top-level>`.
 
-   * - Parameter
-     - Required
-     - Default
-     - Description
-   * - ``case``
-     - **Yes**
-     - *(none)*
-     - The case name of the simulation.
-   * - ``input``
-     - **Yes**
-     - *(none)*
-     - The top-level directory of the simulation output to post-process.
-   * - ``output``
-     - **Yes**
-     - *(none)*
-     - Where the post-processing results (``post/`` directory) should go.
-   * - ``years``
-     - No
-     - ``[""]``
-     - Year ranges to process. Format: ``"start:end:increment"`` (e.g.,
-       ``"1:100:10"``).
-   * - ``input_files``
-     - No
-     - ``"eam.h0"``
-     - Pattern matching the input history files.
-   * - ``input_subdir``
-     - No
-     - ``"archive/atm/hist"``
-     - Subdirectory under ``input``/``case`` containing the data files.
-   * - ``mapping_file``
-     - No
-     - ``""``
-     - Path to the mapping (regridding) file. Leave empty for no regridding.
-   * - ``grid``
-     - No
-     - ``""``
-     - Name of the output grid (e.g., ``180x360_aave``).
-   * - ``vars``
-     - No
-     - ``"FSNTOA,FLUT,..."``
-     - Variables to process. An empty string processes all variables.
-   * - ``walltime``
-     - No
-     - ``"02:00:00"``
-     - Maximum wall time for the SLURM job.
-   * - ``partition``
-     - No
-     - ``""``
-     - SLURM partition to submit the job to.
-   * - ``account``
-     - No
-     - ``""``
-     - SLURM account to charge.
 
 Dependencies
 ------------

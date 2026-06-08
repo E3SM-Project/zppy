@@ -10,14 +10,14 @@ other tasks.
 .. toctree::
    :maxdepth: 1
 
+   bundle
    climo
    ts
    e3sm_to_cmip
+   tc_analysis
    e3sm_diags
    mpas_analysis
    global_time_series
-   tc_analysis
    ilamb
    livvkit
    pcmdi_diags
-   bundle

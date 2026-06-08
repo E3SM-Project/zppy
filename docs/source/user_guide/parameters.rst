@@ -16,19 +16,277 @@ on GitHub for a complete list of parameters and their default values.
 You can also view the most up-to-date,
 `unreleased parameter defaults <https://github.com/E3SM-Project/zppy/blob/main/zppy/defaults/default.ini>`_.
 
+Parameters for individual tasks
+===============================
+
 For per-task parameter tables, see the :ref:`Tasks <user-tasks>` section.
 
-Deprecated parameters
-=====================
+.. _parameters-top-level:
 
-The following parameters no longer perform any function:
-   ::
+Parameters at the top-level
+===========================
 
-        "e3sm_to_cmip_environment_commands"
-        "ts_fmt"
-        "scratch"
-        "atmosphere_only"
-        "plot_names"
+These parameters appear in the top-level ``[default]`` section of ``zppy/defaults/default.ini``. They can be overridden in individual tasks and subtasks.
+
+There are 38 (non-deprecated) parameters that can be defined at the top level.
+
+**Input specifics**
+
+There are 2 input-specific parameters:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 10 18 50
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``case``
+     - **Yes**
+     - *(none)*
+     - The case name of the simulation.
+   * - ``input``
+     - **Yes**
+     - *(none)*
+     - The top-level directory of the simulation output to post-process.
+
+**Output specifics**
+
+There are 6 output-specific parameters:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 10 18 50
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``output``
+     - **Yes**
+     - *(none)*
+     - Where the post-processing results (``post/`` directory) should go.
+   * - ``www``
+     - **Yes**
+     - *(none)*
+     - Where the post-processing visuals should go (to be viewed online).
+   * - ``campaign``
+     - No
+     - ``"none"``
+     - Specify which campaign you are running. Campaigns can be found in ``zppy/defaults``. Possible campaigns include ``cryosphere`` and ``water_cycle``.
+   * - ``debug``
+     - No
+     - ``False``
+     - Set to True to have ``zppy`` produce more verbose output and retain temporary workdirs. This is helpful for debugging.
+   * - ``dry_run``
+     - No
+     - ``False``
+     - This should be set to True if you don't want the batch jobs to be submitted. I.e., you only want to see what *would* be submitted.
+   * - ``fail_on_dependency_skip``
+     - No
+     - ``False``
+     - If set to False, zppy will launch other jobs, if possible.
+
+**Machine specifics**
+
+There are 8 machine-specific parameters:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 10 18 50
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``account``
+     - No
+     - ``""``
+     - SLURM account to charge.
+   * - ``constraint``
+     - No
+     - ``""``
+     - The constraint of the machine to run on.
+   * - ``nodes``
+     - No
+     - ``1``
+     - Number of compute nodes.
+   * - ``parallel``
+     - No
+     - ``"mpi"``
+     - The ``parallel`` option passed to ``ncclimo``.
+   * - ``partition``
+     - No
+     - ``""``
+     - SLURM partition to submit the job to.
+   * - ``qos``
+     - No
+     - ``"regular"``
+     - Quality of service
+   * - ``reservation``
+     - No
+     - ``""``
+     - If you have access to a node reservation, specify it here.
+   * - ``walltime``
+     - No
+     - ``"02:00:00"``
+     - Maximum wall time for the SLURM job.
+
+**Environment specifics**
+
+There are 3 environment-specific parameters:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 10 18 50
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``environment_commands``
+     - No
+     - ``""``
+     - Shell commands to set up the software environment before running the
+       task (e.g., ``source /path/to/e3sm_unified.sh``).
+   * - ``environment_commands_secondary``
+     - No
+     - ``""``
+     - Shell commands to set up the *secondary* software environment before running the task (e.g., ``source /path/to/e3sm_unified.sh``). This is currently only used for the ``pcmdi_diags`` task.
+   * - ``nco_path``
+     - No
+     - ``""``
+     - Keep as the empty string to use production-version NCO commands. Set to the development-version path to use that instead.
+
+**Inference specifics**
+
+There are 2 inference-specific parameters. See "Parameter checking & inferring" below for more info.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 10 18 50
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``infer_path_parameters``
+     - No
+     - ``True``
+     - If true, infer file paths not given. 
+   * - ``infer_section_parameters``
+     - No
+     - ``True``
+     - If true, infer dependencies not given.
+
+**Dependency specifics**
+
+There are 7 dependency-specific parameters. See :ref:`Dependencies <dependency_graph>` for more info on which tasks depend on which.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 10 18 50
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``ts_atm_grid``
+     - No
+     - ``"180x360_aave"``
+     - Grid name of the atmosphere ``[ts]`` subtask.
+   * - ``ts_atm_subsection``
+     - No
+     - ``""``
+     - Name of the ``[ts]`` atmosphere subtask (for multi-component runs).
+   * - ``ts_grid``
+     - No
+     - ``"180x360_aave"``
+     - Grid name of the ``[ts]`` subtask to depend on.
+   * - ``ts_land_grid``
+     - No
+     - ``"180x360_aave"``
+     - Grid name of the land ``[ts]`` subtask.
+   * - ``ts_land_subsection``
+     - No
+     - ``""``
+     - Name of the ``[ts]`` land subtask (for multi-component runs).
+   * - ``ts_num_years``
+     - No
+     - ``5``
+     - Years increment from the dependent ``[ts]`` task.
+   * - ``ts_subsection``
+     - No
+     - ``""``
+     - Name of the ``[ts]`` subtask to depend on. If empty and
+       ``infer_section_parameters`` is ``True``, inferred from the
+       subsection name.
+
+**Task specifics**
+
+There are 10 task-specific parameters:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 10 18 50
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``active``
+     - No
+     - ``False``
+     - Set to ``True`` to enable this task.
+   * - ``bundle``
+     - No
+     - ``""``
+     - (Set on individual tasks) Name of the bundle to include this task
+       in.
+   * - ``frequency``
+     - No
+     - ``"monthly"``
+     - The frequency of the data. Options include "monthly", "diurnal_8xdaily", "daily".
+   * - ``grid``
+     - No
+     - ``""``
+     - Name of the output grid (e.g., ``180x360_aave``). Used for naming
+       output directories.
+   * - ``input_files``
+     - No
+     - ``"eam.h0"``
+     - Pattern matching the input history files (e.g., ``eam.h0``,
+       ``eam.h1``).
+   * - ``input_subdir``
+     - No
+     - ``"archive/atm/hist"``
+     - Subdirectory under ``input``/``case`` containing the data files.
+   * - ``mapping_file``
+     - No
+     - ``""``
+     - Path to the mapping (regridding) file. Leave empty for no regridding.
+   * - ``plugins``
+     - No
+     - ``""``
+     - External zppy plugin modules
+   * - ``vars``
+     - No
+     - ``"FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,TAUX,TAUY,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT,CLDTOT,CLDHGH,CLDMED,CLDLOW,U,PSL"``
+     - Variables to process. An empty string processes all variables.
+   * - ``years``
+     - No
+     - ``[""]``
+     - Year ranges to process. Format: ``"start:end:increment"`` (e.g.,
+       ``"1:100:20"``).
+
+**Deprecated Parameters**
+
+There is 1 deprecated parameter. Specifying it will have no effect.
+
+.. code-block:: text
+
+   ncclimo_cmd
 
 Parameter checking & inferring
 ==============================
@@ -130,3 +388,26 @@ For the ``ilamb`` task:
 **Required parameters, by e3sm_diags set**
 
 See `Confluence <https://acme-climate.atlassian.net/wiki/spaces/IPD/pages/4984209586/zppy+parameters+for+e3sm_diags>`_ for tables of which sets require which parameters.
+
+Deprecated parameters
+=====================
+
+The following ``zppy`` parameters no longer perform any function.
+
+These are no longer defined in ``zppy/defaults/default.ini``:
+
+.. code-block:: text
+
+   e3sm_to_cmip_environment_commands
+   ts_fmt
+   scratch
+   atmosphere_only
+   plot_names
+   vars_exclude
+
+These are still defined in ``zppy/defaults/default.ini``, but have no effect:
+
+.. code-block:: text
+   ncclimo_cmd
+   nrows
+   ncols

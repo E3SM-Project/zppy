@@ -11,5 +11,4 @@ historical reference.
 .. toctree::
    :maxdepth: 1
 
-   deprecated_parameters
    initial_docs

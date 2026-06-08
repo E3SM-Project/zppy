@@ -11,6 +11,8 @@ and :doc:`pcmdi_diags`.
 Parameters
 ----------
 
+These 6 parameters are specific to the ``e3sm_to_cmip`` task.
+
 .. list-table::
    :header-rows: 1
    :widths: 22 10 18 50
@@ -19,10 +21,6 @@ Parameters
      - Required
      - Default
      - Description
-   * - ``active``
-     - No
-     - ``False``
-     - Set to ``True`` to enable this task.
    * - ``cmip_metadata``
      - No
      - ``"inclusions/e3sm_to_cmip/default_metadata.json"``
@@ -50,68 +48,11 @@ Parameters
      - ``""``
      - Source vertical coordinate file for ``ncremap``. Required for
        EAMxx (L128 grid).
-   * - ``ts_subsection``
-     - No
-     - ``""``
-     - Name of the ``[ts]`` subtask to depend on. If empty and
-       ``infer_section_parameters`` is ``True``, inferred from the
-       subsection name.
-   * - ``ts_atm_subsection``
-     - No
-     - ``""``
-     - Name of the ``[ts]`` atmosphere subtask (for multi-component runs).
-   * - ``ts_land_subsection``
-     - No
-     - ``""``
-     - Name of the ``[ts]`` land subtask (for multi-component runs).
 
-Inherited common parameters most relevant to ``e3sm_to_cmip``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Parameters at the top-level
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. list-table::
-   :header-rows: 1
-   :widths: 22 10 18 50
-
-   * - Parameter
-     - Required
-     - Default
-     - Description
-   * - ``case``
-     - **Yes**
-     - *(none)*
-     - The case name of the simulation.
-   * - ``input``
-     - **Yes**
-     - *(none)*
-     - The top-level directory of the simulation output.
-   * - ``output``
-     - **Yes**
-     - *(none)*
-     - Where the post-processing results go.
-   * - ``years``
-     - No
-     - ``[""]``
-     - Year ranges to process.
-   * - ``ts_grid``
-     - No
-     - ``"180x360_aave"``
-     - Grid name of the ``[ts]`` subtask to depend on.
-   * - ``ts_atm_grid``
-     - No
-     - ``"180x360_aave"``
-     - Grid name of the atmosphere ``[ts]`` subtask.
-   * - ``ts_land_grid``
-     - No
-     - ``"180x360_aave"``
-     - Grid name of the land ``[ts]`` subtask.
-   * - ``ts_num_years``
-     - No
-     - ``5``
-     - Years increment from the dependent ``[ts]`` task.
-   * - ``environment_commands``
-     - No
-     - ``""``
-     - Shell commands to activate the software environment.
+For top-level parameters, see :ref:`top-level parameters <parameters-top-level>`.
 
 Dependencies
 ------------
