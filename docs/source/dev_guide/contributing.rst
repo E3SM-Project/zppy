@@ -39,9 +39,21 @@ using Sphinx, you can refer to
       cd docs
       make html
 
-      # And transfer it to a web server path so we can see it online:
-      cp -r _build/ web_server_path/zppy_docs
-      chmod -R 644 web_serber_path/zppy_docs
+      # And transfer it to a web server path so we can see it online.
+
+      # Example web server paths:
+      # Chrysalis: /lcrc/group/e3sm/public_html/diagnostic_output -> https://web.lcrc.anl.gov/public/e3sm/diagnostic_output
+      # Compy: /compyfs/www -> https://compy-dtn.pnl.gov
+      # Perlmutter: /global/cfs/cdirs/e3sm/www -> https://portal.nersc.gov/cfs/e3sm
+
+      # For more machines, go to:
+      # https://github.com/E3SM-Project/mache/tree/main/mache/machines
+      # Select the cfg for the machine, and find the `[web_portal]`` section.
+      # That will show the `base_path` and `base_url`.
+
+      cp -r _build/ base_url/$USER/zppy_docs
+      # Needs to be 755 to show up on https://portal.nersc.gov/cfs/e3sm
+      chmod -R 755 base_url/$USER/zppy_docs
 
       # Optional -- if you want to generate and view versioned docs:
       sphinx-multiversion source _build/html
