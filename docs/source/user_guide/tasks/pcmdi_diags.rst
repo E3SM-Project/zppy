@@ -480,6 +480,8 @@ must be defined inside ``[pcmdi_diags]``:
      - Data frequency for variability-mode calculations. Overrides the
        ``[default]`` value (``"monthly"``).
 
+For other top-level parameters, see :ref:`top-level parameters <parameters-top-level>`.
+
 Dependencies
 ------------
 

@@ -160,6 +160,8 @@ defined inside ``[global_time_series]``:
      - Subdirectory with ocean data. Overrides the ``[default]`` value
        (``archive/atm/hist``).
 
+For other top-level parameters, see :ref:`top-level parameters <parameters-top-level>`.
+
 Deprecated parameters
 ~~~~~~~~~~~~~~~~~~~~~
 

@@ -203,6 +203,8 @@ defined inside ``[mpas_analysis]``:
      - ``"06:00:00"``
      - Maximum wall time. Overrides the ``[default]`` value (``02:00:00``).
 
+For other top-level parameters, see :ref:`top-level parameters <parameters-top-level>`.
+
 Year range behavior for MVM runs
 ---------------------------------
 
