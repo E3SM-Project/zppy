@@ -9,30 +9,56 @@ This automation system streamlines the zppy integration testing workflow, reduci
 ./run_integration_test.bash
 ```
 
+### Skip Straight to a Later Phase
+```bash
+./run_integration_test.bash --phase 2   # Start at Bundles Part 2
+./run_integration_test.bash --phase 3   # Start at Validation only
+```
+
+### Non-Interactive (Auto) Mode
+```bash
+./run_integration_test.bash --auto
+```
+In auto mode all checkpoints are bypassed and the script runs end-to-end without waiting for user input.
+
+## Configuration
+
+Open `run_integration_test.bash` and edit the **"Check these every time"** block at the top before each test run:
+
+| Variable | Description |
+| --- | --- |
+| `RUN_NUMBER` | Increment this if you run multiple tests on the same day |
+| `DIAGS_BASE_BRANCH` | Branch to test for e3sm_diags (usually `main`) |
+| `ZI_BASE_BRANCH` | Branch to test for zppy-interfaces (usually `main`) |
+| `ZPPY_BASE_BRANCH` | Branch to test for zppy (usually `main`) |
+| `SKIP_MPAS` | Set to `true` to omit mpas_analysis (workaround for known segfault) |
+
+The **"Set these up once"** block below that contains machine paths (`EZ_DIR`, `CONDA_PROFILE`, `OUTPUT_WORKSPACE`) which typically don't change between runs.
+
 ## Workflow Phases
 
 ### Phase 1: Setup
-- Sets up e3sm_diags conda environment
-- Sets up zppy-interfaces conda environment
-- Sets up zppy conda environment
-- Generates config files
-- Submits initial SLURM jobs (6 configs)
-- Waits for jobs to complete
+- Creates conda environments for e3sm_diags, zppy-interfaces, and zppy
+- Runs unit tests for zppy-interfaces and zppy
+- Patches `tests/integration/utils.py` with test-specific environment commands, config list, and unique ID
+- Generates config files via `python tests/integration/utils.py`
+- Submits all 9 initial SLURM jobs (3 current + 3 legacy 3.1.0 + 3 legacy 3.0.0)
+- Waits for jobs to complete (polls every 10 min, 4-hour max)
 
 ### Phase 2: Bundles Part 2
-- Checks status of bundles runs
-- Submits bundles part 2 jobs
-- Waits for completion
+- Checks status files for all three bundles output directories; warns if any are non-OK before proceeding (a non-OK status here is the likely cause of the historical KeyError)
+- Submits bundles part 2 jobs (`weekly_bundles`, `legacy_3.1.0_bundles`, `legacy_3.0.0_bundles`)
+- Waits for completion (polls every 10 min, 1-hour max)
 
 ### Phase 3: Validation
-- Checks all status files
+- Checks status files for all 9 output directories
 - Runs pytest integration tests:
-  - test_bash_generation.py
-  - test_campaign.py
-  - test_defaults.py
-  - test_last_year.py
-  - test_bundles.py
-- Provides instructions for running test_images.py on compute node
+  - `test_last_year.py`
+  - `test_bash_generation.py`
+  - `test_campaign.py`
+  - `test_defaults.py`
+  - `test_bundles.py`
+- Prints instructions for running `test_images.py` manually on a compute node
 
 ## Output and Logs
 
@@ -45,61 +71,56 @@ The script provides color-coded output:
 ### SLURM Job Monitoring
 The script automatically monitors SLURM jobs and shows:
 ```
-Jobs remaining: 42 (elapsed: 1234s)
+Jobs remaining: 42 (elapsed: 1234s / max: 14400s)
 ```
+If all remaining jobs enter `DependencyNeverSatisfied`, they are cancelled automatically and the script exits with an error.
 
 ### Status File Checking
-Automatically checks for errors in status files:
+Automatically checks for non-OK entries in all status directories:
 ```
-✓ v2: No errors found
-✓ Legacy v2: No errors found
-✓ v3: No errors found
+✓ v2: All status files OK
+✓ Legacy 3.1.0 v2: All status files OK
+✓ Legacy 3.0.0 v2: All status files OK
 ...
 ```
 
 ## Customization
 
-### Modify Test Configurations
-
-Edit the script to change which configs are run:
-
-```bash
-# In the generated Python code section, modify:
-"cfgs_to_run": [
-    "weekly_bundles",
-    "weekly_comprehensive_v2",
-    # Add or remove configs here
-],
-```
-
 ### Adjust Timeouts
 
 ```bash
-# In phase_1_setup(), change max wait time:
-wait_for_slurm_jobs 30 14400  # 30s interval, 4hr max
+# In phase_1_setup():
+wait_for_slurm_jobs 600 14400   # Check every 10 min, max 4 hours
 
 # In phase_2_bundles_part2():
-wait_for_slurm_jobs 30 3600   # 30s interval, 1hr max
+wait_for_slurm_jobs 600 3600    # Check every 10 min, max 1 hour
 ```
 
 ## Troubleshooting
 
 ### Script Exits Early
-Check the error message. The script uses `set -e`, so it exits on any error.
+Check the error message. The script uses `set -e`, so it exits on any error. Common causes:
+- A unit test failure during Phase 1 setup
+- A SLURM timeout (increase the max-wait argument to `wait_for_slurm_jobs`)
+- `DependencyNeverSatisfied` on all queued jobs (check your cfg files and SLURM account)
 
-### Jobs Don't Complete
-- Check SLURM queue: `squeue -u <user>`
-- Check job logs in the output directories
-- Increase timeout: edit `wait_for_slurm_jobs` calls
+### mpas_analysis Segfault
+Set `SKIP_MPAS=true` in the configuration section. This removes `mpas_analysis` from `tasks_to_run` and sets a placeholder for `mpas_analysis_environment_commands` so it cannot be accidentally invoked.
+
+### KeyError on Bundles Part 2
+Phase 2 now checks bundle status files before resubmitting and warns if any are non-OK. Resolve any failures in the Phase 1 bundle runs before proceeding. You can restart from Phase 2 once the underlying jobs are clean:
+```bash
+./run_integration_test.bash --phase 2
+```
 
 ### Environment Issues
 ```bash
-# Clean and rebuild
-conda remove --y --all --name test-diags-main-YYYYMMDD
-conda remove --y --all --name test-zi-main-YYYYMMDD
-conda remove --y --all --name test-zppy-main-YYYYMMDD
+# Remove and rebuild stale environments
+conda remove --yes --all --name test-diags-main-YYYYMMDD_runN
+conda remove --yes --all --name test-zi-main-YYYYMMDD_runN
+conda remove --yes --all --name test-zppy-main-YYYYMMDD_runN
 
-# Check configurations and then re-run
+# Then re-run from Phase 1
 ./run_integration_test.bash
 ```
 
@@ -111,41 +132,52 @@ conda remove --y --all --name test-zppy-main-YYYYMMDD
 │   ├── test_weekly_bundles_chrysalis.cfg
 │   ├── test_weekly_comprehensive_v2_chrysalis.cfg
 │   ├── test_weekly_comprehensive_v3_chrysalis.cfg
+│   ├── test_weekly_legacy_3.1.0_bundles_chrysalis.cfg
+│   ├── test_weekly_legacy_3.1.0_comprehensive_v2_chrysalis.cfg
+│   ├── test_weekly_legacy_3.1.0_comprehensive_v3_chrysalis.cfg
 │   ├── test_weekly_legacy_3.0.0_bundles_chrysalis.cfg
 │   ├── test_weekly_legacy_3.0.0_comprehensive_v2_chrysalis.cfg
 │   └── test_weekly_legacy_3.0.0_comprehensive_v3_chrysalis.cfg
 └── test_images_summary.md
 
-/lcrc/group/e3sm/ac.forsyth2/
-├── zppy_weekly_bundles_output/zppy_main_branch_test_YYYYMMDD_run1/
-├── zppy_weekly_comprehensive_v2_output/zppy_main_branch_test_YYYYMMDD_run1/
-├── zppy_weekly_comprehensive_v3_output/zppy_main_branch_test_YYYYMMDD_run1/
-└── zppy_weekly_legacy_3.0.0_*/zppy_main_branch_test_YYYYMMDD_run1/
+/lcrc/group/e3sm/<user>/
+├── zppy_weekly_bundles_output/zppy_main_branch_test_YYYYMMDD_runN/
+├── zppy_weekly_comprehensive_v2_output/zppy_main_branch_test_YYYYMMDD_runN/
+├── zppy_weekly_comprehensive_v3_output/zppy_main_branch_test_YYYYMMDD_runN/
+├── zppy_weekly_legacy_3.1.0_bundles_output/zppy_main_branch_test_YYYYMMDD_runN/
+├── zppy_weekly_legacy_3.1.0_comprehensive_v2_output/zppy_main_branch_test_YYYYMMDD_runN/
+├── zppy_weekly_legacy_3.1.0_comprehensive_v3_output/zppy_main_branch_test_YYYYMMDD_runN/
+├── zppy_weekly_legacy_3.0.0_bundles_output/zppy_main_branch_test_YYYYMMDD_runN/
+├── zppy_weekly_legacy_3.0.0_comprehensive_v2_output/zppy_main_branch_test_YYYYMMDD_runN/
+└── zppy_weekly_legacy_3.0.0_comprehensive_v3_output/zppy_main_branch_test_YYYYMMDD_runN/
 ```
 
-## Example run
+## Example Run
 
 ```bash
-# The script WILL change branches and MAY cancel jobs.
-# For safety, confirm branches have no uncommitted changes beforehand:
-cd ~/ez/e3sm_diags
-git status
-cd ~/ez/zppy-interfaces
-git status
-cd ~/ez/zppy
-git status
-# For safety, confirm no jobs are currently running:
-squeue -u <user>
+# Confirm repos have no uncommitted changes
+cd ~/ez/e3sm_diags && git status
+cd ~/ez/zppy-interfaces && git status
+cd ~/ez/zppy && git status
 
-cd /home/ac.forsyth2/ez/zppy_main_branch_tests/test_20260126
-cp ~/ez/zppy/tests/main_branch_testing/* . # Copy, so the script isn't affected by the branch change
-emacs run_integration_test.bash # Configure parameters
+# Confirm no jobs are currently running
+squeue -u $USER
 
-screen # Run on screen
-cd /home/ac.forsyth2/ez/zppy_main_branch_tests/test_20260126 # If not there already
-# Bypass manual checkpoints, tee output:
-time ./run_integration_test.bash --date 20260126_run1 --auto 2>&1 | tee integration_test.log
-# CTRL A D to exit screen
-screen -ls # Check which node the screen is on.
-tail -f integration_test.log # Follow log updates
+# Copy the script out of the repo (Phase 1 will change branches)
+mkdir -p ~/ez/zppy_main_branch_tests/test_YYYYMMDD
+cd ~/ez/zppy_main_branch_tests/test_YYYYMMDD
+cp ~/ez/zppy/tests/main_branch_testing/* .
+
+# Edit configuration parameters
+emacs run_integration_test.bash
+
+# Run inside a screen session so it survives disconnects
+screen
+cd ~/ez/zppy_main_branch_tests/test_YYYYMMDD
+time ./run_integration_test.bash --auto 2>&1 | tee integration_test.log
+# Ctrl-A D to detach from screen
+
+# Monitor progress from another terminal
+screen -ls                      # Find the screen session
+tail -f integration_test.log    # Follow log output
 ```
