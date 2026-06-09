@@ -18,6 +18,11 @@ otherwise it is treated as MVO.
 Parameters
 ----------
 
+These 25 parameters are specific to the ``mpas_analysis`` task.
+
+MPAS-Analysis configuration parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. list-table::
    :header-rows: 1
    :widths: 28 10 18 44
@@ -26,14 +31,14 @@ Parameters
      - Required
      - Default
      - Description
-   * - ``active``
+   * - ``anomalyRefYear``
      - No
-     - ``False``
-     - Set to ``True`` to enable this task.
-   * - ``generate``
+     - ``1``
+     - Reference year for anomaly calculations.
+   * - ``cache``
      - No
-     - ``"all,no_landIceCavities,..."``
-     - List of MPAS-Analysis analyses to generate.
+     - ``True``
+     - Whether to cache MPAS-Analysis intermediate results.
    * - ``ts_years``
      - No
      - ``[""]``
@@ -84,14 +89,10 @@ Parameters
      - No
      - ``[""]``
      - Year ranges for reference ENSO sub-runs.
-   * - ``anomalyRefYear``
+   * - ``generate``
      - No
-     - ``1``
-     - Reference year for anomaly calculations.
-   * - ``cache``
-     - No
-     - ``True``
-     - Whether to cache MPAS-Analysis intermediate results.
+     - ``"all,no_landIceCavities,..."``
+     - List of MPAS-Analysis analyses to generate.
    * - ``mapMpiTasks``
      - No
      - ``6``
@@ -136,6 +137,23 @@ Parameters
      - No
      - ``"streams.ocean"``
      - Name of the MPAS ocean streams file.
+
+Parameters at the top-level
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This parameter has an ``mpas_analysis``-specific default, which means even if
+it is set at the top level (``[default]``) section, this default value will be
+used instead. Therefore, to specify a custom value, this parameter must be
+defined inside ``[mpas_analysis]``:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
    * - ``walltime``
      - No
      - ``"06:00:00"``

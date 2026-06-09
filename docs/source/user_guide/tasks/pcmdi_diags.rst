@@ -22,8 +22,10 @@ The ``current_set`` parameter selects which PMP diagnostic to run:
 Parameters
 ----------
 
-Most useful at the task level (all sets)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+These 72 parameters are specific to the ``pcmdi_diags`` task.
+
+Task-level parameters (all sets)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -33,47 +35,54 @@ Most useful at the task level (all sets)
      - Required
      - Default
      - Description
-   * - ``active``
-     - No
-     - ``False``
-     - Set to ``True`` to enable this task.
-   * - ``run_type``
-     - No
-     - ``"model_vs_obs"``
-     - ``"model_vs_obs"`` or ``"model_vs_model"``. Note: in PCMDI context,
-       model-vs-model compares two model simulations against observations.
    * - ``figure_format``
      - No
      - ``"png"``
      - Output figure format.
+   * - ``run_type``
+     - No
+     - ``"model_vs_obs"``
+     - ``"model_vs_obs"`` or ``"model_vs_model"``.
    * - ``model_name``
      - No
      - ``"e3sm.historical.v3-LR.0051"``
-     - Model name (required for MVO runs).
+     - Model name (required for model-vs-observations runs).
    * - ``model_tableID``
      - No
      - ``"Amon"``
-     - CMIP table ID (required for MVO runs).
+     - CMIP table ID (required for model-vs-observations runs).
    * - ``model_name_ref``
      - No
      - ``"ERA5"``
-     - Reference model name (required for MVM runs).
+     - Reference model name (required for model-vs-model runs).
    * - ``model_tableID_ref``
      - No
      - ``"Amon"``
-     - Reference CMIP table ID (required for MVM runs).
+     - Reference CMIP table ID (required for model-vs-model runs).
    * - ``e3sm_to_cmip_atm_subsection``
      - No
      - ``""``
-     - Name of the ``[e3sm_to_cmip]`` atm subtask to depend on.
+     - Name of the ``[e3sm_to_cmip]`` atmosphere subtask to depend on.
    * - ``generate_sftlf``
      - No
      - ``True``
-     - Flag to process the land/sea mask within PCMDI.
-   * - ``grid``
+     - Process the land/sea mask within PCMDI.
+   * - ``mov_plot_obs``
      - No
-     - ``"180x360_aave"``
-     - Model data grid after remapping.
+     - ``True``
+     - Generate variability-modes observation plots.
+   * - ``mov_plot_model``
+     - No
+     - ``True``
+     - Generate variability-modes model plots.
+   * - ``mov_nc_out_obs``
+     - No
+     - ``True``
+     - Write variability-modes observation NetCDF output.
+   * - ``mov_nc_out_model``
+     - No
+     - ``True``
+     - Write variability-modes model NetCDF output.
    * - ``multiprocessing``
      - No
      - ``True``
@@ -85,8 +94,23 @@ Most useful at the task level (all sets)
    * - ``obs_ts``
      - No
      - ``""``
-     - Path to observation time-series data. Required for
-       ``mean_climate``, ``variability_modes_*``, ``enso`` sets.
+     - Path to observation time-series data.
+   * - ``pcmdi_debug``
+     - No
+     - ``False``
+     - Enable debug mode in PCMDI diagnostics.
+   * - ``save_test_clims``
+     - No
+     - ``True``
+     - Save derived test climatology data.
+   * - ``reference_data_path``
+     - No
+     - ``""``
+     - Path to reference model data for model-vs-model runs.
+   * - ``reference_data_path_ts``
+     - No
+     - ``""``
+     - Path to reference model time-series data for model-vs-model runs.
    * - ``ts_num_years``
      - No
      - ``5``
@@ -96,8 +120,8 @@ Most useful at the task level (all sets)
      - ``[""]``
      - Year ranges for test model data.
 
-Per-subtask parameters
-~~~~~~~~~~~~~~~~~~~~~~~
+Per-subtask shared parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -110,27 +134,26 @@ Per-subtask parameters
    * - ``current_set``
      - No
      - ``""``
-     - The diagnostic set to run. If not set, inferred from the subsection
-       name.
+     - Diagnostic set to run.
    * - ``obs_sets``
      - No
      - ``"default"``
-     - Observational datasets to use (see ``reference_alias.json``).
-   * - ``ref_start_yr``
-     - No
-     - ``""``
-     - Start year for reference data.
+     - Observational dataset aliases to use.
    * - ``ref_final_yr``
      - No
      - ``""``
      - End year for reference data.
+   * - ``ref_start_yr``
+     - No
+     - ``""``
+     - Start year for reference data.
    * - ``ref_years``
      - No
      - ``[""]``
      - Year ranges for reference data.
 
-mean_climate parameters
-~~~~~~~~~~~~~~~~~~~~~~~~
+Mean-climate and regridding parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -143,15 +166,7 @@ mean_climate parameters
    * - ``cmip_vars``
      - No
      - ``"pr,prw,psl,..."``
-     - Variables from the CMIP6 table to use.
-   * - ``clim_vars``
-     - No
-     - ``"pr,prw,psl,..."``
-     - Variables for mean climate metrics.
-   * - ``clim_regions``
-     - No
-     - ``"global,ocean,land"``
-     - Regions for mean climate metrics.
+     - CMIP variables to include for mean-climate diagnostics.
    * - ``target_grid``
      - No
      - ``"1x1"``
@@ -159,18 +174,34 @@ mean_climate parameters
    * - ``target_grid_string``
      - No
      - ``"1px1p"``
-     - Description string for the target grid.
+     - Descriptor string for the target grid.
    * - ``regrid_tool``
      - No
      - ``"esmf"``
-     - Regridding tool.
+     - Regridding tool for atmosphere fields.
+   * - ``regrid_tool_ocn``
+     - No
+     - ``"esmf"``
+     - Regridding tool for ocean fields.
    * - ``regrid_method``
      - No
      - ``"regrid2"``
-     - Regridding method.
+     - Regridding method for atmosphere fields.
+   * - ``regrid_method_ocn``
+     - No
+     - ``"conservative"``
+     - Regridding method for ocean fields.
+   * - ``clim_vars``
+     - No
+     - ``"pr,prw,psl,..."``
+     - Variables for mean-climate and synthetic-plot diagnostics.
+   * - ``clim_regions``
+     - No
+     - ``"global,ocean,land"``
+     - Regions used for mean-climate metrics.
 
-variability_modes parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Variability-modes parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -180,6 +211,42 @@ variability_modes parameters
      - Required
      - Default
      - Description
+   * - ``CBF``
+     - No
+     - ``True``
+     - Use Common Base Function approach.
+   * - ``ConvEOF``
+     - No
+     - ``True``
+     - Compute conventional EOF.
+   * - ``eofn_mod_max``
+     - No
+     - ``3``
+     - Maximum number of EOF modes for model data.
+   * - ``EofScaling``
+     - No
+     - ``False``
+     - Apply EOF scaling.
+   * - ``landmask``
+     - No
+     - ``False``
+     - Apply land-mask handling in variability diagnostics.
+   * - ``ModUnitsAdjust``
+     - No
+     - ``""``
+     - Unit-adjustment keywords for model data.
+   * - ``ObsUnitsAdjust``
+     - No
+     - ``""``
+     - Unit-adjustment keywords for observation data.
+   * - ``RmDomainMean``
+     - No
+     - ``True``
+     - Remove domain mean before variability calculations.
+   * - ``seasons``
+     - No
+     - ``"monthly"``
+     - Seasons/frequency bins to analyze.
    * - ``mova_vars``
      - No
      - ``"psl"``
@@ -196,26 +263,153 @@ variability_modes parameters
      - No
      - ``"PDO,NPGO,AMO"``
      - Modes for ``variability_modes_cpl``.
-   * - ``CBF``
+
+ENSO parameters
+~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``enso_groups``
+     - No
+     - ``"ENSO_perf,ENSO_proc,ENSO_tel"``
+     - ENSO metric groups to run.
+   * - ``enso_vars``
+     - No
+     - ``"psl,pr,prsn,ts,tas,tauu,tauv,hflx,hfss,rlds,rsds,rlus,rlut,rsdt"``
+     - Variables used by ENSO diagnostics.
+
+Synthetic-plots parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``clim_viewer``
      - No
      - ``True``
-     - Use Common Base Function approach.
-   * - ``ConvEOF``
+     - Include mean-climate panels in the synthetic viewer.
+   * - ``clim_years``
+     - No
+     - ``""``
+     - Year range used for mean-climate synthetic panels.
+   * - ``mova_viewer``
      - No
      - ``True``
-     - Compute conventional EOF.
-   * - ``EofScaling``
+     - Include atmospheric variability-mode panels in the synthetic viewer.
+   * - ``mova_years``
+     - No
+     - ``""``
+     - Year range used for atmospheric variability synthetic panels.
+   * - ``movc_viewer``
+     - No
+     - ``True``
+     - Include coupled variability-mode panels in the synthetic viewer.
+   * - ``movc_years``
+     - No
+     - ``""``
+     - Year range used for coupled variability synthetic panels.
+   * - ``enso_viewer``
      - No
      - ``False``
-     - Apply EOF scaling.
-   * - ``eofn_mod_max``
+     - Include ENSO panels in the synthetic viewer.
+   * - ``enso_years``
      - No
-     - ``3``
-     - Maximum number of EOF modes for model.
-   * - ``seasons``
+     - ``""``
+     - Year range used for ENSO synthetic panels.
+   * - ``save_all_data``
      - No
-     - ``"monthly"``
-     - Seasons to analyze.
+     - ``True``
+     - Save all intermediate synthetic-diagnostic data.
+   * - ``reference_alias``
+     - No
+     - ``"inclusions/pcmdi_diags/reference_alias.json"``
+     - Observation alias file.
+   * - ``regions_specs``
+     - No
+     - ``"inclusions/pcmdi_diags/regions_specs.json"``
+     - Region-specification file.
+   * - ``pcmdi_version``
+     - No
+     - ``"v3.8.2"``
+     - Version tag for the zppy-pcmdi workflow.
+   * - ``pcmdi_viewer_template``
+     - No
+     - ``"pcmdi_data/viewer"``
+     - Template directory for synthetic-viewer generation.
+   * - ``pcmdi_webtitle``
+     - No
+     - ``"E3SM-PMP-Diagnostics"``
+     - Title used in generated PCMDI web output.
+   * - ``synthetic_metrics_list``
+     - No
+     - ``"inclusions/pcmdi_diags/synthetic_metrics_list.json"``
+     - Metrics-list file used to assemble synthetic plots.
+   * - ``synthetic_sets``
+     - No
+     - ``"portrait,parcoord"``
+     - Synthetic plot types to generate.
+   * - ``cmip_clim_dir``
+     - No
+     - ``""``
+     - Directory containing CMIP mean-climate metrics.
+   * - ``cmip_enso_dir``
+     - No
+     - ``""``
+     - Directory containing CMIP ENSO metrics.
+   * - ``cmip_movs_dir``
+     - No
+     - ``""``
+     - Directory containing CMIP variability-mode metrics.
+   * - ``cmip_clim_set``
+     - No
+     - ``"cmip6.historical.v20250707"``
+     - CMIP mean-climate metrics set ID.
+   * - ``cmip_enso_set``
+     - No
+     - ``"cmip6.historical.v20210620"``
+     - CMIP ENSO metrics set ID.
+   * - ``cmip_movs_set``
+     - No
+     - ``"cmip6.historical.v20220825"``
+     - CMIP variability-mode metrics set ID.
+
+Parameters at the top-level
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These 2 parameters have ``pcmdi_diags``-specific defaults, which means even if
+they are set at the top level (``[default]``) section, these default values
+will be used instead. Therefore, to specify custom values, these parameters
+must be defined inside ``[pcmdi_diags]``:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``grid``
+     - No
+     - ``"180x360_aave"``
+     - Model data grid after remapping. Overrides the ``[default]`` value
+       (``""``).
+   * - ``frequency``
+     - No
+     - ``"mo"``
+     - Data frequency for variability-mode calculations. Overrides the
+       ``[default]`` value (``"monthly"``).
 
 Dependencies
 ------------

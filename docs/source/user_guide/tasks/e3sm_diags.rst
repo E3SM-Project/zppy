@@ -32,6 +32,11 @@ available sets are:
 Parameters
 ----------
 
+These 35 parameters are specific to the ``e3sm_diags`` task.
+
+General parameters
+~~~~~~~~~~~~~~~~~~
+
 .. list-table::
    :header-rows: 1
    :widths: 28 10 18 44
@@ -40,22 +45,6 @@ Parameters
      - Required
      - Default
      - Description
-   * - ``active``
-     - No
-     - ``False``
-     - Set to ``True`` to enable this task.
-   * - ``sets``
-     - No
-     - ``"lat_lon,zonal_mean_xy,..."``
-     - List of diagnostic sets to run.
-   * - ``run_type``
-     - No
-     - ``"model_vs_obs"``
-     - Comparison type: ``"model_vs_obs"`` or ``"model_vs_model"``.
-   * - ``climo_subsection``
-     - No
-     - ``""``
-     - Name of the ``[climo]`` subtask to depend on.
    * - ``backend``
      - No
      - ``"mpl"``
@@ -64,6 +53,34 @@ Parameters
      - No
      - ``""``
      - Path to an additional E3SM Diags configuration file.
+   * - ``climo_diurnal_frequency``
+     - No
+     - ``""``
+     - Frequency name for the diurnal cycle ``[climo]`` subtask.
+   * - ``climo_diurnal_subsection``
+     - No
+     - ``""``
+     - ``[climo]`` subtask for diurnal cycle data.
+   * - ``climo_subsection``
+     - No
+     - ``""``
+     - Name of the ``[climo]`` subtask to depend on.
+   * - ``dc_obs_climo``
+     - No
+     - ``""``
+     - Path to observation climatology for the ``diurnal_cycle`` set.
+   * - ``diff_title``
+     - No
+     - ``"Model - Observations"``
+     - Title for difference plots.
+   * - ``keep_mvm_case_name_in_fig``
+     - No
+     - ``True``
+     - Include case name in model-vs-model output paths.
+   * - ``gauges_path``
+     - No
+     - ``""``
+     - Path to stream gauge data for ``streamflow`` model-vs-model runs.
    * - ``multiprocessing``
      - No
      - ``True``
@@ -72,6 +89,11 @@ Parameters
      - No
      - ``24``
      - Number of worker processes.
+   * - ``obs_ts``
+     - No
+     - ``""``
+     - Path to observation time-series data for ``enso_diags``, ``qbo``, and
+       ``area_mean_time_series``.
    * - ``output_format``
      - No
      - ``["png"]``
@@ -80,83 +102,41 @@ Parameters
      - No
      - ``[]``
      - Output formats for subplots.
-   * - ``short_name``
-     - No
-     - ``""``
-     - Short name used as test name and label.
-   * - ``tag``
-     - No
-     - ``"model_vs_obs"``
-     - Label for the results directory.
-   * - ``swap_test_ref``
-     - No
-     - ``False``
-     - Swap test and reference in model-vs-model runs.
-   * - ``keep_mvm_case_name_in_fig``
-     - No
-     - ``True``
-     - Include case name in model-vs-model output paths.
-   * - ``obs_ts``
-     - No
-     - ``""``
-     - Path to observation time-series data for ``enso_diags``, ``qbo``,
-       ``area_mean_time_series`` sets.
-   * - ``reference_data_path``
-     - No*
-     - ``""``
-     - Path to reference climatology data.
-       **Required for** ``run_type="model_vs_model"``.
-   * - ``ref_name``
-     - No*
-     - ``""``
-     - Reference dataset name.
-       **Required for** ``run_type="model_vs_model"``.
-   * - ``short_ref_name``
-     - No*
-     - ``""``
-     - Short reference name.
-       **Required for** ``run_type="model_vs_model"``.
-   * - ``diff_title``
-     - No
-     - ``"Model - Observations"``
-     - Title for difference plots.
-   * - ``ref_years``
-     - No
-     - ``[""]``
-     - Year ranges for reference data in model-vs-model runs.
-   * - ``ref_start_yr``
-     - No*
-     - ``""``
-     - Start year of reference data. Required for ``enso_diags``, ``qbo``.
+
+Reference-data parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
    * - ``ref_final_yr``
      - No*
      - ``""``
      - End year of reference data. Required for ``qbo`` and certain
        model-vs-model sets.
-   * - ``ts_subsection``
-     - No
+   * - ``ref_name``
+     - No*
      - ``""``
-     - Name of the ``[ts]`` subtask to depend on.
-   * - ``ts_num_years_ref``
-     - No
-     - ``5``
-     - Year increment for reference time-series data.
-   * - ``ts_daily_subsection``
-     - No
+     - Reference dataset name.
+       **Required for** ``run_type="model_vs_model"``.
+   * - ``ref_start_yr``
+     - No*
      - ``""``
-     - ``[ts]`` subtask for daily data (required for ``tropical_subseasonal``).
-   * - ``climo_diurnal_subsection``
+     - Start year of reference data. Required for ``enso_diags``, ``qbo``.
+   * - ``ref_years``
      - No
+     - ``[""]``
+     - Year ranges for reference data in model-vs-model runs.
+   * - ``reference_data_path``
+     - No*
      - ``""``
-     - ``[climo]`` subtask for diurnal cycle data.
-   * - ``climo_diurnal_frequency``
-     - No
-     - ``""``
-     - Frequency name for the diurnal cycle ``[climo]`` subtask.
-   * - ``dc_obs_climo``
-     - No
-     - ``""``
-     - Path to observation climatology for ``diurnal_cycle`` set.
+     - Path to reference climatology data.
+       **Required for** ``run_type="model_vs_model"``.
    * - ``reference_data_path_climo_diurnal``
      - No
      - ``""``
@@ -177,18 +157,69 @@ Parameters
      - No
      - ``""``
      - Reference river time-series path for ``streamflow`` MVM runs.
+
+Set-selection and dependency parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``run_type``
+     - No
+     - ``"model_vs_obs"``
+     - Comparison type: ``"model_vs_obs"`` or ``"model_vs_model"``.
+   * - ``sets``
+     - No
+     - ``"lat_lon,zonal_mean_xy,..."``
+     - List of diagnostic sets to run.
+   * - ``short_name``
+     - No
+     - ``""``
+     - Short name used as test name and label.
+   * - ``short_ref_name``
+     - No*
+     - ``""``
+     - Short reference name.
+       **Required for** ``run_type="model_vs_model"``.
    * - ``streamflow_obs_ts``
      - No
      - ``""``
      - Path to observation data for ``streamflow`` set.
-   * - ``gauges_path``
+   * - ``swap_test_ref``
      - No
-     - ``""``
-     - Path to stream gauge data for ``streamflow`` MVM runs.
+     - ``False``
+     - Swap test and reference in model-vs-model runs.
+   * - ``tag``
+     - No
+     - ``"model_vs_obs"``
+     - Label for the results directory.
    * - ``tc_obs``
      - No
      - ``""``
      - Path to observation data for ``tc_analysis`` set.
+   * - ``ts_num_years_ref``
+     - No
+     - ``5``
+     - Year increment for reference time-series data.
+   * - ``ts_subsection``
+     - No
+     - ``""``
+     - Name of the ``[ts]`` subtask to depend on.
+   * - ``ts_daily_subsection``
+     - No
+     - ``""``
+     - ``[ts]`` subtask for daily data (required for
+       ``tropical_subseasonal``).
+
+Parameters at the top-level
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For top-level parameters, see :ref:`top-level parameters <parameters-top-level>`.
 
 Dependencies
 ------------

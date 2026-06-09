@@ -11,6 +11,11 @@ key climate metrics. It can optionally produce a Viewer page. It depends on
 Parameters
 ----------
 
+These 14 parameters are specific to the ``global_time_series`` task.
+
+Core plotting options
+~~~~~~~~~~~~~~~~~~~~~
+
 .. list-table::
    :header-rows: 1
    :widths: 28 10 18 44
@@ -19,14 +24,6 @@ Parameters
      - Required
      - Default
      - Description
-   * - ``active``
-     - No
-     - ``False``
-     - Set to ``True`` to enable this task.
-   * - ``ts_years``
-     - No
-     - ``[""]``
-     - Year ranges for the time-series sub-runs to depend on.
    * - ``climo_years``
      - No
      - ``[""]``
@@ -52,10 +49,10 @@ Parameters
      - ``"glb,n,s"``
      - Regions to plot: ``glb`` (global), ``n`` (northern hemisphere),
        ``s`` (southern hemisphere).
-   * - ``input_subdir``
+   * - ``ts_years``
      - No
-     - ``"archive/ocn/hist"``
-     - Subdirectory with ocean data. Overrides the ``[default]`` value.
+     - ``[""]``
+     - Year ranges for the time-series sub-runs to depend on.
    * - ``moc_file``
      - No
      - ``""``
@@ -82,11 +79,27 @@ Parameters
        - ``change_sea_level`` — requires ocean data
 
        Remove the three ocean plots if you don't have ocean data.
+
+Viewer-specific plot options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
    * - ``plots_atm``
      - No
      - ``""``
      - Extra atmosphere plots (when ``make_viewer = True``). These should be
        a subset of the variables from ``ts`` global subtasks.
+   * - ``plots_ice``
+     - No
+     - ``""``
+     - Extra sea-ice plots (when ``make_viewer = True``).
    * - ``plots_lnd``
      - No
      - ``""``
@@ -96,10 +109,34 @@ Parameters
      - No
      - ``""``
      - Extra ocean plots (when ``make_viewer = True``).
-   * - ``plots_ice``
+
+Parameters at the top-level
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This parameter has a ``global_time_series``-specific default, which means even
+if it is set at the top level (``[default]``) section, this default value will
+be used instead. Therefore, to specify a custom value, this parameter must be
+defined inside ``[global_time_series]``:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``input_subdir``
      - No
-     - ``""``
-     - Extra sea-ice plots (when ``make_viewer = True``).
+     - ``"archive/ocn/hist"``
+     - Subdirectory with ocean data. Overrides the ``[default]`` value
+       (``archive/atm/hist``).
+
+Deprecated parameters
+~~~~~~~~~~~~~~~~~~~~~
+
+The following parameters are still in ``default.ini`` but are deprecated and
+have no effect: ``ncols``, ``nrows``.
 
 Dependencies
 ------------

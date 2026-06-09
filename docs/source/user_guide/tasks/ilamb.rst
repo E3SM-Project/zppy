@@ -11,6 +11,8 @@ provide CMIP-format land and atmosphere time-series files.
 Parameters
 ----------
 
+These 5 parameters are specific to the ``ilamb`` task.
+
 .. list-table::
    :header-rows: 1
    :widths: 22 10 18 50
@@ -19,10 +21,6 @@ Parameters
      - Required
      - Default
      - Description
-   * - ``active``
-     - No
-     - ``False``
-     - Set to ``True`` to enable this task.
    * - ``cfg``
      - No
      - ``"inclusions/ilamb/ilamb.cfg"``
@@ -46,16 +44,11 @@ Parameters
      - No
      - ``False``
      - Set to ``True`` for land-only runs (skips atmosphere dependencies).
-   * - ``ts_atm_subsection``
-     - No
-     - ``""``
-     - Name of the ``[ts]`` atmosphere subtask to depend on. Inferred as
-       ``atm_monthly_180x360_aave`` if not specified and not a land-only run.
-   * - ``ts_land_subsection``
-     - No
-     - ``""``
-     - Name of the ``[ts]`` land subtask to depend on. Inferred as
-       ``land_monthly`` if not specified.
+
+Parameters at the top-level
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For top-level parameters, see :ref:`top-level parameters <parameters-top-level>`.
 
 Dependencies
 ------------
