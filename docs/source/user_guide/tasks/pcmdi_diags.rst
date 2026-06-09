@@ -451,7 +451,7 @@ There are 22 synthetic_plots parameters:
 Parameters at the top-level
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-These 2 parameters have ``pcmdi_diags``-specific defaults, which means even if
+These 3 parameters have ``pcmdi_diags``-specific defaults, which means even if
 they are set at the top level (``[default]``) section, these default values
 will be used instead. Therefore, to specify custom values, these parameters
 must be defined inside ``[pcmdi_diags]``:
@@ -473,7 +473,7 @@ must be defined inside ``[pcmdi_diags]``:
      - No
      - ``5``
      - Year increment for test model data. Overrides the
-       ``[default]`` value (``"5"``), which in this case is actually the same value.
+       ``[default]`` value (``5``), which in this case is actually the same value.
    * - ``frequency``
      - No
      - ``"mo"``

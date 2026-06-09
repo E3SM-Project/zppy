@@ -11,7 +11,7 @@ for multiple independent runs of the same task.
 
 **Available tasks:**
 
-Listed by the order they are evaluated in `__main__.py`:
+Listed by the order they are evaluated in ``__main__.py``:
 
 .. list-table::
    :header-rows: 1

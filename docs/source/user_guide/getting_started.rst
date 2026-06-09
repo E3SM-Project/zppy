@@ -64,7 +64,7 @@ E3SM Unified and zppy versions
 * E3SM Unified 1.13.0: ``zppy 3.2.0``, ``zppy-interfaces 0.2.1``
 * E3SM Unified 1.12.0: ``zppy 3.1.0``, ``zppy-interfaces 0.2.0``
 * E3SM Unified 1.11.1: ``zppy 3.1.0``, ``zppy-interfaces 0.1.2``
-* E3SM Unified 1.11.0: ``zppy 3.0.0``, ``zppy-interfaces 0.1.1`` (new auxillary package)
+* E3SM Unified 1.11.0: ``zppy 3.0.0``, ``zppy-interfaces 0.1.1`` (new auxiliary package)
 * E3SM Unified 1.10.0: ``zppy 2.5.0``
 
 To use ``zppy`` features/fixes not yet in a production release, you can use a development environment.
@@ -85,7 +85,7 @@ Setting up a development environment
         # Click the green "Code" button
         # Choose the SSH option and paste it here:
         git clone git@github.com:E3SM-Project/zppy.git
-        cd zppy_dev
+        cd zppy
         git remote -v # You should see the main repo listed as `origin`
 
         # A couple optional steps:
@@ -93,9 +93,10 @@ Setting up a development environment
         git remote add your-fork-name git@github.com:your-fork-name/zppy.git # Use your fork, if you have one
 
         # To use the latest code:
-        git checkout upstream main
+        git fetch upstream
+        git checkout -b main upstream/main
         # To use code from a specific branch:
-        git checkout upstream that-branch-name
+        git checkout -b that-branch-name upstream/that-branch-name
 
         # Set up the environment ##############################################################
         # First, make sure you have conda activated. Then:

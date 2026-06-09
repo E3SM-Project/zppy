@@ -82,7 +82,7 @@ Process
     ./tests/integration/generated/update_campaign_expected_files_${machine_name}.sh
     ./tests/integration/generated/update_defaults_expected_files_${machine_name}.sh
 
-    # Theis script only updates the expected results
+    # This script only updates the expected results
     ./tests/integration/generated/update_weekly_expected_files_${machine_name}.sh
     # Chrysalis -- takes about 40 minutes
     # Perlmutter -- takes about 25 minutes

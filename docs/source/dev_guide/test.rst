@@ -44,8 +44,8 @@ Process
 
 In your Markdown report, note the date the expected results were last updated.
 
-Step 2: Determine what the current expected results are
-=======================================================
+Step 2: Review changes since expected results were updated
+==========================================================
 
 Now that we know the date the expected results are from, we can review what changes we'll be testing.
 

@@ -49,12 +49,12 @@ using Sphinx, you can refer to
 
     # For more machines, go to:
     # https://github.com/E3SM-Project/mache/tree/main/mache/machines
-    # Select the cfg for the machine, and find the `[web_portal]`` section.
+    # Select the cfg for the machine, and find the `[web_portal]` section.
     # That will show the `base_path` and `base_url`.
 
-    cp -r _build/ base_url/$USER/zppy_docs
+    cp -r _build/ base_path/$USER/zppy_docs
     # Needs to be 755 to show up on https://portal.nersc.gov/cfs/e3sm
-    chmod -R 755 base_url/$USER/zppy_docs
+    chmod -R 755 base_path/$USER/zppy_docs
 
     # Optional -- if you want to generate and view versioned docs:
     sphinx-multiversion source _build/html
