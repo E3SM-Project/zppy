@@ -23,6 +23,10 @@ These 25 parameters are specific to the ``mpas_analysis`` task.
 MPAS-Analysis configuration parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+**General parameters**
+
+There are 8 general parameters:
+
 .. list-table::
    :header-rows: 1
    :widths: 28 10 18 44
@@ -31,37 +35,10 @@ MPAS-Analysis configuration parameters
      - Required
      - Default
      - Description
-   * - ``anomalyRefYear``
-     - No
-     - ``1``
-     - Reference year for anomaly calculations.
    * - ``cache``
      - No
      - ``True``
      - Whether to cache MPAS-Analysis intermediate results.
-   * - ``ts_years``
-     - No
-     - ``[""]``
-     - Year ranges for time-series sub-runs.
-   * - ``climo_years``
-     - No
-     - ``[""]``
-     - Year ranges for climatology sub-runs.
-   * - ``enso_years``
-     - No
-     - ``[""]``
-     - Year ranges for ENSO sub-runs.
-   * - ``reference_data_path``
-     - No
-     - ``""``
-     - For MVM runs: path to a prior zppy output directory (the one
-       containing ``post/``) to use as the reference run. Setting this
-       triggers MVM mode.
-   * - ``test_data_path``
-     - No
-     - ``""``
-     - For MVM runs: path to the test run's prior zppy output directory (if
-       different from the current run).
    * - ``reference_comparison_type``
      - No
      - ``"auto"``
@@ -74,8 +51,53 @@ MPAS-Analysis configuration parameters
    * - ``reference_case``
      - No*
      - ``""``
-     - Case name of the reference run. Required when
+     - Case name of the reference run. \*Required when
        ``reference_data_path`` points to a non-subsection path.
+   * - ``generate``
+     - No
+     - ``['all', 'no_landIceCavities', 'no_BGC', 'no_icebergs', 'no_min', 'no_max', 'no_sose', 'no_waves', 'no_eke', 'no_climatologyMapAntarcticMelt', 'no_regionalTSDiagrams', 'no_timeSeriesAntarcticMelt', 'no_timeSeriesOceanRegions', 'no_climatologyMapSose', 'no_woceTransects', 'no_soseTransects', 'no_geojsonTransects', 'no_oceanRegionalProfiles', 'no_hovmollerOceanRegions', 'no_oceanConservation']``
+     - List of MPAS-Analysis analyses to generate.
+   * - ``PostMOC``
+     - No
+     - ``False``
+     - Whether to post-process MOC data.
+   * - ``purge``
+     - No
+     - ``False``
+     - Whether to purge previous MPAS-Analysis output before running.
+   * - ``shortTermArchive``
+     - No
+     - ``True``
+     - Whether the input uses the short-term archive directory structure.
+
+**Year parameters**
+
+There are 7 year parameters:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``anomalyRefYear``
+     - No
+     - ``1``
+     - Reference year for anomaly calculations.
+   * - ``ts_years``
+     - No
+     - ``[""]``
+     - Year ranges for time-series sub-runs.
+   * - ``climo_years``
+     - No
+     - ``[""]``
+     - Year ranges for climatology sub-runs.
+   * - ``enso_years``
+     - No
+     - ``[""]``
+     - Year ranges for ENSO sub-runs.
    * - ``ref_ts_years``
      - No
      - ``[""]``
@@ -89,14 +111,30 @@ MPAS-Analysis configuration parameters
      - No
      - ``[""]``
      - Year ranges for reference ENSO sub-runs.
-   * - ``generate``
+
+**Data path parameters**
+
+There are 6 data path parameters:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``reference_data_path``
      - No
-     - ``"all,no_landIceCavities,..."``
-     - List of MPAS-Analysis analyses to generate.
-   * - ``mapMpiTasks``
+     - ``""``
+     - For MVM runs: path to a prior zppy output directory (the one
+       containing ``post/``) to use as the reference run. Setting this
+       triggers MVM mode.
+   * - ``test_data_path``
      - No
-     - ``6``
-     - Number of MPI tasks for mapping.
+     - ``""``
+     - For MVM runs: path to the test run's prior zppy output directory (if
+       different from the current run).
    * - ``mpaso_nml``
      - No
      - ``"mpaso_in"``
@@ -105,6 +143,31 @@ MPAS-Analysis configuration parameters
      - No
      - ``"mpassi_in"``
      - Name of the MPAS sea-ice namelist file.
+   * - ``stream_ice``
+     - No
+     - ``"streams.seaice"``
+     - Name of the MPAS sea-ice streams file.
+   * - ``stream_ocn``
+     - No
+     - ``"streams.ocean"``
+     - Name of the MPAS ocean streams file.
+
+**Computational parameters**
+
+There are 4 computational parameters:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``mapMpiTasks``
+     - No
+     - ``6``
+     - Number of MPI tasks for mapping.
    * - ``ncclimoThreads``
      - No
      - ``12``
@@ -117,26 +180,7 @@ MPAS-Analysis configuration parameters
      - No
      - ``12``
      - Number of parallel analysis tasks in MPAS-Analysis.
-   * - ``PostMOC``
-     - No
-     - ``False``
-     - Whether to post-process MOC data.
-   * - ``purge``
-     - No
-     - ``False``
-     - Whether to purge previous MPAS-Analysis output before running.
-   * - ``shortTermArchive``
-     - No
-     - ``True``
-     - Whether the input uses the short-term archive directory structure.
-   * - ``stream_ice``
-     - No
-     - ``"streams.seaice"``
-     - Name of the MPAS sea-ice streams file.
-   * - ``stream_ocn``
-     - No
-     - ``"streams.ocean"``
-     - Name of the MPAS ocean streams file.
+
 
 Parameters at the top-level
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
