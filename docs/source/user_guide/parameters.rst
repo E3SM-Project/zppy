@@ -385,10 +385,6 @@ For the ``ilamb`` task:
 
 * If ``ilamb_obs`` (the path to observation data for ``ilamb``) is undefined, assume it is the ``diagnostics_base_path`` from Mache plus ``/ilamb_data``.
 
-**Required parameters, by e3sm_diags set**
-
-See `Confluence <https://acme-climate.atlassian.net/wiki/spaces/IPD/pages/4984209586/zppy+parameters+for+e3sm_diags>`_ for tables of which sets require which parameters.
-
 Deprecated parameters
 =====================
 
