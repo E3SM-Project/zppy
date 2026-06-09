@@ -22,10 +22,12 @@ The ``current_set`` parameter selects which PMP diagnostic to run:
 Parameters
 ----------
 
-These 72 parameters are specific to the ``pcmdi_diags`` task.
+These 71 parameters are specific to the ``pcmdi_diags`` task.
 
 Task-level parameters (all sets)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are 6 task-level (all sets) parameters:
 
 .. list-table::
    :header-rows: 1
@@ -59,6 +61,20 @@ Task-level parameters (all sets)
      - No
      - ``"Amon"``
      - Reference CMIP table ID (required for model-vs-model runs).
+
+Task-level parameters (all sets except synthetic_plots)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are 14 task-level (all sets except synthetic_plots) parameters:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
    * - ``e3sm_to_cmip_atm_subsection``
      - No
      - ``""``
@@ -111,10 +127,6 @@ Task-level parameters (all sets)
      - No
      - ``""``
      - Path to reference model time-series data for model-vs-model runs.
-   * - ``ts_num_years``
-     - No
-     - ``5``
-     - Year increment for test model data.
    * - ``ts_years``
      - No
      - ``[""]``
@@ -122,6 +134,8 @@ Task-level parameters (all sets)
 
 Per-subtask shared parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are 5 per-subtask shared parameters:
 
 .. list-table::
    :header-rows: 1
@@ -152,8 +166,10 @@ Per-subtask shared parameters
      - ``[""]``
      - Year ranges for reference data.
 
-Mean-climate and regridding parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mean_climate parameters
+~~~~~~~~~~~~~~~~~~~~~~~
+
+There are 7 mean_climate parameters:
 
 .. list-table::
    :header-rows: 1
@@ -191,6 +207,20 @@ Mean-climate and regridding parameters
      - No
      - ``"conservative"``
      - Regridding method for ocean fields.
+
+Mean_climate & synthetic_plots parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are 2 mean_climate & synthetic_plots parameters:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
    * - ``clim_vars``
      - No
      - ``"pr,prw,psl,..."``
@@ -200,8 +230,10 @@ Mean-climate and regridding parameters
      - ``"global,ocean,land"``
      - Regions used for mean-climate metrics.
 
-Variability-modes parameters
+Variability_modes parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are 9 variability_modes parameters:
 
 .. list-table::
    :header-rows: 1
@@ -247,6 +279,20 @@ Variability-modes parameters
      - No
      - ``"monthly"``
      - Seasons/frequency bins to analyze.
+
+Variability_modes & synthetic_plots parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are 4 variability_modes & synthetic_plots parameters:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
    * - ``mova_vars``
      - No
      - ``"psl"``
@@ -267,6 +313,8 @@ Variability-modes parameters
 ENSO parameters
 ~~~~~~~~~~~~~~~
 
+There is 1 ENSO parameter:
+
 .. list-table::
    :header-rows: 1
    :widths: 28 10 18 44
@@ -279,13 +327,29 @@ ENSO parameters
      - No
      - ``"ENSO_perf,ENSO_proc,ENSO_tel"``
      - ENSO metric groups to run.
+
+ENSO & synthetic_plots parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There is 1 ENSO & synthetic_plots parameter:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 28 10 18 44
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
    * - ``enso_vars``
      - No
      - ``"psl,pr,prsn,ts,tas,tauu,tauv,hflx,hfss,rlds,rsds,rlus,rlut,rsdt"``
      - Variables used by ENSO diagnostics.
 
-Synthetic-plots parameters
+Synthetic_plots parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are 22 synthetic_plots parameters:
 
 .. list-table::
    :header-rows: 1
@@ -405,6 +469,11 @@ must be defined inside ``[pcmdi_diags]``:
      - ``"180x360_aave"``
      - Model data grid after remapping. Overrides the ``[default]`` value
        (``""``).
+   * - ``ts_num_years``
+     - No
+     - ``5``
+     - Year increment for test model data. Overrides the
+       ``[default]`` value (``"5"``), which in this case is actually the same value.
    * - ``frequency``
      - No
      - ``"mo"``
