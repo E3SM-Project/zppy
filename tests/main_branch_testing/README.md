@@ -29,15 +29,21 @@ Open `run_integration_test.bash` and edit the **"Check these every time"** block
 | --- | --- |
 | `RUN_NUMBER` | Increment this if you run multiple tests on the same day |
 | `DIAGS_BASE_BRANCH` | Branch to test for e3sm_diags (usually `main`) |
+| `E3SM_TO_CMIP_BASE_BRANCH` | Branch to test for e3sm_to_cmip (usually `master`) |
+| `MPAS_BASE_BRANCH` | Branch to test for MPAS-Analysis (usually `develop`) |
 | `ZI_BASE_BRANCH` | Branch to test for zppy-interfaces (usually `main`) |
 | `ZPPY_BASE_BRANCH` | Branch to test for zppy (usually `main`) |
+| `DIAGS_ENV_TYPE` | `"dev"` to build a dedicated conda env; `"unified"` to use e3sm-unified |
+| `E3SM_TO_CMIP_ENV_TYPE` | `"dev"` to build a dedicated conda env; `"unified"` to use e3sm-unified |
+| `MPAS_ENV_TYPE` | `"dev"` to build a dedicated conda env; `"unified"` to use e3sm-unified |
+| `ZI_ENV_TYPE` | `"dev"` to build a dedicated conda env; `"unified"` to use e3sm-unified |
 
 The **"Set these up once"** block below that contains paths (`EZ_DIR`, `CONDA_PROFILE`) which typically don't change between runs. Machine-specific settings (`OUTPUT_WORKSPACE`, conda activation command, unified environment path, `salloc` command) are derived automatically from `--machine`.
 
 ## Workflow Phases
 
 ### Phase 1: Setup
-- Creates conda environments for e3sm_diags, zppy-interfaces, and zppy
+- Creates conda environments for each component where `ENV_TYPE="dev"` (e3sm_to_cmip, e3sm_diags, MPAS-Analysis, zppy-interfaces, zppy); skips env creation and uses e3sm-unified for any component where `ENV_TYPE="unified"`
 - Runs unit tests for zppy-interfaces and zppy
 - Patches `tests/integration/utils.py` with test-specific environment commands, config list, and unique ID
 - Generates config files via `python tests/integration/utils.py`
@@ -110,8 +116,10 @@ Phase 2 checks bundle status files before resubmitting and warns if any are non-
 
 ### Environment Issues
 ```bash
-# Remove and rebuild stale environments
+# Remove and rebuild stale environments (only applies to components with ENV_TYPE="dev")
+conda remove --yes --all --name test-e3sm-to-cmip-master-YYYYMMDD_runN
 conda remove --yes --all --name test-diags-main-YYYYMMDD_runN
+conda remove --yes --all --name test-mpas-develop-YYYYMMDD_runN
 conda remove --yes --all --name test-zi-main-YYYYMMDD_runN
 conda remove --yes --all --name test-zppy-main-YYYYMMDD_runN
 
@@ -151,7 +159,9 @@ conda remove --yes --all --name test-zppy-main-YYYYMMDD_runN
 
 ```bash
 # Confirm repos have no uncommitted changes
+cd ~/ez/e3sm_to_cmip && git status
 cd ~/ez/e3sm_diags && git status
+cd ~/ez/MPAS-Analysis && git status
 cd ~/ez/zppy-interfaces && git status
 cd ~/ez/zppy && git status
 
