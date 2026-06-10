@@ -14,8 +14,6 @@
 #
 # Notes:
 #   - test_images.py must be run manually from a compute node (see Phase 3 output).
-#   - If Bundles Part 2 fails with a KeyError, re-run with --phase 2 after confirming
-#     that the bundle status files are all "OK".
 
 set -e  # Exit on error
 set -u  # Exit on undefined variable
@@ -112,12 +110,12 @@ V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_comprehensive_v3_output/${UNIQUE_ID}/
 LEGACY_310_V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_legacy_3.1.0_comprehensive_v3_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
 LEGACY_300_V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_legacy_3.0.0_comprehensive_v3_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
 
-# Colors
+# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m'
+NC='\033[0m' # No Color
 
 # ============================================================================
 # Helper Functions
@@ -434,7 +432,6 @@ phase_2_bundles_part2() {
     ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH"
 
     # Verify all bundle status files are clean before submitting part 2.
-    # A non-OK status here is the likely cause of the historical KeyError.
     log "Checking bundle status files before submitting part 2..."
     local all_ok=true
     check_status_files "$BUNDLES_OUTPUT"         "Bundles"         || all_ok=false
@@ -443,7 +440,7 @@ phase_2_bundles_part2() {
 
     if [ "$all_ok" = false ]; then
         log_error "One or more bundle status files have non-OK entries."
-        checkpoint "Errors found. Proceeding may cause a KeyError in bundles part 2. Continue anyway?"
+        checkpoint "Errors found. Continue anyway?"
     else
         log_success "Bundle status files look clean -- safe to submit part 2."
     fi
