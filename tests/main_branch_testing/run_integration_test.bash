@@ -4,7 +4,8 @@
 # Usage:
 #   1. Copy this file OUT of the zppy repo (this script will change branches).
 #   2. Edit the "Check these every time" configuration section below.
-#   3. Run: ./run_integration_test.bash [--phase N] [--auto]
+#   3. Run: ./run_integration_test.bash --machine MACHINE [--phase N] [--auto]
+#      MACHINE: chrysalis | compy | perlmutter
 #
 # Phases:
 #   1 - Full setup: build envs, run unit tests, generate configs, submit SLURM jobs
@@ -25,14 +26,21 @@ set -u  # Exit on undefined variable
 
 AUTO_MODE=false
 START_PHASE=1
+MACHINE=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --auto)   AUTO_MODE=true; shift ;;
-        --phase)  START_PHASE="$2"; shift 2 ;;
+        --auto)    AUTO_MODE=true; shift ;;
+        --phase)   START_PHASE="$2"; shift 2 ;;
+        --machine) MACHINE="$2"; shift 2 ;;
         *) echo "Unknown argument: $1"; exit 1 ;;
     esac
 done
+
+if [[ -z "$MACHINE" ]]; then
+    echo "Error: --machine is required. Valid values: chrysalis | compy | perlmutter"
+    exit 1
+fi
 
 # ============================================================================
 # Configuration
@@ -55,7 +63,33 @@ E3SM_DIAGS_DIR="$EZ_DIR/e3sm_diags"
 ZPPY_INTERFACES_DIR="$EZ_DIR/zppy-interfaces"
 ZPPY_DIR="$EZ_DIR/zppy"
 CONDA_PROFILE="$HOME_DIR/miniforge3/etc/profile.d/conda.sh"
-OUTPUT_WORKSPACE="/lcrc/group/e3sm/${USER}"    # Chrysalis default; edit for Compy/Perlmutter
+
+# --- Machine-specific settings -----------------------------------------------
+
+case "$MACHINE" in
+    chrysalis)
+        OUTPUT_WORKSPACE="/lcrc/group/e3sm/${USER}"
+        CONDA_ACTIVATION_CMD="lcrc_conda"
+        UNIFIED_ENV_CMD="source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh"
+        SALLOC_CMD="salloc --nodes=1 --partition=debug --time=02:00:00 --account=e3sm"
+        ;;
+    compy)
+        OUTPUT_WORKSPACE="/compyfs/${USER}"
+        CONDA_ACTIVATION_CMD="compy_conda"
+        UNIFIED_ENV_CMD="source /share/apps/E3SM/conda_envs/load_latest_e3sm_unified_compy.sh"
+        SALLOC_CMD="salloc --nodes=1 --partition=short --time=01:00:00 --account=e3sm"
+        ;;
+    perlmutter)
+        OUTPUT_WORKSPACE="/global/cfs/cdirs/e3sm/${USER}"
+        CONDA_ACTIVATION_CMD="nersc_conda"
+        UNIFIED_ENV_CMD="source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_pm-cpu.sh"
+        SALLOC_CMD="salloc --nodes=1 --qos=interactive --time=01:00:00 --constraint=cpu --account=e3sm"
+        ;;
+    *)
+        echo "Error: Unknown machine '$MACHINE'. Valid values: chrysalis | compy | perlmutter"
+        exit 1
+        ;;
+esac
 
 # --- Derived (probably no edits needed) --------------------------------------
 
@@ -121,7 +155,7 @@ activate_env() {
     set +u
     # shellcheck disable=SC1090
     source ~/.bashrc
-    lcrc_conda  # Defined in ~/.bashrc for Chrysalis; adjust for Compy/Perlmutter
+    $CONDA_ACTIVATION_CMD  # Machine-specific conda init (lcrc_conda / compy_conda / nersc_conda)
 
     if [ -n "$env_name" ]; then
         conda activate "$env_name"
@@ -323,11 +357,11 @@ with open(utils_file, 'r') as f:
 replacement = '''TEST_SPECIFICS: Dict[str, Any] = {
     "nco_path": "",
     "diags_environment_commands": "source ${CONDA_PROFILE}; conda activate ${DIAGS_ENV}",
-    "mpas_analysis_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
+    "mpas_analysis_environment_commands": "${UNIFIED_ENV_CMD}",
     "global_time_series_environment_commands": "source ${CONDA_PROFILE}; conda activate ${ZI_ENV}",
-    "livvkit_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
+    "livvkit_environment_commands": "${UNIFIED_ENV_CMD}",
     "pcmdi_diags_environment_commands": "source ${CONDA_PROFILE}; conda activate ${ZI_ENV}",
-    "environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
+    "environment_commands": "${UNIFIED_ENV_CMD}",
     "cfgs_to_run": [
         "weekly_bundles",
         "weekly_comprehensive_v2",
@@ -494,16 +528,13 @@ phase_3_validation() {
     # test_images.py -- must run from a compute node
     # ------------------------------------------------------------------
     log_warning "test_images.py requires a compute node and must be run manually."
-    log "To run it on Chrysalis:"
-    log "  salloc --nodes=1 --partition=debug --time=02:00:00 --account=e3sm"
+    log "To run it on ${MACHINE}:"
+    log "  ${SALLOC_CMD}"
     log "  source ${CONDA_PROFILE}"
     log "  conda activate ${ZPPY_ENV}"
     log "  cd ${ZPPY_DIR}"
     log "  pytest tests/integration/test_images.py"
     log "  cat test_images_summary.md"
-    log ""
-    log "On Compy:      salloc --nodes=1 --partition=short --time=01:00:00 --account=e3sm"
-    log "On Perlmutter: salloc --nodes=1 --qos=interactive --time=01:00:00 --constraint=cpu --account=e3sm"
 
     log_success "Phase 3 automated tests complete!"
     log_success "Remember to run test_images.py manually from a compute node."
@@ -515,6 +546,7 @@ phase_3_validation() {
 
 main() {
     log "Starting zppy integration test automation"
+    log "Machine:      $MACHINE"
     log "Date stamp:   $DATE_STAMP"
     log "Auto mode:    $AUTO_MODE"
     log "Start phase:  $START_PHASE"

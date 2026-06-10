@@ -6,18 +6,18 @@ This automation system streamlines the zppy integration testing workflow, reduci
 
 ### Basic Usage (Interactive Mode)
 ```bash
-./run_integration_test.bash
+./run_integration_test.bash --machine chrysalis
 ```
 
 ### Skip Straight to a Later Phase
 ```bash
-./run_integration_test.bash --phase 2   # Start at Bundles Part 2
-./run_integration_test.bash --phase 3   # Start at Validation only
+./run_integration_test.bash --machine chrysalis --phase 2
+./run_integration_test.bash --machine chrysalis --phase 3
 ```
 
 ### Non-Interactive (Auto) Mode
 ```bash
-./run_integration_test.bash --auto
+./run_integration_test.bash --machine chrysalis --auto
 ```
 In auto mode all checkpoints are bypassed and the script runs end-to-end without waiting for user input.
 
@@ -32,7 +32,7 @@ Open `run_integration_test.bash` and edit the **"Check these every time"** block
 | `ZI_BASE_BRANCH` | Branch to test for zppy-interfaces (usually `main`) |
 | `ZPPY_BASE_BRANCH` | Branch to test for zppy (usually `main`) |
 
-The **"Set these up once"** block below that contains machine paths (`EZ_DIR`, `CONDA_PROFILE`, `OUTPUT_WORKSPACE`) which typically don't change between runs.
+The **"Set these up once"** block below that contains paths (`EZ_DIR`, `CONDA_PROFILE`) which typically don't change between runs. Machine-specific settings (`OUTPUT_WORKSPACE`, conda activation command, unified environment path, `salloc` command) are derived automatically from `--machine`.
 
 ## Workflow Phases
 
@@ -170,7 +170,7 @@ emacs run_integration_test.bash
 # Run inside a screen session so it survives disconnects
 screen
 cd ~/ez/zppy_main_branch_tests/test_YYYYMMDD
-time ./run_integration_test.bash --auto 2>&1 | tee integration_test.log
+time ./run_integration_test.bash --machine chrysalis --auto 2>&1 | tee integration_test.log
 # Ctrl-A D to detach from screen
 
 # Monitor progress from another terminal
