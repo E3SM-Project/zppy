@@ -48,16 +48,28 @@ fi
 
 RUN_NUMBER=1
 
-# Base branches (what we're testing -- usually "main")
+# Base branches (what we're testing -- usually "main"/"master"/"develop")
 DIAGS_BASE_BRANCH="main"
+E3SM_TO_CMIP_BASE_BRANCH="master"
+MPAS_BASE_BRANCH="develop"
 ZI_BASE_BRANCH="main"
 ZPPY_BASE_BRANCH="main"
+
+# Dev vs unified env per component.
+# "dev"     = build a dedicated conda env from the repo's dev.yml
+# "unified" = use the machine's e3sm-unified env (UNIFIED_ENV_CMD)
+DIAGS_ENV_TYPE="dev"
+E3SM_TO_CMIP_ENV_TYPE="dev"
+MPAS_ENV_TYPE="unified"
+ZI_ENV_TYPE="dev"
 
 # --- Set these up once -------------------------------------------------------
 
 HOME_DIR="$HOME"
-EZ_DIR="$HOME_DIR/ez"                          # Parent dir for all repos
+EZ_DIR="$HOME_DIR/ez"                             # Parent dir for all repos
 E3SM_DIAGS_DIR="$EZ_DIR/e3sm_diags"
+E3SM_TO_CMIP_DIR="$EZ_DIR/e3sm_to_cmip"
+MPAS_ANALYSIS_DIR="$EZ_DIR/MPAS-Analysis"
 ZPPY_INTERFACES_DIR="$EZ_DIR/zppy-interfaces"
 ZPPY_DIR="$EZ_DIR/zppy"
 CONDA_PROFILE="$HOME_DIR/miniforge3/etc/profile.d/conda.sh"
@@ -95,8 +107,6 @@ DATE_STAMP="${DATE_STAMP:-$(date +%Y%m%d)}"
 TAG="${DATE_STAMP}_run${RUN_NUMBER}"
 UNIQUE_ID="zppy_main_branch_test_${TAG}"
 
-DIAGS_ENV="test-diags-${DIAGS_BASE_BRANCH}-${TAG}"
-ZI_ENV="test-zi-${ZI_BASE_BRANCH}-${TAG}"
 ZPPY_ENV="test-zppy-${ZPPY_BASE_BRANCH}-${TAG}"
 
 # Output directories (status file locations)
@@ -211,6 +221,19 @@ ensure_test_branch() {
     log_success "On branch '$test_branch'"
 }
 
+# Return the environment_commands string for a component.
+# Usage: get_env_cmd "dev" "$ENV_NAME"
+#        get_env_cmd "unified" ""
+get_env_cmd() {
+    local env_type="$1"
+    local env_name="$2"
+    if [[ "$env_type" == "dev" ]]; then
+        echo "source ${CONDA_PROFILE}; conda activate ${env_name}"
+    else
+        echo "$UNIFIED_ENV_CMD"
+    fi
+}
+
 # Poll squeue until no user jobs remain (or timeout).
 wait_for_slurm_jobs() {
     local check_interval=${1:-600}  # seconds between checks (default 10 min)
@@ -297,26 +320,76 @@ phase_1_setup() {
     log "========================================="
 
     # ------------------------------------------------------------------
+    # e3sm_to_cmip
+    # ------------------------------------------------------------------
+    log "Setting up e3sm_to_cmip..."
+    cd "$E3SM_TO_CMIP_DIR"
+    ensure_test_branch "test_e3sm_to_cmip_${TAG}" "$E3SM_TO_CMIP_BASE_BRANCH"
+
+    log "Latest e3sm_to_cmip commit (should match https://github.com/E3SM-Project/e3sm_to_cmip/commits/${E3SM_TO_CMIP_BASE_BRANCH}):"
+    git log -1 --oneline
+
+    local E3SM_TO_CMIP_ENV=""
+    if [[ "$E3SM_TO_CMIP_ENV_TYPE" == "dev" ]]; then
+        E3SM_TO_CMIP_ENV="test-e3sm-to-cmip-${E3SM_TO_CMIP_BASE_BRANCH}-${TAG}"
+        setup_conda_env "conda" "$E3SM_TO_CMIP_ENV"
+    else
+        log "Using unified env for e3sm_to_cmip (skipping conda env creation)"
+    fi
+
+    # ------------------------------------------------------------------
     # e3sm_diags
     # ------------------------------------------------------------------
-    log "Setting up e3sm_diags environment..."
+    log "Setting up e3sm_diags..."
     cd "$E3SM_DIAGS_DIR"
     ensure_test_branch "test_e3sm_diags_${TAG}" "$DIAGS_BASE_BRANCH"
 
     log "Latest e3sm_diags commit (should match https://github.com/E3SM-Project/e3sm_diags/commits/${DIAGS_BASE_BRANCH}):"
     git log -1 --oneline
-    setup_conda_env "conda-env" "$DIAGS_ENV"
+
+    local DIAGS_ENV=""
+    if [[ "$DIAGS_ENV_TYPE" == "dev" ]]; then
+        DIAGS_ENV="test-diags-${DIAGS_BASE_BRANCH}-${TAG}"
+        setup_conda_env "conda-env" "$DIAGS_ENV"
+    else
+        log "Using unified env for e3sm_diags (skipping conda env creation)"
+    fi
+
+    # ------------------------------------------------------------------
+    # MPAS-Analysis
+    # ------------------------------------------------------------------
+    log "Setting up MPAS-Analysis..."
+    cd "$MPAS_ANALYSIS_DIR"
+    ensure_test_branch "test_mpas_${TAG}" "$MPAS_BASE_BRANCH"
+
+    log "Latest MPAS-Analysis commit (should match https://github.com/MPAS-Dev/MPAS-Analysis/commits/${MPAS_BASE_BRANCH}):"
+    git log -1 --oneline
+
+    local MPAS_ENV=""
+    if [[ "$MPAS_ENV_TYPE" == "dev" ]]; then
+        MPAS_ENV="test-mpas-${MPAS_BASE_BRANCH}-${TAG}"
+        setup_conda_env "conda" "$MPAS_ENV"
+    else
+        log "Using unified env for MPAS-Analysis (skipping conda env creation)"
+    fi
 
     # ------------------------------------------------------------------
     # zppy-interfaces (includes unit tests)
     # ------------------------------------------------------------------
-    log "Setting up zppy-interfaces environment..."
+    log "Setting up zppy-interfaces..."
     cd "$ZPPY_INTERFACES_DIR"
     ensure_test_branch "test_zi_${TAG}" "$ZI_BASE_BRANCH"
 
     log "Latest zppy-interfaces commit (should match https://github.com/E3SM-Project/zppy-interfaces/commits/${ZI_BASE_BRANCH}):"
     git log -1 --oneline
-    setup_conda_env "conda" "$ZI_ENV"
+
+    local ZI_ENV=""
+    if [[ "$ZI_ENV_TYPE" == "dev" ]]; then
+        ZI_ENV="test-zi-${ZI_BASE_BRANCH}-${TAG}"
+        setup_conda_env "conda" "$ZI_ENV"
+    else
+        log "Using unified env for zppy-interfaces (skipping conda env creation)"
+    fi
 
     log "Running zppy-interfaces unit tests..."
     pytest tests/unit/global_time_series/test_*.py
@@ -326,7 +399,7 @@ phase_1_setup() {
     # ------------------------------------------------------------------
     # zppy (includes unit tests + config generation)
     # ------------------------------------------------------------------
-    log "Setting up zppy environment..."
+    log "Setting up zppy..."
     cd "$ZPPY_DIR"
     ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH"
 
@@ -343,6 +416,13 @@ phase_1_setup() {
     # ------------------------------------------------------------------
     log "Generating config files..."
 
+    local DIAGS_CMD
+    local MPAS_CMD
+    local ZI_CMD
+    DIAGS_CMD=$(get_env_cmd "$DIAGS_ENV_TYPE" "$DIAGS_ENV")
+    MPAS_CMD=$(get_env_cmd "$MPAS_ENV_TYPE" "$MPAS_ENV")
+    ZI_CMD=$(get_env_cmd "$ZI_ENV_TYPE" "$ZI_ENV")
+
     UTILS_FILE="tests/integration/utils.py"
 
     python - <<PYEOF
@@ -354,11 +434,11 @@ with open(utils_file, 'r') as f:
 
 replacement = '''TEST_SPECIFICS: Dict[str, Any] = {
     "nco_path": "",
-    "diags_environment_commands": "source ${CONDA_PROFILE}; conda activate ${DIAGS_ENV}",
-    "mpas_analysis_environment_commands": "${UNIFIED_ENV_CMD}",
-    "global_time_series_environment_commands": "source ${CONDA_PROFILE}; conda activate ${ZI_ENV}",
+    "diags_environment_commands": "${DIAGS_CMD}",
+    "mpas_analysis_environment_commands": "${MPAS_CMD}",
+    "global_time_series_environment_commands": "${ZI_CMD}",
     "livvkit_environment_commands": "${UNIFIED_ENV_CMD}",
-    "pcmdi_diags_environment_commands": "source ${CONDA_PROFILE}; conda activate ${ZI_ENV}",
+    "pcmdi_diags_environment_commands": "${ZI_CMD}",
     "environment_commands": "${UNIFIED_ENV_CMD}",
     "cfgs_to_run": [
         "weekly_bundles",
@@ -434,7 +514,7 @@ phase_2_bundles_part2() {
     # Verify all bundle status files are clean before submitting part 2.
     log "Checking bundle status files before submitting part 2..."
     local all_ok=true
-    check_status_files "$BUNDLES_OUTPUT"         "Bundles"         || all_ok=false
+    check_status_files "$BUNDLES_OUTPUT"            "Bundles"              || all_ok=false
     check_status_files "$LEGACY_310_BUNDLES_OUTPUT" "Legacy 3.1.0 Bundles" || all_ok=false
     check_status_files "$LEGACY_300_BUNDLES_OUTPUT" "Legacy 3.0.0 Bundles" || all_ok=false
 
@@ -479,13 +559,13 @@ phase_3_validation() {
     log "Checking all status files..."
     local all_good=true
 
-    check_status_files "$V2_OUTPUT"               "v2"               || all_good=false
-    check_status_files "$LEGACY_310_V2_OUTPUT"    "Legacy 3.1.0 v2"  || all_good=false
-    check_status_files "$LEGACY_300_V2_OUTPUT"    "Legacy 3.0.0 v2"  || all_good=false
-    check_status_files "$V3_OUTPUT"               "v3"               || all_good=false
-    check_status_files "$LEGACY_310_V3_OUTPUT"    "Legacy 3.1.0 v3"  || all_good=false
-    check_status_files "$LEGACY_300_V3_OUTPUT"    "Legacy 3.0.0 v3"  || all_good=false
-    check_status_files "$BUNDLES_OUTPUT"          "Bundles"          || all_good=false
+    check_status_files "$V2_OUTPUT"                 "v2"                   || all_good=false
+    check_status_files "$LEGACY_310_V2_OUTPUT"      "Legacy 3.1.0 v2"      || all_good=false
+    check_status_files "$LEGACY_300_V2_OUTPUT"      "Legacy 3.0.0 v2"      || all_good=false
+    check_status_files "$V3_OUTPUT"                 "v3"                   || all_good=false
+    check_status_files "$LEGACY_310_V3_OUTPUT"      "Legacy 3.1.0 v3"      || all_good=false
+    check_status_files "$LEGACY_300_V3_OUTPUT"      "Legacy 3.0.0 v3"      || all_good=false
+    check_status_files "$BUNDLES_OUTPUT"            "Bundles"              || all_good=false
     check_status_files "$LEGACY_310_BUNDLES_OUTPUT" "Legacy 3.1.0 Bundles" || all_good=false
     check_status_files "$LEGACY_300_BUNDLES_OUTPUT" "Legacy 3.0.0 Bundles" || all_good=false
 
