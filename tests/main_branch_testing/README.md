@@ -31,7 +31,6 @@ Open `run_integration_test.bash` and edit the **"Check these every time"** block
 | `DIAGS_BASE_BRANCH` | Branch to test for e3sm_diags (usually `main`) |
 | `ZI_BASE_BRANCH` | Branch to test for zppy-interfaces (usually `main`) |
 | `ZPPY_BASE_BRANCH` | Branch to test for zppy (usually `main`) |
-| `SKIP_MPAS` | Set to `true` to omit mpas_analysis (workaround for known segfault) |
 
 The **"Set these up once"** block below that contains machine paths (`EZ_DIR`, `CONDA_PROFILE`, `OUTPUT_WORKSPACE`) which typically don't change between runs.
 
@@ -103,9 +102,6 @@ Check the error message. The script uses `set -e`, so it exits on any error. Com
 - A unit test failure during Phase 1 setup
 - A SLURM timeout (increase the max-wait argument to `wait_for_slurm_jobs`)
 - `DependencyNeverSatisfied` on all queued jobs (check your cfg files and SLURM account)
-
-### mpas_analysis Segfault
-Set `SKIP_MPAS=true` in the configuration section. This removes `mpas_analysis` from `tasks_to_run` and sets a placeholder for `mpas_analysis_environment_commands` so it cannot be accidentally invoked.
 
 ### KeyError on Bundles Part 2
 Phase 2 now checks bundle status files before resubmitting and warns if any are non-OK. Resolve any failures in the Phase 1 bundle runs before proceeding. You can restart from Phase 2 once the underlying jobs are clean:

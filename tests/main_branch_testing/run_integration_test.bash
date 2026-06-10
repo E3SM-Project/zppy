@@ -13,7 +13,6 @@
 #
 # Notes:
 #   - test_images.py must be run manually from a compute node (see Phase 3 output).
-#   - mpas_analysis is skipped by default due to known segfault issues; see SKIP_MPAS below.
 #   - If Bundles Part 2 fails with a KeyError, re-run with --phase 2 after confirming
 #     that the bundle status files are all "OK".
 
@@ -47,10 +46,6 @@ RUN_NUMBER=1
 DIAGS_BASE_BRANCH="main"
 ZI_BASE_BRANCH="main"
 ZPPY_BASE_BRANCH="main"
-
-# Set to true to skip mpas_analysis due to known segfault issues on some machines.
-# When true, "mpas_analysis" is removed from tasks_to_run in utils.py.
-SKIP_MPAS=false
 
 # --- Set these up once -------------------------------------------------------
 
@@ -267,7 +262,6 @@ phase_1_setup() {
     log "Phase 1: Setup"
     log "Date stamp:  $DATE_STAMP"
     log "Unique ID:   $UNIQUE_ID"
-    log "Skip mpas:   $SKIP_MPAS"
     log "========================================="
 
     # ------------------------------------------------------------------
@@ -319,30 +313,17 @@ phase_1_setup() {
 
     UTILS_FILE="tests/integration/utils.py"
 
-    # Build tasks_to_run list, optionally skipping mpas_analysis
-    if [ "$SKIP_MPAS" = true ]; then
-        log_warning "SKIP_MPAS=true: omitting mpas_analysis from tasks_to_run"
-        TASKS_TO_RUN='["e3sm_diags", "global_time_series", "ilamb", "livvkit", "pcmdi_diags"]'
-        MPAS_ENV_CMD='# mpas_analysis skipped'
-    else
-        TASKS_TO_RUN='["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb", "livvkit", "pcmdi_diags"]'
-        MPAS_ENV_CMD="source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh"
-    fi
-
     python - <<PYEOF
-import re, json
+import re
 
 utils_file = "${UTILS_FILE}"
 with open(utils_file, 'r') as f:
     content = f.read()
 
-tasks_to_run = json.loads('${TASKS_TO_RUN}')
-mpas_env_cmd = "${MPAS_ENV_CMD}"
-
 replacement = '''TEST_SPECIFICS: Dict[str, Any] = {
     "nco_path": "",
     "diags_environment_commands": "source ${CONDA_PROFILE}; conda activate ${DIAGS_ENV}",
-    "mpas_analysis_environment_commands": "''' + mpas_env_cmd + '''",
+    "mpas_analysis_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
     "global_time_series_environment_commands": "source ${CONDA_PROFILE}; conda activate ${ZI_ENV}",
     "livvkit_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
     "pcmdi_diags_environment_commands": "source ${CONDA_PROFILE}; conda activate ${ZI_ENV}",
@@ -358,7 +339,7 @@ replacement = '''TEST_SPECIFICS: Dict[str, Any] = {
         "weekly_legacy_3.0.0_comprehensive_v2",
         "weekly_legacy_3.0.0_comprehensive_v3",
     ],
-    "tasks_to_run": ''' + json.dumps(tasks_to_run) + ''',
+    "tasks_to_run": ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb", "livvkit", "pcmdi_diags"],
     "unique_id": "${UNIQUE_ID}",
 }'''
 
@@ -537,7 +518,6 @@ main() {
     log "Date stamp:   $DATE_STAMP"
     log "Auto mode:    $AUTO_MODE"
     log "Start phase:  $START_PHASE"
-    log "Skip mpas:    $SKIP_MPAS"
 
     case "$START_PHASE" in
         1)
