@@ -45,7 +45,7 @@ The **"Set these up once"** block below that contains paths (`EZ_DIR`, `CONDA_PR
 - Waits for jobs to complete (polls every 10 min, 4-hour max)
 
 ### Phase 2: Bundles Part 2
-- Checks status files for all three bundles output directories; warns if any are non-OK before proceeding (a non-OK status here is the likely cause of the historical KeyError)
+- Checks status files for all three bundles output directories; warns if any are non-OK before proceeding
 - Submits bundles part 2 jobs (`weekly_bundles`, `legacy_3.1.0_bundles`, `legacy_3.0.0_bundles`)
 - Waits for completion (polls every 10 min, 1-hour max)
 
@@ -103,8 +103,7 @@ Check the error message. The script uses `set -e`, so it exits on any error. Com
 - A SLURM timeout (increase the max-wait argument to `wait_for_slurm_jobs`)
 - `DependencyNeverSatisfied` on all queued jobs (check your cfg files and SLURM account)
 
-### KeyError on Bundles Part 2
-Phase 2 now checks bundle status files before resubmitting and warns if any are non-OK. Resolve any failures in the Phase 1 bundle runs before proceeding. You can restart from Phase 2 once the underlying jobs are clean:
+Phase 2 checks bundle status files before resubmitting and warns if any are non-OK. Resolve any failures in the Phase 1 bundle runs before proceeding. You can restart from Phase 2 once the underlying jobs are clean:
 ```bash
 ./run_integration_test.bash --phase 2
 ```
@@ -167,7 +166,7 @@ cp ~/ez/zppy/tests/main_branch_testing/* .
 # Edit configuration parameters
 emacs run_integration_test.bash
 
-# Run inside a screen session so it survives disconnects
+# Run inside a screen session so it will survive disconnections.
 screen
 cd ~/ez/zppy_main_branch_tests/test_YYYYMMDD
 time ./run_integration_test.bash --machine chrysalis --auto 2>&1 | tee integration_test.log
