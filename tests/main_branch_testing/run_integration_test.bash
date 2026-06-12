@@ -55,6 +55,7 @@ _required_vars=(
     RUN_NUMBER
     DIAGS_BASE_BRANCH E3SM_TO_CMIP_BASE_BRANCH MPAS_BASE_BRANCH ZI_BASE_BRANCH ZPPY_BASE_BRANCH
     DIAGS_ENV_TYPE E3SM_TO_CMIP_ENV_TYPE MPAS_ENV_TYPE ZI_ENV_TYPE
+    CFGS_TO_RUN TASKS_TO_RUN
     HOME_DIR EZ_DIR
     E3SM_DIAGS_DIR E3SM_TO_CMIP_DIR MPAS_ANALYSIS_DIR ZPPY_INTERFACES_DIR ZPPY_DIR
     CONDA_PROFILE TAG_CACHE_FILE
@@ -102,8 +103,17 @@ case "$MACHINE" in
         ;;
 esac
 
-# ============================================================================
-# Resolve TAG
+# Derive the filename suffix used by generated zppy cfg files.
+case "$MACHINE" in
+    chrysalis)  MACHINE_CFG_SUFFIX="chrysalis" ;;
+    compy)      MACHINE_CFG_SUFFIX="compy" ;;
+    perlmutter) MACHINE_CFG_SUFFIX="pm-cpu" ;;
+esac
+
+# Split comma-separated config lists into bash arrays.
+# IFS = Internal Field Separator
+IFS=',' read -ra CFGS_ARRAY  <<< "$CFGS_TO_RUN"
+IFS=',' read -ra TASKS_ARRAY <<< "$TASKS_TO_RUN"
 # ============================================================================
 #
 # Priority:
@@ -470,6 +480,20 @@ phase_1_setup() {
 
     UTILS_FILE="tests/integration/utils.py"
 
+    # Build Python list literals from the bash arrays for injection into the heredoc.
+    local CFGS_PY_LIST TASKS_PY_LIST cfg task
+    CFGS_PY_LIST=""
+    for cfg in "${CFGS_ARRAY[@]}"; do
+        cfg="${cfg// /}"  # strip any accidental whitespace
+        CFGS_PY_LIST+="        \"${cfg}\","$'\n'
+    done
+    TASKS_PY_LIST=""
+    for task in "${TASKS_ARRAY[@]}"; do
+        task="${task// /}"
+        TASKS_PY_LIST+="\"${task}\", "
+    done
+    TASKS_PY_LIST="${TASKS_PY_LIST%, }"  # strip trailing comma+space
+
     python - <<PYEOF
 import re
 
@@ -487,17 +511,8 @@ replacement = '''TEST_SPECIFICS: Dict[str, Any] = {
     "pcmdi_diags_environment_commands": "${ZI_CMD}",
     "environment_commands": "${UNIFIED_ENV_CMD}",
     "cfgs_to_run": [
-        "weekly_bundles",
-        "weekly_comprehensive_v2",
-        "weekly_comprehensive_v3",
-        "weekly_legacy_3.1.0_bundles",
-        "weekly_legacy_3.1.0_comprehensive_v2",
-        "weekly_legacy_3.1.0_comprehensive_v3",
-        "weekly_legacy_3.0.0_bundles",
-        "weekly_legacy_3.0.0_comprehensive_v2",
-        "weekly_legacy_3.0.0_comprehensive_v3",
-    ],
-    "tasks_to_run": ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb", "livvkit", "pcmdi_diags"],
+${CFGS_PY_LIST}    ],
+    "tasks_to_run": [${TASKS_PY_LIST}],
     "unique_id": "${UNIQUE_ID}",
 }'''
 
@@ -520,18 +535,11 @@ PYEOF
     # Submit initial SLURM jobs
     # ------------------------------------------------------------------
     log "Submitting SLURM jobs..."
-
-    zppy -c tests/integration/generated/test_weekly_comprehensive_v3_chrysalis.cfg
-    zppy -c tests/integration/generated/test_weekly_bundles_chrysalis.cfg
-    zppy -c tests/integration/generated/test_weekly_comprehensive_v2_chrysalis.cfg
-
-    zppy -c tests/integration/generated/test_weekly_legacy_3.1.0_comprehensive_v3_chrysalis.cfg
-    zppy -c tests/integration/generated/test_weekly_legacy_3.1.0_bundles_chrysalis.cfg
-    zppy -c tests/integration/generated/test_weekly_legacy_3.1.0_comprehensive_v2_chrysalis.cfg
-
-    zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v3_chrysalis.cfg
-    zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_bundles_chrysalis.cfg
-    zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v2_chrysalis.cfg
+    local cfg
+    for cfg in "${CFGS_ARRAY[@]}"; do
+        cfg="${cfg// /}"
+        zppy -c "tests/integration/generated/test_weekly_${cfg}_${MACHINE_CFG_SUFFIX}.cfg"
+    done
 
     local job_count
     job_count=$(squeue -u "${USER}" | wc -l)
@@ -558,7 +566,8 @@ phase_2_bundles_part2() {
     activate_env "$ZPPY_ENV"
     ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH"
 
-    # Verify all bundle status files are clean before submitting part 2.
+    # Verify bundle status files are clean before submitting part 2.
+    # These paths are fixed regardless of CFGS_TO_RUN; skip any that don't exist yet.
     log "Checking bundle status files before submitting part 2..."
     local all_ok=true
     check_status_files "$BUNDLES_OUTPUT"            "Bundles"              || all_ok=false
@@ -573,9 +582,13 @@ phase_2_bundles_part2() {
     fi
 
     log "Submitting bundles part 2..."
-    zppy -c tests/integration/generated/test_weekly_bundles_chrysalis.cfg
-    zppy -c tests/integration/generated/test_weekly_legacy_3.1.0_bundles_chrysalis.cfg
-    zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_bundles_chrysalis.cfg
+    local cfg
+    for cfg in "${CFGS_ARRAY[@]}"; do
+        cfg="${cfg// /}"
+        if [[ "$cfg" == *bundle* ]]; then
+            zppy -c "tests/integration/generated/test_weekly_${cfg}_${MACHINE_CFG_SUFFIX}.cfg"
+        fi
+    done
 
     local job_count
     job_count=$(squeue -u "${USER}" | wc -l)
