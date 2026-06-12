@@ -6,28 +6,31 @@ This automation system streamlines the zppy integration testing workflow, reduci
 
 ### Basic Usage (Interactive Mode)
 ```bash
-./run_integration_test.bash --machine chrysalis
+./run_integration_test.bash --config zppy_test.cfg
 ```
 
 ### Skip Straight to a Later Phase
+Set `START_PHASE=2` or `START_PHASE=3` in your config file, then re-run:
 ```bash
-./run_integration_test.bash --machine chrysalis --phase 2
-./run_integration_test.bash --machine chrysalis --phase 3
+./run_integration_test.bash --config zppy_test.cfg
 ```
 
 ### Non-Interactive (Auto) Mode
-```bash
-./run_integration_test.bash --machine chrysalis --auto
-```
-In auto mode all checkpoints are bypassed and the script runs end-to-end without waiting for user input.
+Set `AUTO_MODE=true` in your config file. All checkpoints are bypassed and the script runs end-to-end without waiting for user input.
 
 ## Configuration
 
-Open `run_integration_test.bash` and edit the **"Check these every time"** block at the top before each test run:
+Copy `zppy_test.cfg` and edit it before each test run. It has three sections:
+
+### Runtime settings (update as needed each run)
 
 | Variable | Description |
 | --- | --- |
-| `RUN_NUMBER` | Increment this if you run multiple tests on the same day |
+| `MACHINE` | `chrysalis`, `compy`, or `perlmutter` |
+| `START_PHASE` | `1`, `2`, or `3` |
+| `AUTO_MODE` | `true` to skip all interactive checkpoints |
+| `EXPLICIT_TAG` | Leave empty to auto-generate; set to a prior TAG to resume |
+| `RUN_NUMBER` | Increment if you run multiple tests on the same day |
 | `DIAGS_BASE_BRANCH` | Branch to test for e3sm_diags (usually `main`) |
 | `E3SM_TO_CMIP_BASE_BRANCH` | Branch to test for e3sm_to_cmip (usually `master`) |
 | `MPAS_BASE_BRANCH` | Branch to test for MPAS-Analysis (usually `develop`) |
@@ -38,7 +41,21 @@ Open `run_integration_test.bash` and edit the **"Check these every time"** block
 | `MPAS_ENV_TYPE` | `"dev"` to build a dedicated conda env; `"unified"` to use e3sm-unified |
 | `ZI_ENV_TYPE` | `"dev"` to build a dedicated conda env; `"unified"` to use e3sm-unified |
 
-The **"Set these up once"** block below that contains paths (`EZ_DIR`, `CONDA_PROFILE`) which typically don't change between runs. Machine-specific settings (`OUTPUT_WORKSPACE`, conda activation command, unified environment path, `salloc` command) are derived automatically from `--machine`.
+### One-time setup (paths that rarely change)
+
+| Variable | Description |
+| --- | --- |
+| `HOME_DIR` | Your home directory (default: `$HOME`) |
+| `EZ_DIR` | Parent directory for all repos (default: `$HOME/ez`) |
+| `E3SM_DIAGS_DIR` | Path to e3sm_diags repo |
+| `E3SM_TO_CMIP_DIR` | Path to e3sm_to_cmip repo |
+| `MPAS_ANALYSIS_DIR` | Path to MPAS-Analysis repo |
+| `ZPPY_INTERFACES_DIR` | Path to zppy-interfaces repo |
+| `ZPPY_DIR` | Path to zppy repo |
+| `CONDA_PROFILE` | Path to your conda profile script |
+| `TAG_CACHE_FILE` | Where the TAG is saved between phases (default: `~/.zppy_test_tag`) |
+
+Machine-specific settings (`OUTPUT_WORKSPACE`, conda activation command, unified environment path, `salloc` command) are derived automatically from `MACHINE` and do not appear in the config.
 
 ## Workflow Phases
 
@@ -109,9 +126,9 @@ Check the error message. The script uses `set -e`, so it exits on any error. Com
 - A SLURM timeout (increase the max-wait argument to `wait_for_slurm_jobs`)
 - `DependencyNeverSatisfied` on all queued jobs (check your cfg files and SLURM account)
 
-Phase 2 checks bundle status files before resubmitting and warns if any are non-OK. Resolve any failures in the Phase 1 bundle runs before proceeding. You can restart from Phase 2 once the underlying jobs are clean:
+Phase 2 checks bundle status files before resubmitting and warns if any are non-OK. Resolve any failures in the Phase 1 bundle runs before proceeding. You can restart from Phase 2 by setting `START_PHASE=2` in your config (the TAG from Phase 1 is saved in `~/.zppy_test_tag` and picked up automatically, or set `EXPLICIT_TAG` to be explicit):
 ```bash
-./run_integration_test.bash --phase 2
+./run_integration_test.bash --config zppy_test.cfg
 ```
 
 ### Environment Issues
@@ -124,7 +141,7 @@ conda remove --yes --all --name test-zi-main-YYYYMMDD_runN
 conda remove --yes --all --name test-zppy-main-YYYYMMDD_runN
 
 # Then re-run from Phase 1
-./run_integration_test.bash
+./run_integration_test.bash --config zppy_test.cfg
 ```
 
 ## Files Created
@@ -168,18 +185,19 @@ cd ~/ez/zppy && git status
 # Confirm no jobs are currently running
 squeue -u $USER
 
-# Copy the script out of the repo (Phase 1 will change branches)
+# Copy the script and config out of the repo (Phase 1 will change branches)
 mkdir -p ~/ez/zppy_main_branch_tests/test_YYYYMMDD
 cd ~/ez/zppy_main_branch_tests/test_YYYYMMDD
-cp ~/ez/zppy/tests/main_branch_testing/* .
+cp ~/ez/zppy/tests/main_branch_testing/run_integration_test.bash .
+cp ~/ez/zppy/tests/main_branch_testing/zppy_test.cfg .
 
 # Edit configuration parameters
-emacs run_integration_test.bash
+emacs zppy_test.cfg
 
 # Run inside a screen session so it will survive disconnections.
 screen
 cd ~/ez/zppy_main_branch_tests/test_YYYYMMDD
-time ./run_integration_test.bash --machine chrysalis --auto 2>&1 | tee integration_test.log
+time ./run_integration_test.bash --config zppy_test.cfg 2>&1 | tee integration_test.log
 # Ctrl-A D to detach from screen
 
 # Monitor progress from another terminal
