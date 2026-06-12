@@ -4,7 +4,7 @@
 # Usage:
 #   1. Copy this file OUT of the zppy repo (this script will change branches).
 #   2. Edit the "Check these every time" configuration section below.
-#   3. Run: ./run_integration_test.bash --machine MACHINE [--phase N] [--auto]
+#   3. Run: ./run_integration_test.bash --machine MACHINE [--phase N] [--tag TAG] [--auto]
 #      MACHINE: chrysalis | compy | perlmutter
 #
 # Phases:
@@ -14,6 +14,8 @@
 #
 # Notes:
 #   - test_images.py must be run manually from a compute node (see Phase 3 output).
+#   - If you need to resume from Phase 2 or 3 on a later day, pass --tag with the
+#     TAG printed at the start of Phase 1 (or stored in ~/.zppy_test_tag).
 
 set -e  # Exit on error
 set -u  # Exit on undefined variable
@@ -25,12 +27,14 @@ set -u  # Exit on undefined variable
 AUTO_MODE=false
 START_PHASE=1
 MACHINE=""
+EXPLICIT_TAG=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --auto)    AUTO_MODE=true; shift ;;
         --phase)   START_PHASE="$2"; shift 2 ;;
         --machine) MACHINE="$2"; shift 2 ;;
+        --tag)     EXPLICIT_TAG="$2"; shift 2 ;;
         *) echo "Unknown argument: $1"; exit 1 ;;
     esac
 done
@@ -74,6 +78,9 @@ ZPPY_INTERFACES_DIR="$EZ_DIR/zppy-interfaces"
 ZPPY_DIR="$EZ_DIR/zppy"
 CONDA_PROFILE="$HOME_DIR/miniforge3/etc/profile.d/conda.sh"
 
+# File used to persist the TAG across separate invocations (e.g. phase 2/3 next day).
+TAG_CACHE_FILE="$HOME_DIR/.zppy_test_tag"
+
 # --- Machine-specific settings -----------------------------------------------
 
 case "$MACHINE" in
@@ -101,10 +108,31 @@ case "$MACHINE" in
         ;;
 esac
 
+# --- Resolve TAG -------------------------------------------------------------
+#
+# Priority:
+#   1. --tag CLI argument (explicit, always wins)
+#   2. $TAG_CACHE_FILE written by a prior Phase 1 run (auto-resume)
+#   3. Fresh timestamp (Phase 1 first run)
+#
+# Phase 1 always writes the resolved TAG to $TAG_CACHE_FILE so later phases
+# can pick it up automatically without needing --tag.
+
+if [[ -n "$EXPLICIT_TAG" ]]; then
+    TAG="$EXPLICIT_TAG"
+    DATE_STAMP="${TAG%%_run*}"   # Extract date portion for display; best-effort.
+elif [[ "$START_PHASE" -gt 1 && -f "$TAG_CACHE_FILE" ]]; then
+    TAG="$(cat "$TAG_CACHE_FILE")"
+    DATE_STAMP="${TAG%%_run*}"
+    echo "Loaded TAG from ${TAG_CACHE_FILE}: ${TAG}"
+    echo "(Pass --tag ${TAG} explicitly to override.)"
+else
+    DATE_STAMP="${DATE_STAMP:-$(date +%Y%m%d)}"
+    TAG="${DATE_STAMP}_run${RUN_NUMBER}"
+fi
+
 # --- Derived (probably no edits needed) --------------------------------------
 
-DATE_STAMP="${DATE_STAMP:-$(date +%Y%m%d)}"
-TAG="${DATE_STAMP}_run${RUN_NUMBER}"
 UNIQUE_ID="zppy_main_branch_test_${TAG}"
 
 ZPPY_ENV="test-zppy-${ZPPY_BASE_BRANCH}-${TAG}"
@@ -279,6 +307,9 @@ wait_for_slurm_jobs() {
         if [ "$elapsed" -ge "$max_wait" ]; then
             log_error "Timeout after ${max_wait}s waiting for SLURM jobs"
             log_error "This script is going to exit now. However, the jobs in the queue will NOT be terminated. Once they finish, you may re-invoke this script with --phase 2 or --phase 3 to continue."
+            log_error "  TAG for this run: ${TAG}"
+            log_error "  Resume command:   $0 --machine ${MACHINE} --phase 2 --tag ${TAG}"
+            log_error "  (TAG is also saved in ${TAG_CACHE_FILE})"
             return 1
         fi
 
@@ -318,10 +349,17 @@ check_status_files() {
 # ============================================================================
 
 phase_1_setup() {
+    # Save TAG immediately so later phases can find it even if the date changes.
+    echo "$TAG" > "$TAG_CACHE_FILE"
+
     log "========================================="
     log "Phase 1: Setup"
     log "Date stamp:  $DATE_STAMP"
+    log "TAG:         $TAG  (saved to ${TAG_CACHE_FILE})"
     log "Unique ID:   $UNIQUE_ID"
+    log ""
+    log "To resume from a later phase, run:"
+    log "  $0 --machine ${MACHINE} --phase 2 --tag ${TAG}"
     log "========================================="
 
     # ------------------------------------------------------------------
@@ -513,6 +551,7 @@ PYEOF
 phase_2_bundles_part2() {
     log "========================================="
     log "Phase 2: Bundles Part 2"
+    log "TAG: $TAG"
     log "========================================="
 
     cd "$ZPPY_DIR"
@@ -555,6 +594,7 @@ phase_2_bundles_part2() {
 phase_3_validation() {
     log "========================================="
     log "Phase 3: Validation"
+    log "TAG: $TAG"
     log "========================================="
 
     cd "$ZPPY_DIR"
@@ -632,7 +672,7 @@ phase_3_validation() {
 main() {
     log "Starting zppy integration test automation"
     log "Machine:      $MACHINE"
-    log "Date stamp:   $DATE_STAMP"
+    log "TAG:          $TAG"
     log "Auto mode:    $AUTO_MODE"
     log "Start phase:  $START_PHASE"
 
