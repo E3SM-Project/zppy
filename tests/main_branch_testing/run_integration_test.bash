@@ -60,7 +60,7 @@ ZPPY_BASE_BRANCH="main"
 # "unified" = use the machine's e3sm-unified env (UNIFIED_ENV_CMD)
 DIAGS_ENV_TYPE="dev"
 E3SM_TO_CMIP_ENV_TYPE="dev"
-MPAS_ENV_TYPE="unified"
+MPAS_ENV_TYPE="dev"
 ZI_ENV_TYPE="dev"
 
 # --- Set these up once -------------------------------------------------------
@@ -186,7 +186,11 @@ setup_conda_env() {
         log "Creating environment '$env_name' from ${conda_dir}/dev.yml..."
         rm -rf build
         conda clean --all --yes
-        conda env create -f "${conda_dir}/dev.yml" -n "$env_name"
+        if [[ "$conda_dir" == "none" ]]; then
+            conda create --name "$env_name" --file dev-spec.txt --yes
+        else
+            conda env create -f "${conda_dir}/dev.yml" -n "$env_name"
+        fi
     fi
 
     activate_env "$env_name"
@@ -274,6 +278,7 @@ wait_for_slurm_jobs() {
 
         if [ "$elapsed" -ge "$max_wait" ]; then
             log_error "Timeout after ${max_wait}s waiting for SLURM jobs"
+            log_error "This script is going to exit now. However, the jobs in the queue will NOT be terminated. Once they finish, you may re-invoke this script with --phase 2 or --phase 3 to continue."
             return 1
         fi
 
@@ -332,7 +337,7 @@ phase_1_setup() {
     local E3SM_TO_CMIP_ENV=""
     if [[ "$E3SM_TO_CMIP_ENV_TYPE" == "dev" ]]; then
         E3SM_TO_CMIP_ENV="test-e3sm-to-cmip-${E3SM_TO_CMIP_BASE_BRANCH}-${TAG}"
-        setup_conda_env "conda" "$E3SM_TO_CMIP_ENV"
+        setup_conda_env "conda-env" "$E3SM_TO_CMIP_ENV"
     else
         log "Using unified env for e3sm_to_cmip (skipping conda env creation)"
     fi
@@ -368,7 +373,7 @@ phase_1_setup() {
     local MPAS_ENV=""
     if [[ "$MPAS_ENV_TYPE" == "dev" ]]; then
         MPAS_ENV="test-mpas-${MPAS_BASE_BRANCH}-${TAG}"
-        setup_conda_env "conda" "$MPAS_ENV"
+        setup_conda_env "none" "$MPAS_ENV"
     else
         log "Using unified env for MPAS-Analysis (skipping conda env creation)"
     fi
@@ -416,9 +421,11 @@ phase_1_setup() {
     # ------------------------------------------------------------------
     log "Generating config files..."
 
+    local E3SM_TO_CMIP_CMD
     local DIAGS_CMD
     local MPAS_CMD
     local ZI_CMD
+    E3SM_TO_CMIP_CMD=$(get_env_cmd "$E3SM_TO_CMIP_ENV_TYPE" "$E3SM_TO_CMIP_ENV")
     DIAGS_CMD=$(get_env_cmd "$DIAGS_ENV_TYPE" "$DIAGS_ENV")
     MPAS_CMD=$(get_env_cmd "$MPAS_ENV_TYPE" "$MPAS_ENV")
     ZI_CMD=$(get_env_cmd "$ZI_ENV_TYPE" "$ZI_ENV")
@@ -434,6 +441,7 @@ with open(utils_file, 'r') as f:
 
 replacement = '''TEST_SPECIFICS: Dict[str, Any] = {
     "nco_path": "",
+    "e3sm_to_cmip_environment_commands": "${E3SM_TO_CMIP_CMD}",
     "diags_environment_commands": "${DIAGS_CMD}",
     "mpas_analysis_environment_commands": "${MPAS_CMD}",
     "global_time_series_environment_commands": "${ZI_CMD}",
