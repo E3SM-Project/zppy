@@ -2,20 +2,21 @@
 # zppy Integration Test Automation Script
 #
 # Usage:
-#   1. Copy this file OUT of the zppy repo (this script will change branches).
-#   2. Edit the "Check these every time" configuration section below.
-#   3. Run: ./run_integration_test.bash --machine MACHINE [--phase N] [--tag TAG] [--auto]
-#      MACHINE: chrysalis | compy | perlmutter
+#   1. Copy this file AND the sample config OUT of the zppy repo
+#      (this script will change branches).
+#   2. Edit your config file (see zppy_test.cfg.sample).
+#   3. Run: ./run_integration_test.bash --config path/to/your.cfg
 #
-# Phases:
+# Phases (set START_PHASE in your config):
 #   1 - Full setup: build envs, run unit tests, generate configs, submit SLURM jobs
 #   2 - Bundles Part 2 (run after Phase 1 jobs finish)
 #   3 - Validation: status checks + pytest integration tests
 #
 # Notes:
 #   - test_images.py must be run manually from a compute node (see Phase 3 output).
-#   - If you need to resume from Phase 2 or 3 on a later day, pass --tag with the
-#     TAG printed at the start of Phase 1 (or stored in ~/.zppy_test_tag).
+#   - To resume from Phase 2 or 3 on a later day, set EXPLICIT_TAG in your config
+#     to the TAG printed at the start of Phase 1 (or stored in ~/.zppy_test_tag),
+#     and set START_PHASE accordingly.
 
 set -e  # Exit on error
 set -u  # Exit on undefined variable
@@ -24,64 +25,61 @@ set -u  # Exit on undefined variable
 # Parse arguments
 # ============================================================================
 
-AUTO_MODE=false
-START_PHASE=1
-MACHINE=""
-EXPLICIT_TAG=""
+CONFIG_FILE=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --auto)    AUTO_MODE=true; shift ;;
-        --phase)   START_PHASE="$2"; shift 2 ;;
-        --machine) MACHINE="$2"; shift 2 ;;
-        --tag)     EXPLICIT_TAG="$2"; shift 2 ;;
+        --config) CONFIG_FILE="$2"; shift 2 ;;
         *) echo "Unknown argument: $1"; exit 1 ;;
     esac
 done
 
-if [[ -z "$MACHINE" ]]; then
-    echo "Error: --machine is required. Valid values: chrysalis | compy | perlmutter"
+if [[ -z "$CONFIG_FILE" ]]; then
+    echo "Error: --config is required."
+    echo "Usage: $0 --config path/to/your.cfg"
     exit 1
 fi
 
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "Error: Config file not found: $CONFIG_FILE"
+    exit 1
+fi
+
+# Source the config. Variables defined there become the script's environment.
+# shellcheck disable=SC1090
+source "$CONFIG_FILE"
+
+# Validate required config keys.
+_required_vars=(
+    MACHINE START_PHASE AUTO_MODE EXPLICIT_TAG
+    RUN_NUMBER
+    DIAGS_BASE_BRANCH E3SM_TO_CMIP_BASE_BRANCH MPAS_BASE_BRANCH ZI_BASE_BRANCH ZPPY_BASE_BRANCH
+    DIAGS_ENV_TYPE E3SM_TO_CMIP_ENV_TYPE MPAS_ENV_TYPE ZI_ENV_TYPE
+    HOME_DIR EZ_DIR
+    E3SM_DIAGS_DIR E3SM_TO_CMIP_DIR MPAS_ANALYSIS_DIR ZPPY_INTERFACES_DIR ZPPY_DIR
+    CONDA_PROFILE TAG_CACHE_FILE
+)
+_missing=()
+for _var in "${_required_vars[@]}"; do
+    if [[ -z "${!_var+x}" ]]; then
+        _missing+=("$_var")
+    fi
+done
+if [[ ${#_missing[@]} -gt 0 ]]; then
+    echo "Error: The following required variables are missing from ${CONFIG_FILE}:"
+    printf '  %s\n' "${_missing[@]}"
+    exit 1
+fi
+
+# Validate MACHINE value.
+case "$MACHINE" in
+    chrysalis|compy|perlmutter) ;;
+    *) echo "Error: Unknown MACHINE '${MACHINE}'. Valid values: chrysalis | compy | perlmutter"; exit 1 ;;
+esac
+
 # ============================================================================
-# Configuration
+# Machine-specific settings
 # ============================================================================
-
-# --- Check these every time --------------------------------------------------
-
-RUN_NUMBER=1
-
-# Base branches (what we're testing -- usually "main"/"master"/"develop")
-DIAGS_BASE_BRANCH="main"
-E3SM_TO_CMIP_BASE_BRANCH="master"
-MPAS_BASE_BRANCH="develop"
-ZI_BASE_BRANCH="main"
-ZPPY_BASE_BRANCH="main"
-
-# Dev vs unified env per component.
-# "dev"     = build a dedicated conda env from the repo's dev.yml
-# "unified" = use the machine's e3sm-unified env (UNIFIED_ENV_CMD)
-DIAGS_ENV_TYPE="dev"
-E3SM_TO_CMIP_ENV_TYPE="dev"
-MPAS_ENV_TYPE="dev"
-ZI_ENV_TYPE="dev"
-
-# --- Set these up once -------------------------------------------------------
-
-HOME_DIR="$HOME"
-EZ_DIR="$HOME_DIR/ez"                             # Parent dir for all repos
-E3SM_DIAGS_DIR="$EZ_DIR/e3sm_diags"
-E3SM_TO_CMIP_DIR="$EZ_DIR/e3sm_to_cmip"
-MPAS_ANALYSIS_DIR="$EZ_DIR/MPAS-Analysis"
-ZPPY_INTERFACES_DIR="$EZ_DIR/zppy-interfaces"
-ZPPY_DIR="$EZ_DIR/zppy"
-CONDA_PROFILE="$HOME_DIR/miniforge3/etc/profile.d/conda.sh"
-
-# File used to persist the TAG across separate invocations (e.g. phase 2/3 next day).
-TAG_CACHE_FILE="$HOME_DIR/.zppy_test_tag"
-
-# --- Machine-specific settings -----------------------------------------------
 
 case "$MACHINE" in
     chrysalis)
@@ -102,36 +100,36 @@ case "$MACHINE" in
         UNIFIED_ENV_CMD="source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_pm-cpu.sh"
         SALLOC_CMD="salloc --nodes=1 --qos=interactive --time=01:00:00 --constraint=cpu --account=e3sm"
         ;;
-    *)
-        echo "Error: Unknown machine '$MACHINE'. Valid values: chrysalis | compy | perlmutter"
-        exit 1
-        ;;
 esac
 
-# --- Resolve TAG -------------------------------------------------------------
+# ============================================================================
+# Resolve TAG
+# ============================================================================
 #
 # Priority:
-#   1. --tag CLI argument (explicit, always wins)
+#   1. EXPLICIT_TAG from config (always wins when non-empty)
 #   2. $TAG_CACHE_FILE written by a prior Phase 1 run (auto-resume)
 #   3. Fresh timestamp (Phase 1 first run)
 #
 # Phase 1 always writes the resolved TAG to $TAG_CACHE_FILE so later phases
-# can pick it up automatically without needing --tag.
+# can pick it up automatically without needing EXPLICIT_TAG.
 
 if [[ -n "$EXPLICIT_TAG" ]]; then
     TAG="$EXPLICIT_TAG"
-    DATE_STAMP="${TAG%%_run*}"   # Extract date portion for display; best-effort.
+    DATE_STAMP="${TAG%%_run*}"
 elif [[ "$START_PHASE" -gt 1 && -f "$TAG_CACHE_FILE" ]]; then
     TAG="$(cat "$TAG_CACHE_FILE")"
     DATE_STAMP="${TAG%%_run*}"
     echo "Loaded TAG from ${TAG_CACHE_FILE}: ${TAG}"
-    echo "(Pass --tag ${TAG} explicitly to override.)"
+    echo "(Set EXPLICIT_TAG in your config to override.)"
 else
-    DATE_STAMP="${DATE_STAMP:-$(date +%Y%m%d)}"
+    DATE_STAMP="$(date +%Y%m%d)"
     TAG="${DATE_STAMP}_run${RUN_NUMBER}"
 fi
 
-# --- Derived (probably no edits needed) --------------------------------------
+# ============================================================================
+# Derived (probably no edits needed)
+# ============================================================================
 
 UNIQUE_ID="zppy_main_branch_test_${TAG}"
 
@@ -306,9 +304,9 @@ wait_for_slurm_jobs() {
 
         if [ "$elapsed" -ge "$max_wait" ]; then
             log_error "Timeout after ${max_wait}s waiting for SLURM jobs"
-            log_error "This script is going to exit now. However, the jobs in the queue will NOT be terminated. Once they finish, you may re-invoke this script with --phase 2 or --phase 3 to continue."
+            log_error "This script is going to exit now. However, the jobs in the queue will NOT be terminated. Once they finish, you may re-invoke this script with START_PHASE=2 or START_PHASE=3 in your config to continue."
             log_error "  TAG for this run: ${TAG}"
-            log_error "  Resume command:   $0 --machine ${MACHINE} --phase 2 --tag ${TAG}"
+            log_error "  Resume: set START_PHASE=2 and EXPLICIT_TAG=${TAG} in your config, then re-run."
             log_error "  (TAG is also saved in ${TAG_CACHE_FILE})"
             return 1
         fi
@@ -354,12 +352,14 @@ phase_1_setup() {
 
     log "========================================="
     log "Phase 1: Setup"
+    log "Config file: $CONFIG_FILE"
     log "Date stamp:  $DATE_STAMP"
     log "TAG:         $TAG  (saved to ${TAG_CACHE_FILE})"
     log "Unique ID:   $UNIQUE_ID"
     log ""
-    log "To resume from a later phase, run:"
-    log "  $0 --machine ${MACHINE} --phase 2 --tag ${TAG}"
+    log "To resume from a later phase, set in your config:"
+    log "  START_PHASE=2"
+    log "  EXPLICIT_TAG=${TAG}"
     log "========================================="
 
     # ------------------------------------------------------------------
@@ -671,6 +671,7 @@ phase_3_validation() {
 
 main() {
     log "Starting zppy integration test automation"
+    log "Config file:  $CONFIG_FILE"
     log "Machine:      $MACHINE"
     log "TAG:          $TAG"
     log "Auto mode:    $AUTO_MODE"
@@ -690,7 +691,7 @@ main() {
             phase_3_validation
             ;;
         *)
-            log_error "Invalid phase: $START_PHASE (must be 1, 2, or 3)"
+            log_error "Invalid START_PHASE: $START_PHASE (must be 1, 2, or 3)"
             exit 1
             ;;
     esac
