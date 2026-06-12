@@ -40,6 +40,13 @@ Copy `zppy_test.cfg` and edit it before each test run. It has three sections:
 | `E3SM_TO_CMIP_ENV_TYPE` | `"dev"` to build a dedicated conda env; `"unified"` to use e3sm-unified |
 | `MPAS_ENV_TYPE` | `"dev"` to build a dedicated conda env; `"unified"` to use e3sm-unified |
 | `ZI_ENV_TYPE` | `"dev"` to build a dedicated conda env; `"unified"` to use e3sm-unified |
+| `CFGS_TO_RUN` | Comma-separated list of zppy cfg names to generate and submit (see below) |
+| `TASKS_TO_RUN` | Comma-separated list of tasks to enable (e.g. `e3sm_diags,mpas_analysis`) |
+
+`CFGS_TO_RUN` values correspond to generated filenames `test_weekly_<name>_<machine>.cfg`. Any name containing `bundle` is automatically treated as a bundle cfg and re-submitted in Phase 2. Example to run only the v3 comprehensive and bundle cfgs:
+```
+CFGS_TO_RUN="weekly_bundles,weekly_comprehensive_v3,weekly_legacy_3.1.0_bundles,weekly_legacy_3.1.0_comprehensive_v3,weekly_legacy_3.0.0_bundles,weekly_legacy_3.0.0_comprehensive_v3"
+```
 
 ### One-time setup (paths that rarely change)
 
