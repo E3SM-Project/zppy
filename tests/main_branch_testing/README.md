@@ -59,7 +59,7 @@ ZI_EXISTING_ENV="test-zi-main-20250601_run1"
 ZPPY_EXISTING_ENV="test-zppy-main-20250601_run1"
 ```
 
-`CFGS_TO_RUN` values correspond to generated filenames `test_weekly_<name>_<machine>.cfg`. Any name containing `bundle` is automatically treated as a bundle cfg and re-submitted in Phase 2. Example to run only the v3 comprehensive and bundle cfgs:
+`CFGS_TO_RUN` values correspond to generated filenames `test_<name>_<machine>.cfg`. Any name containing `bundle` is automatically treated as a bundle cfg and re-submitted in Phase 2. Example to run only the v3 comprehensive and bundle cfgs:
 ```
 CFGS_TO_RUN="weekly_bundles,weekly_comprehensive_v3,weekly_legacy_3.1.0_bundles,weekly_legacy_3.1.0_comprehensive_v3,weekly_legacy_3.0.0_bundles,weekly_legacy_3.0.0_comprehensive_v3"
 ```

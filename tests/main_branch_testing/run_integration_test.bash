@@ -577,10 +577,17 @@ PYEOF
     # Submit initial SLURM jobs
     # ------------------------------------------------------------------
     log "Submitting SLURM jobs..."
-    local cfg
+    local cfg cfg_path
     for cfg in "${CFGS_ARRAY[@]}"; do
         cfg="${cfg// /}"
-        zppy -c "tests/integration/generated/test_weekly_${cfg}_${MACHINE_CFG_SUFFIX}.cfg"
+        cfg_path="tests/integration/generated/test_${cfg}_${MACHINE_CFG_SUFFIX}.cfg"
+        if [[ ! -f "$cfg_path" ]]; then
+            log_error "Config file not found: $cfg_path"
+            log_error "Check that CFGS_TO_RUN names do not include the 'weekly_' prefix."
+            exit 1
+        fi
+        log "Submitting: $cfg_path"
+        zppy -c "$cfg_path"
     done
 
     local job_count
@@ -624,11 +631,18 @@ phase_2_bundles_part2() {
     fi
 
     log "Submitting bundles part 2..."
-    local cfg
+    local cfg cfg_path
     for cfg in "${CFGS_ARRAY[@]}"; do
         cfg="${cfg// /}"
         if [[ "$cfg" == *bundle* ]]; then
-            zppy -c "tests/integration/generated/test_weekly_${cfg}_${MACHINE_CFG_SUFFIX}.cfg"
+            cfg_path="tests/integration/generated/test_${cfg}_${MACHINE_CFG_SUFFIX}.cfg"
+            if [[ ! -f "$cfg_path" ]]; then
+                log_error "Config file not found: $cfg_path"
+                log_error "Check that CFGS_TO_RUN names do not include the 'weekly_' prefix."
+                exit 1
+            fi
+            log "Submitting: $cfg_path"
+            zppy -c "$cfg_path"
         fi
     done
 
