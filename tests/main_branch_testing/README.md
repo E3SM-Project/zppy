@@ -40,8 +40,24 @@ Copy `zppy_test.cfg` and edit it before each test run. It has three sections:
 | `E3SM_TO_CMIP_ENV_TYPE` | `"dev"` to build a dedicated conda env; `"unified"` to use e3sm-unified |
 | `MPAS_ENV_TYPE` | `"dev"` to build a dedicated conda env; `"unified"` to use e3sm-unified |
 | `ZI_ENV_TYPE` | `"dev"` to build a dedicated conda env; `"unified"` to use e3sm-unified |
+| `DIAGS_EXISTING_ENV` | *(optional)* Name of an existing conda env to reuse for e3sm_diags; skips creation |
+| `E3SM_TO_CMIP_EXISTING_ENV` | *(optional)* Name of an existing conda env to reuse for e3sm_to_cmip; skips creation |
+| `MPAS_EXISTING_ENV` | *(optional)* Name of an existing conda env to reuse for MPAS-Analysis; skips creation |
+| `ZI_EXISTING_ENV` | *(optional)* Name of an existing conda env to reuse for zppy-interfaces; skips creation |
+| `ZPPY_EXISTING_ENV` | *(optional)* Name of an existing conda env to reuse for zppy; skips creation |
 | `CFGS_TO_RUN` | Comma-separated list of zppy cfg names to generate and submit (see below) |
 | `TASKS_TO_RUN` | Comma-separated list of tasks to enable (e.g. `e3sm_diags,mpas_analysis`) |
+
+The `*_EXISTING_ENV` variables only take effect when the corresponding `*_ENV_TYPE` is `"dev"`. When set, the script skips conda env creation entirely and activates the named env directly (still running `pip install .` to pick up any local changes). Leave them empty to let the script auto-name and create environments as usual.
+
+Example — reuse envs from a prior run on the same day:
+```
+DIAGS_EXISTING_ENV="test-diags-main-20250601_run1"
+E3SM_TO_CMIP_EXISTING_ENV="test-e3sm-to-cmip-master-20250601_run1"
+MPAS_EXISTING_ENV="test-mpas-develop-20250601_run1"
+ZI_EXISTING_ENV="test-zi-main-20250601_run1"
+ZPPY_EXISTING_ENV="test-zppy-main-20250601_run1"
+```
 
 `CFGS_TO_RUN` values correspond to generated filenames `test_weekly_<name>_<machine>.cfg`. Any name containing `bundle` is automatically treated as a bundle cfg and re-submitted in Phase 2. Example to run only the v3 comprehensive and bundle cfgs:
 ```
@@ -67,7 +83,7 @@ Machine-specific settings (`OUTPUT_WORKSPACE`, conda activation command, unified
 ## Workflow Phases
 
 ### Phase 1: Setup
-- Creates conda environments for each component where `ENV_TYPE="dev"` (e3sm_to_cmip, e3sm_diags, MPAS-Analysis, zppy-interfaces, zppy); skips env creation and uses e3sm-unified for any component where `ENV_TYPE="unified"`
+- Creates conda environments for each component where `ENV_TYPE="dev"` and no `*_EXISTING_ENV` is set; reuses the named env when `*_EXISTING_ENV` is set; skips env handling entirely for any component where `ENV_TYPE="unified"`
 - Runs unit tests for zppy-interfaces and zppy
 - Patches `tests/integration/utils.py` with test-specific environment commands, config list, and unique ID
 - Generates config files via `python tests/integration/utils.py`
@@ -140,7 +156,8 @@ Phase 2 checks bundle status files before resubmitting and warns if any are non-
 
 ### Environment Issues
 ```bash
-# Remove and rebuild stale environments (only applies to components with ENV_TYPE="dev")
+# Remove and rebuild stale environments (only applies to components with ENV_TYPE="dev"
+# and no *_EXISTING_ENV set)
 conda remove --yes --all --name test-e3sm-to-cmip-master-YYYYMMDD_runN
 conda remove --yes --all --name test-diags-main-YYYYMMDD_runN
 conda remove --yes --all --name test-mpas-develop-YYYYMMDD_runN
