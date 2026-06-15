@@ -385,126 +385,170 @@ phase_1_setup() {
     # e3sm_to_cmip
     # ------------------------------------------------------------------
     log "Setting up e3sm_to_cmip..."
-    cd "$E3SM_TO_CMIP_DIR"
-    ensure_test_branch "test_e3sm_to_cmip_${TAG}" "$E3SM_TO_CMIP_BASE_BRANCH"
-
-    log "Latest e3sm_to_cmip commit (should match https://github.com/E3SM-Project/e3sm_to_cmip/commits/${E3SM_TO_CMIP_BASE_BRANCH}):"
-    git log -1 --oneline
 
     local E3SM_TO_CMIP_ENV=""
     if [[ "$E3SM_TO_CMIP_ENV_TYPE" == "dev" ]]; then
         if [[ -n "$E3SM_TO_CMIP_EXISTING_ENV" ]]; then
-            log "Reusing existing 'e3sm_to_cmip' env: $E3SM_TO_CMIP_EXISTING_ENV (skipping creation)"
             E3SM_TO_CMIP_ENV="$E3SM_TO_CMIP_EXISTING_ENV"
-            activate_env "$E3SM_TO_CMIP_ENV"
         else
             E3SM_TO_CMIP_ENV="test-e3sm-to-cmip-${E3SM_TO_CMIP_BASE_BRANCH}-${TAG}"
-            setup_conda_env "conda-env" "$E3SM_TO_CMIP_ENV"
         fi
-    else
-        log "Using unified env for e3sm_to_cmip (skipping conda env creation)"
     fi
+
+    (
+        cd "$E3SM_TO_CMIP_DIR"
+        ensure_test_branch "test_e3sm_to_cmip_${TAG}" "$E3SM_TO_CMIP_BASE_BRANCH"
+
+        log "Latest e3sm_to_cmip commit (should match https://github.com/E3SM-Project/e3sm_to_cmip/commits/${E3SM_TO_CMIP_BASE_BRANCH}):"
+        git log -1 --oneline
+
+        if [[ "$E3SM_TO_CMIP_ENV_TYPE" == "dev" ]]; then
+            if [[ -n "$E3SM_TO_CMIP_EXISTING_ENV" ]]; then
+                log "Reusing existing 'e3sm_to_cmip' env: $E3SM_TO_CMIP_EXISTING_ENV (skipping creation)"
+                activate_env "$E3SM_TO_CMIP_EXISTING_ENV"
+            else
+                setup_conda_env "conda-env" "$E3SM_TO_CMIP_ENV"
+            fi
+        else
+            log "Using unified env for e3sm_to_cmip (skipping conda env creation)"
+        fi
+    )
 
     # ------------------------------------------------------------------
     # e3sm_diags
     # ------------------------------------------------------------------
     log "Setting up e3sm_diags..."
-    cd "$E3SM_DIAGS_DIR"
-    ensure_test_branch "test_e3sm_diags_${TAG}" "$DIAGS_BASE_BRANCH"
-
-    log "Latest e3sm_diags commit (should match https://github.com/E3SM-Project/e3sm_diags/commits/${DIAGS_BASE_BRANCH}):"
-    git log -1 --oneline
 
     local DIAGS_ENV=""
     if [[ "$DIAGS_ENV_TYPE" == "dev" ]]; then
         if [[ -n "$DIAGS_EXISTING_ENV" ]]; then
-            log "Reusing existing 'e3sm_diags' env: $DIAGS_EXISTING_ENV (skipping creation)"
             DIAGS_ENV="$DIAGS_EXISTING_ENV"
-            activate_env "$DIAGS_ENV"
         else
             DIAGS_ENV="test-diags-${DIAGS_BASE_BRANCH}-${TAG}"
-            setup_conda_env "conda-env" "$DIAGS_ENV"
         fi
-    else
-        log "Using unified env for e3sm_diags (skipping conda env creation)"
     fi
+
+    (
+        cd "$E3SM_DIAGS_DIR"
+        ensure_test_branch "test_e3sm_diags_${TAG}" "$DIAGS_BASE_BRANCH"
+
+        log "Latest e3sm_diags commit (should match https://github.com/E3SM-Project/e3sm_diags/commits/${DIAGS_BASE_BRANCH}):"
+        git log -1 --oneline
+
+        if [[ "$DIAGS_ENV_TYPE" == "dev" ]]; then
+            if [[ -n "$DIAGS_EXISTING_ENV" ]]; then
+                log "Reusing existing 'e3sm_diags' env: $DIAGS_EXISTING_ENV (skipping creation)"
+                activate_env "$DIAGS_EXISTING_ENV"
+            else
+                setup_conda_env "conda-env" "$DIAGS_ENV"
+            fi
+        else
+            log "Using unified env for e3sm_diags (skipping conda env creation)"
+        fi
+    )
 
     # ------------------------------------------------------------------
     # MPAS-Analysis
     # ------------------------------------------------------------------
     log "Setting up MPAS-Analysis..."
-    cd "$MPAS_ANALYSIS_DIR"
-    ensure_test_branch "test_mpas_${TAG}" "$MPAS_BASE_BRANCH"
-
-    log "Latest MPAS-Analysis commit (should match https://github.com/MPAS-Dev/MPAS-Analysis/commits/${MPAS_BASE_BRANCH}):"
-    git log -1 --oneline
 
     local MPAS_ENV=""
     if [[ "$MPAS_ENV_TYPE" == "dev" ]]; then
         if [[ -n "$MPAS_EXISTING_ENV" ]]; then
-            log "Reusing existing 'MPAS-Analysis' env: $MPAS_EXISTING_ENV (skipping creation)"
             MPAS_ENV="$MPAS_EXISTING_ENV"
-            activate_env "$MPAS_ENV"
         else
             MPAS_ENV="test-mpas-${MPAS_BASE_BRANCH}-${TAG}"
-            setup_conda_env "none" "$MPAS_ENV"
         fi
-    else
-        log "Using unified env for MPAS-Analysis (skipping conda env creation)"
     fi
+
+    (
+        cd "$MPAS_ANALYSIS_DIR"
+        ensure_test_branch "test_mpas_${TAG}" "$MPAS_BASE_BRANCH"
+
+        log "Latest MPAS-Analysis commit (should match https://github.com/MPAS-Dev/MPAS-Analysis/commits/${MPAS_BASE_BRANCH}):"
+        git log -1 --oneline
+
+        if [[ "$MPAS_ENV_TYPE" == "dev" ]]; then
+            if [[ -n "$MPAS_EXISTING_ENV" ]]; then
+                log "Reusing existing 'MPAS-Analysis' env: $MPAS_EXISTING_ENV (skipping creation)"
+                activate_env "$MPAS_EXISTING_ENV"
+            else
+                setup_conda_env "none" "$MPAS_ENV"
+            fi
+        else
+            log "Using unified env for MPAS-Analysis (skipping conda env creation)"
+        fi
+    )
 
     # ------------------------------------------------------------------
     # zppy-interfaces (includes unit tests)
     # ------------------------------------------------------------------
     log "Setting up zppy-interfaces..."
-    cd "$ZPPY_INTERFACES_DIR"
-    ensure_test_branch "test_zi_${TAG}" "$ZI_BASE_BRANCH"
-
-    log "Latest zppy-interfaces commit (should match https://github.com/E3SM-Project/zppy-interfaces/commits/${ZI_BASE_BRANCH}):"
-    git log -1 --oneline
 
     local ZI_ENV=""
     if [[ "$ZI_ENV_TYPE" == "dev" ]]; then
         if [[ -n "$ZI_EXISTING_ENV" ]]; then
-            log "Reusing existing 'zppy-interfaces' env: $ZI_EXISTING_ENV (skipping creation)"
             ZI_ENV="$ZI_EXISTING_ENV"
-            activate_env "$ZI_ENV"
         else
             ZI_ENV="test-zi-${ZI_BASE_BRANCH}-${TAG}"
-            setup_conda_env "conda" "$ZI_ENV"
         fi
-    else
-        log "Using unified env for zppy-interfaces (skipping conda env creation)"
     fi
 
-    log "Running zppy-interfaces unit tests..."
-    pytest tests/unit/global_time_series/test_*.py
-    pytest tests/unit/pcmdi_diags/test_*.py
-    log_success "zppy-interfaces unit tests passed"
+    (
+        cd "$ZPPY_INTERFACES_DIR"
+        ensure_test_branch "test_zi_${TAG}" "$ZI_BASE_BRANCH"
+
+        log "Latest zppy-interfaces commit (should match https://github.com/E3SM-Project/zppy-interfaces/commits/${ZI_BASE_BRANCH}):"
+        git log -1 --oneline
+
+        if [[ "$ZI_ENV_TYPE" == "dev" ]]; then
+            if [[ -n "$ZI_EXISTING_ENV" ]]; then
+                log "Reusing existing 'zppy-interfaces' env: $ZI_EXISTING_ENV (skipping creation)"
+                activate_env "$ZI_EXISTING_ENV"
+            else
+                setup_conda_env "conda" "$ZI_ENV"
+            fi
+        else
+            log "Using unified env for zppy-interfaces (skipping conda env creation)"
+        fi
+
+        log "Running zppy-interfaces unit tests..."
+        pytest tests/unit/global_time_series/test_*.py
+        pytest tests/unit/pcmdi_diags/test_*.py
+        log_success "zppy-interfaces unit tests passed"
+    )
 
     # ------------------------------------------------------------------
     # zppy (includes unit tests + config generation)
     # ------------------------------------------------------------------
     log "Setting up zppy..."
-    cd "$ZPPY_DIR"
-    ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH"
 
-    log "Latest zppy commit (should match https://github.com/E3SM-Project/zppy/commits/${ZPPY_BASE_BRANCH}):"
-    git log -1 --oneline
-
-    # Resolve ZPPY_ENV: if an existing env is specified, use it; otherwise use
-    # the auto-generated name and create/update the env as normal.
+    # Resolve ZPPY_ENV name before the subshell so it's available for
+    # config generation and later phases.
     if [[ -n "$ZPPY_EXISTING_ENV" ]]; then
-        log "Reusing existing 'zppy' env: $ZPPY_EXISTING_ENV (skipping creation)"
         ZPPY_ENV="$ZPPY_EXISTING_ENV"
-        activate_env "$ZPPY_ENV"
-    else
-        setup_conda_env "conda" "$ZPPY_ENV"
     fi
+    # (If ZPPY_EXISTING_ENV is empty, ZPPY_ENV retains the auto-generated
+    # name set at the top of the script.)
 
-    log "Running zppy unit tests..."
-    pytest tests/test_*.py
-    log_success "zppy unit tests passed"
+    (
+        cd "$ZPPY_DIR"
+        ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH"
+
+        log "Latest zppy commit (should match https://github.com/E3SM-Project/zppy/commits/${ZPPY_BASE_BRANCH}):"
+        git log -1 --oneline
+
+        if [[ -n "$ZPPY_EXISTING_ENV" ]]; then
+            log "Reusing existing 'zppy' env: $ZPPY_EXISTING_ENV (skipping creation)"
+            activate_env "$ZPPY_ENV"
+        else
+            setup_conda_env "conda" "$ZPPY_ENV"
+        fi
+
+        log "Running zppy unit tests..."
+        pytest tests/test_*.py
+        log_success "zppy unit tests passed"
+    )
 
     # ------------------------------------------------------------------
     # Generate config files (update utils.py TEST_SPECIFICS, then run it)
@@ -519,6 +563,12 @@ phase_1_setup() {
     DIAGS_CMD=$(get_env_cmd "$DIAGS_ENV_TYPE" "$DIAGS_ENV")
     MPAS_CMD=$(get_env_cmd "$MPAS_ENV_TYPE" "$MPAS_ENV")
     ZI_CMD=$(get_env_cmd "$ZI_ENV_TYPE" "$ZI_ENV")
+
+    # Config generation and job submission run in the parent shell so that
+    # the zppy command is available and cd/env state is consistent.
+    cd "$ZPPY_DIR"
+    activate_env "$ZPPY_ENV"
+    ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH"
 
     UTILS_FILE="tests/integration/utils.py"
 
