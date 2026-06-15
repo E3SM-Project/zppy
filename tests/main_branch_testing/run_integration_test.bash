@@ -72,6 +72,14 @@ if [[ ${#_missing[@]} -gt 0 ]]; then
     exit 1
 fi
 
+# Apply defaults for optional *_EXISTING_ENV variables so the rest of the
+# script can reference them unconditionally.
+DIAGS_EXISTING_ENV="${DIAGS_EXISTING_ENV:-}"
+E3SM_TO_CMIP_EXISTING_ENV="${E3SM_TO_CMIP_EXISTING_ENV:-}"
+MPAS_EXISTING_ENV="${MPAS_EXISTING_ENV:-}"
+ZI_EXISTING_ENV="${ZI_EXISTING_ENV:-}"
+ZPPY_EXISTING_ENV="${ZPPY_EXISTING_ENV:-}"
+
 # Validate MACHINE value.
 case "$MACHINE" in
     chrysalis|compy|perlmutter) ;;
@@ -233,6 +241,23 @@ setup_conda_env() {
     log_success "Environment '$env_name' ready"
 }
 
+# Resolve the conda env name for a "dev"-type component.
+# If an existing env name is provided, log that it will be reused and echo it.
+# Otherwise, echo the auto-generated name.
+# Usage: env_name=$(resolve_dev_env "e3sm_diags" "$DIAGS_EXISTING_ENV" "test-diags-main-${TAG}")
+resolve_dev_env() {
+    local component="$1"
+    local existing_env="$2"
+    local auto_name="$3"
+
+    if [[ -n "$existing_env" ]]; then
+        log "Reusing existing '$component' env: $existing_env (skipping creation)"
+        echo "$existing_env"
+    else
+        echo "$auto_name"
+    fi
+}
+
 # Checkout test branch, creating it from upstream/<base> if it doesn't exist.
 # Stashes/commits any in-progress work first.
 ensure_test_branch() {
@@ -384,8 +409,15 @@ phase_1_setup() {
 
     local E3SM_TO_CMIP_ENV=""
     if [[ "$E3SM_TO_CMIP_ENV_TYPE" == "dev" ]]; then
-        E3SM_TO_CMIP_ENV="test-e3sm-to-cmip-${E3SM_TO_CMIP_BASE_BRANCH}-${TAG}"
-        setup_conda_env "conda-env" "$E3SM_TO_CMIP_ENV"
+        E3SM_TO_CMIP_ENV=$(resolve_dev_env \
+            "e3sm_to_cmip" \
+            "$E3SM_TO_CMIP_EXISTING_ENV" \
+            "test-e3sm-to-cmip-${E3SM_TO_CMIP_BASE_BRANCH}-${TAG}")
+        if [[ -z "$E3SM_TO_CMIP_EXISTING_ENV" ]]; then
+            setup_conda_env "conda-env" "$E3SM_TO_CMIP_ENV"
+        else
+            activate_env "$E3SM_TO_CMIP_ENV"
+        fi
     else
         log "Using unified env for e3sm_to_cmip (skipping conda env creation)"
     fi
@@ -402,8 +434,15 @@ phase_1_setup() {
 
     local DIAGS_ENV=""
     if [[ "$DIAGS_ENV_TYPE" == "dev" ]]; then
-        DIAGS_ENV="test-diags-${DIAGS_BASE_BRANCH}-${TAG}"
-        setup_conda_env "conda-env" "$DIAGS_ENV"
+        DIAGS_ENV=$(resolve_dev_env \
+            "e3sm_diags" \
+            "$DIAGS_EXISTING_ENV" \
+            "test-diags-${DIAGS_BASE_BRANCH}-${TAG}")
+        if [[ -z "$DIAGS_EXISTING_ENV" ]]; then
+            setup_conda_env "conda-env" "$DIAGS_ENV"
+        else
+            activate_env "$DIAGS_ENV"
+        fi
     else
         log "Using unified env for e3sm_diags (skipping conda env creation)"
     fi
@@ -420,8 +459,15 @@ phase_1_setup() {
 
     local MPAS_ENV=""
     if [[ "$MPAS_ENV_TYPE" == "dev" ]]; then
-        MPAS_ENV="test-mpas-${MPAS_BASE_BRANCH}-${TAG}"
-        setup_conda_env "none" "$MPAS_ENV"
+        MPAS_ENV=$(resolve_dev_env \
+            "MPAS-Analysis" \
+            "$MPAS_EXISTING_ENV" \
+            "test-mpas-${MPAS_BASE_BRANCH}-${TAG}")
+        if [[ -z "$MPAS_EXISTING_ENV" ]]; then
+            setup_conda_env "none" "$MPAS_ENV"
+        else
+            activate_env "$MPAS_ENV"
+        fi
     else
         log "Using unified env for MPAS-Analysis (skipping conda env creation)"
     fi
@@ -438,8 +484,15 @@ phase_1_setup() {
 
     local ZI_ENV=""
     if [[ "$ZI_ENV_TYPE" == "dev" ]]; then
-        ZI_ENV="test-zi-${ZI_BASE_BRANCH}-${TAG}"
-        setup_conda_env "conda" "$ZI_ENV"
+        ZI_ENV=$(resolve_dev_env \
+            "zppy-interfaces" \
+            "$ZI_EXISTING_ENV" \
+            "test-zi-${ZI_BASE_BRANCH}-${TAG}")
+        if [[ -z "$ZI_EXISTING_ENV" ]]; then
+            setup_conda_env "conda" "$ZI_ENV"
+        else
+            activate_env "$ZI_ENV"
+        fi
     else
         log "Using unified env for zppy-interfaces (skipping conda env creation)"
     fi
@@ -458,7 +511,15 @@ phase_1_setup() {
 
     log "Latest zppy commit (should match https://github.com/E3SM-Project/zppy/commits/${ZPPY_BASE_BRANCH}):"
     git log -1 --oneline
-    setup_conda_env "conda" "$ZPPY_ENV"
+
+    # Resolve ZPPY_ENV: if an existing env is specified, use it; otherwise use
+    # the auto-generated name and create/update the env as normal.
+    if [[ -n "$ZPPY_EXISTING_ENV" ]]; then
+        ZPPY_ENV=$(resolve_dev_env "zppy" "$ZPPY_EXISTING_ENV" "$ZPPY_ENV")
+        activate_env "$ZPPY_ENV"
+    else
+        setup_conda_env "conda" "$ZPPY_ENV"
+    fi
 
     log "Running zppy unit tests..."
     pytest tests/test_*.py
