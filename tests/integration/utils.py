@@ -208,8 +208,6 @@ def get_expansions():
     expansions["active_livvkit"] = "False"
     expansions["active_pcmdi_diags"] = "False"
 
-    # TODO: Continue adding dependencies to all tasks, update all 9 test cfgs
-
     if "e3sm_diags" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_e3sm_diags"] = "True"
 
