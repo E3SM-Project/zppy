@@ -21,6 +21,8 @@
 set -e  # Exit on error
 set -u  # Exit on undefined variable
 
+SCRIPT_RUN_DIR="$PWD"
+
 # ============================================================================
 # Parse arguments
 # ============================================================================
@@ -642,6 +644,7 @@ PYEOF
     # Submit initial SLURM jobs
     # ------------------------------------------------------------------
     log "Submitting SLURM jobs..."
+    env > "${SCRIPT_RUN_DIR}/env_${TAG}.txt"
     local cfg cfg_path
     for cfg in "${CFGS_ARRAY[@]}"; do
         cfg="${cfg// /}"
