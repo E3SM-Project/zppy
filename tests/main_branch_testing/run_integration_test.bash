@@ -217,6 +217,20 @@ activate_env() {
     set -u
 }
 
+# Activate the machine-specific unified environment.
+# UNIFIED_ENV_CMD is always "source /path/to/script.sh" (set in the
+# machine-specific case block above), so we strip the leading "source "
+# and source the path directly -- no eval required.
+activate_unified_env() {
+    set +u
+    # shellcheck disable=SC1090
+    source ~/.bashrc
+    $CONDA_ACTIVATION_CMD
+    # shellcheck disable=SC1090
+    source "${UNIFIED_ENV_CMD#source }"
+    set -u
+}
+
 # Create (if needed) and activate a conda environment.
 setup_conda_env() {
     local conda_dir="$1"   # Directory containing dev.yml (e.g. "conda" or "conda-env")
@@ -509,7 +523,8 @@ phase_1_setup() {
                 setup_conda_env "conda" "$ZI_ENV"
             fi
         else
-            log "Using unified env for zppy-interfaces (skipping conda env creation)"
+            log "Using unified env for zppy-interfaces..."
+            activate_unified_env
         fi
 
         log "Running zppy-interfaces unit tests..."
