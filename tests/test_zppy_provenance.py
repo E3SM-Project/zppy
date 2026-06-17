@@ -2,15 +2,14 @@
 
 import configparser
 import os
-import textwrap
 from typing import Dict, Optional
 from unittest.mock import MagicMock
 
 from zppy.provenance import (
-    append_provenance_fields,
     build_diagnostics_url,
     build_provenance_extras,
     parse_env_case_xml,
+    write_provenance_settings,
 )
 
 
@@ -152,66 +151,44 @@ def test_build_diagnostics_url_empty_www():
 
 
 # ---------------------------------------------------------------------------
-# append_provenance_fields
+# write_provenance_settings
 # ---------------------------------------------------------------------------
 
 
-def test_append_provenance_fields_appends(tmp_path):
-    src = tmp_path / "user.cfg"
-    src.write_text(
-        textwrap.dedent(
-            """\
-        [default]
-        case = v3.LR.historical_0051
-        # a comment the user wrote
-        input = /lcrc/group/e3sm2/x/v3.LR.historical_0051
-    """
-        )
-    )
-    append_provenance_fields(
-        str(src),
+def test_write_provenance_settings_writes_metadata(tmp_path):
+    settings = tmp_path / "provenance.settings"
+    write_provenance_settings(
+        str(settings),
         {
             "case_name": "v3.LR.historical_0051",
             "machine": "chrysalis",
             "diagnostics_url": "https://portal/x/case",
         },
     )
-    content = src.read_text()
-    # Original content preserved verbatim
-    assert "# a comment the user wrote" in content
-    assert "case = v3.LR.historical_0051" in content
-    # Additions present, marked, and under a [default] header so configobj
-    # picks them up as default-section keys.
-    assert "# --- zppy provenance additions (issue #831) ---" in content
+    content = settings.read_text()
     assert "case_name = v3.LR.historical_0051" in content
     assert "machine = chrysalis" in content
     assert "diagnostics_url = https://portal/x/case" in content
-    # The addition block follows the user content.
-    assert content.index("# a comment the user wrote") < content.index(
-        "# --- zppy provenance additions (issue #831) ---"
-    )
 
 
-def test_append_provenance_fields_skips_empty(tmp_path):
-    src = tmp_path / "user.cfg"
-    src.write_text("[default]\ncase = c\n")
-    append_provenance_fields(str(src), {})
-    assert src.read_text() == "[default]\ncase = c\n"
-    append_provenance_fields(str(src), {"case_name": "", "machine": None})
-    assert src.read_text() == "[default]\ncase = c\n"
+def test_write_provenance_settings_skips_empty(tmp_path):
+    settings = tmp_path / "provenance.settings"
+    write_provenance_settings(str(settings), {})
+    assert not settings.exists()
+    write_provenance_settings(str(settings), {"case_name": "", "machine": None})
+    assert not settings.exists()
 
 
-def test_append_provenance_fields_skips_falsy_values(tmp_path):
-    src = tmp_path / "user.cfg"
-    src.write_text("[default]\n")
-    append_provenance_fields(
-        str(src),
+def test_write_provenance_settings_skips_falsy_values(tmp_path):
+    settings = tmp_path / "provenance.settings"
+    write_provenance_settings(
+        str(settings),
         {"case_name": "good", "machine": "", "hpc_username": None},
     )
-    content = src.read_text()
+    content = settings.read_text()
     assert "case_name = good" in content
-    assert "machine =" not in content.split("# --- zppy provenance additions")[1]
-    assert "hpc_username" not in content.split("# --- zppy provenance additions")[1]
+    assert "machine =" not in content
+    assert "hpc_username" not in content
 
 
 # ---------------------------------------------------------------------------

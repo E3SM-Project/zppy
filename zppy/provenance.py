@@ -1,5 +1,5 @@
 """Helpers for emitting authoritative case identity and explicit
-diagnostics URLs into zppy provenance cfg files.
+diagnostics URLs into zppy provenance metadata files.
 
 See https://github.com/E3SM-Project/zppy/issues/831.
 """
@@ -93,30 +93,27 @@ def build_diagnostics_url(
     return f"{base_url}{www_suffix}/{case}"
 
 
-def append_provenance_fields(
-    provenance_path: str, extras: Mapping[str, Optional[str]]
+def write_provenance_settings(
+    settings_path: str, extras: Mapping[str, Optional[str]]
 ) -> None:
-    """Append a block of `key = value` lines to an existing provenance cfg.
+    """Write extra provenance metadata to a separate settings file.
 
-    The block is appended under the existing `[default]` section so the new
-    fields are picked up by configobj/ConfigParser readers. Empty / None
-    values are skipped. A no-op if `extras` contains no usable entries.
+    Empty / None values are skipped. A no-op if `extras` contains no usable
+    entries, so callers can avoid creating an empty settings file.
     """
     usable = {k: v for k, v in extras.items() if v}
     if not usable:
         return
-    lines = ["", "# --- zppy provenance additions (issue #831) ---", "[default]"]
-    for key, value in usable.items():
-        lines.append(f"{key} = {value}")
-    lines.append("")
-    with open(provenance_path, "a") as f:
-        f.write("\n".join(lines))
+
+    with open(settings_path, "w") as f:
+        for key, value in usable.items():
+            f.write(f"{key} = {value}\n")
 
 
 def build_provenance_extras(
     config_default: Dict[str, str], machine_info: MachineInfo
 ) -> Dict[str, str]:
-    """Assemble the dict of extra provenance fields to append.
+    """Assemble the dict of extra provenance metadata fields.
 
     - `case_name`, `machine`, `hpc_username` from `env_case.xml` under cfg `input`.
     - `diagnostics_url` from cfg `www` + `case` + machine `web_portal` config.
