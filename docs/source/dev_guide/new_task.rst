@@ -2,6 +2,23 @@
 Adding a new task
 *****************
 
+A task should be a wrapper around an external package.
+
+* The ``climo`` and ``ts`` tasks use NCO. ``tc_analysis`` and ``pcmdi_diags`` also make use of NCO tools.
+* The ``global_time_series`` and ``pcmdi_diags`` tasks use ``zppy-interfaces``.
+* The ``tc_analysis`` uses ``TempestRemap`` and ``TempestExtremes``. 
+* The ``e3sm_to_cmip``, ``e3sm_diags``, ``mpas_analysis``, ``ilamb``, and ``livvkit`` use their eponymous packages.
+
+In general, functionality should be added via calls to external packages. There are 2 reasons for this:
+
+* It creates a clearer separation of concerns: ``zppy`` is the workflow manager whereas the called packages do the actual post-processing.
+* The called packages often have different environment needs than ``zppy``. A package can have its own dependency list and developer environment setup instructions. Putting all the functionality in a ``zppy`` bash template makes it more difficult to customize the environment for that specific task.
+
+The ``zppy-interfaces`` package is meant to be a collection of tools that are too complex to just write inline in a ``zppy`` bash file but not complex enough to be worth the effort of building and maintaining a new package just for it. Currently, ``zppy-interfaces`` is home to these two tools:
+
+* ``global_time_series``: this functionality was initially implemented in the ``zppy`` bash template itself, but grew complex enough to require separation.
+* ``pcmdi_diags``: this is "glue code" to allow for seamless integration of the PCMDI Metrics Package with ``zppy``.
+
 The task's bash file
 =====================
 
