@@ -30,7 +30,7 @@ Some key parts, however, are displayed below:
     .. code::
 
         #!/bin/bash
-        {% include 'inclusions/slurm_header.sh' %}
+        {% include 'inclusions/slurm_header.bash' %}
         {% include 'inclusions/boilerplate.bash' %}
 
         set -e

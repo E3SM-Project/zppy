@@ -34,7 +34,8 @@ using Sphinx, you can refer to
     cd zppy
     conda clean --all --y
     conda env create -f conda/dev.yml -n env-name
-    python -m pip install . 
+    conda activate env-name
+    python -m pip install .
 
     # Now, we can produce the documentation locally:
     cd docs
