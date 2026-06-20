@@ -483,8 +483,6 @@ phase_1_setup() {
     fi
 
     (
-        conda deactivate 2>/dev/null || true
-        unset LD_LIBRARY_PATH PYTHONPATH LD_PRELOAD
         cd "$MPAS_ANALYSIS_DIR"
         ensure_test_branch "test_mpas_${TAG}" "$MPAS_BASE_BRANCH"
 
