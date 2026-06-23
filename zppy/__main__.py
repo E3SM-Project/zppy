@@ -22,6 +22,7 @@ from zppy.livvkit import livvkit
 from zppy.logger import _setup_custom_logger
 from zppy.mpas_analysis import mpas_analysis
 from zppy.pcmdi_diags import pcmdi_diags
+from zppy.provenance import build_provenance_extras, write_provenance_settings
 from zppy.tc_analysis import tc_analysis
 from zppy.ts import ts
 from zppy.utils import check_status, submit_script
@@ -58,8 +59,15 @@ def main():
     _validate_config(config)
     # Add templateDir to config
     config["default"]["templateDir"] = template_dir
+    # Resolve machine info up-front so provenance can include machine-aware
+    # diagnostics URLs (see issue #831).
+    machine_info = _get_machine_info(config)
+    config = _determine_parameters(machine_info, config)
+    # Build provenance metadata (case_name, machine, hpc_username,
+    # diagnostics_url) from env_case.xml + mache web_portal config.
+    provenance_extras = build_provenance_extras(config["default"], machine_info)
     # Get timestamp for provenance
-    # Provenance cfg will be placed in both `output` and `www`
+    # Provenance cfg/settings will be placed in both `output` and `www`
     ts_utc = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     # Output script directory
     output = config["default"]["output"]
@@ -68,28 +76,31 @@ def main():
     script_dir = os.path.join(output, "post/scripts")
     job_ids_file = os.path.join(script_dir, "jobids.txt")
     provenance = os.path.join(script_dir, f"provenance.{ts_utc}.cfg")
+    provenance_settings = os.path.join(script_dir, f"provenance.{ts_utc}.settings")
     try:
         os.makedirs(script_dir)
-        shutil.copy(args.config, provenance)
     except OSError as exc:
         if exc.errno != errno.EEXIST:
             raise OSError("Cannot create script directory")
-        pass
+    shutil.copy(args.config, provenance)
+    write_provenance_settings(provenance_settings, provenance_extras)
     # Web output directory
     www = config["default"]["www"]
     username = os.environ.get("USER")
     www = www.replace("$USER", username)
     www_case_dir = os.path.join(www, config["default"]["case"])
-    provenance = os.path.join(www_case_dir, f"provenance.{ts_utc}.cfg")
+    www_provenance = os.path.join(www_case_dir, f"provenance.{ts_utc}.cfg")
+    www_provenance_settings = os.path.join(
+        www_case_dir, f"provenance.{ts_utc}.settings"
+    )
     try:
         os.makedirs(www_case_dir)
-        shutil.copy(args.config, provenance)
     except OSError as exc:
         if exc.errno != errno.EEXIST:
             raise OSError("Cannot create www case directory")
-        pass
-    machine_info = _get_machine_info(config)
-    config = _determine_parameters(machine_info, config)
+    shutil.copy(args.config, www_provenance)
+    if os.path.isfile(provenance_settings):
+        shutil.copy(provenance_settings, www_provenance_settings)
     if args.last_year:
         config["default"]["last_year"] = args.last_year
     _launch_scripts(config, script_dir, job_ids_file, plugins)
