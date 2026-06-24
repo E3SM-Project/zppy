@@ -35,6 +35,7 @@ There are two types of inferences, each with their own parameter in ``default.in
 
 * ``infer_path_parameters``: infer paths that are not explicitly provided in the configuraiton file. Default is ``True``.
 * ``infer_section_parameters``: infer subtask dependency names that are not explicitly provided in the configuration file. Default is ``True``.
+* ``simboard_type``: when ``www`` is left empty and path inference is enabled, choose whether the inferred SimBoard path uses ``prod`` or ``dev``. Default is ``prod``.
 
 **Section inferences**
 
@@ -69,6 +70,11 @@ For the ``livvkit`` task:
 For the ``e3sm_diags`` task:
 
 * If ``reference_data_path`` (the path to the reference data) is undefined, assume it is the ``diagnostics_base_path`` from Mache plus ``/observations/Atm/climatology/``. (So, it is important to change this for model-vs-model runs).
+
+For the top-level ``www`` parameter:
+
+* If ``www`` is undefined and ``infer_path_parameters = True``, assume it is ``<web_portal base_path>/simboard/<simboard_type>/``.
+* If ``www`` is undefined and ``infer_path_parameters = False``, ``zppy`` will raise an error.
 
 
 For the ``mpas_analysis`` task:

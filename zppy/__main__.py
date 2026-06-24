@@ -259,7 +259,21 @@ def _determine_parameters(machine_info: MachineInfo, config: ConfigObj) -> Confi
         config["default"][
             "environment_commands"
         ] = f"source {unified_base}/load_latest_e3sm_unified_{machine}.sh"
+    _set_default_www(machine_info, config)
     return config
+
+
+def _set_default_www(machine_info: MachineInfo, config: ConfigObj) -> None:
+    if config["default"]["www"] != "":
+        return
+    if not config["default"]["infer_path_parameters"]:
+        raise ValueError("www must be provided when infer_path_parameters is False.")
+
+    simboard_type = config["default"]["simboard_type"]
+    web_portal_base_path = machine_info.config.get("web_portal", "base_path")
+    config["default"]["www"] = (
+        f"{web_portal_base_path}/simboard/{simboard_type}/"
+    )
 
 
 def _launch_scripts(config: ConfigObj, script_dir, job_ids_file, plugins) -> None:

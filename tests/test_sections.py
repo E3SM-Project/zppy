@@ -92,6 +92,7 @@ def test_sections():
         "plugins": [],
         "reservation": "",
         "qos": "regular",
+        "simboard_type": "prod",
         "templateDir": "zppy/templates",
         "ts_atm_grid": "180x360_aave",
         "ts_atm_subsection": "",
