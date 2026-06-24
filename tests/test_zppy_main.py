@@ -70,6 +70,7 @@ def test_determine_parameters_requires_www_without_path_inference() -> None:
 
 def test_default_ini_rejects_invalid_simboard_type(tmp_path: Path) -> None:
     config_path = tmp_path / "bad_simboard.cfg"
+    default_ini = Path(__file__).resolve().parents[1] / "zppy" / "defaults" / "default.ini"
     config_path.write_text(
         "\n".join(
             [
@@ -84,7 +85,7 @@ def test_default_ini_rejects_invalid_simboard_type(tmp_path: Path) -> None:
     )
     config = ConfigObj(
         str(config_path),
-        configspec="/home/runner/work/zppy/zppy/zppy/defaults/default.ini",
+        configspec=str(default_ini),
     )
 
     result = config.validate(Validator())
