@@ -33,7 +33,7 @@ Parameter checking & inferring -- for users
 
 There are two types of inferences, each with their own parameter in ``default.ini``:
 
-* ``infer_path_parameters``: infer paths that are not explicitly provided in the configuraiton file. Default is ``True``.
+* ``infer_path_parameters``: infer paths that are not explicitly provided in the configuration file. Default is ``True``.
 * ``infer_section_parameters``: infer subtask dependency names that are not explicitly provided in the configuration file. Default is ``True``.
 * ``simboard_type``: when ``www`` is left empty and path inference is enabled, choose whether the inferred SimBoard path uses ``prod`` or ``dev``. Default is ``prod``.
 
