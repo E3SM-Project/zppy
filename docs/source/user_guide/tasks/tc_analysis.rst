@@ -65,8 +65,8 @@ These 3 parameters are specific to the ``tc_analysis`` task:
      - ``"PSL,T200,T500,UBOT,VBOT,U850,V850"``
      - Ordered list of exactly 7 comma-separated variable names in the
        sequence required by the TempestExtremes workflow:
-       SLP, T@200hPa, T@500hPa, U@model_bottom, V@model_bottom, U@850hPa,
-       V@850hPa. The default covers EAM output. EAMxx users should set this
+       ``SLP, T@200hPa, T@500hPa, U@model_bottom, V@model_bottom, U@850hPa,
+       V@850hPa``. The default covers EAM output. EAMxx users should set this
        to the corresponding EAMxx variable names, e.g.
        ``SeaLevelPressure,T_mid_at_200hPa,T_mid_at_500hPa,U_at_model_bot,V_at_model_bot,U_at_850hPa,V_at_850hPa``.
 
