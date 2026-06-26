@@ -7,7 +7,7 @@ The ``ts`` task generates per-variable time-series files from E3SM
 simulation output using NCO's ``ncclimo``. It produces one file per variable
 covering a specified year range. Time-series files produced by ``ts`` are
 required inputs for the :doc:`e3sm_diags`, :doc:`global_time_series`,
-:doc:`e3sm_to_cmip`, :doc:`ilamb`, and :doc:`pcmdi_diags` tasks.
+:doc:`e3sm_to_cmip`, :doc:`ilamb`, :doc:`livvkit`, and :doc:`pcmdi_diags` tasks.
 
 Configuration example
 ---------------------

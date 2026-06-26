@@ -289,9 +289,9 @@ Process
 
 First, let's edit ``tests/integration/utils.py``. 
 
-In place of ech ``{env_cmd}`` put either ``${conda_setup_cmd}; conda activate ${repo_name}-yyyymmdd`` or the command from ``activate_unified_env``. You may want to use dev environments for some tasks and the Unified environment for others.
+In place of each ``{env_cmd}`` put either ``${conda_setup_cmd}; conda activate ${repo_name}-yyyymmdd`` or the command from ``activate_unified_env``. You may want to use dev environments for some tasks and the Unified environment for others.
 
-You can comment out ``cfg``s from ``cfgs_to_run`` to run fewer configuration files. Likewise, you can comment out tasks from ``tasks_torun`` to run fewer tasks.
+You can comment out ``cfg``s from ``cfgs_to_run`` to run fewer configuration files. Likewise, you can comment out tasks from ``tasks_to_run`` to run fewer tasks.
 
 Be sure to set the ``unique_id``; this allows us to avoid path name collisions.
 
