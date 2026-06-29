@@ -115,6 +115,255 @@ if [ $? != 0 ]; then
   exit 2
 fi
 
+{%- if mapping_file != '' and mapping_file != 'glb' and prc_typ in ['mpasocean', 'mpasseaice'] %}
+
+# Regrid MPAS-Ocean and MPAS-Seaice files separately.
+#
+# For MPAS components, generate native-grid time-series files first, then
+# regrid them with ncremap. This lets us restore MPAS-native time metadata,
+# construct a CF-style numeric time coordinate, and repair missing_value
+# attributes after regridding if needed.
+#
+# For MPAS-Seaice, also provide valid spatial-only SGS helper variables for
+# regridding. MPAS-Seaice monthly files may include time-dependent SGS
+# diagnostics such as:
+#
+#   timeMonthly_avg_iceAreaCell(Time,nCells)
+#
+# This variable should remain in the final time-series output. However,
+# NCO's regridder requires sgs_frc_nm and sgs_msk_nm to be spatial-only
+# fields matching the horizontal source grid size, i.e., nCells. Therefore,
+# create temporary spatial-only helper variables with separate names and use
+# them only for regridding.
+mkdir -p output
+
+mpas_calendar="{{ mpas_calendar }}"
+mpas_start_time="{{ mpas_start_time }}"
+mpas_start_time="${mpas_start_time/_/ }"
+
+for f in trash/*.nc ; do
+  bname=$(basename "${f}")
+  tmp_f="tmp_regrid_${bname}"
+  tmp_frc="tmp_sgs_frc_${bname}"
+  tmp_msk="tmp_sgs_msk_${bname}"
+  out_f="output/${bname}"
+
+  cp "${f}" "${tmp_f}"
+
+  # Detect whether the time dimension is named Time or time.
+  # MPAS native ncclimo files often have a Time dimension but no
+  # coordinate variable named Time/time.
+  if run_nco ncks -m "${tmp_f}" | grep -qE "^[[:space:]]*Time[[:space:]]*=|\(Time[,)]|, Time[,)]"; then
+    time_dim="Time"
+  elif run_nco ncks -m "${tmp_f}" | grep -qE "^[[:space:]]*time[[:space:]]*=|\(time[,)]|, time[,)]"; then
+    time_dim="time"
+  else
+    echo "ERROR: Cannot find Time/time dimension in ${tmp_f}"
+    cd {{ scriptDir }}
+    echo 'ERROR (3)' > {{ prefix }}.status
+    exit 3
+  fi
+
+  # Infer the main variable name from the output filename.
+  # Example:
+  #   timeMonthly_avg_seaSurfaceTemperature_000101_000512.nc
+  # becomes:
+  #   timeMonthly_avg_seaSurfaceTemperature
+  main_var=$(echo "${bname}" | sed -E 's/_[0-9]{6}_[0-9]{6}\.nc$//')
+
+  use_sgs_helpers="false"
+
+  {%- if prc_typ == 'mpasseaice' %}
+
+  # Construct explicit static SGS helpers for MPAS-Seaice.
+  #
+  # ncremap -P mpasseaice automatically tries to use
+  # timeMonthly_avg_iceAreaCell as sgs_frc_nm. However, that variable is
+  # time-dependent, with shape Time x nCells, while NCO requires sgs_frc_nm
+  # to be spatial-only, with shape nCells.
+  #
+  # Therefore, whenever timeMonthly_avg_iceAreaCell is available, construct:
+  #
+  #   sgs_frc_static(nCells) = time mean of timeMonthly_avg_iceAreaCell
+  #   sgs_msk_static(nCells) = 1 where sgs_frc_static > 0, else 0
+  #
+  # Do not fall back to implicit ncremap SGS handling when this helper can be
+  # constructed, because the implicit path may reuse the time-dependent field.
+  if run_nco ncks -m "${tmp_f}" | grep -q "timeMonthly_avg_iceAreaCell"; then
+
+    # Construct spatial-only SGS fraction helper.
+    run_nco ncwa -O -a "${time_dim}" -y avg \
+      -v timeMonthly_avg_iceAreaCell \
+      "${tmp_f}" "${tmp_frc}"
+
+    run_nco ncrename -O \
+      -v timeMonthly_avg_iceAreaCell,sgs_frc_static \
+      "${tmp_frc}"
+
+    # Construct a spatial-only binary SGS mask from the static fraction.
+    # This avoids relying on timeMonthly_avg_icePresentIntMask, which may
+    # not be present in every split file.
+    run_nco ncap2 -O \
+      -s 'sgs_msk_static=(sgs_frc_static > 0.0)' \
+      "${tmp_frc}" "${tmp_msk}"
+
+    run_nco ncks -O -x -v sgs_frc_static "${tmp_msk}" "${tmp_msk}.only_msk"
+    mv "${tmp_msk}.only_msk" "${tmp_msk}"
+
+    # Append helper variables to the temporary file.
+    # This does not remove or overwrite the original time-dependent variables.
+    run_nco ncks -A "${tmp_frc}" "${tmp_f}"
+    run_nco ncks -A "${tmp_msk}" "${tmp_f}"
+
+    use_sgs_helpers="true"
+  else
+    echo "ERROR: timeMonthly_avg_iceAreaCell is missing in ${tmp_f}; cannot construct static SGS helpers for MPAS-Seaice."
+    cd {{ scriptDir }}
+    echo 'ERROR (3)' > {{ prefix }}.status
+    exit 3
+  fi
+
+  {%- endif %}
+
+  if [ "${use_sgs_helpers}" == "true" ]; then
+    run_nco ncremap \
+      -P {{ prc_typ }} \
+      --d2f \
+      --no_stagger \
+      -t 1 \
+      --nco_opt='--no_tmp_fl --hdr_pad=10000' \
+      --map={{ mapping_file }} \
+      --sgs_frc=sgs_frc_static \
+      --sgs_msk=sgs_msk_static \
+      --sgs_nrm=1.0 \
+      "${tmp_f}" \
+      "${out_f}"
+  else
+    run_nco ncremap \
+      -P {{ prc_typ }} \
+      --d2f \
+      --no_stagger \
+      -t 1 \
+      --nco_opt='--no_tmp_fl --hdr_pad=10000' \
+      --map={{ mapping_file }} \
+      "${tmp_f}" \
+      "${out_f}"
+  fi
+
+  rc=$?
+
+  # Remove temporary/helper variables from the final regridded output.
+  # Keep timeMonthly_avg_iceAreaCell only when it is the requested main variable.
+  if [ ${rc} == 0 ] && [ "{{ prc_typ }}" == "mpasseaice" ]; then
+    vars_to_remove="sgs_frc_static,sgs_msk_static"
+
+    if [ "${main_var}" != "timeMonthly_avg_iceAreaCell" ]; then
+      vars_to_remove="${vars_to_remove},timeMonthly_avg_iceAreaCell"
+    fi
+
+    # Remove helper variables only if at least one is present in the output.
+    remove_present="false"
+    for rm_var in $(echo "${vars_to_remove}" | tr ',' ' '); do
+      if run_nco ncks -m "${out_f}" | grep -qE "^[[:space:]]*[^:]+[[:space:]]+${rm_var}(\(|\[)"; then
+        remove_present="true"
+        break
+      fi
+    done
+
+    if [ "${remove_present}" == "true" ]; then
+      run_nco ncks -O -x -v "${vars_to_remove}" "${out_f}" "${out_f}.clean"
+      mv "${out_f}.clean" "${out_f}"
+      rc=$?
+    fi
+  fi
+
+  # Restore MPAS-native time metadata variables if needed.
+  # MPAS files often have a Time dimension and xtime_* variables, but no
+  # standard numeric coordinate variable named Time/time.
+  if [ ${rc} == 0 ]; then
+    for tvar in xtime_startMonthly xtime_endMonthly timeMonthly_avg_daysSinceStartOfSim; do
+      if run_nco ncks -m "${tmp_f}" | grep -q "${tvar}"; then
+        if ! run_nco ncks -m "${out_f}" | grep -q "${tvar}"; then
+          run_nco ncks -A -v "${tvar}" "${tmp_f}" "${out_f}"
+          rc=$?
+          if [ ${rc} != 0 ]; then
+            break
+          fi
+        fi
+      fi
+    done
+  fi
+
+  # Construct a CF-style numeric time coordinate if it is missing.
+  # Use MPAS days-since-start metadata:
+  #
+  #   timeMonthly_avg_daysSinceStartOfSim(Time)
+  #
+  # to create:
+  #
+  #   time(Time)
+  #     units    = "days since ${mpas_start_time}"
+  #     calendar = "${mpas_calendar}"
+  #
+  # This improves compatibility with downstream tools that expect a
+  # standard numeric time coordinate.
+  if [ ${rc} == 0 ]; then
+    if ! run_nco ncks -m "${out_f}" | grep -qE "^[[:space:]]*(float|double)[[:space:]]+time(\(|\[)"; then
+      if run_nco ncks -m "${tmp_f}" | grep -q "timeMonthly_avg_daysSinceStartOfSim"; then
+        tmp_time="tmp_time_${bname}"
+
+        run_nco ncks -O \
+          -v timeMonthly_avg_daysSinceStartOfSim \
+          "${tmp_f}" "${tmp_time}"
+
+        run_nco ncrename -O \
+          -v timeMonthly_avg_daysSinceStartOfSim,time \
+          "${tmp_time}"
+
+        run_nco ncatted -O \
+          -a units,time,o,c,"days since ${mpas_start_time}" \
+          -a calendar,time,o,c,"${mpas_calendar}" \
+          -a long_name,time,o,c,time \
+          -a standard_name,time,o,c,time \
+          "${tmp_time}"
+
+        run_nco ncks -A -v time "${tmp_time}" "${out_f}"
+        rc=$?
+
+        rm -f "${tmp_time}"
+      fi
+    fi
+  fi
+
+  # Add missing_value metadata only for the main floating-point data variable
+  # if it is missing. Avoid modifying coordinate or integer mask variables.
+  # Do not force-create _FillValue here, because some NetCDF workflows are
+  # sensitive to adding _FillValue after variable creation. Existing _FillValue
+  # attributes are preserved.
+  if [ ${rc} == 0 ]; then
+    if run_nco ncks -m "${out_f}" | grep -qE "^[[:space:]]*(float|double)[[:space:]]+${main_var}(\(|\[)"; then
+      if ! run_nco ncks -m "${out_f}" | grep -A8 -E "^[[:space:]]*(float|double)[[:space:]]+${main_var}(\(|\[)" | grep -q "missing_value"; then
+        run_nco ncatted -O \
+          -a missing_value,"${main_var}",o,f,1.0e36 \
+          "${out_f}"
+        rc=$?
+      fi
+    fi
+  fi
+
+  rm -f "${tmp_f}" "${tmp_frc}" "${tmp_msk}" "${tmp_msk}.only_msk" "${out_f}.clean"
+
+  if [ ${rc} != 0 ]; then
+    echo "ERROR: MPAS component regridding failed for ${bname}"
+    cd {{ scriptDir }}
+    echo 'ERROR (4)' > {{ prefix }}.status
+    exit 4
+  fi
+
+done
+
+{%- endif %}
+
 {%- if vrt_remap_vars != '' %}
 
 # Vertical regrid (model levels → pressure levels)
