@@ -18,7 +18,6 @@ export UCX_SHM_DEVICES=all # or not set UCX_NET_DEVICES at all
 # Make sure UVCDAT doesn't prompt us about anonymous logging
 export UVCDAT_ANONYMOUS_LOG=False
 
-
 # Use a non-interactive Matplotlib backend for batch diagnostics.
 # Safe for workflows that save figures to files and avoids GUI/Tkinter errors
 # on systems without a display.
@@ -1185,11 +1184,39 @@ if [ $? != 0 ]; then
 fi
 {% endif %}
 
+{% if current_set == "mean_climate" %}
+# optional, when save_all_data = True, also copy the mean climate nc data
+{% if save_all_data|lower == "true" %}
+cd ${workdir}
+
+clim_dir=${web_dir}/${run_type}/metrics_data/mean_climate/
+mkdir -p ${clim_dir}
+
+rsync -a climo ${clim_dir}/
+rc1=$?
+
+rsync -a climo_ref ${clim_dir}/
+rc2=$?
+
+if [ ${rc1} != 0 ] || [ ${rc2} != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'ERROR (110)' > {{ prefix }}.status
+  exit 110
+fi
+{% endif %}
+{% endif %}
+
 {% if machine in ['pm-cpu', 'pm-gpu'] %}
 # For NERSC, change permissions of new files
 pushd ${web_dir}/
 chgrp -R e3sm ${results_dir}
 chmod -R go+rX,go-w ${results_dir}
+{% if current_set == "mean_climate" %}
+{% if save_all_data|lower == "true" %}
+chgrp -R e3sm ${run_type}/metrics_data/mean_climate
+chmod -R go+rX,go-w ${run_type}/metrics_data/mean_climate
+{% endif %}
+{% endif %}
 popd
 {% endif %}
 
@@ -1197,6 +1224,11 @@ popd
 # For LCRC, change permissions of new files
 pushd ${web_dir}/
 chmod -R go+rX,go-w ${results_dir}
+{% if current_set == "mean_climate" %}
+{% if save_all_data|lower == "true" %}
+chmod -R go+rX,go-w ${run_type}/metrics_data/mean_climate
+{% endif %}
+{% endif %}
 popd
 {% endif %}
 
