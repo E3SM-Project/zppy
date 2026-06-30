@@ -1,0 +1,286 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tc_analysis — Tropical Cyclone Analysis &mdash; zppy  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="e3sm_diags — E3SM Diagnostics" href="e3sm_diags.html" />
+    <link rel="prev" title="e3sm_to_cmip — CMIP6 Conversion" href="e3sm_to_cmip.html" />
+    <link href="../../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../campaigns.html">Campaigns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parameters.html">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dependencies.html">Dependencies</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tasks</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="bundle.html">bundle — Job Bundling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="climo.html">climo — Climatology Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ts.html">ts — Time Series Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="e3sm_to_cmip.html">e3sm_to_cmip — CMIP6 Conversion</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">tc_analysis — Tropical Cyclone Analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#configuration-example">Configuration example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="e3sm_diags.html">e3sm_diags — E3SM Diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mpas_analysis.html">mpas_analysis — Ocean and Sea-Ice Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="global_time_series.html">global_time_series — Global Time Series Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ilamb.html">ilamb — Land Benchmarking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="livvkit.html">livvkit — Ice Sheet Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pcmdi_diags.html">pcmdi_diags — PCMDI Metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../components/index.html">Model Components</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dev_guide/index.html">Developer Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Tasks</a></li>
+      <li class="breadcrumb-item active">tc_analysis — Tropical Cyclone Analysis</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/tasks/tc_analysis.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tc-analysis-tropical-cyclone-analysis">
+<span id="task-tc-analysis"></span><h1>tc_analysis — Tropical Cyclone Analysis<a class="headerlink" href="#tc-analysis-tropical-cyclone-analysis" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">tc_analysis</span></code> task performs tropical cyclone (TC) and African Easterly
+Wave (AEW) analysis on E3SM output. It uses high-frequency atmospheric data
+(typically <code class="docutils literal notranslate"><span class="pre">eam.h2</span></code>) to detect and track TCs and AEWs using TempestExtremes.</p>
+<p>Both EAM and EAMxx output are supported. EAMxx requires the <code class="docutils literal notranslate"><span class="pre">input_grid</span></code>
+parameter to be set because its output sets <code class="docutils literal notranslate"><span class="pre">topography_file=&quot;NONE&quot;</span></code>,
+preventing automatic grid inference.</p>
+<section id="configuration-example">
+<h2>Configuration example<a class="headerlink" href="#configuration-example" title="Link to this heading"></a></h2>
+<p>EAM:</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[tc_analysis]</span>
+<span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="na">input_grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">ne30pg2</span>
+<span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:10</span>
+</pre></div>
+</div>
+<p>EAMxx:</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[tc_analysis]</span>
+<span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="na">input_grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">ne30pg2</span>
+<span class="na">tc_vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">SeaLevelPressure,T_mid_at_200hPa,T_mid_at_500hPa,U_at_model_bot,V_at_model_bot,U_at_850hPa,V_at_850hPa</span>
+<span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:10</span>
+</pre></div>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<p>These 3 parameters are specific to the <code class="docutils literal notranslate"><span class="pre">tc_analysis</span></code> task:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">input_grid</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Native model grid of the input files, e.g. <code class="docutils literal notranslate"><span class="pre">ne30pg2</span></code>, <code class="docutils literal notranslate"><span class="pre">ne120pg2</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ne30np4</span></code>. When set, the resolution and pg2 flag are derived from
+this value automatically. Required for EAMxx. Accepted formats:
+<code class="docutils literal notranslate"><span class="pre">neXpg2</span></code> or <code class="docutils literal notranslate"><span class="pre">neXnp4</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">ne30pg2</span></code>, <code class="docutils literal notranslate"><span class="pre">ne120np4</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">res</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Explicit <code class="docutils literal notranslate"><span class="pre">--res</span></code> value for TempestExtremes (EAM only). Used when
+<code class="docutils literal notranslate"><span class="pre">input_grid</span></code> is empty. If both are empty, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> attempts to infer
+<code class="docutils literal notranslate"><span class="pre">res</span></code> from the <code class="docutils literal notranslate"><span class="pre">topography_file</span></code> global attribute of the input
+files (EAM only).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tc_vars</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;PSL,T200,T500,UBOT,VBOT,U850,V850&quot;</span></code></p></td>
+<td><p>Ordered list of exactly 7 comma-separated variable names in the
+sequence required by the TempestExtremes workflow:
+<code class="docutils literal notranslate"><span class="pre">SLP,</span> <span class="pre">T&#64;200hPa,</span> <span class="pre">T&#64;500hPa,</span> <span class="pre">U&#64;model_bottom,</span> <span class="pre">V&#64;model_bottom,</span> <span class="pre">U&#64;850hPa,</span>
+<span class="pre">V&#64;850hPa</span></code>. The default covers EAM output. EAMxx users should set this
+to the corresponding EAMxx variable names, e.g.
+<code class="docutils literal notranslate"><span class="pre">SeaLevelPressure,T_mid_at_200hPa,T_mid_at_500hPa,U_at_model_bot,V_at_model_bot,U_at_850hPa,V_at_850hPa</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<section id="parameters-at-the-top-level">
+<h3>Parameters at the top-level<a class="headerlink" href="#parameters-at-the-top-level" title="Link to this heading"></a></h3>
+<p>This parameter has a <code class="docutils literal notranslate"><span class="pre">tc_analysis</span></code>-specific default, which means even if it
+is set at the top level (<code class="docutils literal notranslate"><span class="pre">[default]</span></code>) section, the default value will be
+used instead. Therefore, to specify a custom value, this parameter must be
+defined inside <code class="docutils literal notranslate"><span class="pre">[tc_analysis]</span></code>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">input_files</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;eam.h2&quot;</span></code></p></td>
+<td><p>Input history file pattern. Overrides the <code class="docutils literal notranslate"><span class="pre">[default]</span></code> value
+(<code class="docutils literal notranslate"><span class="pre">eam.h0</span></code>).</p></td>
+</tr>
+</tbody>
+</table>
+<p>For other top-level parameters, see <a class="reference internal" href="../parameters.html#parameters-top-level"><span class="std std-ref">top-level parameters</span></a>.</p>
+</section>
+</section>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h2>
+<p><strong>Upstream (what tc_analysis depends on):</strong></p>
+<ul class="simple">
+<li><p>None.</p></li>
+</ul>
+<p><strong>Downstream (what depends on tc_analysis):</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="e3sm_diags.html"><span class="doc">e3sm_diags — E3SM Diagnostics</span></a> — Required for tc_analysis set.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="e3sm_to_cmip.html" class="btn btn-neutral float-left" title="e3sm_to_cmip — CMIP6 Conversion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="e3sm_diags.html" class="btn btn-neutral float-right" title="e3sm_diags — E3SM Diagnostics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../../../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../../../v2.0.0/index.html">v2.0.0</a></dd>
+      <dd><a href="../../../v2.1.0/index.html">v2.1.0</a></dd>
+      <dd><a href="../../../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../../../v2.3.0/index.html">v2.3.0</a></dd>
+      <dd><a href="../../../v2.3.1/index.html">v2.3.1</a></dd>
+      <dd><a href="../../../v2.4.0/index.html">v2.4.0</a></dd>
+      <dd><a href="../../../v2.5.0/index.html">v2.5.0</a></dd>
+      <dd><a href="../../../v3.0.0/index.html">v3.0.0</a></dd>
+      <dd><a href="../../../v3.1.0/index.html">v3.1.0</a></dd>
+      <dd><a href="../../../v3.2.0/index.html">v3.2.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="tc_analysis.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,812 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pcmdi_diags — PCMDI Metrics &mdash; zppy  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Model Components" href="../components/index.html" />
+    <link rel="prev" title="livvkit — Ice Sheet Validation" href="livvkit.html" />
+    <link href="../../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../campaigns.html">Campaigns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parameters.html">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dependencies.html">Dependencies</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tasks</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="bundle.html">bundle — Job Bundling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="climo.html">climo — Climatology Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ts.html">ts — Time Series Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="e3sm_to_cmip.html">e3sm_to_cmip — CMIP6 Conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tc_analysis.html">tc_analysis — Tropical Cyclone Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="e3sm_diags.html">e3sm_diags — E3SM Diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mpas_analysis.html">mpas_analysis — Ocean and Sea-Ice Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="global_time_series.html">global_time_series — Global Time Series Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ilamb.html">ilamb — Land Benchmarking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="livvkit.html">livvkit — Ice Sheet Validation</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">pcmdi_diags — PCMDI Metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#diagnostic-sets">Diagnostic sets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../components/index.html">Model Components</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dev_guide/index.html">Developer Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Tasks</a></li>
+      <li class="breadcrumb-item active">pcmdi_diags — PCMDI Metrics</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/tasks/pcmdi_diags.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="pcmdi-diags-pcmdi-metrics">
+<span id="task-pcmdi-diags"></span><h1>pcmdi_diags — PCMDI Metrics<a class="headerlink" href="#pcmdi-diags-pcmdi-metrics" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">pcmdi_diags</span></code> task runs <a class="reference external" href="https://pcmdi.github.io/pcmdi_metrics/">PCMDI Metrics Package (PMP)</a> diagnostics to compute climate
+model performance metrics. It depends on the <a class="reference internal" href="e3sm_to_cmip.html"><span class="doc">e3sm_to_cmip — CMIP6 Conversion</span></a> task for
+CMIP-format input data.</p>
+<section id="diagnostic-sets">
+<h2>Diagnostic sets<a class="headerlink" href="#diagnostic-sets" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">current_set</span></code> parameter selects which PMP diagnostic to run:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mean_climate</span></code> — climatological mean metrics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variability_modes_cpl</span></code> — coupled variability modes (PDO, NPGO, AMO)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variability_modes_atm</span></code> — atmospheric variability modes (NAM, NAO, PNA, etc.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enso</span></code> — ENSO metrics (not currently enabled by default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">synthetic_plots</span></code> — composite viewer page combining outputs from other sets</p></li>
+</ul>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<p>These 71 parameters are specific to the <code class="docutils literal notranslate"><span class="pre">pcmdi_diags</span></code> task.</p>
+<section id="task-level-parameters-all-sets">
+<h3>Task-level parameters (all sets)<a class="headerlink" href="#task-level-parameters-all-sets" title="Link to this heading"></a></h3>
+<p>There are 6 task-level (all sets) parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">figure_format</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;png&quot;</span></code></p></td>
+<td><p>Output figure format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">run_type</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;model_vs_obs&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;model_vs_obs&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;model_vs_model&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_name</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;e3sm.historical.v3-LR.0051&quot;</span></code></p></td>
+<td><p>Model name (required for model-vs-observations runs).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_tableID</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;Amon&quot;</span></code></p></td>
+<td><p>CMIP table ID (required for model-vs-observations runs).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_name_ref</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;ERA5&quot;</span></code></p></td>
+<td><p>Reference model name (required for model-vs-model runs).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_tableID_ref</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;Amon&quot;</span></code></p></td>
+<td><p>Reference CMIP table ID (required for model-vs-model runs).</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="task-level-parameters-all-sets-except-synthetic-plots">
+<h3>Task-level parameters (all sets except synthetic_plots)<a class="headerlink" href="#task-level-parameters-all-sets-except-synthetic-plots" title="Link to this heading"></a></h3>
+<p>There are 14 task-level (all sets except synthetic_plots) parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip_atm_subsection</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Name of the <code class="docutils literal notranslate"><span class="pre">[e3sm_to_cmip]</span></code> atmosphere subtask to depend on.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">generate_sftlf</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Process the land/sea mask within PCMDI.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mov_plot_obs</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Generate variability-modes observation plots.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mov_plot_model</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Generate variability-modes model plots.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mov_nc_out_obs</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Write variability-modes observation NetCDF output.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mov_nc_out_model</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Write variability-modes model NetCDF output.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multiprocessing</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Use multiprocessing.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">num_workers</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">24</span></code></p></td>
+<td><p>Number of worker processes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">obs_ts</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Path to observation time-series data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pcmdi_debug</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Enable debug mode in PCMDI diagnostics.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">save_test_clims</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Save derived test climatology data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Path to reference model data for model-vs-model runs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reference_data_path_ts</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Path to reference model time-series data for model-vs-model runs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ts_years</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[&quot;&quot;]</span></code></p></td>
+<td><p>Year ranges for test model data.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="per-subtask-shared-parameters">
+<h3>Per-subtask shared parameters<a class="headerlink" href="#per-subtask-shared-parameters" title="Link to this heading"></a></h3>
+<p>There are 5 per-subtask shared parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">current_set</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Diagnostic set to run.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">obs_sets</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code></p></td>
+<td><p>Observational dataset aliases to use.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ref_final_yr</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>End year for reference data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ref_start_yr</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Start year for reference data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ref_years</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[&quot;&quot;]</span></code></p></td>
+<td><p>Year ranges for reference data.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="mean-climate-parameters">
+<h3>Mean_climate parameters<a class="headerlink" href="#mean-climate-parameters" title="Link to this heading"></a></h3>
+<p>There are 7 mean_climate parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cmip_vars</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;pr,prw,psl,...&quot;</span></code></p></td>
+<td><p>CMIP variables to include for mean-climate diagnostics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target_grid</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;1x1&quot;</span></code></p></td>
+<td><p>Target regridding grid.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_grid_string</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;1px1p&quot;</span></code></p></td>
+<td><p>Descriptor string for the target grid.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">regrid_tool</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;esmf&quot;</span></code></p></td>
+<td><p>Regridding tool for atmosphere fields.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">regrid_tool_ocn</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;esmf&quot;</span></code></p></td>
+<td><p>Regridding tool for ocean fields.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">regrid_method</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;regrid2&quot;</span></code></p></td>
+<td><p>Regridding method for atmosphere fields.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">regrid_method_ocn</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;conservative&quot;</span></code></p></td>
+<td><p>Regridding method for ocean fields.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="mean-climate-synthetic-plots-parameters">
+<h3>Mean_climate &amp; synthetic_plots parameters<a class="headerlink" href="#mean-climate-synthetic-plots-parameters" title="Link to this heading"></a></h3>
+<p>There are 2 mean_climate &amp; synthetic_plots parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">clim_vars</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;pr,prw,psl,...&quot;</span></code></p></td>
+<td><p>Variables for mean-climate and synthetic-plot diagnostics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">clim_regions</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;global,ocean,land&quot;</span></code></p></td>
+<td><p>Regions used for mean-climate metrics.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="variability-modes-parameters">
+<h3>Variability_modes parameters<a class="headerlink" href="#variability-modes-parameters" title="Link to this heading"></a></h3>
+<p>There are 9 variability_modes parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CBF</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Use Common Base Function approach.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ConvEOF</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Compute conventional EOF.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">eofn_mod_max</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
+<td><p>Maximum number of EOF modes for model data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EofScaling</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Apply EOF scaling.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">landmask</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Apply land-mask handling in variability diagnostics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ModUnitsAdjust</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Unit-adjustment keywords for model data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ObsUnitsAdjust</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Unit-adjustment keywords for observation data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RmDomainMean</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Remove domain mean before variability calculations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seasons</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;monthly&quot;</span></code></p></td>
+<td><p>Seasons/frequency bins to analyze.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="variability-modes-synthetic-plots-parameters">
+<h3>Variability_modes &amp; synthetic_plots parameters<a class="headerlink" href="#variability-modes-synthetic-plots-parameters" title="Link to this heading"></a></h3>
+<p>There are 4 variability_modes &amp; synthetic_plots parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mova_vars</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;psl&quot;</span></code></p></td>
+<td><p>Variables for <code class="docutils literal notranslate"><span class="pre">variability_modes_atm</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mova_modes</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;NAM,NAO,PNA,NPO,SAM,PSA1,PSA2&quot;</span></code></p></td>
+<td><p>Modes for <code class="docutils literal notranslate"><span class="pre">variability_modes_atm</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">movc_vars</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;ts&quot;</span></code></p></td>
+<td><p>Variables for <code class="docutils literal notranslate"><span class="pre">variability_modes_cpl</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">movc_modes</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;PDO,NPGO,AMO&quot;</span></code></p></td>
+<td><p>Modes for <code class="docutils literal notranslate"><span class="pre">variability_modes_cpl</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="enso-parameters">
+<h3>ENSO parameters<a class="headerlink" href="#enso-parameters" title="Link to this heading"></a></h3>
+<p>There is 1 ENSO parameter:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enso_groups</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;ENSO_perf,ENSO_proc,ENSO_tel&quot;</span></code></p></td>
+<td><p>ENSO metric groups to run.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="enso-synthetic-plots-parameters">
+<h3>ENSO &amp; synthetic_plots parameters<a class="headerlink" href="#enso-synthetic-plots-parameters" title="Link to this heading"></a></h3>
+<p>There is 1 ENSO &amp; synthetic_plots parameter:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enso_vars</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;psl,pr,prsn,ts,tas,tauu,tauv,hflx,hfss,rlds,rsds,rlus,rlut,rsdt&quot;</span></code></p></td>
+<td><p>Variables used by ENSO diagnostics.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="synthetic-plots-parameters">
+<h3>Synthetic_plots parameters<a class="headerlink" href="#synthetic-plots-parameters" title="Link to this heading"></a></h3>
+<p>There are 22 synthetic_plots parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">clim_viewer</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Include mean-climate panels in the synthetic viewer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">clim_years</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Year range used for mean-climate synthetic panels.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mova_viewer</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Include atmospheric variability-mode panels in the synthetic viewer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mova_years</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Year range used for atmospheric variability synthetic panels.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">movc_viewer</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Include coupled variability-mode panels in the synthetic viewer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">movc_years</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Year range used for coupled variability synthetic panels.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enso_viewer</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Include ENSO panels in the synthetic viewer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">enso_years</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Year range used for ENSO synthetic panels.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">save_all_data</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Save all intermediate synthetic-diagnostic data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reference_alias</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;inclusions/pcmdi_diags/reference_alias.json&quot;</span></code></p></td>
+<td><p>Observation alias file.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">regions_specs</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;inclusions/pcmdi_diags/regions_specs.json&quot;</span></code></p></td>
+<td><p>Region-specification file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pcmdi_version</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;v3.8.2&quot;</span></code></p></td>
+<td><p>Version tag for the zppy-pcmdi workflow.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pcmdi_viewer_template</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;pcmdi_data/viewer&quot;</span></code></p></td>
+<td><p>Template directory for synthetic-viewer generation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pcmdi_webtitle</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;E3SM-PMP-Diagnostics&quot;</span></code></p></td>
+<td><p>Title used in generated PCMDI web output.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">synthetic_metrics_list</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;inclusions/pcmdi_diags/synthetic_metrics_list.json&quot;</span></code></p></td>
+<td><p>Metrics-list file used to assemble synthetic plots.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">synthetic_sets</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;portrait,parcoord&quot;</span></code></p></td>
+<td><p>Synthetic plot types to generate.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cmip_clim_dir</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Directory containing CMIP mean-climate metrics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cmip_enso_dir</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Directory containing CMIP ENSO metrics.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cmip_movs_dir</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Directory containing CMIP variability-mode metrics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cmip_clim_set</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;cmip6.historical.v20250707&quot;</span></code></p></td>
+<td><p>CMIP mean-climate metrics set ID.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cmip_enso_set</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;cmip6.historical.v20210620&quot;</span></code></p></td>
+<td><p>CMIP ENSO metrics set ID.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cmip_movs_set</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;cmip6.historical.v20220825&quot;</span></code></p></td>
+<td><p>CMIP variability-mode metrics set ID.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="parameters-at-the-top-level">
+<h3>Parameters at the top-level<a class="headerlink" href="#parameters-at-the-top-level" title="Link to this heading"></a></h3>
+<p>These 3 parameters have <code class="docutils literal notranslate"><span class="pre">pcmdi_diags</span></code>-specific defaults, which means even if
+they are set at the top level (<code class="docutils literal notranslate"><span class="pre">[default]</span></code>) section, these default values
+will be used instead. Therefore, to specify custom values, these parameters
+must be defined inside <code class="docutils literal notranslate"><span class="pre">[pcmdi_diags]</span></code>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">grid</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;180x360_aave&quot;</span></code></p></td>
+<td><p>Model data grid after remapping. Overrides the <code class="docutils literal notranslate"><span class="pre">[default]</span></code> value
+(<code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ts_num_years</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">5</span></code></p></td>
+<td><p>Year increment for test model data. Overrides the
+<code class="docutils literal notranslate"><span class="pre">[default]</span></code> value (<code class="docutils literal notranslate"><span class="pre">5</span></code>), which in this case is actually the same value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;mo&quot;</span></code></p></td>
+<td><p>Data frequency for variability-mode calculations. Overrides the
+<code class="docutils literal notranslate"><span class="pre">[default]</span></code> value (<code class="docutils literal notranslate"><span class="pre">&quot;monthly&quot;</span></code>).</p></td>
+</tr>
+</tbody>
+</table>
+<p>For other top-level parameters, see <a class="reference internal" href="../parameters.html#parameters-top-level"><span class="std std-ref">top-level parameters</span></a>.</p>
+</section>
+</section>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h2>
+<p><strong>Upstream (what pcmdi_diags depends on):</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="ts.html"><span class="doc">ts — Time Series Files</span></a> — Monthly-atm ts: mean_climate, variability_modes_atm,variability_modes_cpl, enso</p></li>
+<li><p><a class="reference internal" href="e3sm_to_cmip.html"><span class="doc">e3sm_to_cmip — CMIP6 Conversion</span></a> — Monthly-atm e3sm_to_cmip: mean_climate, variability_modes_atm,variability_modes_cpl, enso</p></li>
+<li><p>Note that the synthetic_plots set depends on the other sets.</p></li>
+</ul>
+<p><strong>Downstream (what depends on pcmdi_diags):</strong></p>
+<ul class="simple">
+<li><p>None.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="livvkit.html" class="btn btn-neutral float-left" title="livvkit — Ice Sheet Validation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../components/index.html" class="btn btn-neutral float-right" title="Model Components" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../../../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../../../v2.0.0/index.html">v2.0.0</a></dd>
+      <dd><a href="../../../v2.1.0/index.html">v2.1.0</a></dd>
+      <dd><a href="../../../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../../../v2.3.0/index.html">v2.3.0</a></dd>
+      <dd><a href="../../../v2.3.1/index.html">v2.3.1</a></dd>
+      <dd><a href="../../../v2.4.0/index.html">v2.4.0</a></dd>
+      <dd><a href="../../../v2.5.0/index.html">v2.5.0</a></dd>
+      <dd><a href="../../../v3.0.0/index.html">v3.0.0</a></dd>
+      <dd><a href="../../../v3.1.0/index.html">v3.1.0</a></dd>
+      <dd><a href="../../../v3.2.0/index.html">v3.2.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="pcmdi_diags.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

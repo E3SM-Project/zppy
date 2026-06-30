@@ -21,15 +21,15 @@ Guidelines for VC
 3. **Rebase** with ``main`` to avoid/resolve conflicts
 4. Make sure ``pre-commit`` checks pass when committing (enforced in CI/CD build)
 5. Open a pull-request (PR) early for discussion
-6. Once the CI/CD build passes and PR is approved, **squash and rebase** your
-   commits
-7. Merge PR into ``main`` and **delete the branch**
+6. Once the CI/CD build passes and PR is approved, the PR is ready to merge.  
+7. Merge PR into ``main``. For small changes, use the "Squash and merge" option. For big changes with many distinct commits, or commits contributed by different developers, use the "Create a merge commit" option.
+8. Delete the branch on GitHub and in your local workspace.
 
 Things to Avoid in VC
 ~~~~~~~~~~~~~~~~~~~~~
 1. Don't merge in broken or commented out code
 2. Don't commit onto ``main`` directly
-3. Don't merge with conflicts (handle conflicts upon rebasing)
+3. Don't merge with conflicts (handle conflicts by rebasing: ``git rebase upstream/main``)
 
 Source: https://gist.github.com/jbenet/ee6c9ac48068889b0912
 
@@ -46,6 +46,16 @@ at the commit level before submitting code reviews.
 
 Helpful ``pre-commit`` Commands
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``zppy`` uses the following pre-commit checks:
+
+* **trailing-whitespace** - Trims trailing whitespace from the end of each line.
+* **end-of-file-fixer** - Ensures files end with a single newline character.
+* **check-yaml** - Validates YAML files for correct syntax.
+* **black** - Auto-formats Python code to a consistent style using the `black <https://black.readthedocs.io/en/stable/>`_ formatter.
+* **isort** - Sorts and organizes Python import statements alphabetically and by type using `isort <https://pycqa.github.io/isort/>`_.
+* **flake8** - Lints Python code for style violations and common errors (PEP 8) using `flake8 <https://github.com/PyCQA/flake8#flake8>`_.
+* **mypy** - Runs static type checking on Python code using type annotations using `mypy <http://mypy-lang.org/>`_.
 
 Install into your cloned repo ::
 
@@ -71,88 +81,13 @@ Run individual hook ::
     # Available hook ids: trailing-whitespace, end-of-file-fixer, check-yaml, black, isort, flake8, mypy
     pre-commit run <hook_id>
 
-Squash and Rebase Commits
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Before you merge a support branch back into ``main``, the branch is typically
-squashed down to a single* buildable commit, and then rebased on top of the main repo's ``main`` branch.
-
-\* *In some cases, it might be logical to have multiple squashed commits, as long as each commit passes the CI/CD build*
-
-Why squash and rebase commits?
-
-- Ensures build passes from the commit
-- Cleans up Git history for easy navigation
-- Makes collaboration and review process more efficient
-- Makes handling conflicts from rebasing simple since there are fewer commits to fix conflicts on
-- Makes ``git bisect`` easier and more effective to use. For example, it will show the exact commit that introduced a bug since the commit contains a relatively small changeset. On the otherhand, a merge commit bringing in many commits makes it much harder since it includes a large changeset. A changeset is a collection of commits that are logically grouped together.
-
-
-How to squash and rebase commits
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Assuming that you followed :ref:`"(b) Development Environment" <dev-env>`:
-
-1. Sync ``main`` with the main repo's ``main`` ::
-
-    git checkout main
-    git rebase <upstream-origin>/main
-    git push -f <fork-origin> main
-
-2. Get the SHA of the commit OR number of commits to rebase to ::
-
-    git log --graph --decorate --pretty=oneline --abbrev-commit
-
-3. Squash commits::
-
-    git rebase -i [SHA]
-
-    # OR
-
-    git rebase -i HEAD~[NUMBER OF COMMITS]
-
-4. Make sure your squashed commit messages are refined
-
-5. Rebase branch onto ``main`` ::
-
-    git checkout <branch-name>
-    git rebase main
-    git push -f <fork-origin> <branch-name>
-
-6. Force push to remote branch ::
-
-    # You have to force push because the rebase rewrites the commit SHAs
-    git push -f <fork-origin> <branch-name>
-
-Source:
-https://blog.carbonfive.com/always-squash-and-rebase-your-git-commits/
-
-Code Quality Assurance
-----------------------
-
-This project uses several tools for code formatting, linting, and type checking listed below.
-
-- Code Formatting: `black <https://black.readthedocs.io/en/stable/>`__
-- Linting: `flake8 <https://github.com/PyCQA/flake8#flake8>`__, `isort <https://pycqa.github.io/isort/>`__
-- Optional Type Checking: `mypy <http://mypy-lang.org/>`__
-
-You can run them as hooks manually/automatically when committing using ``pre-commit``, or manually through the terminal or IDE/text editor.
-
-Helpful Commands
-~~~~~~~~~~~~~~~~
-
-Run a tool
-    ::
-
-       # Available tool names: black, flake8, isort, mypy
-       <tool_name> .
 
 .. _ci-cd:
 
 Continuous Integration / Continuous Delivery (CI/CD)
 ----------------------------------------------------
 
-This project uses `GitHub Actions <https://github.com/E3SM-Project/zppy/actions>`_ to run two CI/CD workflows.
+This project uses `GitHub Actions <https://github.com/E3SM-Project/zppy/actions>`_ to run two CI/CD workflows. The workflows are defined `here <https://github.com/E3SM-Project/zppy/tree/main/.github/workflows>`_.
 
 1. CI/CD Build Workflow
 
@@ -164,6 +99,8 @@ This project uses `GitHub Actions <https://github.com/E3SM-Project/zppy/actions>
     2. Run test suite in a conda environment
     3. Publish latest ``main`` docs (only on ``push``)
 
+  When a pull request is made, the build workflow is run automatically on the pushed branch. When the pull request is merged, the build workflow is once again run, but this time on the ``main`` branch.
+
 2. CI/CD Release Workflow
 
   This workflow is triggered by the Git ``publish`` event, which occurs when a new release is tagged.
@@ -173,10 +110,6 @@ This project uses `GitHub Actions <https://github.com/E3SM-Project/zppy/actions>
     1. Publish new release docs
     2. Publish Anaconda package
 
-Style Guide
------------
-
-This project follows the Black code style. Please read about it more `here <https://black.readthedocs.io/en/stable/the_black_code_style.html>`__.
 
 API Documentation
 -----------------

@@ -1,0 +1,623 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parameters &mdash; zppy  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Dependencies" href="dependencies.html" />
+    <link rel="prev" title="Campaigns" href="campaigns.html" />
+    <link href="../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="campaigns.html">Campaigns</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Parameters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#parameters-for-individual-tasks">Parameters for individual tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parameters-at-the-top-level">Parameters at the top-level</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parameter-checking-inferring">Parameter checking &amp; inferring</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deprecated-parameters">Deprecated parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dependencies.html">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks/index.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="components/index.html">Model Components</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev_guide/index.html">Developer Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">User Guide</a></li>
+      <li class="breadcrumb-item active">Parameters</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/user_guide/parameters.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="parameters">
+<span id="id1"></span><h1>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h1>
+<p>Parameters make use of inheritance. Parameters set in <code class="docutils literal notranslate"><span class="pre">[default]</span></code> can
+be overridden by parameters set in a <code class="docutils literal notranslate"><span class="pre">[section]</span></code>, which can themselves
+be overridden by parameters set in a <code class="docutils literal notranslate"><span class="pre">[[subsection]]</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Note that some parameters will be overridden by defaults if you define them too high up in the inheritance hierarchy.</p>
+</div>
+<p>See <a class="reference external" href="https://github.com/E3SM-Project/zppy/blob/885d53cb989119d77a21b4f25fe6109fc74a043e/zppy/defaults/default.ini">this release’s parameter defaults</a>
+on GitHub for a complete list of parameters and their default values.
+You can also view the most up-to-date,
+<a class="reference external" href="https://github.com/E3SM-Project/zppy/blob/main/zppy/defaults/default.ini">unreleased parameter defaults</a>.</p>
+<section id="parameters-for-individual-tasks">
+<h2>Parameters for individual tasks<a class="headerlink" href="#parameters-for-individual-tasks" title="Link to this heading"></a></h2>
+<p>For per-task parameter tables, see the <a class="reference internal" href="tasks/index.html#user-tasks"><span class="std std-ref">Tasks</span></a> section.</p>
+</section>
+<section id="parameters-at-the-top-level">
+<span id="parameters-top-level"></span><h2>Parameters at the top-level<a class="headerlink" href="#parameters-at-the-top-level" title="Link to this heading"></a></h2>
+<p>These parameters appear in the top-level <code class="docutils literal notranslate"><span class="pre">[default]</span></code> section of <code class="docutils literal notranslate"><span class="pre">zppy/defaults/default.ini</span></code>. They can be overridden in individual tasks and subtasks.</p>
+<p>There are 38 (non-deprecated) parameters that can be defined at the top level.</p>
+<p><strong>Input specifics</strong></p>
+<p>There are 2 input-specific parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">case</span></code></p></td>
+<td><p><strong>Yes</strong></p></td>
+<td><p><em>(none)</em></p></td>
+<td><p>The case name of the simulation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">input</span></code></p></td>
+<td><p><strong>Yes</strong></p></td>
+<td><p><em>(none)</em></p></td>
+<td><p>The top-level directory of the simulation output to post-process.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output specifics</strong></p>
+<p>There are 6 output-specific parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">output</span></code></p></td>
+<td><p><strong>Yes</strong></p></td>
+<td><p><em>(none)</em></p></td>
+<td><p>Where the post-processing results (<code class="docutils literal notranslate"><span class="pre">post/</span></code> directory) should go.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">www</span></code></p></td>
+<td><p><strong>Yes</strong></p></td>
+<td><p><em>(none)</em></p></td>
+<td><p>Where the post-processing visuals should go (to be viewed online).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">campaign</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code></p></td>
+<td><p>Specify which campaign you are running. Campaigns can be found in <code class="docutils literal notranslate"><span class="pre">zppy/defaults</span></code>. Possible campaigns include <code class="docutils literal notranslate"><span class="pre">cryosphere</span></code> and <code class="docutils literal notranslate"><span class="pre">water_cycle</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">debug</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Set to True to have <code class="docutils literal notranslate"><span class="pre">zppy</span></code> produce more verbose output and retain temporary workdirs. This is helpful for debugging.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dry_run</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>This should be set to True if you don’t want the batch jobs to be submitted. I.e., you only want to see what <em>would</em> be submitted.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fail_on_dependency_skip</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>If set to False, zppy will launch other jobs, if possible.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Machine specifics</strong></p>
+<p>There are 8 machine-specific parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">account</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>SLURM account to charge.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">constraint</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>The constraint of the machine to run on.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nodes</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>Number of compute nodes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">parallel</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;mpi&quot;</span></code></p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">parallel</span></code> option passed to <code class="docutils literal notranslate"><span class="pre">ncclimo</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">partition</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>SLURM partition to submit the job to.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">qos</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;regular&quot;</span></code></p></td>
+<td><p>Quality of service</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reservation</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>If you have access to a node reservation, specify it here.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">walltime</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;02:00:00&quot;</span></code></p></td>
+<td><p>Maximum wall time for the SLURM job.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Environment specifics</strong></p>
+<p>There are 3 environment-specific parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">environment_commands</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Shell commands to set up the software environment before running the
+task (e.g., <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/path/to/e3sm_unified.sh</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">environment_commands_secondary</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Shell commands to set up the <em>secondary</em> software environment before running the task (e.g., <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">/path/to/e3sm_unified.sh</span></code>). This is currently only used for the <code class="docutils literal notranslate"><span class="pre">pcmdi_diags</span></code> task.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nco_path</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Keep as the empty string to use production-version NCO commands. Set to the development-version path to use that instead.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Inference specifics</strong></p>
+<p>There are 2 inference-specific parameters. See “Parameter checking &amp; inferring” below for more info.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">infer_path_parameters</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>If true, infer file paths not given.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">infer_section_parameters</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>If true, infer dependencies not given.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Dependency specifics</strong></p>
+<p>There are 7 dependency-specific parameters. See <a class="reference internal" href="dependencies.html#dependency-graph"><span class="std std-ref">Dependencies</span></a> for more info on which tasks depend on which.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ts_atm_grid</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;180x360_aave&quot;</span></code></p></td>
+<td><p>Grid name of the atmosphere <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> subtask.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ts_atm_subsection</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Name of the <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> atmosphere subtask (for multi-component runs).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ts_grid</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;180x360_aave&quot;</span></code></p></td>
+<td><p>Grid name of the <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> subtask to depend on.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ts_land_grid</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;180x360_aave&quot;</span></code></p></td>
+<td><p>Grid name of the land <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> subtask.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ts_land_subsection</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Name of the <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> land subtask (for multi-component runs).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ts_num_years</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">5</span></code></p></td>
+<td><p>Years increment from the dependent <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> task.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ts_subsection</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Name of the <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> subtask to depend on. If empty and
+<code class="docutils literal notranslate"><span class="pre">infer_section_parameters</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, inferred from the
+subsection name.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Task specifics</strong></p>
+<p>There are 10 task-specific parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">active</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to enable this task.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bundle</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>(Set on individual tasks) Name of the bundle to include this task
+in.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;monthly&quot;</span></code></p></td>
+<td><p>The frequency of the data. Options include “monthly”, “diurnal_8xdaily”, “daily”.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">grid</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Name of the output grid (e.g., <code class="docutils literal notranslate"><span class="pre">180x360_aave</span></code>). Used for naming
+output directories.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">input_files</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;eam.h0&quot;</span></code></p></td>
+<td><p>Pattern matching the input history files (e.g., <code class="docutils literal notranslate"><span class="pre">eam.h0</span></code>,
+<code class="docutils literal notranslate"><span class="pre">eam.h1</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">input_subdir</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;archive/atm/hist&quot;</span></code></p></td>
+<td><p>Subdirectory under <code class="docutils literal notranslate"><span class="pre">input</span></code>/<code class="docutils literal notranslate"><span class="pre">case</span></code> containing the data files.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mapping_file</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Path to the mapping (regridding) file. Leave empty for no regridding.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">plugins</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>External zppy plugin modules</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vars</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,TAUX,TAUY,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT,CLDTOT,CLDHGH,CLDMED,CLDLOW,U,PSL&quot;</span></code></p></td>
+<td><p>Variables to process. An empty string processes all variables.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">years</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[&quot;&quot;]</span></code></p></td>
+<td><p>Year ranges to process. Format: <code class="docutils literal notranslate"><span class="pre">&quot;start:end:increment&quot;</span></code> (e.g.,
+<code class="docutils literal notranslate"><span class="pre">&quot;1:100:20&quot;</span></code>).</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Deprecated Parameters</strong></p>
+<p>There is 1 deprecated parameter. Specifying it will have no effect.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ncclimo_cmd
+</pre></div>
+</div>
+</section>
+<section id="parameter-checking-inferring">
+<h2>Parameter checking &amp; inferring<a class="headerlink" href="#parameter-checking-inferring" title="Link to this heading"></a></h2>
+<p>There are two types of inferences, each with their own parameter in <code class="docutils literal notranslate"><span class="pre">default.ini</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">infer_path_parameters</span></code>: infer paths that are not explicitly provided in the configuration file. Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">infer_section_parameters</span></code>: infer subtask dependency names that are not explicitly provided in the configuration file. Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+</ul>
+<p><strong>Section inferences</strong></p>
+<p>For the <code class="docutils literal notranslate"><span class="pre">climo</span></code>, <code class="docutils literal notranslate"><span class="pre">ts</span></code>, <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip</span></code>, and <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> tasks:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">subsection</span></code> (the name of the subtask) is undefined, just use the value of <code class="docutils literal notranslate"><span class="pre">grid</span></code>.</p></li>
+</ul>
+<p>For the <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip</span></code> task:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">ts_subsection</span></code> (the name of the <code class="docutils literal notranslate"><span class="pre">ts</span></code> subtask that this <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip</span></code> subtask is dependent on) is undefined, assume it had the same name as this <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip</span></code> subtask.</p></li>
+</ul>
+<p>For the <code class="docutils literal notranslate"><span class="pre">ilamb</span></code> task:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">ts_land_subsection</span></code> (the name of the <code class="docutils literal notranslate"><span class="pre">ts</span></code> land-specific subtask that this <code class="docutils literal notranslate"><span class="pre">ilamb</span></code> task is dependent on), assume it is <code class="docutils literal notranslate"><span class="pre">land_monthly</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip_land_subsection</span></code> (the name of the <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip</span></code> land-specific subtask that this <code class="docutils literal notranslate"><span class="pre">ilamb</span></code> task is dependent on), again assume it is <code class="docutils literal notranslate"><span class="pre">land_monthly</span></code>.</p></li>
+<li><p>If we are not doing a <code class="docutils literal notranslate"><span class="pre">land_only</span></code> run and <code class="docutils literal notranslate"><span class="pre">ts_atm_subsection</span></code> (the name of the <code class="docutils literal notranslate"><span class="pre">ts</span></code> atm-specific subtask that this <code class="docutils literal notranslate"><span class="pre">ilamb</span></code> task is dependent on), assume it is <code class="docutils literal notranslate"><span class="pre">atm_monthly_180x360_aave</span></code>.</p></li>
+<li><p>If we are not doing a <code class="docutils literal notranslate"><span class="pre">land_only</span></code> run and <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip_atm_subsection</span></code> (the name of the <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip</span></code> atm-specific subtask that this <code class="docutils literal notranslate"><span class="pre">ilamb</span></code> task is dependent on), again assume it is <code class="docutils literal notranslate"><span class="pre">atm_monthly_180x360_aave</span></code>.</p></li>
+</ul>
+<p>For the <code class="docutils literal notranslate"><span class="pre">livvkit</span></code> task:</p>
+<ul class="simple">
+<li><p>A grid-native climatology must be generated, assumed to be <code class="docutils literal notranslate"><span class="pre">land_monthly_climo_native</span></code></p></li>
+<li><p>For each reanalysis comparison to be performed, a corresponding <code class="docutils literal notranslate"><span class="pre">land_monthly_climo_GRID</span></code> where <code class="docutils literal notranslate"><span class="pre">GRID</span></code> corresponds to the reanalysis grid name</p></li>
+<li><dl class="simple">
+<dt>Available reanalysis comparisons are</dt><dd><ul>
+<li><p>racmo_gis, racmo_ais</p></li>
+<li><p>merra2</p></li>
+<li><p>era5</p></li>
+<li><p>ceres (default cmip6 grid)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Path inferences</strong></p>
+<p>For the <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> task:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> (the path to the reference data) is undefined, assume it is the <code class="docutils literal notranslate"><span class="pre">diagnostics_base_path</span></code> from Mache plus <code class="docutils literal notranslate"><span class="pre">/observations/Atm/climatology/</span></code>. (So, it is important to change this for model-vs-model runs).</p></li>
+</ul>
+<p>For the <code class="docutils literal notranslate"><span class="pre">mpas_analysis</span></code> task:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> and <code class="docutils literal notranslate"><span class="pre">test_data_path</span></code> are optional and are only used for model-vs-model comparisons.
+If provided, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> uses them to locate the MPAS-Analysis config files from a <em>previous</em> MPAS-Analysis run and passes those through to MPAS-Analysis as <code class="docutils literal notranslate"><span class="pre">controlRunConfigFile</span></code> (reference) and <code class="docutils literal notranslate"><span class="pre">mainRunConfigFile</span></code> (test).</p>
+<p>The comparison type of the <em>current</em> MPAS-Analysis run is inferred implicitly:
+if <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> is set, the run is treated as model-vs-model (<code class="docutils literal notranslate"><span class="pre">mvm</span></code>);
+otherwise it is treated as model-vs-observations (<code class="docutils literal notranslate"><span class="pre">mvo</span></code>). Users normally do
+not need to set a comparison type for the current run.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These parameter names are intentionally consistent with the terminology used by <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> for model-vs-model runs: in both cases, <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> identifies the <em>reference simulation’s zppy-generated outputs</em>.</p>
+<p>The practical difference is what each downstream tool consumes:
+<code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> needs <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> to be the specific directory containing the reference climatology files (typically under the reference run’s <code class="docutils literal notranslate"><span class="pre">post/.../clim</span></code> tree), whereas <code class="docutils literal notranslate"><span class="pre">mpas_analysis</span></code> needs to find the reference MPAS-Analysis config file.
+For MPAS-Analysis, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> resolves the config file when <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> points to the prior run’s zppy output directory (the one containing <code class="docutils literal notranslate"><span class="pre">post/</span></code>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> is intended to point to the prior run’s zppy output directory (the one containing <code class="docutils literal notranslate"><span class="pre">post/</span></code>). <code class="docutils literal notranslate"><span class="pre">zppy</span></code> will then use:
+<code class="docutils literal notranslate"><span class="pre">&lt;reference_data_path&gt;/post/analysis/mpas_analysis/&lt;comparison_type&gt;/cfg/mpas_analysis_&lt;identifier&gt;.cfg</span></code>
+where <code class="docutils literal notranslate"><span class="pre">&lt;comparison_type&gt;</span></code> is <code class="docutils literal notranslate"><span class="pre">mvo</span></code> or <code class="docutils literal notranslate"><span class="pre">mvm</span></code>.</p>
+<p>For referenced prior runs, <code class="docutils literal notranslate"><span class="pre">reference_comparison_type</span></code> and
+<code class="docutils literal notranslate"><span class="pre">test_comparison_type</span></code> can be set to <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mvo&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;mvm&quot;</span></code>.
+The default is <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>. In auto mode:</p>
+<ul class="simple">
+<li><p>if the path points to <code class="docutils literal notranslate"><span class="pre">[[subsection]]</span></code>, zppy uses the referenced subsection’s actual comparison type</p></li>
+<li><p>if the path points to an external zppy output directory, zppy looks for the matching cfg under <code class="docutils literal notranslate"><span class="pre">mvo</span></code> and <code class="docutils literal notranslate"><span class="pre">mvm</span></code></p></li>
+<li><p>if both exist for the same identifier, zppy raises an error and the user should set <code class="docutils literal notranslate"><span class="pre">reference_comparison_type</span></code> or <code class="docutils literal notranslate"><span class="pre">test_comparison_type</span></code> explicitly</p></li>
+</ul>
+<p>When <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> is set to a non-subsection path, <code class="docutils literal notranslate"><span class="pre">reference_case</span></code> is required so the MVM output directory can include the reference case name. If <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> is set to <code class="docutils literal notranslate"><span class="pre">[[subsection]]</span></code>, <code class="docutils literal notranslate"><span class="pre">reference_case</span></code> is inferred to be the same as the current <code class="docutils literal notranslate"><span class="pre">case</span></code>.</p>
+</div>
+</li>
+</ul>
+<p><strong>MPAS-Analysis model-vs-model year ranges</strong></p>
+<p>MPAS-Analysis comparisons are configured by year ranges, similar to other <code class="docutils literal notranslate"><span class="pre">zppy</span></code> tasks.
+For model-vs-model comparisons, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> supports separate year ranges for the test and reference runs:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">ts_years</span></code>, <code class="docutils literal notranslate"><span class="pre">climo_years</span></code>, <code class="docutils literal notranslate"><span class="pre">enso_years</span></code> define the test run year ranges.</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">test_data_path</span></code> references a prior <code class="docutils literal notranslate"><span class="pre">[mpas_analysis]</span></code> subsection using
+<code class="docutils literal notranslate"><span class="pre">[[subsection]]</span></code>, and these values are not provided, zppy uses that
+subsection’s year ranges instead.</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ref_ts_years</span></code>, <code class="docutils literal notranslate"><span class="pre">ref_climo_years</span></code>, <code class="docutils literal notranslate"><span class="pre">ref_enso_years</span></code> optionally override the reference run year ranges.</p></li>
+</ul>
+<p>If a <code class="docutils literal notranslate"><span class="pre">ref_*_years</span></code> parameter is not provided, it defaults to the corresponding test year ranges.
+If <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> references a prior <code class="docutils literal notranslate"><span class="pre">[mpas_analysis]</span></code> subsection using <code class="docutils literal notranslate"><span class="pre">[[subsection]]</span></code>,
+the defaults come from that subsection’s year ranges instead.
+If a <code class="docutils literal notranslate"><span class="pre">ref_*_years</span></code> parameter contains a single range and multiple test ranges are requested, the single reference range is used for each test range.</p>
+<p>For the <code class="docutils literal notranslate"><span class="pre">ilamb</span></code> task:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">ilamb_obs</span></code> (the path to observation data for <code class="docutils literal notranslate"><span class="pre">ilamb</span></code>) is undefined, assume it is the <code class="docutils literal notranslate"><span class="pre">diagnostics_base_path</span></code> from Mache plus <code class="docutils literal notranslate"><span class="pre">/ilamb_data</span></code>.</p></li>
+</ul>
+</section>
+<section id="deprecated-parameters">
+<h2>Deprecated parameters<a class="headerlink" href="#deprecated-parameters" title="Link to this heading"></a></h2>
+<p>The following <code class="docutils literal notranslate"><span class="pre">zppy</span></code> parameters no longer perform any function.</p>
+<p>These are no longer defined in <code class="docutils literal notranslate"><span class="pre">zppy/defaults/default.ini</span></code>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>e3sm_to_cmip_environment_commands
+ts_fmt
+scratch
+atmosphere_only
+plot_names
+vars_exclude
+</pre></div>
+</div>
+<p>These are still defined in <code class="docutils literal notranslate"><span class="pre">zppy/defaults/default.ini</span></code>, but have no effect:</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="campaigns.html" class="btn btn-neutral float-left" title="Campaigns" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dependencies.html" class="btn btn-neutral float-right" title="Dependencies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../../v2.0.0/index.html">v2.0.0</a></dd>
+      <dd><a href="../../v2.1.0/index.html">v2.1.0</a></dd>
+      <dd><a href="../../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../../v2.3.0/index.html">v2.3.0</a></dd>
+      <dd><a href="../../v2.3.1/index.html">v2.3.1</a></dd>
+      <dd><a href="../../v2.4.0/index.html">v2.4.0</a></dd>
+      <dd><a href="../../v2.5.0/index.html">v2.5.0</a></dd>
+      <dd><a href="../../v3.0.0/index.html">v3.0.0</a></dd>
+      <dd><a href="../../v3.1.0/index.html">v3.1.0</a></dd>
+      <dd><a href="../../v3.2.0/index.html">v3.2.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="parameters.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

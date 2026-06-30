@@ -1,0 +1,265 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Land — ELM &mdash; zppy  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Rivers — MOSART" href="rivers.html" />
+    <link rel="prev" title="Atmosphere — EAM and EAMxx" href="atmosphere.html" />
+    <link href="../../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../campaigns.html">Campaigns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parameters.html">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dependencies.html">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tasks/index.html">Tasks</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Model Components</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="atmosphere.html">Atmosphere — EAM and EAMxx</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Land — ELM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#relevant-zppy-tasks">Relevant zppy tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#elm-time-series-configuration">ELM time-series configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cmip-conversion-for-ilamb">CMIP conversion for ILAMB</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ice-sheet-validation-with-livvkit">Ice sheet validation with LIVVkit</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes-for-elm-developers">Notes for ELM developers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rivers.html">Rivers — MOSART</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ocean.html">Ocean — MPAS-Ocean</a></li>
+<li class="toctree-l3"><a class="reference internal" href="seaice.html">Sea Ice — MPAS-seaice</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dev_guide/index.html">Developer Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Model Components</a></li>
+      <li class="breadcrumb-item active">Land — ELM</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/components/land.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="land-elm">
+<span id="component-land"></span><h1>Land — ELM<a class="headerlink" href="#land-elm" title="Link to this heading"></a></h1>
+<p><strong>ELM</strong> (E3SM Land Model) is E3SM’s land component, based on CLM5. It
+simulates vegetation, soil, hydrology, and carbon/nitrogen cycles.</p>
+<section id="relevant-zppy-tasks">
+<h2>Relevant zppy tasks<a class="headerlink" href="#relevant-zppy-tasks" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../tasks/ts.html"><span class="doc">ts — Time Series Files</span></a> — generate land time-series files</p></li>
+<li><p><a class="reference internal" href="../tasks/e3sm_to_cmip.html"><span class="doc">e3sm_to_cmip — CMIP6 Conversion</span></a> — convert land output to CMIP6 format</p></li>
+<li><p><a class="reference internal" href="../tasks/e3sm_diags.html"><span class="doc">e3sm_diags — E3SM Diagnostics</span></a> — land diagnostics (e.g., <code class="docutils literal notranslate"><span class="pre">lat_lon</span></code> set with land variables)</p></li>
+<li><p><a class="reference internal" href="../tasks/ilamb.html"><span class="doc">ilamb — Land Benchmarking</span></a> — land benchmarking against observational datasets</p></li>
+<li><p><a class="reference internal" href="../tasks/livvkit.html"><span class="doc">livvkit — Ice Sheet Validation</span></a> — ice sheet validation (for cryosphere configurations)</p></li>
+<li><p><a class="reference internal" href="../tasks/global_time_series.html"><span class="doc">global_time_series — Global Time Series Plots</span></a> — land global time series (via <code class="docutils literal notranslate"><span class="pre">plots_lnd</span></code>)</p></li>
+</ul>
+</section>
+<section id="elm-time-series-configuration">
+<h2>ELM time-series configuration<a class="headerlink" href="#elm-time-series-configuration" title="Link to this heading"></a></h2>
+<p>ELM output is typically in monthly <code class="docutils literal notranslate"><span class="pre">elm.h0</span></code> files. A typical <code class="docutils literal notranslate"><span class="pre">[ts]</span></code>
+configuration for land:</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[ts]</span>
+<span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+
+<span class="w">  </span><span class="k">[[land_monthly]]</span>
+<span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">elm.h0</span>
+<span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">archive/lnd/hist</span>
+<span class="w">  </span><span class="na">input_component</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">elm</span>
+<span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/map_r05_to_cmip6_180x360_aave.nc</span>
+<span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">180x360_aave</span>
+<span class="w">  </span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:10</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">input_component</span> <span class="pre">=</span> <span class="pre">elm</span></code> setting tells <code class="docutils literal notranslate"><span class="pre">zppy</span></code> that this is ELM
+output. This is required for correct processing by <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ilamb</span></code>.</p>
+</section>
+<section id="cmip-conversion-for-ilamb">
+<h2>CMIP conversion for ILAMB<a class="headerlink" href="#cmip-conversion-for-ilamb" title="Link to this heading"></a></h2>
+<p>ILAMB requires CMIP6-format data. The <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip</span></code> task must be run
+first. Typical configuration:</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[e3sm_to_cmip]</span>
+<span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+
+<span class="w">  </span><span class="k">[[land_monthly]]</span>
+<span class="w">  </span><span class="na">input_component</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">elm</span>
+<span class="w">  </span><span class="na">ts_land_subsection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">land_monthly</span>
+
+<span class="k">[ilamb]</span>
+<span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="na">land_only</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">False</span>
+<span class="na">e3sm_to_cmip_land_subsection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">land_monthly</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">ilamb</span></code> task will depend on both the land and atmosphere
+<code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip</span></code> subtasks (unless <code class="docutils literal notranslate"><span class="pre">land_only</span> <span class="pre">=</span> <span class="pre">True</span></code>). With
+<code class="docutils literal notranslate"><span class="pre">infer_section_parameters</span> <span class="pre">=</span> <span class="pre">True</span></code> (default), subsection names for land
+tasks default to <code class="docutils literal notranslate"><span class="pre">land_monthly</span></code> and atmosphere tasks default to
+<code class="docutils literal notranslate"><span class="pre">atm_monthly_180x360_aave</span></code>.</p>
+</section>
+<section id="ice-sheet-validation-with-livvkit">
+<h2>Ice sheet validation with LIVVkit<a class="headerlink" href="#ice-sheet-validation-with-livvkit" title="Link to this heading"></a></h2>
+<p>For cryosphere-enabled simulations, the <code class="docutils literal notranslate"><span class="pre">livvkit</span></code> task validates the ice
+sheet component against reanalysis datasets. LIVVkit requires grid-native
+and regridded climatology files from the <code class="docutils literal notranslate"><span class="pre">[climo]</span></code> task:</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[climo]</span>
+<span class="w">  </span><span class="k">[[land_monthly_climo_native]]</span>
+<span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">elm.h0</span>
+<span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">archive/lnd/hist</span>
+<span class="w">  </span><span class="na">input_component</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">elm</span>
+<span class="w">  </span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:20</span>
+
+<span class="w">  </span><span class="k">[[land_monthly_climo_era5]]</span>
+<span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">elm.h0</span>
+<span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">archive/lnd/hist</span>
+<span class="w">  </span><span class="na">input_component</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">elm</span>
+<span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/map_r05_to_era5.nc</span>
+<span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">era5</span>
+<span class="w">  </span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:20</span>
+
+<span class="k">[livvkit]</span>
+<span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="na">climo_subsections</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">land_monthly_climo_native, land_monthly_climo_era5</span>
+<span class="na">icesheets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">gis,ais</span>
+<span class="na">sets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">cmb,smb,energy_era5</span>
+</pre></div>
+</div>
+</section>
+<section id="notes-for-elm-developers">
+<h2>Notes for ELM developers<a class="headerlink" href="#notes-for-elm-developers" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">input_component</span> <span class="pre">=</span> <span class="pre">elm</span></code> parameter is used internally by <code class="docutils literal notranslate"><span class="pre">zppy</span></code>
+to set the correct processing type (<code class="docutils literal notranslate"><span class="pre">prc_typ</span></code>) for <code class="docutils literal notranslate"><span class="pre">ncclimo</span></code>.</p></li>
+<li><p>ELM variables to process can be set via the <code class="docutils literal notranslate"><span class="pre">vars</span></code> parameter. Leaving
+<code class="docutils literal notranslate"><span class="pre">vars</span> <span class="pre">=</span> <span class="pre">&quot;&quot;</span></code> processes all variables, which can be slow. Consider
+specifying only the variables needed for your diagnostics.</p></li>
+<li><p>The land component mapping file maps from ELM’s finite-volume grid (e.g.,
+<code class="docutils literal notranslate"><span class="pre">r05</span></code>, <code class="docutils literal notranslate"><span class="pre">ne30pg2</span></code>) to a regular lat-lon grid.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="atmosphere.html" class="btn btn-neutral float-left" title="Atmosphere — EAM and EAMxx" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rivers.html" class="btn btn-neutral float-right" title="Rivers — MOSART" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../../../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../../../v2.0.0/index.html">v2.0.0</a></dd>
+      <dd><a href="../../../v2.1.0/index.html">v2.1.0</a></dd>
+      <dd><a href="../../../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../../../v2.3.0/index.html">v2.3.0</a></dd>
+      <dd><a href="../../../v2.3.1/index.html">v2.3.1</a></dd>
+      <dd><a href="../../../v2.4.0/index.html">v2.4.0</a></dd>
+      <dd><a href="../../../v2.5.0/index.html">v2.5.0</a></dd>
+      <dd><a href="../../../v3.0.0/index.html">v3.0.0</a></dd>
+      <dd><a href="../../../v3.1.0/index.html">v3.1.0</a></dd>
+      <dd><a href="../../../v3.2.0/index.html">v3.2.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="land.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

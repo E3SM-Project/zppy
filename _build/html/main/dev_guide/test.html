@@ -1,0 +1,656 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testing zppy &mdash; zppy  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Updating expected results for the tests" href="update_expected_results.html" />
+    <link rel="prev" title="pcmdi_diags (Developer Reference)" href="tasks/pcmdi_diags.html" />
+    <link href="../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/index.html">User Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="project-standards.html">Project Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing to This Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameters.html">Parameter checking &amp; inferring – for developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="provenance.html">Provenance (Developer Reference)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks/index.html">Tasks (Developer Reference)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Testing zppy</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#step-1-determine-what-the-current-expected-results-are">Step 1: Determine what the current expected results are</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#machine-specific-setup">Machine-specific setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#process">Process</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#step-2-review-changes-since-expected-results-were-updated">Step 2: Review changes since expected results were updated</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-3-set-up-environments-for-called-packages">Step 3: Set up environments for called packages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Machine-specific setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Process</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#step-4-set-up-zppy-environment">Step 4: Set up zppy environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-5-launch-zppy-jobs">Step 5: Launch zppy jobs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Machine-specific setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id5">Process</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#step-6-launch-zppy-jobs-bundles-part-2">Step 6: Launch zppy jobs – bundles part 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-7-review-finished-returns">Step 7: Review finished returns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-8-run-python-tests">Step 8: Run Python tests</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id6">Machine-specific setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id7">Process</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="update_expected_results.html">Updating expected results for the tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="releases/index.html">How to Prepare a Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_task.html">Adding a new task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_diags_set.html">Examples: Adding a new set to the E3SM Diagnostics task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="archive/index.html">Archive</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Developer Guide</a></li>
+      <li class="breadcrumb-item active">Testing zppy</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/dev_guide/test.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="testing-zppy">
+<span id="id1"></span><h1>Testing zppy<a class="headerlink" href="#testing-zppy" title="Link to this heading"></a></h1>
+<p>Follow the steps below to test <code class="docutils literal notranslate"><span class="pre">zppy</span></code>. As you do so, please produce a Markdown report summarizing your results.</p>
+<section id="step-1-determine-what-the-current-expected-results-are">
+<h2>Step 1: Determine what the current expected results are<a class="headerlink" href="#step-1-determine-what-the-current-expected-results-are" title="Link to this heading"></a></h2>
+<section id="machine-specific-setup">
+<h3>Machine-specific setup<a class="headerlink" href="#machine-specific-setup" title="Link to this heading"></a></h3>
+<p>Chrysalis:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">expected_results_dir</span><span class="o">=</span>/lcrc/group/e3sm/public_html/zppy_test_resources
+<span class="nv">expected_results_records_dir</span><span class="o">=</span>/lcrc/group/e3sm/public_html/zppy_test_resources_previous
+</pre></div>
+</div>
+<p>Compy:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">expected_results_dir</span><span class="o">=</span>/compyfs/www/zppy_test_resources
+<span class="nv">expected_results_records_dir</span><span class="o">=</span>/compyfs/fors729/zppy_test_resources_previous
+</pre></div>
+</div>
+<p>Note that Compy doesn’t give write access to <code class="docutils literal notranslate"><span class="pre">/compyfs/www/</span></code>, so we can’t add a new directory there. That’s why <code class="docutils literal notranslate"><span class="pre">zppy_test_resources_previous</span></code> is in a separate path.</p>
+<p>Perlmutter:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">expected_results_dir</span><span class="o">=</span>/global/cfs/cdirs/e3sm/www/zppy_test_resources
+<span class="nv">expected_results_records_dir</span><span class="o">=</span>/global/cfs/cdirs/e3sm/www/zppy_test_resources_previous
+</pre></div>
+</div>
+</section>
+<section id="process">
+<h3>Process<a class="headerlink" href="#process" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ls<span class="w"> </span>-lt<span class="w"> </span><span class="si">${</span><span class="nv">expected_results_dir</span><span class="si">}</span>
+</pre></div>
+</div>
+<p>In your Markdown report, note the date the expected results were last updated.</p>
+</section>
+</section>
+<section id="step-2-review-changes-since-expected-results-were-updated">
+<h2>Step 2: Review changes since expected results were updated<a class="headerlink" href="#step-2-review-changes-since-expected-results-were-updated" title="Link to this heading"></a></h2>
+<p>Now that we know the date the expected results are from, we can review what changes we’ll be testing.</p>
+<p>Review each of the following commit logs and note commits made since the date the expected results were updated:</p>
+<ul class="simple">
+<li><p>For the <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip</span></code> task: <a class="reference external" href="https://github.com/E3SM-Project/e3sm_to_cmip/commits/master">e3sm_to_cmip</a></p></li>
+<li><p>For the <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> task: <a class="reference external" href="https://github.com/E3SM-Project/e3sm_diags/commits/main">e3sm_diags</a></p></li>
+<li><p>For the <code class="docutils literal notranslate"><span class="pre">mpas_analysis</span></code> task: <a class="reference external" href="https://github.com/MPAS-Dev/MPAS-Analysis/commits/develop/">MPAS-Analysis</a></p></li>
+<li><p>For the <code class="docutils literal notranslate"><span class="pre">global_time_series</span></code> and <code class="docutils literal notranslate"><span class="pre">pcmdi_diags</span></code> tasks: <a class="reference external" href="https://github.com/E3SM-Project/zppy-interfaces/commits/main">zppy-interfaces</a></p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">zppy</span></code> itself: <a class="reference external" href="https://github.com/E3SM-Project/zppy/commits/main">zppy</a></p></li>
+</ul>
+<p>For the remaining tasks (<code class="docutils literal notranslate"><span class="pre">climo</span></code>, <code class="docutils literal notranslate"><span class="pre">ts</span></code>, <code class="docutils literal notranslate"><span class="pre">tc_analysis</span></code>, <code class="docutils literal notranslate"><span class="pre">ilamb</span></code>, <code class="docutils literal notranslate"><span class="pre">livvkit</span></code>), we typically just use the associated package’s latest release rather than making dev environments. As such, their latest development will have no impact on our tests unless we have started using one of their newer releases.</p>
+<p>In your Markdown report, make a table like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">|</span> <span class="n">Package</span> <span class="o">|</span> <span class="n">Changes</span> <span class="n">since</span> <span class="n">expected</span> <span class="n">results</span> <span class="n">were</span> <span class="n">updated</span> <span class="o">|</span>
+<span class="o">|</span> <span class="o">---</span> <span class="o">|</span> <span class="o">---</span> <span class="o">|</span>
+<span class="o">|</span> <span class="p">[</span><span class="n">package</span> <span class="n">name</span><span class="p">](</span><span class="n">link</span> <span class="n">to</span> <span class="n">package</span><span class="s1">&#39;s commit log) | Links to all PRs merged since the expected results were updated |</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</section>
+<section id="step-3-set-up-environments-for-called-packages">
+<h2>Step 3: Set up environments for called packages<a class="headerlink" href="#step-3-set-up-environments-for-called-packages" title="Link to this heading"></a></h2>
+<section id="id2">
+<h3>Machine-specific setup<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<p>Chrysalis:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">repo_parent_dir</span><span class="o">=</span>~/ez/<span class="w"> </span><span class="c1"># Or wherever you keep your repos</span>
+
+start_bash_subshell<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span>bash
+<span class="w">    </span><span class="nb">source</span><span class="w"> </span>~/.bashrc<span class="w"> </span><span class="c1"># Or wherever you have your aliases, etc. defined</span>
+<span class="o">}</span>
+
+activate_dev_env<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span><span class="nv">env_name</span><span class="o">=</span><span class="nv">$1</span>
+
+<span class="w">    </span>lcrc_conda<span class="w"> </span><span class="c1"># Or however you activate conda</span>
+<span class="w">    </span>rm<span class="w"> </span>-rf<span class="w"> </span>build
+<span class="w">    </span>conda<span class="w"> </span>clean<span class="w"> </span>--all<span class="w"> </span>--y
+<span class="w">    </span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>conda/dev.yml<span class="w"> </span>-n<span class="w"> </span><span class="si">${</span><span class="nv">env_name</span><span class="si">}</span>
+<span class="w">    </span>conda<span class="w"> </span>activate<span class="w"> </span><span class="si">${</span><span class="nv">env_name</span><span class="si">}</span>
+<span class="w">    </span>pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files<span class="w"> </span><span class="c1"># Confirm this passes</span>
+<span class="w">    </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
+<span class="o">}</span>
+
+activate_unified_env<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span><span class="nb">source</span><span class="w"> </span>/lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh
+<span class="o">}</span>
+</pre></div>
+</div>
+<p>Compy:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">repo_parent_dir</span><span class="o">=</span>~/ez/<span class="w"> </span><span class="c1"># Or wherever you keep your repos</span>
+
+start_bash_subshell<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span>bash
+<span class="w">    </span><span class="nb">source</span><span class="w"> </span>~/.bash_profile<span class="w"> </span><span class="c1"># Or wherever you have your aliases, etc. defined</span>
+<span class="o">}</span>
+
+activate_dev_env<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span><span class="nv">env_name</span><span class="o">=</span><span class="nv">$1</span>
+
+<span class="w">    </span>compy_conda<span class="w"> </span><span class="c1"># Or however you activate conda</span>
+<span class="w">    </span>rm<span class="w"> </span>-rf<span class="w"> </span>build
+<span class="w">    </span>conda<span class="w"> </span>clean<span class="w"> </span>--all<span class="w"> </span>--y
+<span class="w">    </span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>conda/dev.yml<span class="w"> </span>-n<span class="w"> </span><span class="si">${</span><span class="nv">env_name</span><span class="si">}</span>
+<span class="w">    </span>conda<span class="w"> </span>activate<span class="w"> </span><span class="si">${</span><span class="nv">env_name</span><span class="si">}</span>
+<span class="w">    </span>pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files<span class="w"> </span><span class="c1"># Confirm this passes</span>
+<span class="w">    </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
+<span class="o">}</span>
+
+activate_unified_env<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span><span class="nb">source</span><span class="w"> </span>/share/apps/E3SM/conda_envs/load_latest_e3sm_unified_compy.sh
+<span class="o">}</span>
+</pre></div>
+</div>
+<p>Perlmutter:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">repo_parent_dir</span><span class="o">=</span>~/ez/<span class="w"> </span><span class="c1"># Or wherever you keep your repos</span>
+
+start_bash_subshell<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span>bash
+<span class="w">    </span><span class="nb">source</span><span class="w"> </span>~/.bash_profile.ext<span class="w"> </span><span class="c1"># Or wherever you have your aliases, etc. defined</span>
+<span class="o">}</span>
+
+activate_dev_env<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span><span class="nv">env_name</span><span class="o">=</span><span class="nv">$1</span>
+
+<span class="w">    </span>nersc_conda<span class="w"> </span><span class="c1"># Or however you activate conda</span>
+<span class="w">    </span>rm<span class="w"> </span>-rf<span class="w"> </span>build
+<span class="w">    </span>conda<span class="w"> </span>clean<span class="w"> </span>--all<span class="w"> </span>--y
+<span class="w">    </span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>conda/dev.yml<span class="w"> </span>-n<span class="w"> </span><span class="si">${</span><span class="nv">env_name</span><span class="si">}</span>
+<span class="w">    </span>conda<span class="w"> </span>activate<span class="w"> </span><span class="si">${</span><span class="nv">env_name</span><span class="si">}</span>
+<span class="w">    </span>pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files<span class="w"> </span><span class="c1"># Confirm this passes</span>
+<span class="w">    </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
+<span class="o">}</span>
+
+activate_unified_env<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span><span class="nb">source</span><span class="w"> </span>/global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_pm-cpu.sh
+<span class="o">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Process<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>set_up_repo<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span><span class="nv">repo_name</span><span class="o">=</span><span class="nv">$1</span>
+<span class="w">    </span><span class="nv">main_branch_name</span><span class="o">=</span><span class="nv">$2</span>
+
+<span class="w">    </span><span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">repo_parent_dir</span><span class="si">}</span>/<span class="si">${</span><span class="nv">repo_name</span><span class="si">}</span>
+<span class="w">    </span>git<span class="w"> </span>status<span class="w"> </span><span class="c1"># Check for uncommitted changes</span>
+
+<span class="w">    </span><span class="c1"># If there are uncommitted changes,</span>
+<span class="w">    </span><span class="c1"># commit them so we can move cleanly to a new branch:</span>
+<span class="w">    </span>git<span class="w"> </span>add<span class="w"> </span>-A
+<span class="w">    </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Checkpoint&quot;</span>
+
+<span class="w">    </span>git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span><span class="si">${</span><span class="nv">main_branch_name</span><span class="si">}</span><span class="w"> </span><span class="c1"># This assumes you&#39;ve named your remote for the main repo as &quot;upstream&quot;</span>
+<span class="w">    </span>git<span class="w"> </span>checkout<span class="w"> </span><span class="si">${</span><span class="nv">main_branch_name</span><span class="si">}</span>
+<span class="w">    </span>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>upstream/<span class="si">${</span><span class="nv">main_branch_name</span><span class="si">}</span>
+<span class="w">    </span>git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span>
+<span class="w">    </span><span class="c1"># Check that this matches the corresponding commit log:</span>
+<span class="w">    </span><span class="c1"># https://github.com/E3SM-Project/e3sm_to_cmip/commits/master</span>
+<span class="w">    </span><span class="c1"># https://github.com/E3SM-Project/e3sm_diags/commits/main</span>
+<span class="w">    </span><span class="c1"># https://github.com/MPAS-Dev/MPAS-Analysis/commits/develop/</span>
+<span class="w">    </span><span class="c1"># https://github.com/E3SM-Project/zppy-interfaces/commits/main</span>
+
+<span class="w">    </span><span class="c1"># Activate EITHER a dev environment or the Unified env:</span>
+<span class="w">    </span><span class="c1"># Dev environment -- test latest development</span>
+<span class="w">    </span><span class="c1"># Unified environment -- test latest Unified environment</span>
+<span class="w">    </span>activate_dev_env<span class="w"> </span><span class="si">${</span><span class="nv">repo_name</span><span class="si">}</span>-yyyymmdd<span class="w"> </span><span class="c1"># Use today&#39;s date</span>
+<span class="w">    </span><span class="c1"># OR: activate_unified_env ${repo_name}-yyyymmdd # Use today&#39;s date</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>start_bash_subshell
+set_up_repo<span class="w"> </span>e3sm_to_cmip<span class="w"> </span>master
+<span class="nb">exit</span><span class="w"> </span><span class="c1"># Exit bash subshell</span>
+
+start_bash_subshell
+set_up_repo<span class="w"> </span>e3sm_diags<span class="w"> </span>main
+<span class="nb">exit</span><span class="w"> </span><span class="c1"># Exit bash subshell</span>
+
+start_bash_subshell
+set_up_repo<span class="w"> </span>MPAS-Analysis<span class="w"> </span>develop
+<span class="nb">exit</span><span class="w"> </span><span class="c1"># Exit bash subshell</span>
+
+start_bash_subshell
+set_up_repo<span class="w"> </span>zppy-interfaces<span class="w"> </span>main
+<span class="c1"># Since zppy-interfaces is so integrated into `zppy`,</span>
+<span class="c1"># run its unit tests as well:</span>
+pytest<span class="w"> </span>tests/unit/global_time_series/test_*.py
+pytest<span class="w"> </span>tests/unit/pcmdi_diags/test_*.py
+<span class="nb">exit</span><span class="w"> </span><span class="c1"># Exit bash subshell</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="step-4-set-up-zppy-environment">
+<h2>Step 4: Set up zppy environment<a class="headerlink" href="#step-4-set-up-zppy-environment" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">repo_parent_dir</span><span class="si">}</span>/zppy
+git<span class="w"> </span>status<span class="w"> </span><span class="c1"># Check for uncommitted changes</span>
+
+<span class="c1"># If there are uncommitted changes,</span>
+<span class="c1"># commit them so we can move cleanly to a new branch:</span>
+git<span class="w"> </span>add<span class="w"> </span>-A
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Checkpoint&quot;</span>
+
+git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span>main<span class="w"> </span><span class="c1"># This assumes you&#39;ve named your remote for the main repo as &quot;upstream&quot;</span>
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>test-zppy-yyyymmdd<span class="w"> </span>upstream/main<span class="w"> </span><span class="c1"># Use today&#39;s date</span>
+git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span>
+<span class="c1"># Check that this matches the corresponding commit log:</span>
+<span class="c1"># https://github.com/E3SM-Project/zppy/commits/main</span>
+
+start_bash_subshell
+<span class="c1"># Activate EITHER a dev environment or the Unified env:</span>
+<span class="c1"># Dev environment -- test latest development</span>
+<span class="c1"># Unified environment -- test latest Unified environment</span>
+activate_dev_env<span class="w"> </span>zppy-yyyymmdd<span class="w"> </span><span class="c1"># Use today&#39;s date</span>
+<span class="c1"># OR: activate_unified_env zppy-yyyymmdd # Use today&#39;s date</span>
+
+<span class="c1"># Note the Python version being used</span>
+<span class="c1"># If you activated dev env:</span>
+conda<span class="w"> </span>list<span class="w"> </span>python
+<span class="c1"># If you activated unified env:</span>
+pixi<span class="w"> </span>list<span class="w"> </span>python
+
+<span class="c1"># Run zppy unit tests</span>
+pytest<span class="w"> </span>tests/test_*.py<span class="w"> </span><span class="c1"># 44 passed in 0.87s</span>
+</pre></div>
+</div>
+</section>
+<section id="step-5-launch-zppy-jobs">
+<h2>Step 5: Launch zppy jobs<a class="headerlink" href="#step-5-launch-zppy-jobs" title="Link to this heading"></a></h2>
+<section id="id4">
+<h3>Machine-specific setup<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<p>Chrysalis:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">conda_setup_cmd</span><span class="o">=</span><span class="nb">source</span><span class="w"> </span>/gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh
+<span class="nv">output_dir</span><span class="o">=</span>/lcrc/group/e3sm/ac.forsyth2
+</pre></div>
+</div>
+<p>Compy:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">conda_setup_cmd</span><span class="o">=</span><span class="nb">source</span><span class="w"> </span>/qfs/people/fors729/miniforge3/etc/profile.d/conda.sh
+<span class="nv">output_dir</span><span class="o">=</span>/compyfs/fors729
+</pre></div>
+</div>
+<p>Perlmutter:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">conda_setup_cmd</span><span class="o">=</span><span class="nb">source</span><span class="w"> </span>/global/homes/f/forsyth/miniforge3/etc/profile.d/conda.sh
+<span class="nv">output_dir</span><span class="o">=</span>/global/cfs/cdirs/e3sm/forsyth
+</pre></div>
+</div>
+</section>
+<section id="id5">
+<h3>Process<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<p>First, let’s edit <code class="docutils literal notranslate"><span class="pre">tests/integration/utils.py</span></code>.</p>
+<p>In place of each <code class="docutils literal notranslate"><span class="pre">{env_cmd}</span></code> put either <code class="docutils literal notranslate"><span class="pre">${conda_setup_cmd};</span> <span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">${repo_name}-yyyymmdd</span></code> or the command from <code class="docutils literal notranslate"><span class="pre">activate_unified_env</span></code>. You may want to use dev environments for some tasks and the Unified environment for others.</p>
+<p>You can comment out <code class="docutils literal notranslate"><span class="pre">cfg``s</span> <span class="pre">from</span> <span class="pre">``cfgs_to_run</span></code> to run fewer configuration files. Likewise, you can comment out tasks from <code class="docutils literal notranslate"><span class="pre">tasks_to_run</span></code> to run fewer tasks.</p>
+<p>Be sure to set the <code class="docutils literal notranslate"><span class="pre">unique_id</span></code>; this allows us to avoid path name collisions.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">TEST_SPECIFICS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># This is the NCO path.</span>
+    <span class="c1"># Keep as &quot;&quot; to use the production-version NCO commands.</span>
+    <span class="c1"># Set to a specific path to use development-version NCO commands.</span>
+    <span class="s2">&quot;nco_path&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="c1"># These are custom environment_commands for specific tasks.</span>
+    <span class="c1"># Never set these to &quot;&quot;, because they will print the line</span>
+    <span class="c1"># `environment_commands = &quot;&quot;` for the corresponding task,</span>
+    <span class="c1"># thus overriding the value set higher up in the cfg.</span>
+    <span class="c1"># That is, there will be no environment set.</span>
+    <span class="c1"># (`environment_commands = &quot;&quot;` only redirects to Unified</span>
+    <span class="c1"># if specified under the [default] task)</span>
+    <span class="s2">&quot;e3sm_to_cmip_environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;diags_environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mpas_analysis_environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;global_time_series_environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;livvkit_environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pcmdi_diags_environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="c1"># This is the environment setup for other tasks.</span>
+    <span class="c1"># Leave as &quot;&quot; to use the latest Unified environment.</span>
+    <span class="s2">&quot;environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="c1"># For a complete test, run the set of latest cfgs and at least one set of legacy cfgs</span>
+    <span class="s2">&quot;cfgs_to_run&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">&quot;weekly_bundles&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis, Compy</span>
+        <span class="s2">&quot;weekly_comprehensive_v2&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis, Compy</span>
+        <span class="s2">&quot;weekly_comprehensive_v3&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on all 3 machines</span>
+        <span class="s2">&quot;weekly_legacy_3.1.0_bundles&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
+        <span class="s2">&quot;weekly_legacy_3.1.0_comprehensive_v2&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
+        <span class="s2">&quot;weekly_legacy_3.1.0_comprehensive_v3&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
+        <span class="s2">&quot;weekly_legacy_3.0.0_bundles&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
+        <span class="s2">&quot;weekly_legacy_3.0.0_comprehensive_v2&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
+        <span class="s2">&quot;weekly_legacy_3.0.0_comprehensive_v3&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
+    <span class="p">],</span>
+    <span class="s2">&quot;tasks_to_run&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">&quot;e3sm_diags&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;mpas_analysis&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;global_time_series&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ilamb&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;livvkit&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;pcmdi_diags&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="s2">&quot;unique_id&quot;</span><span class="p">:</span> <span class="s2">&quot;test_zppy_yyyymmdd&quot;</span><span class="p">,</span> <span class="c1"># Use today&#39;s date</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>diff<span class="w"> </span><span class="c1"># Check that the diff looks as you expect</span>
+python<span class="w"> </span>tests/integration/utils.py
+<span class="c1"># This will generate the actual test cfgs based off the templates.</span>
+
+<span class="c1"># Set up an alias for checking jobs:</span>
+<span class="nb">alias</span><span class="w"> </span><span class="nv">sqa</span><span class="o">=</span><span class="s1">&#39;squeue -o &quot;%8u %.7a %.4D %.9P %7i %.2t %.10r %.10M %.10l %.8Q %j&quot; --sort=P,-t,-p&#39;</span>
+<span class="nb">alias</span><span class="w"> </span><span class="nv">sq</span><span class="o">=</span><span class="s1">&#39;sqa -u $USER&#39;</span>
+
+sq
+<span class="c1"># Check that you have no jobs currently queued.</span>
+<span class="c1"># It&#39;s ok if you do, but it makes counting remaining zppy jobs easier if you don&#39;t have any existing jobs.</span>
+
+<span class="c1"># Typically run on Chrysalis, Compy, Perlmutter:</span>
+zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_comprehensive_v3_chrysalis.cfg
+
+<span class="c1"># Typically run on Chrysalis, Compy:</span>
+zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_bundles_chrysalis.cfg
+zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_comprehensive_v2_chrysalis.cfg
+
+<span class="c1"># Typically run on Chrysalis:</span>
+zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_legacy_3.1.0_bundles_chrysalis.cfg
+zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_legacy_3.1.0_comprehensive_v2_chrysalis.cfg
+zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_legacy_3.1.0_comprehensive_v3_chrysalis.cfg
+zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_legacy_3.0.0_bundles_chrysalis.cfg
+zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v2_chrysalis.cfg
+zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v3_chrysalis.cfg
+
+
+sq<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l<span class="w"> </span><span class="c1"># This includes the header row, so subtract 1 to get the number of jobs you have running</span>
+<span class="c1"># WAIT until that returns 1 (i.e., 0 jobs running)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="step-6-launch-zppy-jobs-bundles-part-2">
+<h2>Step 6: Launch zppy jobs – bundles part 2<a class="headerlink" href="#step-6-launch-zppy-jobs-bundles-part-2" title="Link to this heading"></a></h2>
+<p>This section is only relevant only if you’re running the <code class="docutils literal notranslate"><span class="pre">_bundles_</span></code> jobs. Only run the lines relevant to the jobs you launched in step 5.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check on bundles status</span>
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_bundles_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.1.0_bundles_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.0.0_bundles_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+
+<span class="c1"># Now, run bundles part 2</span>
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">repo_parent_dir</span><span class="si">}</span>/zppy
+git<span class="w"> </span>status
+<span class="c1"># You might have changed branches while you were waiting for jobs to finish.</span>
+<span class="c1"># Make sure you&#39;re now back on the correct branch: test-zppy-yyyymmdd</span>
+<span class="c1"># Also confirm you&#39;re back in the correct env: zppy-yyyymmdd or the Unified env</span>
+
+
+zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_bundles_chrysalis.cfg
+zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_legacy_3.1.0_bundles_chrysalis.cfg
+zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_legacy_3.0.0_bundles_chrysalis.cfg
+sq<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+<span class="c1"># WAIT until that returns 1 (i.e., 0 jobs running)</span>
+</pre></div>
+</div>
+</section>
+<section id="step-7-review-finished-returns">
+<h2>Step 7: Review finished returns<a class="headerlink" href="#step-7-review-finished-returns" title="Link to this heading"></a></h2>
+<p>Only run the lines relevant to the jobs you launched in steps 5/6.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1">### v2  ###</span>
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_comprehensive_v2_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v2.LR.historical_0201/post/scripts
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.0.0_comprehensive_v2_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v2.LR.historical_0201/post/scripts
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.1.0_comprehensive_v2_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v2.LR.historical_0201/post/scripts
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+
+<span class="c1">### v3 ###</span>
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_comprehensive_v3_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.0.0_comprehensive_v3_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.1.0_comprehensive_v3_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+
+<span class="c1">### bundles ###</span>
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_bundles_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.0.0_bundles_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.1.0_bundles_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+</pre></div>
+</div>
+<p>In your Markdown report, any of the output subdirectories that had non-OK statuses.</p>
+</section>
+<section id="step-8-run-python-tests">
+<h2>Step 8: Run Python tests<a class="headerlink" href="#step-8-run-python-tests" title="Link to this heading"></a></h2>
+<section id="id6">
+<h3>Machine-specific setup<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<p>Chrysalis:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>launch_compute_node<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span>salloc<span class="w"> </span>--nodes<span class="o">=</span><span class="m">1</span><span class="w"> </span>--partition<span class="o">=</span>debug<span class="w"> </span>--time<span class="o">=</span><span class="m">02</span>:00:00<span class="w"> </span>--account<span class="o">=</span>e3sm
+<span class="o">}</span>
+</pre></div>
+</div>
+<p>Compy:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>launch_compute_node<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span>salloc<span class="w"> </span>--nodes<span class="o">=</span><span class="m">1</span><span class="w"> </span>--partition<span class="o">=</span>short<span class="w"> </span>--time<span class="o">=</span><span class="m">01</span>:00:00<span class="w"> </span>--account<span class="o">=</span>e3sm
+<span class="o">}</span>
+</pre></div>
+</div>
+<p>Perlmutter:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>launch_compute_node<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span>salloc<span class="w"> </span>--nodes<span class="o">=</span><span class="m">1</span><span class="w"> </span>--qos<span class="o">=</span>interactive<span class="w"> </span>--time<span class="o">=</span><span class="m">01</span>:00:00<span class="w"> </span>--constraint<span class="o">=</span>cpu<span class="w"> </span>--account<span class="o">=</span>e3sm
+<span class="o">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h3>Process<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">repo_parent_dir</span><span class="si">}</span>/zppy
+git<span class="w"> </span>status
+<span class="c1"># You might have changed branches while you were waiting for jobs to finish.</span>
+<span class="c1"># Make sure you&#39;re now back on the correct branch: test-zppy-yyyymmdd</span>
+<span class="c1"># Also confirm you&#39;re back in the correct env: zppy-yyyymmdd or the Unified env</span>
+
+<span class="c1"># This test doesn&#39;t make use of an expected results directory.</span>
+pytest<span class="w"> </span>tests/integration/test_last_year.py
+
+<span class="c1"># These tests do make use of an expected results directory.</span>
+<span class="c1"># That is, the expected results may need to be updated if expected behavior has changed.</span>
+pytest<span class="w"> </span>tests/integration/test_bash_generation.py
+pytest<span class="w"> </span>tests/integration/test_campaign.py
+pytest<span class="w"> </span>tests/integration/test_defaults.py
+
+<span class="c1"># These tests make use of an expected results directory</span>
+<span class="c1"># AND rely on the jobs we just ran:</span>
+<span class="c1"># 1. The bundles test:</span>
+pytest<span class="w"> </span>tests/integration/test_bundles.py
+<span class="c1"># 2. The image checker test, which we&#39;ll run from a compute node:</span>
+launch_compute_node
+
+start_bash_subshell
+<span class="c1"># EITHER:</span>
+<span class="c1"># Activate EITHER a dev environment or the Unified env:</span>
+conda<span class="w"> </span>activate<span class="w"> </span>zppy-yyyymmdd
+<span class="c1"># OR: the command from `activate_unified_env`</span>
+
+pytest<span class="w"> </span>tests/integration/test_images.py
+<span class="c1"># Typically takes between 10 and 20 minutes on Chrysalis and Perlmutter.</span>
+<span class="c1"># Typically takes closer to 50 minutes on Compy.</span>
+cat<span class="w"> </span>test_images_summary.md
+<span class="nb">exit</span><span class="w"> </span><span class="c1"># Exit bash shell</span>
+<span class="nb">exit</span><span class="w"> </span><span class="c1"># Exit compute note</span>
+</pre></div>
+</div>
+<p>In your Markdown report:</p>
+<ul class="simple">
+<li><p>From the <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">tests/integration/test_images.py</span> <span class="pre">``</span> <span class="pre">command-line</span> <span class="pre">output,</span> <span class="pre">copy</span> <span class="pre">everything</span> <span class="pre">after</span> <span class="pre">``Captured</span> <span class="pre">stdout</span> <span class="pre">call</span></code> to a code block labeled “Output”</p></li>
+<li><p>Copy the results of <code class="docutils literal notranslate"><span class="pre">cat</span> <span class="pre">test_images_summary.md</span></code> to a section labeled “Complete summary table”</p></li>
+<li><p>Make a new section named “Summary table – only failing image-check tests, sorted by task”. For each task that has missing and/or mismatched images, copy the relevant rows from the summary table. Skip this section if there were no failing image-check tests.</p></li>
+<li><p>Note any test failures from the other Python tests.</p></li>
+<li><p>If there were no failures at all, print “All tests pass”</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tasks/pcmdi_diags.html" class="btn btn-neutral float-left" title="pcmdi_diags (Developer Reference)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="update_expected_results.html" class="btn btn-neutral float-right" title="Updating expected results for the tests" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../../v2.0.0/index.html">v2.0.0</a></dd>
+      <dd><a href="../../v2.1.0/index.html">v2.1.0</a></dd>
+      <dd><a href="../../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../../v2.3.0/index.html">v2.3.0</a></dd>
+      <dd><a href="../../v2.3.1/index.html">v2.3.1</a></dd>
+      <dd><a href="../../v2.4.0/index.html">v2.4.0</a></dd>
+      <dd><a href="../../v2.5.0/index.html">v2.5.0</a></dd>
+      <dd><a href="../../v3.0.0/index.html">v3.0.0</a></dd>
+      <dd><a href="../../v3.1.0/index.html">v3.1.0</a></dd>
+      <dd><a href="../../v3.2.0/index.html">v3.2.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="test.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

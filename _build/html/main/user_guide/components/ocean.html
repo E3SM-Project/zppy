@@ -1,0 +1,249 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ocean — MPAS-Ocean &mdash; zppy  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Sea Ice — MPAS-seaice" href="seaice.html" />
+    <link rel="prev" title="Rivers — MOSART" href="rivers.html" />
+    <link href="../../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../campaigns.html">Campaigns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parameters.html">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dependencies.html">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tasks/index.html">Tasks</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Model Components</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="atmosphere.html">Atmosphere — EAM and EAMxx</a></li>
+<li class="toctree-l3"><a class="reference internal" href="land.html">Land — ELM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rivers.html">Rivers — MOSART</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Ocean — MPAS-Ocean</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#relevant-zppy-tasks">Relevant zppy tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mpas-analysis-for-ocean">MPAS-Analysis for ocean</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#model-vs-model-ocean-comparisons">Model-vs-model ocean comparisons</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#global-time-series-ocean-plots">Global time series ocean plots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#notes-for-mpas-ocean-developers">Notes for MPAS-Ocean developers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="seaice.html">Sea Ice — MPAS-seaice</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dev_guide/index.html">Developer Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Model Components</a></li>
+      <li class="breadcrumb-item active">Ocean — MPAS-Ocean</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/components/ocean.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ocean-mpas-ocean">
+<span id="component-ocean"></span><h1>Ocean — MPAS-Ocean<a class="headerlink" href="#ocean-mpas-ocean" title="Link to this heading"></a></h1>
+<p><strong>MPAS-Ocean</strong> is E3SM’s ocean model, based on the Model for Prediction
+Across Scales (MPAS) framework. It uses an unstructured mesh that allows
+variable horizontal resolution.</p>
+<section id="relevant-zppy-tasks">
+<h2>Relevant zppy tasks<a class="headerlink" href="#relevant-zppy-tasks" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../tasks/mpas_analysis.html"><span class="doc">mpas_analysis — Ocean and Sea-Ice Analysis</span></a> — ocean and sea-ice analysis (primary task)</p></li>
+<li><p><a class="reference internal" href="../tasks/global_time_series.html"><span class="doc">global_time_series — Global Time Series Plots</span></a> — ocean global time series plots</p></li>
+</ul>
+</section>
+<section id="mpas-analysis-for-ocean">
+<h2>MPAS-Analysis for ocean<a class="headerlink" href="#mpas-analysis-for-ocean" title="Link to this heading"></a></h2>
+<p>MPAS-Analysis is the primary tool for MPAS-Ocean diagnostics. It operates
+on MPAS-Ocean’s native unstructured mesh. The <code class="docutils literal notranslate"><span class="pre">[mpas_analysis]</span></code> task in
+<code class="docutils literal notranslate"><span class="pre">zppy</span></code> calls MPAS-Analysis automatically.</p>
+<p>Typical <code class="docutils literal notranslate"><span class="pre">[mpas_analysis]</span></code> configuration:</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[mpas_analysis]</span>
+<span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">06:00:00</span>
+<span class="na">shortTermArchive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:50</span>
+<span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:50</span>
+<span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:50</span>
+<span class="na">generate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">all, no_landIceCavities, no_BGC, no_icebergs, no_min, no_max</span>
+</pre></div>
+</div>
+<p>Key MPAS-Ocean-specific parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mpaso_nml</span></code>: name of the MPAS-Ocean namelist file (default: <code class="docutils literal notranslate"><span class="pre">mpaso_in</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stream_ocn</span></code>: name of the MPAS-Ocean streams file (default: <code class="docutils literal notranslate"><span class="pre">streams.ocean</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PostMOC</span></code>: whether to post-process MOC (meridional overturning
+circulation) data</p></li>
+</ul>
+</section>
+<section id="model-vs-model-ocean-comparisons">
+<h2>Model-vs-model ocean comparisons<a class="headerlink" href="#model-vs-model-ocean-comparisons" title="Link to this heading"></a></h2>
+<p>MPAS-Analysis supports comparing two model simulations. In <code class="docutils literal notranslate"><span class="pre">zppy</span></code>, this
+is configured via <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code>:</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[mpas_analysis]</span>
+
+<span class="w">  </span><span class="k">[[main_run]]</span>
+<span class="w">  </span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:50</span>
+<span class="w">  </span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:50</span>
+
+<span class="w">  </span><span class="k">[[mvm_run]]</span>
+<span class="w">  </span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:50</span>
+<span class="w">  </span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:50</span>
+<span class="w">  </span><span class="na">reference_data_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">[[main_run]]</span>
+<span class="w">  </span><span class="c1"># or: reference_data_path = /path/to/prior/zppy/output</span>
+</pre></div>
+</div>
+<p>See the <a class="reference internal" href="../tasks/mpas_analysis.html"><span class="doc">mpas_analysis — Ocean and Sea-Ice Analysis</span></a> page and the <a class="reference internal" href="../tutorial.html#tutorial"><span class="std std-ref">tutorial</span></a>
+for a complete model-vs-model example.</p>
+</section>
+<section id="global-time-series-ocean-plots">
+<h2>Global time series ocean plots<a class="headerlink" href="#global-time-series-ocean-plots" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">[global_time_series]</span></code> task can produce ocean time series plots such
+as:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">change_ohc</span></code> — ocean heat content change</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_moc</span></code> — maximum meridional overturning circulation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">change_sea_level</span></code> — global mean sea level change</p></li>
+</ul>
+<p>These require access to MPAS-Ocean output. The <code class="docutils literal notranslate"><span class="pre">input_subdir</span></code> in
+<code class="docutils literal notranslate"><span class="pre">[global_time_series]</span></code> should be set to <code class="docutils literal notranslate"><span class="pre">archive/ocn/hist</span></code> (the default).</p>
+</section>
+<section id="notes-for-mpas-ocean-developers">
+<h2>Notes for MPAS-Ocean developers<a class="headerlink" href="#notes-for-mpas-ocean-developers" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">generate</span></code> parameter in <code class="docutils literal notranslate"><span class="pre">[mpas_analysis]</span></code> controls which
+MPAS-Analysis tasks to run. Use <code class="docutils literal notranslate"><span class="pre">no_*</span></code> filters to exclude irrelevant
+analyses for your simulation (e.g., <code class="docutils literal notranslate"><span class="pre">no_BGC</span></code> if biogeochemistry is not
+enabled, <code class="docutils literal notranslate"><span class="pre">no_landIceCavities</span></code> if land ice cavities are not used).</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">environment_commands</span></code> for <code class="docutils literal notranslate"><span class="pre">[mpas_analysis]</span></code> must be consistent
+across all year-range runs. Mixing environments can cause MPAS-Analysis to
+fail.</p></li>
+<li><p>MPAS-Analysis caches intermediate results (<code class="docutils literal notranslate"><span class="pre">cache</span> <span class="pre">=</span> <span class="pre">True</span></code> by default).
+Set <code class="docutils literal notranslate"><span class="pre">purge</span> <span class="pre">=</span> <span class="pre">True</span></code> to clear previous output and start fresh.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rivers.html" class="btn btn-neutral float-left" title="Rivers — MOSART" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="seaice.html" class="btn btn-neutral float-right" title="Sea Ice — MPAS-seaice" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../../../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../../../v2.0.0/index.html">v2.0.0</a></dd>
+      <dd><a href="../../../v2.1.0/index.html">v2.1.0</a></dd>
+      <dd><a href="../../../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../../../v2.3.0/index.html">v2.3.0</a></dd>
+      <dd><a href="../../../v2.3.1/index.html">v2.3.1</a></dd>
+      <dd><a href="../../../v2.4.0/index.html">v2.4.0</a></dd>
+      <dd><a href="../../../v2.5.0/index.html">v2.5.0</a></dd>
+      <dd><a href="../../../v3.0.0/index.html">v3.0.0</a></dd>
+      <dd><a href="../../../v3.1.0/index.html">v3.1.0</a></dd>
+      <dd><a href="../../../v3.2.0/index.html">v3.2.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="ocean.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

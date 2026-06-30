@@ -19,7 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="A schematic view of zppy" href="schematics.html" />
+    <link rel="next" title="User Guide" href="user_guide/index.html" />
     <link href="_static/style.css" rel="stylesheet" type="text/css">
 
 </head>
@@ -43,16 +43,13 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Zppy documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="schematics.html">A schematic view of zppy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="campaigns.html">Campaigns</a></li>
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html">User Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="dev_guide/index.html">Developer Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to This Documentation</a></li>
 </ul>
 
         </div>
@@ -83,69 +80,55 @@
 <span id="index-label"></span><h1>Zppy documentation<a class="headerlink" href="#zppy-documentation" title="Link to this heading"></a></h1>
 <section id="what-is-zppy">
 <h2>What is zppy?<a class="headerlink" href="#what-is-zppy" title="Link to this heading"></a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">zppy</span></code> (pronounced “zippee”) is a post-processing toolchain for E3SM written in
-Python. The goal of <code class="docutils literal notranslate"><span class="pre">zppy</span></code> is to speed-up the post-processing of E3SM simulations
-by automating commonly performed tasks.</p>
+<p><code class="docutils literal notranslate"><span class="pre">zppy</span></code> (pronounced as “zippy”, or in IPA: /ˈzɪpi/) is a <strong>workflow manager</strong> for post-processing
+E3SM simulations, written in Python. The goal of <code class="docutils literal notranslate"><span class="pre">zppy</span></code> is to speed up
+post-processing by automating commonly performed tasks.</p>
 <p><code class="docutils literal notranslate"><span class="pre">zppy</span></code> is built around a set of tasks that perform specific actions,
 such as generating (regridded) <strong>time series</strong> or <strong>climatology</strong> files
 using NCO’s <code class="docutils literal notranslate"><span class="pre">ncclimo</span></code>, or generating analysis figures with <strong>E3SM Diags</strong>
-or <strong>MPAS-Analysis</strong>. <code class="docutils literal notranslate"><span class="pre">zppy</span></code> provides a framework to simplify the use of these
-tools, especially for long simulations.</p>
-<p><code class="docutils literal notranslate"><span class="pre">zppy</span></code> is controlled entirely from a single user provided configuration file
-(e.g., “mysimulation.cfg”). This configuration file specifies input and output
-directories, as well as the list of tasks to run. Each task operates
-for a specific model component and over
-a specified number of years, for example generating atmosphere climatology
-files every 20 and 50 years.</p>
-<p><code class="docutils literal notranslate"><span class="pre">zppy</span></code> parses the configuration file and generates batch
-jobs that are submitted for execution by SLURM. Dependencies between tasks
-are handled and passed to SLURM. Internally, each batch job is created by
-instantiating <a class="reference external" href="https://jinja.palletsprojects.com">Jinja</a> template scripts
-(usually written in bash, but other languages are supported as well).</p>
+or <strong>MPAS-Analysis</strong>. <code class="docutils literal notranslate"><span class="pre">zppy</span></code> provides a framework to simplify the use of
+these tools, especially for long simulations.</p>
+<p><code class="docutils literal notranslate"><span class="pre">zppy</span></code> is controlled entirely from a single user-provided configuration file
+(e.g., <code class="docutils literal notranslate"><span class="pre">mysimulation.cfg</span></code>). This configuration file specifies input and
+output directories, as well as the list of tasks to run. Each task operates
+over a specified number of years—for
+example, generating atmosphere climatology files every 20 and 50 years.</p>
+<p><code class="docutils literal notranslate"><span class="pre">zppy</span></code> parses the configuration file and generates batch jobs that are
+submitted for execution by SLURM. Dependencies between tasks are handled and
+passed to SLURM. Internally, each batch job is created by instantiating
+Jinja2 template scripts (usually
+written in bash, but other languages are supported as well).</p>
 <div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Zppy documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="schematics.html">A schematic view of zppy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#activate-e3sm-unified-environment">Activate e3sm_unified environment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation-in-a-conda-environment">Installation in a Conda Environment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#a-latest-stable-release">(a) Latest Stable Release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#b-development-environment">(b) Development Environment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#configuration-file">Configuration file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#running">Running</a></li>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/campaigns.html">Campaigns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/parameters.html">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/dependencies.html">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/tasks/index.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/components/index.html">Model Components</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#example-1">Example 1</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#example-2">Example 2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#example-3">Example 3</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial.html#debugging-failures">Debugging failures</a></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="parameters.html">Parameters</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="parameters.html#deprecated-parameters">Deprecated parameters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parameters.html#parameter-checking-inferring-for-users">Parameter checking &amp; inferring – for users</a></li>
-<li class="toctree-l2"><a class="reference internal" href="parameters.html#parameter-checking-inferring-for-developers">Parameter checking &amp; inferring – for developers</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="campaigns.html">Campaigns</a></li>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="dev_guide/index.html">Developer Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="dev_guide/project-standards.html">Project Standards</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dev_guide/ci.html">Understanding CI</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dev_guide/testing.html">Testing zppy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dev_guide/release_testing.html">Testing directions for making a release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dev_guide/release.html">How to Prepare a Release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dev_guide/tutorial_testing_e3sm_unified.html">Testing zppy for E3SM Unified release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dev_guide/new_diags_set.html">Adding a new set to the E3SM Diagnostics task</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dev_guide/new_glb_plot.html">Adding a new plot to Global Time Series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/contributing.html">Contributing to This Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/parameters.html">Parameter checking &amp; inferring – for developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/provenance.html">Provenance (Developer Reference)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/tasks/index.html">Tasks (Developer Reference)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/test.html">Testing zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/update_expected_results.html">Updating expected results for the tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/releases/index.html">How to Prepare a Release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dev_guide/new_task.html">Adding a new task</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing to This Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#getting-started">Getting Started</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#edit-documentation">Edit Documentation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html#initial-setup-obsolete-for-reference-only">Initial setup (obsolete/for reference only)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/new_diags_set.html">Examples: Adding a new set to the E3SM Diagnostics task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev_guide/archive/index.html">Archive</a></li>
 </ul>
 </li>
 </ul>
@@ -157,7 +140,7 @@ instantiating <a class="reference external" href="https://jinja.palletsprojects.
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="schematics.html" class="btn btn-neutral float-right" title="A schematic view of zppy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="user_guide/index.html" class="btn btn-neutral float-right" title="User Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -1,0 +1,298 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atmosphere — EAM and EAMxx &mdash; zppy  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Land — ELM" href="land.html" />
+    <link rel="prev" title="Model Components" href="index.html" />
+    <link href="../../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../campaigns.html">Campaigns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parameters.html">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dependencies.html">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tasks/index.html">Tasks</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Model Components</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Atmosphere — EAM and EAMxx</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#relevant-zppy-tasks">Relevant zppy tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#eam-configuration">EAM configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#eamxx-configuration">EAMxx configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mapping-files">Mapping files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#diurnal-cycle">Diurnal cycle</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="land.html">Land — ELM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rivers.html">Rivers — MOSART</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ocean.html">Ocean — MPAS-Ocean</a></li>
+<li class="toctree-l3"><a class="reference internal" href="seaice.html">Sea Ice — MPAS-seaice</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dev_guide/index.html">Developer Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Model Components</a></li>
+      <li class="breadcrumb-item active">Atmosphere — EAM and EAMxx</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/components/atmosphere.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="atmosphere-eam-and-eamxx">
+<span id="component-atmosphere"></span><h1>Atmosphere — EAM and EAMxx<a class="headerlink" href="#atmosphere-eam-and-eamxx" title="Link to this heading"></a></h1>
+<p>E3SM has two atmosphere models:</p>
+<ul class="simple">
+<li><p><strong>EAM</strong> (E3SM Atmosphere Model) — the standard atmosphere model used in
+most E3SM configurations.</p></li>
+<li><p><strong>EAMxx</strong> (E3SM Atmosphere Model, next generation) — uses a different
+vertical grid (L128) and a different file format.</p></li>
+</ul>
+<section id="relevant-zppy-tasks">
+<h2>Relevant zppy tasks<a class="headerlink" href="#relevant-zppy-tasks" title="Link to this heading"></a></h2>
+<p>The following <code class="docutils literal notranslate"><span class="pre">zppy</span></code> tasks are commonly used for atmosphere post-processing:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../tasks/climo.html"><span class="doc">climo — Climatology Files</span></a> — generate atmosphere climatology files</p></li>
+<li><p><a class="reference internal" href="../tasks/ts.html"><span class="doc">ts — Time Series Files</span></a> — generate atmosphere time-series files</p></li>
+<li><p><a class="reference internal" href="../tasks/e3sm_to_cmip.html"><span class="doc">e3sm_to_cmip — CMIP6 Conversion</span></a> — convert to CMIP6 format</p></li>
+<li><p><a class="reference internal" href="../tasks/e3sm_diags.html"><span class="doc">e3sm_diags — E3SM Diagnostics</span></a> — atmospheric diagnostics (most sets)</p></li>
+<li><p><a class="reference internal" href="../tasks/tc_analysis.html"><span class="doc">tc_analysis — Tropical Cyclone Analysis</span></a> — tropical cyclone analysis</p></li>
+<li><p><a class="reference internal" href="../tasks/global_time_series.html"><span class="doc">global_time_series — Global Time Series Plots</span></a> — global atmospheric time series plots</p></li>
+<li><p><a class="reference internal" href="../tasks/pcmdi_diags.html"><span class="doc">pcmdi_diags — PCMDI Metrics</span></a> — atmospheric performance metrics</p></li>
+</ul>
+</section>
+<section id="eam-configuration">
+<h2>EAM configuration<a class="headerlink" href="#eam-configuration" title="Link to this heading"></a></h2>
+<p>For EAM (standard resolution), typical history streams are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">eam.h0</span></code> — monthly averages (most common for diagnostics)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eam.h1</span></code> — daily averages</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eam.h2</span></code> — high-frequency output (used for TC analysis)</p></li>
+</ul>
+<p>Typical <code class="docutils literal notranslate"><span class="pre">[climo]</span></code> and <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> subsection configuration for EAM:</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[climo]</span>
+<span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+
+<span class="w">  </span><span class="k">[[atm_monthly_180x360_aave]]</span>
+<span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">eam.h0</span>
+<span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">archive/atm/hist</span>
+<span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</span>
+<span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">180x360_aave</span>
+<span class="w">  </span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:20</span>
+
+<span class="k">[ts]</span>
+<span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+
+<span class="w">  </span><span class="k">[[atm_monthly_180x360_aave]]</span>
+<span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">eam.h0</span>
+<span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">archive/atm/hist</span>
+<span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</span>
+<span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">180x360_aave</span>
+<span class="w">  </span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:10</span>
+
+<span class="w">  </span><span class="k">[[atm_daily_180x360_aave]]</span>
+<span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">eam.h1</span>
+<span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">archive/atm/hist</span>
+<span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</span>
+<span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">180x360_aave</span>
+<span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">daily</span>
+<span class="w">  </span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:10</span>
+
+<span class="w">  </span><span class="k">[[atm_monthly_glb]]</span>
+<span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">eam.h0</span>
+<span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">archive/atm/hist</span>
+<span class="w">  </span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:10</span>
+</pre></div>
+</div>
+</section>
+<section id="eamxx-configuration">
+<h2>EAMxx configuration<a class="headerlink" href="#eamxx-configuration" title="Link to this heading"></a></h2>
+<p>EAMxx uses a 128-level vertical grid (L128) and stores output differently
+from EAM. Key differences when configuring <code class="docutils literal notranslate"><span class="pre">zppy</span></code> for EAMxx:</p>
+<ul class="simple">
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">input_component</span> <span class="pre">=</span> <span class="pre">eamxx</span></code> in <code class="docutils literal notranslate"><span class="pre">[climo]</span></code> and <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> sections.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">vrt_in_file</span></code> parameter may be needed for vertical remapping.
+When <code class="docutils literal notranslate"><span class="pre">input_component</span> <span class="pre">=</span> <span class="pre">eamxx</span></code>, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> defaults to a
+<code class="docutils literal notranslate"><span class="pre">vert_L128.nc</span></code> file under <code class="docutils literal notranslate"><span class="pre">diagnostics_base_path</span></code>.</p></li>
+<li><p>Vertical remapping (<code class="docutils literal notranslate"><span class="pre">vrt_remap_vars</span></code>) is often needed to produce
+pressure-level data for diagnostics.</p></li>
+</ul>
+<p>Example EAMxx configuration:</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[ts]</span>
+<span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+
+<span class="w">  </span><span class="k">[[eamxx_monthly_180x360_aave]]</span>
+<span class="w">  </span><span class="na">input_component</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">eamxx</span>
+<span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">eamxx.h0</span>
+<span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">archive/atm/hist</span>
+<span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/map_ne30pg2_to_cmip6_180x360_aave.nc</span>
+<span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">180x360_aave</span>
+<span class="w">  </span><span class="na">vrt_remap_vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">T,Q,U,V,Z3,OMEGA</span>
+<span class="w">  </span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:50:10</span>
+</pre></div>
+</div>
+</section>
+<section id="mapping-files">
+<h2>Mapping files<a class="headerlink" href="#mapping-files" title="Link to this heading"></a></h2>
+<p>Mapping files remap EAM/EAMxx output from the native spectral-element
+grid (e.g., <code class="docutils literal notranslate"><span class="pre">ne30pg2</span></code>) to a regular latitude-longitude grid
+(e.g., <code class="docutils literal notranslate"><span class="pre">180x360_aave</span></code>). These files are typically pre-computed and
+available on supported machines under the <code class="docutils literal notranslate"><span class="pre">diagnostics_base_path</span></code>.</p>
+<p>Machine-specific mapping file locations:</p>
+<ul class="simple">
+<li><p><strong>Chrysalis/Anvil (LCRC)</strong>: typically under
+<code class="docutils literal notranslate"><span class="pre">/home/ac.zender/data/maps/</span></code></p></li>
+<li><p><strong>Perlmutter (NERSC)</strong>: typically under
+<code class="docutils literal notranslate"><span class="pre">/global/homes/z/zender/data/maps/</span></code></p></li>
+<li><p><strong>Compy</strong>: typically under <code class="docutils literal notranslate"><span class="pre">/compyfs/zender/maps/</span></code></p></li>
+</ul>
+</section>
+<section id="diurnal-cycle">
+<h2>Diurnal cycle<a class="headerlink" href="#diurnal-cycle" title="Link to this heading"></a></h2>
+<p>For diurnal cycle diagnostics in <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code>, high-frequency
+(8× daily) climatologies are needed. Configure an additional <code class="docutils literal notranslate"><span class="pre">[climo]</span></code>
+subsection:</p>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[climo]</span>
+<span class="w">  </span><span class="k">[[atm_monthly_diurnal_8xdaily_180x360_aave]]</span>
+<span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">eam.h3</span>
+<span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">archive/atm/hist</span>
+<span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">diurnal_8xdaily</span>
+<span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/map_ne30pg2_to_cmip6_180x360_aave.nc</span>
+<span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">180x360_aave</span>
+<span class="w">  </span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1:100:20</span>
+
+<span class="k">[e3sm_diags]</span>
+<span class="w">  </span><span class="k">[[atm_monthly_180x360_aave]]</span>
+<span class="w">  </span><span class="na">sets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">diurnal_cycle,...</span>
+<span class="w">  </span><span class="na">climo_diurnal_subsection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">atm_monthly_diurnal_8xdaily_180x360_aave</span>
+<span class="w">  </span><span class="na">climo_diurnal_frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">diurnal_8xdaily</span>
+<span class="w">  </span><span class="na">dc_obs_climo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/obs/climatology</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Model Components" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="land.html" class="btn btn-neutral float-right" title="Land — ELM" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../../../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../../../v2.0.0/index.html">v2.0.0</a></dd>
+      <dd><a href="../../../v2.1.0/index.html">v2.1.0</a></dd>
+      <dd><a href="../../../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../../../v2.3.0/index.html">v2.3.0</a></dd>
+      <dd><a href="../../../v2.3.1/index.html">v2.3.1</a></dd>
+      <dd><a href="../../../v2.4.0/index.html">v2.4.0</a></dd>
+      <dd><a href="../../../v2.5.0/index.html">v2.5.0</a></dd>
+      <dd><a href="../../../v3.0.0/index.html">v3.0.0</a></dd>
+      <dd><a href="../../../v3.1.0/index.html">v3.1.0</a></dd>
+      <dd><a href="../../../v3.2.0/index.html">v3.2.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="atmosphere.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Adding a new set to the E3SM Diagnostics task &mdash; zppy  documentation</title>
+  <title>Examples: Adding a new set to the E3SM Diagnostics task &mdash; zppy  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
 
@@ -19,8 +19,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Adding a new plot to Global Time Series" href="new_glb_plot.html" />
-    <link rel="prev" title="Testing zppy for E3SM Unified release" href="tutorial_testing_e3sm_unified.html" />
+    <link rel="next" title="Archive" href="archive/index.html" />
+    <link rel="prev" title="Adding a new task" href="new_task.html" />
     <link href="../_static/style.css" rel="stylesheet" type="text/css">
 
 </head>
@@ -44,22 +44,23 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/index.html">User Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../index.html">Zppy documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../schematics.html">A schematic view of zppy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../parameters.html">Parameters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../campaigns.html">Campaigns</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="project-standards.html">Project Standards</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ci.html">Understanding CI</a></li>
-<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing zppy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="release_testing.html">Testing directions for making a release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="release.html">How to Prepare a Release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tutorial_testing_e3sm_unified.html">Testing zppy for E3SM Unified release</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Adding a new set to the E3SM Diagnostics task</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing to This Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parameters.html">Parameter checking &amp; inferring – for developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="provenance.html">Provenance (Developer Reference)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks/index.html">Tasks (Developer Reference)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="test.html">Testing zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="update_expected_results.html">Updating expected results for the tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="releases/index.html">How to Prepare a Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_task.html">Adding a new task</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Examples: Adding a new set to the E3SM Diagnostics task</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#example-pull-requests">Example pull requests</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#handle-dependencies">Handle dependencies</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#add-dependencies-in-the-python-file">Add dependencies in the Python file</a></li>
@@ -79,11 +80,9 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="new_glb_plot.html">Adding a new plot to Global Time Series</a></li>
-<li class="toctree-l2"><a class="reference internal" href="new_task.html">Adding a new task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="archive/index.html">Archive</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing to This Documentation</a></li>
 </ul>
 
         </div>
@@ -101,7 +100,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="index.html">Developer Guide</a></li>
-      <li class="breadcrumb-item active">Adding a new set to the E3SM Diagnostics task</li>
+      <li class="breadcrumb-item active">Examples: Adding a new set to the E3SM Diagnostics task</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/dev_guide/new_diags_set.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -111,8 +110,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="adding-a-new-set-to-the-e3sm-diagnostics-task">
-<h1>Adding a new set to the E3SM Diagnostics task<a class="headerlink" href="#adding-a-new-set-to-the-e3sm-diagnostics-task" title="Link to this heading"></a></h1>
+  <section id="examples-adding-a-new-set-to-the-e3sm-diagnostics-task">
+<h1>Examples: Adding a new set to the E3SM Diagnostics task<a class="headerlink" href="#examples-adding-a-new-set-to-the-e3sm-diagnostics-task" title="Link to this heading"></a></h1>
 <p>This guide gives a general list of things to consider when adding a new
 E3SM Diagnostics set. The exact code changes required will differ amongst sets.</p>
 <section id="example-pull-requests">
@@ -138,7 +137,7 @@ has replaced <code class="docutils literal notranslate"><span class="pre">/lcrc/
 <p>In <code class="docutils literal notranslate"><span class="pre">zppy/e3sm_diags.py</span></code></p>
 <p>Diurnal Cycle: <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> had to be set up to depend on a new climatology subtask:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="s2">&quot;diurnal_cycle&quot;</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s1">&#39;sets&#39;</span><span class="p">]:</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="s2">&quot;diurnal_cycle&quot;</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s1">&#39;sets&#39;</span><span class="p">]:</span>
     <span class="n">dependencies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s1">&#39;climo_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%04d</span><span class="s1">-</span><span class="si">%04d</span><span class="s1">.status&#39;</span> <span class="o">%</span> <span class="p">(</span>
         <span class="n">c</span><span class="p">[</span><span class="s1">&#39;climo_diurnal_subsection&#39;</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="s1">&#39;year1&#39;</span><span class="p">],</span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;year2&#39;</span><span class="p">])))</span>
 </pre></div>
@@ -146,7 +145,7 @@ has replaced <code class="docutils literal notranslate"><span class="pre">/lcrc/
 </div></blockquote>
 <p>Streamflow: <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> had to be set up to depend on a new time series subtask:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="s2">&quot;streamflow&quot;</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;sets&quot;</span><span class="p">]:</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="s2">&quot;streamflow&quot;</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;sets&quot;</span><span class="p">]:</span>
     <span class="n">dependencies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
         <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
             <span class="n">scriptDir</span><span class="p">,</span>
@@ -344,8 +343,8 @@ to the tutorial documentation:</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="tutorial_testing_e3sm_unified.html" class="btn btn-neutral float-left" title="Testing zppy for E3SM Unified release" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="new_glb_plot.html" class="btn btn-neutral float-right" title="Adding a new plot to Global Time Series" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="new_task.html" class="btn btn-neutral float-left" title="Adding a new task" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="archive/index.html" class="btn btn-neutral float-right" title="Archive" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

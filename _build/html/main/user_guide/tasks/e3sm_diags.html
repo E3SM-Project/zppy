@@ -1,0 +1,757 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>e3sm_diags — E3SM Diagnostics &mdash; zppy  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="mpas_analysis — Ocean and Sea-Ice Analysis" href="mpas_analysis.html" />
+    <link rel="prev" title="tc_analysis — Tropical Cyclone Analysis" href="tc_analysis.html" />
+    <link href="../../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../campaigns.html">Campaigns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parameters.html">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dependencies.html">Dependencies</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tasks</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="bundle.html">bundle — Job Bundling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="climo.html">climo — Climatology Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ts.html">ts — Time Series Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="e3sm_to_cmip.html">e3sm_to_cmip — CMIP6 Conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tc_analysis.html">tc_analysis — Tropical Cyclone Analysis</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">e3sm_diags — E3SM Diagnostics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#diagnostic-sets">Diagnostic sets</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mpas_analysis.html">mpas_analysis — Ocean and Sea-Ice Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="global_time_series.html">global_time_series — Global Time Series Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ilamb.html">ilamb — Land Benchmarking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="livvkit.html">livvkit — Ice Sheet Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pcmdi_diags.html">pcmdi_diags — PCMDI Metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../components/index.html">Model Components</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dev_guide/index.html">Developer Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Tasks</a></li>
+      <li class="breadcrumb-item active">e3sm_diags — E3SM Diagnostics</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/tasks/e3sm_diags.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="e3sm-diags-e3sm-diagnostics">
+<span id="task-e3sm-diags"></span><h1>e3sm_diags — E3SM Diagnostics<a class="headerlink" href="#e3sm-diags-e3sm-diagnostics" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> task runs <a class="reference external" href="https://e3sm-project.github.io/e3sm_diags/">E3SM Diagnostics</a> to produce a wide variety of
+atmospheric, land, and river diagnostic plots. It depends on the <a class="reference internal" href="climo.html"><span class="doc">climo — Climatology Files</span></a>
+and/or <a class="reference internal" href="ts.html"><span class="doc">ts — Time Series Files</span></a> tasks for its input files.</p>
+<p>For a complete list of available E3SM Diags parameters, see the
+<a class="reference external" href="https://e3sm-project.github.io/e3sm_diags/_build/html/master/available-parameters.html">E3SM Diags documentation</a>.</p>
+<p>For a table of which diagnostic sets require which parameters, see
+<a class="reference external" href="https://acme-climate.atlassian.net/wiki/spaces/IPD/pages/4984209586/zppy+parameters+for+e3sm_diags">Confluence</a>.</p>
+<section id="diagnostic-sets">
+<h2>Diagnostic sets<a class="headerlink" href="#diagnostic-sets" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">sets</span></code> parameter controls which diagnostic sets are run. All 20
+available sets are:</p>
+<p><code class="docutils literal notranslate"><span class="pre">aerosol_aeronet</span></code>, <code class="docutils literal notranslate"><span class="pre">aerosol_budget</span></code>, <code class="docutils literal notranslate"><span class="pre">annual_cycle_zonal_mean</span></code>,
+<code class="docutils literal notranslate"><span class="pre">area_mean_time_series</span></code>, <code class="docutils literal notranslate"><span class="pre">cosp_histogram</span></code>, <code class="docutils literal notranslate"><span class="pre">diurnal_cycle</span></code>,
+<code class="docutils literal notranslate"><span class="pre">enso_diags</span></code>, <code class="docutils literal notranslate"><span class="pre">lat_lon</span></code>, <code class="docutils literal notranslate"><span class="pre">lat_lon_land</span></code>, <code class="docutils literal notranslate"><span class="pre">meridional_mean_2d</span></code>, <code class="docutils literal notranslate"><span class="pre">mp_partition</span></code>,
+<code class="docutils literal notranslate"><span class="pre">polar</span></code>, <code class="docutils literal notranslate"><span class="pre">precip_pdf</span></code>, <code class="docutils literal notranslate"><span class="pre">qbo</span></code>, <code class="docutils literal notranslate"><span class="pre">streamflow</span></code>, <code class="docutils literal notranslate"><span class="pre">tc_analysis</span></code>,
+<code class="docutils literal notranslate"><span class="pre">tropical_subseasonal</span></code>, <code class="docutils literal notranslate"><span class="pre">zonal_mean_2d</span></code>, <code class="docutils literal notranslate"><span class="pre">zonal_mean_2d_stratosphere</span></code>,
+<code class="docutils literal notranslate"><span class="pre">zonal_mean_xy</span></code></p>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<p>These 35 parameters are specific to the <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> task.</p>
+<section id="general-parameters">
+<h3>General parameters<a class="headerlink" href="#general-parameters" title="Link to this heading"></a></h3>
+<p>There are 12 general parameters:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">backend</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;mpl&quot;</span></code></p></td>
+<td><p>Plotting backend.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cfg</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Path to an additional E3SM Diags configuration file.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">keep_mvm_case_name_in_fig</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Include case name in model-vs-model output paths.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multiprocessing</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Use multiprocessing.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">num_workers</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">24</span></code></p></td>
+<td><p>Number of worker processes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">output_format</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[&quot;png&quot;]</span></code></p></td>
+<td><p>Output plot formats.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">output_format_subplot</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
+<td><p>Output formats for subplots.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">run_type</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;model_vs_obs&quot;</span></code></p></td>
+<td><p>Comparison type: <code class="docutils literal notranslate"><span class="pre">&quot;model_vs_obs&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;model_vs_model&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sets</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;lat_lon,zonal_mean_xy,...&quot;</span></code></p></td>
+<td><p>List of diagnostic sets to run.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">short_name</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Short name used as test name and label.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">swap_test_ref</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Swap test and reference in model-vs-model runs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tag</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;model_vs_obs&quot;</span></code></p></td>
+<td><p>Label for the results directory.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="set-specific-parameters">
+<h3>Set-specific parameters<a class="headerlink" href="#set-specific-parameters" title="Link to this heading"></a></h3>
+<p>There are 23 set-specific parameters.</p>
+<p><strong>Overview by set</strong></p>
+<p>We will review useful parameters by set. To do this, we will group them by dependency. For more info on dependencies, see <a class="reference internal" href="../dependencies.html#dependency-graph"><span class="std std-ref">Dependencies</span></a>.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head stub"><p>Group</p></th>
+<th class="head"><p>Sets</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">climo_month_atm</span></code></p></th>
+<td><p><code class="docutils literal notranslate"><span class="pre">lat_lon</span></code>, <code class="docutils literal notranslate"><span class="pre">zonal_mean_xy</span></code>, <code class="docutils literal notranslate"><span class="pre">zonal_mean_2d</span></code>, <code class="docutils literal notranslate"><span class="pre">polar</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cosp_histogram</span></code>, <code class="docutils literal notranslate"><span class="pre">meridional_mean_2d</span></code>,
+<code class="docutils literal notranslate"><span class="pre">annual_cycle_zonal_mean</span></code>, <code class="docutils literal notranslate"><span class="pre">zonal_mean_2d_stratosphere</span></code>,
+<code class="docutils literal notranslate"><span class="pre">aerosol_aeronet</span></code>, <code class="docutils literal notranslate"><span class="pre">aerosol_budget</span></code></p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">climo_month_lnd</span></code></p></th>
+<td><p><code class="docutils literal notranslate"><span class="pre">lat_lon_land</span></code></p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">diurnal</span></code></p></th>
+<td><p><code class="docutils literal notranslate"><span class="pre">diurnal_cycle</span></code></p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">ts_month_atm</span></code></p></th>
+<td><p><code class="docutils literal notranslate"><span class="pre">enso_diags</span></code>, <code class="docutils literal notranslate"><span class="pre">qbo</span></code>, <code class="docutils literal notranslate"><span class="pre">area_mean_time_series</span></code>, <code class="docutils literal notranslate"><span class="pre">mp_partition</span></code></p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">ts_daily_atm</span></code></p></th>
+<td><p><code class="docutils literal notranslate"><span class="pre">tropical_subseasonal</span></code>, <code class="docutils literal notranslate"><span class="pre">precip_pdf</span></code></p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">streamflow</span></code></p></th>
+<td><p><code class="docutils literal notranslate"><span class="pre">streamflow</span></code></p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">tc</span></code></p></th>
+<td><p><code class="docutils literal notranslate"><span class="pre">tc_analysis</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Cell values: <strong>Always</strong> = required for both run types;
+<strong>MvO</strong> = <code class="docutils literal notranslate"><span class="pre">model_vs_obs</span></code> only; <strong>MvM</strong> = <code class="docutils literal notranslate"><span class="pre">model_vs_model</span></code> only;
+<strong>—</strong> = not used. Values marked with * differ across sets within the group
+(see notes below the table).</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 11.7%" />
+<col style="width: 11.7%" />
+<col style="width: 8.3%" />
+<col style="width: 13.3%" />
+<col style="width: 11.7%" />
+<col style="width: 10.0%" />
+<col style="width: 8.3%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head stub"><p>Parameter</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">climo_month_atm</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">climo_month_lnd</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">diurnal</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">ts_month_atm</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">ts_daily_atm</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">streamflow</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">tc</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">climo_diurnal_frequency</span></code></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>Always</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">climo_diurnal_subsection</span></code></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>Always</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">climo_subsection</span></code> <a class="footnote-reference brackets" href="#subsection" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p></th>
+<td><p>Always</p></td>
+<td><p>Always</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">dc_obs_climo</span></code> <a class="footnote-reference brackets" href="#dc-obs" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvO</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">diff_title</span></code></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">gauges_path</span></code> <a class="footnote-reference brackets" href="#inferred" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvM</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">obs_ts</span></code> <a class="footnote-reference brackets" href="#inferred" id="id4" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvO</p></td>
+<td><p>MvO</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">ref_final_yr</span></code> *</p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>Always *</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">ref_name</span></code></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">ref_start_yr</span></code> *</p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>Always *</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> <a class="footnote-reference brackets" href="#refpath" id="id5" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a></p></th>
+<td><p>Always</p></td>
+<td><p>Always</p></td>
+<td><p>Always</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">reference_data_path_climo_diurnal</span></code> <a class="footnote-reference brackets" href="#inferred" id="id6" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvM</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">reference_data_path_tc</span></code> <a class="footnote-reference brackets" href="#inferred" id="id7" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvM</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">reference_data_path_ts</span></code> <a class="footnote-reference brackets" href="#inferred" id="id8" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvM</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">reference_data_path_ts_daily</span></code> <a class="footnote-reference brackets" href="#inferred" id="id9" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvM</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">reference_data_path_ts_rof</span></code> <a class="footnote-reference brackets" href="#inferred" id="id10" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvM</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">short_ref_name</span></code></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">streamflow_obs_ts</span></code> <a class="footnote-reference brackets" href="#inferred" id="id11" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvO</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">tc_obs</span></code> <a class="footnote-reference brackets" href="#inferred" id="id12" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvO</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">ts_daily_subsection</span></code> <a class="footnote-reference brackets" href="#subsection" id="id13" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>Always</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">ts_num_years_ref</span></code></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+<td><p>MvM</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">ts_subsection</span></code> <a class="footnote-reference brackets" href="#subsection" id="id14" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p></th>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>Always</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="subsection" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id13">2</a>,<a role="doc-backlink" href="#id14">3</a>)</span>
+<p>Falls back to <code class="docutils literal notranslate"><span class="pre">sub</span></code> → <code class="docutils literal notranslate"><span class="pre">grid</span></code> if not set.</p>
+</aside>
+<aside class="footnote brackets" id="refpath" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id5">2</a><span class="fn-bracket">]</span></span>
+<p>Inferred from <code class="docutils literal notranslate"><span class="pre">diagnostics_base_path</span></code> if not set. In MvM,
+also used as a base path from which <code class="docutils literal notranslate"><span class="pre">reference_data_path_climo_diurnal</span></code>
+and <code class="docutils literal notranslate"><span class="pre">reference_data_path_ts</span></code> are derived.</p>
+</aside>
+<aside class="footnote brackets" id="dc-obs" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">3</a><span class="fn-bracket">]</span></span>
+<p>Inferred from <code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code> if not set (MvO only).</p>
+</aside>
+<aside class="footnote brackets" id="inferred" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id3">1</a>,<a role="doc-backlink" href="#id4">2</a>,<a role="doc-backlink" href="#id6">3</a>,<a role="doc-backlink" href="#id7">4</a>,<a role="doc-backlink" href="#id8">5</a>,<a role="doc-backlink" href="#id9">6</a>,<a role="doc-backlink" href="#id10">7</a>,<a role="doc-backlink" href="#id11">8</a>,<a role="doc-backlink" href="#id12">9</a>)</span>
+<p>Inferred from <code class="docutils literal notranslate"><span class="pre">diagnostics_base_path</span></code> (or a sibling path)
+if not set.</p>
+</aside>
+</aside>
+<p>Note on * cells (<code class="docutils literal notranslate"><span class="pre">ts_month_atm</span></code>): within <code class="docutils literal notranslate"><span class="pre">ts_month_atm</span></code> the four sets do not behave uniformly for <code class="docutils literal notranslate"><span class="pre">ref_start_yr</span></code> and <code class="docutils literal notranslate"><span class="pre">ref_final_yr</span></code>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 27.3%" />
+<col style="width: 18.2%" />
+<col style="width: 18.2%" />
+<col style="width: 18.2%" />
+<col style="width: 18.2%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">enso_diags</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">qbo</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">area_mean_time_series</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">mp_partition</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ref_final_yr</span></code></p></td>
+<td><p>MvM</p></td>
+<td><p>Always</p></td>
+<td><p>—</p></td>
+<td><p>MvM</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ref_start_yr</span></code></p></td>
+<td><p>Always</p></td>
+<td><p>Always</p></td>
+<td><p>—</p></td>
+<td><p>MvM</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Parameter list</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 44.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">climo_diurnal_frequency</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Frequency name for the diurnal cycle <code class="docutils literal notranslate"><span class="pre">[climo]</span></code> subtask.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">climo_diurnal_subsection</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[climo]</span></code> subtask for diurnal cycle data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">climo_subsection</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Name of the <code class="docutils literal notranslate"><span class="pre">[climo]</span></code> subtask to depend on.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dc_obs_climo</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Path to observation climatology for the <code class="docutils literal notranslate"><span class="pre">diurnal_cycle</span></code> set.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">diff_title</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;Model</span> <span class="pre">-</span> <span class="pre">Observations&quot;</span></code></p></td>
+<td><p>Title for difference plots.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gauges_path</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Path to stream gauge data for <code class="docutils literal notranslate"><span class="pre">streamflow</span></code> model-vs-model runs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">obs_ts</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Path to observation time-series data for <code class="docutils literal notranslate"><span class="pre">enso_diags</span></code>, <code class="docutils literal notranslate"><span class="pre">qbo</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">area_mean_time_series</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ref_final_yr</span></code></p></td>
+<td><p>No*</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>End year of reference data. Required for <code class="docutils literal notranslate"><span class="pre">qbo</span></code> and certain
+model-vs-model sets.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ref_name</span></code></p></td>
+<td><p>No*</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Reference dataset name.
+<strong>Required for</strong> <code class="docutils literal notranslate"><span class="pre">run_type=&quot;model_vs_model&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ref_start_yr</span></code></p></td>
+<td><p>No*</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Start year of reference data. Required for <code class="docutils literal notranslate"><span class="pre">enso_diags</span></code>, <code class="docutils literal notranslate"><span class="pre">qbo</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reference_data_path</span></code></p></td>
+<td><p>No*</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Path to reference climatology data.
+<strong>Required for</strong> <code class="docutils literal notranslate"><span class="pre">run_type=&quot;model_vs_model&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reference_data_path_climo_diurnal</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Reference climatology path for <code class="docutils literal notranslate"><span class="pre">diurnal_cycle</span></code> MVM runs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ref_years</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[&quot;&quot;]</span></code></p></td>
+<td><p>Year ranges for reference data in model-vs-model runs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reference_data_path_tc</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Reference data path for <code class="docutils literal notranslate"><span class="pre">tc_analysis</span></code> MVM runs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reference_data_path_ts</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Reference time-series path for <code class="docutils literal notranslate"><span class="pre">enso_diags</span></code>, <code class="docutils literal notranslate"><span class="pre">qbo</span></code>, <code class="docutils literal notranslate"><span class="pre">area_mean_time_series</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reference_data_path_ts_daily</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Reference daily time-series path for <code class="docutils literal notranslate"><span class="pre">tropical_subseasonal</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reference_data_path_ts_rof</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Reference river time-series path for <code class="docutils literal notranslate"><span class="pre">streamflow</span></code> MVM runs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">short_ref_name</span></code></p></td>
+<td><p>No*</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Short reference name.
+<strong>Required for</strong> <code class="docutils literal notranslate"><span class="pre">run_type=&quot;model_vs_model&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">streamflow_obs_ts</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Path to observation data for <code class="docutils literal notranslate"><span class="pre">streamflow</span></code> set.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tc_obs</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Path to observation data for <code class="docutils literal notranslate"><span class="pre">tc_analysis</span></code> set.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ts_daily_subsection</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[ts]</span></code> subtask for daily data (required for
+<code class="docutils literal notranslate"><span class="pre">tropical_subseasonal</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ts_num_years_ref</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">5</span></code></p></td>
+<td><p>Year increment for reference time-series data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ts_subsection</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Name of the <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> subtask to depend on.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="parameters-at-the-top-level">
+<h3>Parameters at the top-level<a class="headerlink" href="#parameters-at-the-top-level" title="Link to this heading"></a></h3>
+<p>For top-level parameters, see <a class="reference internal" href="../parameters.html#parameters-top-level"><span class="std std-ref">top-level parameters</span></a>.</p>
+</section>
+</section>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h2>
+<p><strong>Upstream (what e3sm_diags depends on):</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="climo.html"><span class="doc">climo — Climatology Files</span></a> — Monthly-atm climo: lat_lon, zonal_mean_xy, zonal_mean_2d, polar, cosp_histogram, meridional_mean_2d, annual_cycle_zonal_mean, zonal_mean_2d_stratosphere, aerosol_aeronet, aerosol_budget. Monthly-lnd climo: lat_lon_land. Monthly diurnal-atm climo: diurnal_cycle</p></li>
+<li><p><a class="reference internal" href="ts.html"><span class="doc">ts — Time Series Files</span></a> — Monthly-atm ts: enso_diags, qbo, area_mean_time_series, mp_partition. Monthly-rof ts: streamflow. Daily-atm ts: tropical_subseasonal, precip_pdf.</p></li>
+<li><p><a class="reference internal" href="tc_analysis.html"><span class="doc">tc_analysis — Tropical Cyclone Analysis</span></a> — Required for tc_analysis set.</p></li>
+</ul>
+<p><strong>Downstream (what depends on e3sm_diags):</strong></p>
+<ul class="simple">
+<li><p>None.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tc_analysis.html" class="btn btn-neutral float-left" title="tc_analysis — Tropical Cyclone Analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mpas_analysis.html" class="btn btn-neutral float-right" title="mpas_analysis — Ocean and Sea-Ice Analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../../../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../../../v2.0.0/index.html">v2.0.0</a></dd>
+      <dd><a href="../../../v2.1.0/index.html">v2.1.0</a></dd>
+      <dd><a href="../../../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../../../v2.3.0/index.html">v2.3.0</a></dd>
+      <dd><a href="../../../v2.3.1/index.html">v2.3.1</a></dd>
+      <dd><a href="../../../v2.4.0/index.html">v2.4.0</a></dd>
+      <dd><a href="../../../v2.5.0/index.html">v2.5.0</a></dd>
+      <dd><a href="../../../v3.0.0/index.html">v3.0.0</a></dd>
+      <dd><a href="../../../v3.1.0/index.html">v3.1.0</a></dd>
+      <dd><a href="../../../v3.2.0/index.html">v3.2.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="e3sm_diags.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
