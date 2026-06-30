@@ -69,9 +69,7 @@ E3SM Unified and zppy versions
 
 To use ``zppy`` features/fixes not yet in a production release, you can use a development environment.
 
-Note that ``e3sm_unified``'s development cycle is not in phase with ``zppy``.
-Therefore the version of ``zppy`` included may not be the latest.
-To install the latest stable release, refer to the following:
+Nevertheless, it is possible that the version of ``zppy`` included in ``e3sm_unified`` may not be the latest. To install the latest development environment, refer to the following section.
 
 Setting up a development environment
 ====================================
