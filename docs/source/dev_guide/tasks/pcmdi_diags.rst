@@ -13,3 +13,4 @@ Implementation
 ``variability_modes_cpl``, ``variability_modes_atm``, ``enso``,
 ``synthetic_plots``). The ``current_set`` parameter (or the subsection
 name) determines which set to run.
+``pcmdi_diags`` is called through `zppy-interfaces <https://docs.e3sm.org/zppy-interfaces/_build/html/main/pcmdi_diags.html>`_.
