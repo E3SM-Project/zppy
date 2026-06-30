@@ -1,0 +1,104 @@
+digraph TaskDependencies {
+    // Graph settings
+    rankdir=LR  // Left-to-right layout (TB for top-to-bottom)
+    node [shape=box, style=rounded]
+
+    // Reviewing the dependencies in each `.py` file
+    // and the test cfgs, we come up with the following:
+
+    // VERTICES (tasks)
+
+    climo_diurnal_atm [label="climo: diurnal, atm"]
+    climo_month_atm [label="climo: monthly, atm"]
+    climo_month_lnd [label="climo: monthly, lnd"]
+
+    ts_daily_atm [label="ts: daily, atm"]
+    ts_month_atm [label="ts: monthly, atm"]
+    ts_month_atm_glb [label="ts: monthly, atm, glb"]
+    ts_month_lnd [label="ts: monthly, lnd"]
+    ts_month_lnd_glb [label="ts: monthly, lnd, glb"]
+    ts_month_rof [label="ts: monthly, rof"]
+    
+    e3sm_to_cmip_month_atm [label="e3sm_to_cmip: monthly, atm"]
+    e3sm_to_cmip_month_lnd [label="e3sm_to_cmip: monthly, lnd"]
+
+    tc_analysis
+
+    e3sm_diags_diurnal [label="e3sm_diags: diurnal_cycle"]
+    e3sm_diags_climo_month_atm [label="e3sm_diags: lat_lon,zonal_mean_xy,\nzonal_mean_2d,polar,cosp_histogram,\nmeridional_mean_2d,annual_cycle_zonal_mean,zonal_mean_2d_stratosphere,\naerosol_aeronet,aerosol_budget"]
+    e3sm_diags_climo_month_lnd [label="e3sm_diags: lat_lon_land"]
+    e3sm_diags_streamflow [label="e3sm_diags: streamflow"]
+    e3sm_diags_tc [label="e3sm_diags: tc_analysis"]
+    e3sm_diags_ts_daily_atm [label="e3sm_diags: tropical_subseasonal,precip_pdf"]
+    e3sm_diags_ts_month_atm [label="e3sm_diags: enso_diags,qbo,\narea_mean_time_series,mp_partition"]
+
+    mpas_analysis
+
+    global_time_series_classic_atm [label="global_time_series:\nThe 5 atm classic plots"]
+    global_time_series_classic_ocn [label="global_time_series:\nThe 3 ocn classic plots"]
+    global_time_series_plots_atm [label="global_time_series:\natm plots"]
+    global_time_series_plots_ice [label="global_time_series:\nice plots"] // Currently unused
+    global_time_series_plots_lnd [label="global_time_series:\nlnd plots"]
+    global_time_series_plots_ocn [label="global_time_series:\nocn plots"]
+
+    ilamb_lnd_atm [label="ilamb: lnd & atm"]
+    ilamb_lnd_only [label="ilamb: lnd only"]
+    
+    livvkit
+
+    pcmdi_diags_mean_climate [label="pcmdi_diags: mean_climate"]
+    pcmdi_diags_variability_modes_atm [label="pcmdi_diags: variability_modes_atm"]
+    pcmdi_diags_variability_modes_cpl [label="pcmdi_diags: variability_modes_cpl"]
+    pcmdi_diags_enso [label="pcmdi_diags: enso"]
+    pcmdi_diags_synthetic_plots [label="pcmdi_diags: synthetic_plots"]
+
+
+    // EDGES (dependencies)
+
+    // Defined in climo.py:
+    // None
+
+    // Defined in ts.py:
+    // None
+
+    // Defined in e3sm_to_cmip.py:
+    ts_month_atm -> e3sm_to_cmip_month_atm
+    ts_month_lnd -> e3sm_to_cmip_month_lnd
+
+    // Defined in tc_analysis.py:
+    // None
+
+    // Defined in e3sm_diags.py:
+    climo_month_atm -> e3sm_diags_climo_month_atm
+    climo_month_lnd -> e3sm_diags_climo_month_lnd
+    climo_diurnal_atm -> e3sm_diags_diurnal
+    tc_analysis -> e3sm_diags_tc
+    ts_month_atm -> e3sm_diags_ts_month_atm
+    ts_month_rof -> e3sm_diags_streamflow
+    ts_daily_atm -> e3sm_diags_ts_daily_atm
+
+    // Defined in mpas_analysis.py:
+    mpas_analysis -> mpas_analysis // Later year sets depend on earlier runs
+
+    // Defined in global_time_series.py:
+    ts_month_atm_glb -> {global_time_series_classic_atm, global_time_series_plots_atm}
+    ts_month_lnd_glb -> global_time_series_plots_lnd
+    mpas_analysis -> {global_time_series_classic_ocn, global_time_series_plots_ocn}
+
+    // Defined in ilamb.py:
+    ts_month_atm -> ilamb_lnd_atm
+    ts_month_lnd -> {ilamb_lnd_atm, ilamb_lnd_only}
+    e3sm_to_cmip_month_atm -> ilamb_lnd_atm
+    e3sm_to_cmip_month_lnd -> {ilamb_lnd_atm, ilamb_lnd_only}
+
+    // Defined in livvkit.py:
+    // Data sources in livvkit.py: "cmb", "smb", "racmo", "merra2", "ceres", "era5"
+    // climo extensions in tests/integration/template_weekly_comprehensive_v3.cfg: traave, native, racmo_gis, racmo_ais, merra2, era5
+    // ts extensions in tests/integration/template_weekly_comprehensive_v3.cfg: energy, smb
+    climo_month_lnd -> livvkit [label="Specify mapping files"]
+    ts_month_lnd -> livvkit [label="Specify mapping files"]
+
+    // Defined in pcmdi_diags.py:
+    {ts_month_atm, e3sm_to_cmip_month_atm} -> {pcmdi_diags_mean_climate, pcmdi_diags_variability_modes_atm, pcmdi_diags_variability_modes_cpl, pcmdi_diags_enso} -> pcmdi_diags_synthetic_plots
+
+}

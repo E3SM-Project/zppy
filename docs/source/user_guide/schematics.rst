@@ -38,7 +38,7 @@ The plots for years 51-100 have similar requirements – however the graph calls
 attention to the fact that MPAS-Analysis for years 51-100 itself depends on
 MPAS-Analysis for years 1-50.
 
-.. image:: figures/zppy_jobs.png
+.. image:: ../figures/zppy_jobs.png
    :scale: 80%
 
 Figure 1.  Illustration of how zppy uses sections of the configuration file and
@@ -47,7 +47,7 @@ climo stands for climatology and ts stands for time series.
 Note that the configuration file is abridged – see the :ref:`zppy tutorial <tutorial>`
 for more complete examples.
 
-.. image:: figures/zppy_dependencies.png
+.. image:: ../figures/zppy_dependencies.png
    :scale: 80%
 
 Figure 2. Two possible job dependency graphs.
