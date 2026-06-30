@@ -19,6 +19,8 @@ The ``zppy-interfaces`` package is meant to be a collection of tools that are to
 * ``global_time_series``: this functionality was initially implemented in the ``zppy`` bash template itself, but grew complex enough to require separation.
 * ``pcmdi_diags``: this is "glue code" to allow for seamless integration of the PCMDI Metrics Package with ``zppy``.
 
+``zppy-interfaces`` official documentation can be found `here <https://docs.e3sm.org/zppy-interfaces/_build/html/main/index.html>`_.
+
 The task's bash file
 =====================
 
