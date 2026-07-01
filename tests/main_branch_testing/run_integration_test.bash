@@ -316,6 +316,10 @@ setup_conda_env() {
         conda clean --all --yes
         if [[ "$conda_dir" == "none" ]]; then
             conda create --name "$env_name" --file dev-spec.txt --yes
+            # esmpy (Python bindings for esmf) is missing from MPAS-Analysis
+            # dev-spec.txt. Install manually until the upstream repo adds it.
+            # The *mpich* glob matches the MPI variant already in dev-spec.txt.
+            conda install -n "$env_name" -c conda-forge "esmpy=*=*mpich*" --yes
         else
             conda env create -f "${conda_dir}/dev.yml" -n "$env_name"
         fi
