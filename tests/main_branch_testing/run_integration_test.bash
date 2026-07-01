@@ -203,6 +203,71 @@ checkpoint() {
     fi
 }
 
+# ============================================================================
+# Debug Helper Functions
+# ============================================================================
+
+# Capture a full environment snapshot to both stdout and a log file.
+# Usage: debug_env_snapshot "label-string"
+debug_env_snapshot() {
+    local label="$1"
+    local out_file="${SCRIPT_RUN_DIR}/debug_env_${TAG}.txt"
+    {
+        echo "========================================"
+        echo "ENV SNAPSHOT: $label"
+        echo "Timestamp: $(date)"
+        echo "----------------------------------------"
+        echo "--- conda info ---"
+        conda info 2>/dev/null || echo "(conda not available)"
+        echo "--- CONDA_DEFAULT_ENV: ${CONDA_DEFAULT_ENV:-<unset>}"
+        echo "--- CONDA_PREFIX: ${CONDA_PREFIX:-<unset>}"
+        echo "--- Active python: $(which python 2>/dev/null || echo '<not found>')"
+        echo "--- Python version: $(python --version 2>/dev/null || echo '<unavailable>')"
+        echo "--- LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-<unset>}"
+        echo "--- PYTHONPATH: ${PYTHONPATH:-<unset>}"
+        echo "--- PYTHONHOME: ${PYTHONHOME:-<unset>}"
+        echo "--- PATH (first 5 entries):"
+        echo "$PATH" | tr ':' '\n' | head -5
+        echo "--- ulimit -s (stack size): $(ulimit -s)"
+        echo "--- ulimit -v (virtual mem): $(ulimit -v)"
+        echo "--- OMP_NUM_THREADS: ${OMP_NUM_THREADS:-<unset>}"
+        echo "--- MKL_NUM_THREADS: ${MKL_NUM_THREADS:-<unset>}"
+        echo "--- OPENBLAS_NUM_THREADS: ${OPENBLAS_NUM_THREADS:-<unset>}"
+        echo "========================================"
+    } | tee -a "$out_file"
+}
+
+# Capture MPAS-specific preflight diagnostics to both stdout and a log file.
+# Checks the mpas_analysis binary, shared library linkage, and key Python
+# packages (numpy BLAS config, ESMF, cartopy) that are common segfault sources.
+# Usage: debug_mpas_preflight "label-string"
+debug_mpas_preflight() {
+    local label="$1"
+    local out_file="${SCRIPT_RUN_DIR}/debug_mpas_${TAG}.txt"
+    {
+        echo "========================================"
+        echo "MPAS PREFLIGHT: $label"
+        echo "Timestamp: $(date)"
+        echo "----------------------------------------"
+        echo "--- mpas_analysis binary: $(which mpas_analysis 2>/dev/null || echo '<not found>')"
+        echo "--- mpas_analysis version: $(mpas_analysis --version 2>/dev/null || echo '<unavailable>')"
+        echo "--- ldd on mpas_analysis binary (if applicable):"
+        _mpas_bin="$(which mpas_analysis 2>/dev/null || true)"
+        if [[ -n "$_mpas_bin" && -f "$_mpas_bin" ]]; then
+            ldd "$_mpas_bin" 2>/dev/null | grep -i "not found" && echo "(^ missing libs above)" || echo "(all libs found)"
+        else
+            echo "(mpas_analysis not a regular file or not found, skipping ldd)"
+        fi
+        echo "--- numpy config (segfaults often trace to BLAS/LAPACK mismatches):"
+        python -c "import numpy; numpy.show_config()" 2>/dev/null || echo "(numpy not importable)"
+        echo "--- ESMF version:"
+        python -c "import ESMF; print(ESMF.__version__)" 2>/dev/null || echo "(ESMF not importable)"
+        echo "--- cartopy version:"
+        python -c "import cartopy; print(cartopy.__version__)" 2>/dev/null || echo "(cartopy not importable)"
+        echo "========================================"
+    } | tee -a "$out_file"
+}
+
 # Activate conda and (optionally) a named environment.
 activate_env() {
     local env_name="${1:-}"
@@ -213,6 +278,9 @@ activate_env() {
 
     if [ -n "$env_name" ]; then
         conda activate "$env_name"
+        # Log every activation so we can spot env-stack contamination between subshells.
+        echo "[DEBUG activate_env] $(date) | activated: $env_name | python: $(which python 2>/dev/null || echo '<not found>') | CONDA_PREFIX: ${CONDA_PREFIX:-<unset>} | LD_LIBRARY_PATH: ${LD_LIBRARY_PATH:-<unset>}" \
+            >> "${SCRIPT_RUN_DIR}/debug_activate_log_${TAG}.txt"
         log "Installing/updating package in '$env_name'..."
         python -m pip install .
     fi
@@ -402,6 +470,10 @@ phase_1_setup() {
     log "  EXPLICIT_TAG=${TAG}"
     log "========================================="
 
+    # Capture the baseline environment before any component setup so we have
+    # a clean reference to diff against later snapshots.
+    debug_env_snapshot "phase-1-start"
+
     # ------------------------------------------------------------------
     # e3sm_to_cmip
     # ------------------------------------------------------------------
@@ -473,6 +545,12 @@ phase_1_setup() {
     # ------------------------------------------------------------------
     log "Setting up MPAS-Analysis..."
 
+    # Snapshot the environment immediately before entering the MPAS subshell.
+    # Compare this against the post-activate snapshot to spot any leakage
+    # from the e3sm_to_cmip or e3sm_diags subshells above (LD_LIBRARY_PATH,
+    # CONDA_PREFIX nesting, PYTHONPATH, etc.).
+    debug_env_snapshot "before-mpas-subshell"
+
     local MPAS_ENV=""
     if [[ "$MPAS_ENV_TYPE" == "dev" ]]; then
         if [[ -n "$MPAS_EXISTING_ENV" ]]; then
@@ -493,11 +571,25 @@ phase_1_setup() {
             if [[ -n "$MPAS_EXISTING_ENV" ]]; then
                 log "Reusing existing 'MPAS-Analysis' env: $MPAS_EXISTING_ENV (skipping creation)"
                 activate_env "$MPAS_EXISTING_ENV"
+                # Snapshot after activating the pre-existing env. A mismatch
+                # between this and the before-mpas-subshell snapshot (especially
+                # in LD_LIBRARY_PATH) is a likely segfault cause.
+                debug_env_snapshot "mpas-subshell-after-activate-existing"
+                debug_mpas_preflight "mpas-existing-env"
             else
                 setup_conda_env "none" "$MPAS_ENV"
+                # Snapshot after a fresh env creation + activation. Check that
+                # CONDA_PREFIX is clean and LD_LIBRARY_PATH only contains paths
+                # from this env, not any prior one.
+                debug_env_snapshot "mpas-subshell-after-setup-conda"
+                debug_mpas_preflight "mpas-new-env"
             fi
         else
             log "Using unified env for MPAS-Analysis (skipping conda env creation)"
+            # Snapshot even for the unified-env path -- the unified env loader
+            # modifies LD_LIBRARY_PATH in ways that can conflict with prior envs.
+            debug_env_snapshot "mpas-subshell-unified-env"
+            debug_mpas_preflight "mpas-unified-env"
         fi
     )
 
