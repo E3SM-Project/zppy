@@ -280,7 +280,8 @@ def _set_default_www(machine_info: MachineInfo, config: ConfigObj) -> None:
         raise ValueError(
             "www is empty. Provide [default] www or set `enabled = True` in "
             "the [simboard] section to infer a SimBoard-compatible "
-            "diagnostics_archive path."
+            "diagnostics_archive path. Note: inference requires "
+            "web_portal.base_path in Mache configuration."
         )
 
     config["default"]["www"] = infer_simboard_www(machine_info, config)

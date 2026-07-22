@@ -20,7 +20,8 @@ def simboard(
 
     This section is an explicit top-level SimBoard configuration entry point,
     analogous to `[bundle]`: it influences how other tasks are configured, but
-    it does not launch an HPC job of its own.
+    it does not launch an HPC job of its own. The unused task-like parameters
+    are retained so this hook matches the call signature of other zppy tasks.
     """
     if config["simboard"].sections:
         raise ValueError("The [simboard] section does not support subsections.")
@@ -33,14 +34,14 @@ def simboard_enabled(config: ConfigObj) -> bool:
     Assumes `config` has already been validated against `default.ini`, which
     provides the `[simboard]` section and its default values.
     """
-    return bool(config["simboard"]["enabled"])
+    return config["simboard"]["enabled"]
 
 
 def validate_simboard_config(config: ConfigObj) -> None:
     if not simboard_enabled(config):
         return
 
-    simulation_type = str(config["simboard"]["simulation_type"])
+    simulation_type = config["simboard"]["simulation_type"]
     if simulation_type == "none":
         raise ValueError(
             "simboard.simulation_type must be 'production' or 'development' "
@@ -49,7 +50,7 @@ def validate_simboard_config(config: ConfigObj) -> None:
 
 
 def infer_simboard_www(machine_info: MachineInfo, config: ConfigObj) -> str:
-    simulation_type = str(config["simboard"]["simulation_type"])
+    simulation_type = config["simboard"]["simulation_type"]
     try:
         web_portal_base_path = machine_info.config.get("web_portal", "base_path")
     except (NoSectionError, NoOptionError) as exc:
