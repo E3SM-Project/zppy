@@ -271,7 +271,8 @@ def _determine_parameters(machine_info: MachineInfo, config: ConfigObj) -> Confi
 
 def _set_default_www(machine_info: MachineInfo, config: ConfigObj) -> None:
     # Keep SimBoard-specific validation active even when `www` is already set,
-    # because `[simboard] enabled = True` still enables SimBoard validation.
+    # because `[simboard] enabled = True` still requires validating
+    # `simulation_type`.
     validate_simboard_config(config)
     if config["default"]["www"] != "":
         return

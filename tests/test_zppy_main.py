@@ -143,9 +143,16 @@ def test_determine_parameters_rejects_empty_web_root() -> None:
 
 def test_simboard_rejects_subsections(tmp_path: Path) -> None:
     config_path = tmp_path / "bad_simboard_subsection.cfg"
+    default_ini = Path(__file__).resolve().parents[1] / "zppy" / "defaults" / "default.ini"
     config_path.write_text(
         "\n".join(
             [
+                "[default]",
+                "case = case_name",
+                "input = /input",
+                "output = /output",
+                "www = /www",
+                "",
                 "[simboard]",
                 "enabled = False",
                 "simulation_type = production",
@@ -155,7 +162,7 @@ def test_simboard_rejects_subsections(tmp_path: Path) -> None:
             ]
         )
     )
-    config = ConfigObj(str(config_path))
+    config = ConfigObj(str(config_path), configspec=str(default_ini))
 
     with pytest.raises(
         ValueError, match="The \\[simboard\\] section does not support subsections."

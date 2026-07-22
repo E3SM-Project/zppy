@@ -10,6 +10,10 @@ from zppy.logger import _setup_custom_logger
 logger = _setup_custom_logger(__name__)
 
 
+def normalize_web_portal_base_path(web_portal_base_path: str) -> str:
+    return web_portal_base_path.strip().rstrip("/")
+
+
 def simboard(
     config: ConfigObj,
     _script_dir: str,
@@ -22,7 +26,13 @@ def simboard(
     analogous to `[bundle]`: it influences how other tasks are configured, but
     it does not launch an HPC job of its own. The unused task-like parameters
     are retained so this hook matches the call signature of other zppy tasks.
+    This hook assumes the config has already been read and validated.
     """
+    if "simboard" not in config:
+        raise ValueError(
+            "Missing [simboard] section. Validate the config against "
+            "default.ini before calling simboard()."
+        )
     if config["simboard"].sections:
         raise ValueError("The [simboard] section does not support subsections.")
     return existing_bundles
@@ -43,7 +53,10 @@ def simboard_enabled(config: ConfigObj) -> bool:
             return True
         if enabled_lower == "false":
             return False
-    raise ValueError(f"Invalid value {enabled} for simboard.enabled")
+    raise ValueError(
+        f"Invalid value '{enabled}' for simboard.enabled. Expected boolean "
+        "or string 'true'/'false'."
+    )
 
 
 def validate_simboard_config(config: ConfigObj) -> None:
@@ -69,7 +82,7 @@ def infer_simboard_www(machine_info: MachineInfo, config: ConfigObj) -> str:
             "cannot infer a diagnostics_archive path."
         ) from exc
 
-    web_portal_base_path = web_portal_base_path.strip().rstrip("/")
+    web_portal_base_path = normalize_web_portal_base_path(web_portal_base_path)
     if web_portal_base_path == "":
         raise ValueError(
             f"www is empty and simboard.enabled is True, but machine "
