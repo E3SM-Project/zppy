@@ -8,6 +8,7 @@ from configobj import ConfigObj
 from validate import Validator
 
 from zppy.__main__ import _determine_parameters
+from zppy.simboard import simboard
 
 
 def _fake_machine_info() -> MagicMock:
@@ -121,6 +122,45 @@ def test_determine_parameters_requires_inferable_web_root() -> None:
         ),
     ):
         _determine_parameters(machine_info, config)
+
+
+def test_determine_parameters_rejects_empty_web_root() -> None:
+    config = _base_config()
+    config["simboard"]["enabled"] = True
+    machine_info = _fake_machine_info()
+    machine_info.config["web_portal"]["base_path"] = "   "
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "www is empty and simboard.enabled is True, but machine 'pm-cpu' "
+            "has an empty web_portal.base_path in mache; cannot infer a "
+            "diagnostics_archive path."
+        ),
+    ):
+        _determine_parameters(machine_info, config)
+
+
+def test_simboard_rejects_subsections(tmp_path: Path) -> None:
+    config_path = tmp_path / "bad_simboard_subsection.cfg"
+    config_path.write_text(
+        "\n".join(
+            [
+                "[simboard]",
+                "enabled = False",
+                "simulation_type = production",
+                "",
+                "  [[nested]]",
+                "  placeholder = value",
+            ]
+        )
+    )
+    config = ConfigObj(str(config_path))
+
+    with pytest.raises(
+        ValueError, match="The \\[simboard\\] section does not support subsections."
+    ):
+        simboard(config, "", [], "")
 
 
 def test_default_ini_rejects_invalid_simulation_type(tmp_path: Path) -> None:

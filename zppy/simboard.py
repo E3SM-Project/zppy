@@ -34,7 +34,16 @@ def simboard_enabled(config: ConfigObj) -> bool:
     Assumes `config` has already been validated against `default.ini`, which
     provides the `[simboard]` section and its default values.
     """
-    return config["simboard"]["enabled"]
+    enabled = config["simboard"]["enabled"]
+    if isinstance(enabled, bool):
+        return enabled
+    if isinstance(enabled, str):
+        enabled_lower = enabled.lower()
+        if enabled_lower == "true":
+            return True
+        if enabled_lower == "false":
+            return False
+    raise ValueError(f"Invalid value {enabled} for simboard.enabled")
 
 
 def validate_simboard_config(config: ConfigObj) -> None:
@@ -60,7 +69,7 @@ def infer_simboard_www(machine_info: MachineInfo, config: ConfigObj) -> str:
             "cannot infer a diagnostics_archive path."
         ) from exc
 
-    web_portal_base_path = web_portal_base_path.rstrip("/")
+    web_portal_base_path = web_portal_base_path.strip().rstrip("/")
     if web_portal_base_path == "":
         raise ValueError(
             f"www is empty and simboard.enabled is True, but machine "
