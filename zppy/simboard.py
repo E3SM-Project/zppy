@@ -16,12 +16,23 @@ def simboard(
     existing_bundles: List[Bundle],
     _job_ids_file: str,
 ) -> List[Bundle]:
+    """Validate the configuration-only `[simboard]` task hook.
+
+    This section is an explicit top-level SimBoard configuration entry point,
+    analogous to `[bundle]`: it influences how other tasks are configured, but
+    it does not launch an HPC job of its own.
+    """
     if config["simboard"].sections:
         raise ValueError("The [simboard] section does not support subsections.")
     return existing_bundles
 
 
 def simboard_enabled(config: ConfigObj) -> bool:
+    """Return whether SimBoard publishing is enabled.
+
+    Assumes `config` has already been validated against `default.ini`, which
+    provides the `[simboard]` section and its default values.
+    """
     return bool(config["simboard"]["enabled"])
 
 
