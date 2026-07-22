@@ -92,7 +92,6 @@ def test_sections():
         "plugins": [],
         "reservation": "",
         "qos": "regular",
-        "simboard_type": "prod",
         "templateDir": "zppy/templates",
         "ts_atm_grid": "180x360_aave",
         "ts_atm_subsection": "",
@@ -107,6 +106,15 @@ def test_sections():
         "years": [""],
     }
     compare(actual_default, expected_default)
+
+    # simboard
+    section_name = "simboard"
+    actual_section = config[section_name]
+    expected_section = {
+        "enabled": False,
+        "simulation_type": "production",
+    }
+    compare(actual_section, expected_section)
 
     # ts
     section_name = "ts"

@@ -23,6 +23,12 @@ from zppy.logger import _setup_custom_logger
 from zppy.mpas_analysis import mpas_analysis
 from zppy.pcmdi_diags import pcmdi_diags
 from zppy.provenance import build_provenance_extras, write_provenance_settings
+from zppy.simboard import (
+    infer_simboard_www,
+    simboard,
+    simboard_enabled,
+    validate_simboard_config,
+)
 from zppy.tc_analysis import tc_analysis
 from zppy.ts import ts
 from zppy.utils import check_status, submit_script
@@ -264,16 +270,17 @@ def _determine_parameters(machine_info: MachineInfo, config: ConfigObj) -> Confi
 
 
 def _set_default_www(machine_info: MachineInfo, config: ConfigObj) -> None:
+    validate_simboard_config(config)
     if config["default"]["www"] != "":
         return
-    if not config["default"]["infer_path_parameters"]:
-        raise ValueError("www must be provided when infer_path_parameters is False.")
 
-    simboard_type = config["default"]["simboard_type"]
-    web_portal_base_path = machine_info.config.get("web_portal", "base_path")
-    config["default"]["www"] = (
-        f"{web_portal_base_path}/simboard/{simboard_type}/"
-    )
+    if not simboard_enabled(config):
+        raise ValueError(
+            "www is empty. Provide [default] www or set [simboard] enabled = "
+            "True to infer a SimBoard-compatible diagnostics_archive path."
+        )
+
+    config["default"]["www"] = infer_simboard_www(machine_info, config)
 
 
 def _launch_scripts(config: ConfigObj, script_dir, job_ids_file, plugins) -> None:
@@ -281,6 +288,9 @@ def _launch_scripts(config: ConfigObj, script_dir, job_ids_file, plugins) -> Non
 
     # predefined bundles
     existing_bundles = predefined_bundles(config, script_dir, existing_bundles)
+
+    # simboard configuration task
+    existing_bundles = simboard(config, script_dir, existing_bundles, job_ids_file)
 
     # climo tasks
     existing_bundles = climo(config, script_dir, existing_bundles, job_ids_file)

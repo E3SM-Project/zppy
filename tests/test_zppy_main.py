@@ -34,41 +34,96 @@ def _base_config() -> Dict[str, Dict[str, Any]]:
             "constraint": "",
             "environment_commands": "",
             "infer_path_parameters": True,
-            "simboard_type": "prod",
             "www": "",
-        }
+        },
+        "simboard": {
+            "enabled": False,
+            "simulation_type": "production",
+        },
     }
 
 
 @pytest.mark.parametrize(
-    ("simboard_type", "expected_www"),
+    ("simulation_type", "expected_www"),
     [
-        ("prod", "/global/cfs/cdirs/e3sm/www/simboard/prod/"),
-        ("dev", "/global/cfs/cdirs/e3sm/www/simboard/dev/"),
+        (
+            "production",
+            "/global/cfs/cdirs/e3sm/www/diagnostics_archive/production/",
+        ),
+        (
+            "development",
+            "/global/cfs/cdirs/e3sm/www/diagnostics_archive/development/",
+        ),
     ],
 )
 def test_determine_parameters_infers_simboard_www(
-    simboard_type: str, expected_www: str
+    simulation_type: str, expected_www: str
 ) -> None:
     config = _base_config()
-    config["default"]["simboard_type"] = simboard_type
+    config["simboard"]["enabled"] = True
+    config["simboard"]["simulation_type"] = simulation_type
 
     updated = _determine_parameters(_fake_machine_info(), config)
 
     assert updated["default"]["www"] == expected_www
 
 
-def test_determine_parameters_requires_www_without_path_inference() -> None:
+def test_determine_parameters_preserves_explicit_www_when_simboard_enabled() -> None:
     config = _base_config()
-    config["default"]["infer_path_parameters"] = False
+    config["default"]["www"] = "/custom/www"
+    config["simboard"]["enabled"] = True
+
+    updated = _determine_parameters(_fake_machine_info(), config)
+
+    assert updated["default"]["www"] == "/custom/www"
+
+
+def test_determine_parameters_requires_www_without_simboard() -> None:
+    config = _base_config()
 
     with pytest.raises(
-        ValueError, match="www must be provided when infer_path_parameters is False."
+        ValueError,
+        match=(
+            r"www is empty\. Provide \[default\] www or set \[simboard\] "
+            r"enabled = True"
+        ),
     ):
         _determine_parameters(_fake_machine_info(), config)
 
 
-def test_default_ini_rejects_invalid_simboard_type(tmp_path: Path) -> None:
+def test_determine_parameters_rejects_none_simulation_type_when_enabled() -> None:
+    config = _base_config()
+    config["simboard"]["enabled"] = True
+    config["simboard"]["simulation_type"] = "none"
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "simboard.simulation_type must be 'production' or 'development' "
+            "when simboard.enabled is True."
+        ),
+    ):
+        _determine_parameters(_fake_machine_info(), config)
+
+
+def test_determine_parameters_requires_inferable_web_root() -> None:
+    config = _base_config()
+    config["simboard"]["enabled"] = True
+    machine_info = _fake_machine_info()
+    machine_info.config.remove_option("web_portal", "base_path")
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "www is empty and simboard.enabled is True, but machine 'pm-cpu' "
+            "has no web_portal.base_path in mache; cannot infer a "
+            "diagnostics_archive path."
+        ),
+    ):
+        _determine_parameters(machine_info, config)
+
+
+def test_default_ini_rejects_invalid_simulation_type(tmp_path: Path) -> None:
     config_path = tmp_path / "bad_simboard.cfg"
     default_ini = Path(__file__).resolve().parents[1] / "zppy" / "defaults" / "default.ini"
     config_path.write_text(
@@ -79,7 +134,9 @@ def test_default_ini_rejects_invalid_simboard_type(tmp_path: Path) -> None:
                 "input = /input",
                 "output = /output",
                 "www = /www",
-                "simboard_type = invalid",
+                "",
+                "[simboard]",
+                "simulation_type = invalid",
             ]
         )
     )
@@ -91,4 +148,4 @@ def test_default_ini_rejects_invalid_simboard_type(tmp_path: Path) -> None:
     result = config.validate(Validator())
 
     assert result is not True
-    assert result["default"]["simboard_type"] is False
+    assert result["simboard"]["simulation_type"] is False
