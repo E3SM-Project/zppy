@@ -8,7 +8,12 @@ from configobj import ConfigObj
 from validate import Validator
 
 from zppy.__main__ import _determine_parameters
-from zppy.simboard import simboard
+from zppy.simboard import (
+    infer_simboard_www,
+    normalize_web_portal_base_path,
+    simboard,
+    simboard_enabled,
+)
 
 
 def _fake_machine_info() -> MagicMock:
@@ -67,6 +72,80 @@ def test_determine_parameters_infers_simboard_www(
     updated = _determine_parameters(_fake_machine_info(), config)
 
     assert updated["default"]["www"] == expected_www
+
+
+@pytest.mark.parametrize(
+    ("base_path", "expected_www"),
+    [
+        (
+            "/global/cfs/cdirs/e3sm/www",
+            "/global/cfs/cdirs/e3sm/www/diagnostics_archive/production/",
+        ),
+        (
+            "/global/cfs/cdirs/e3sm/www/",
+            "/global/cfs/cdirs/e3sm/www/diagnostics_archive/production/",
+        ),
+        (
+            " /global/cfs/cdirs/e3sm/www/ ",
+            "/global/cfs/cdirs/e3sm/www/diagnostics_archive/production/",
+        ),
+    ],
+)
+def test_infer_simboard_www_normalizes_web_root(
+    base_path: str, expected_www: str
+) -> None:
+    machine_info = _fake_machine_info()
+    machine_info.config["web_portal"]["base_path"] = base_path
+    config = _base_config()
+
+    assert infer_simboard_www(machine_info, config) == expected_www
+
+
+@pytest.mark.parametrize(
+    ("raw_path", "expected_path"),
+    [
+        ("/global/cfs/cdirs/e3sm/www", "/global/cfs/cdirs/e3sm/www"),
+        ("/global/cfs/cdirs/e3sm/www/", "/global/cfs/cdirs/e3sm/www"),
+        (" /global/cfs/cdirs/e3sm/www/ ", "/global/cfs/cdirs/e3sm/www"),
+        ("   ", ""),
+    ],
+)
+def test_normalize_web_portal_base_path(raw_path: str, expected_path: str) -> None:
+    assert normalize_web_portal_base_path(raw_path) == expected_path
+
+
+@pytest.mark.parametrize(
+    ("enabled_value", "expected_enabled"),
+    [
+        (True, True),
+        (False, False),
+        ("true", True),
+        ("TRUE", True),
+        ("false", False),
+        ("FALSE", False),
+    ],
+)
+def test_simboard_enabled_parses_bool_values(
+    enabled_value: Any, expected_enabled: bool
+) -> None:
+    config = _base_config()
+    config["simboard"]["enabled"] = enabled_value
+
+    assert simboard_enabled(config) is expected_enabled
+
+
+def test_simboard_enabled_rejects_invalid_value() -> None:
+    config = _base_config()
+    config["simboard"]["enabled"] = "maybe"
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "Invalid value 'maybe' for simboard.enabled. Expected boolean "
+            "or string 'true'/'false'."
+        ),
+    ):
+        simboard_enabled(config)
 
 
 def test_determine_parameters_preserves_explicit_www_when_simboard_enabled() -> None:
