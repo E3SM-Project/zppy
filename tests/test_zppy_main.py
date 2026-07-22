@@ -84,8 +84,8 @@ def test_determine_parameters_requires_www_without_simboard() -> None:
     with pytest.raises(
         ValueError,
         match=(
-            r"www is empty\. Provide \[default\] www or set \[simboard\] "
-            r"enabled = True"
+            r"www is empty\. Provide \[default\] www or set `enabled = True` "
+            r"in the \[simboard\] section"
         ),
     ):
         _determine_parameters(_fake_machine_info(), config)

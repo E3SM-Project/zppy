@@ -12,11 +12,10 @@ logger = _setup_custom_logger(__name__)
 
 def simboard(
     config: ConfigObj,
-    script_dir: str,
+    _script_dir: str,
     existing_bundles: List[Bundle],
-    job_ids_file: str,
+    _job_ids_file: str,
 ) -> List[Bundle]:
-    del script_dir, job_ids_file
     if config["simboard"].sections:
         raise ValueError("The [simboard] section does not support subsections.")
     return existing_bundles

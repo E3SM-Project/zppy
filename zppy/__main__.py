@@ -276,8 +276,9 @@ def _set_default_www(machine_info: MachineInfo, config: ConfigObj) -> None:
 
     if not simboard_enabled(config):
         raise ValueError(
-            "www is empty. Provide [default] www or set [simboard] enabled = "
-            "True to infer a SimBoard-compatible diagnostics_archive path."
+            "www is empty. Provide [default] www or set `enabled = True` in "
+            "the [simboard] section to infer a SimBoard-compatible "
+            "diagnostics_archive path."
         )
 
     config["default"]["www"] = infer_simboard_www(machine_info, config)
