@@ -225,12 +225,18 @@ def _determine_parameters(machine_info: MachineInfo, config: ConfigObj) -> Confi
     config["default"]["diagnostics_base_path"] = machine_info.config.get(
         "diagnostics", "base_path"
     )
-    config["default"]["web_portal_base_path"] = machine_info.config.get(
-        "web_portal", "base_path"
-    )
-    config["default"]["web_portal_base_url"] = machine_info.config.get(
-        "web_portal", "base_url"
-    )
+    try:
+        config["default"]["web_portal_base_path"] = machine_info.config.get(
+            "web_portal", "base_path"
+        )
+    except (configparser.NoSectionError, configparser.NoOptionError):
+        config["default"]["web_portal_base_path"] = ""
+    try:
+        config["default"]["web_portal_base_url"] = machine_info.config.get(
+            "web_portal", "base_url"
+        )
+    except (configparser.NoSectionError, configparser.NoOptionError):
+        config["default"]["web_portal_base_url"] = ""
 
     # Determine machine to decide which header files to use
     if ("machine" not in config["default"]) or (config["default"]["machine"] == ""):
