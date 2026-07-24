@@ -222,7 +222,9 @@ def test_determine_parameters_rejects_empty_web_root() -> None:
 
 def test_simboard_rejects_subsections(tmp_path: Path) -> None:
     config_path = tmp_path / "bad_simboard_subsection.cfg"
-    default_ini = Path(__file__).resolve().parents[1] / "zppy" / "defaults" / "default.ini"
+    default_ini = (
+        Path(__file__).resolve().parents[1] / "zppy" / "defaults" / "default.ini"
+    )
     config_path.write_text(
         "\n".join(
             [
@@ -251,7 +253,9 @@ def test_simboard_rejects_subsections(tmp_path: Path) -> None:
 
 def test_default_ini_rejects_invalid_simulation_type(tmp_path: Path) -> None:
     config_path = tmp_path / "bad_simboard.cfg"
-    default_ini = Path(__file__).resolve().parents[1] / "zppy" / "defaults" / "default.ini"
+    default_ini = (
+        Path(__file__).resolve().parents[1] / "zppy" / "defaults" / "default.ini"
+    )
     config_path.write_text(
         "\n".join(
             [

@@ -90,9 +90,7 @@ def infer_simboard_www(machine_info: MachineInfo, config: ConfigObj) -> str:
             "mache; cannot infer a diagnostics_archive path."
         )
 
-    inferred_www = (
-        f"{web_portal_base_path}/diagnostics_archive/{simulation_type}/"
-    )
+    inferred_www = f"{web_portal_base_path}/diagnostics_archive/{simulation_type}/"
     logger.info(
         "Inferred www=%s from mache web_portal.base_path because "
         "simboard.enabled is True.",
