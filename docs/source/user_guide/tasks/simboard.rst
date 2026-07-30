@@ -102,8 +102,7 @@ under ``development``, so production is an explicit opt-in.
 
 To promote a run's diagnostics to the production archive:
 
-1. Update ``simulation_type = production`` in the ``[simboard]`` section of
-   your ``zppy`` configuration file and re-run ``zppy``.
+1. Update ``simulation_type`` to be ``production`` on the SimBoard UI itself.
 2. Manually move (or copy) the existing diagnostic output from
    ``<web_portal_base_path>/diagnostics_archive/development/<case>/`` to
    ``<web_portal_base_path>/diagnostics_archive/production/<case>/``.
