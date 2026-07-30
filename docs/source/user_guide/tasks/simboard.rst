@@ -60,7 +60,7 @@ Configuration example
 
    [simboard]
    enabled = True
-   simulation_type = production
+   simulation_type = development
 
 Parameters
 ----------
@@ -81,10 +81,29 @@ Parameters
        ``www`` from Mache's ``web_portal.base_path``.
    * - ``simulation_type``
      - No
-     - ``"production"``
+     - ``"development"``
      - Diagnostic classification for the archive path. One of
        ``"production"``, ``"development"``, or ``"none"``.
        Must not be ``"none"`` when ``enabled = True``.
+       Defaults to ``"development"`` — see :ref:`simboard-promotion` below.
 
 .. note::
    The ``[simboard]`` section does not support subsections.
+
+.. _simboard-promotion:
+
+Promoting diagnostics from development to production
+-----------------------------------------------------
+
+The default ``simulation_type`` is ``"development"`` rather than
+``"production"``. Accidentally placing development diagnostics under the
+``production`` archive is more harmful than placing production diagnostics
+under ``development``, so production is an explicit opt-in.
+
+To promote a run's diagnostics to the production archive:
+
+1. Update ``simulation_type = production`` in the ``[simboard]`` section of
+   your ``zppy`` configuration file and re-run ``zppy``.
+2. Manually move (or copy) the existing diagnostic output from
+   ``<web_portal_base_path>/diagnostics_archive/development/<case>/`` to
+   ``<web_portal_base_path>/diagnostics_archive/production/<case>/``.

@@ -433,7 +433,7 @@ a configuration-only hook; see :doc:`tasks/simboard` for full details.
        ``www`` from Mache's ``web_portal.base_path``.
    * - ``simulation_type``
      - No
-     - ``"production"``
+     - ``"development"``
      - Archive sub-directory for the run. One of ``"production"``,
        ``"development"``, or ``"none"``.
        Must not be ``"none"`` when ``enabled = True``.

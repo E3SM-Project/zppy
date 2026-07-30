@@ -112,7 +112,7 @@ def test_sections():
     actual_section = config[section_name]
     expected_section = {
         "enabled": False,
-        "simulation_type": "production",
+        "simulation_type": "development",
     }
     compare(actual_section, expected_section)
 
