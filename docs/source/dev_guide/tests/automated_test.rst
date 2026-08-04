@@ -81,7 +81,7 @@ The automated test script handles the following steps from the manual testing pr
 * Step 8: Run Python tests (excluding the final ``pytest tests/integration/test_images.py`` call from a compute node)
 
 A. Set up the test script
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -110,7 +110,7 @@ A. Set up the test script
     emacs zppy_test.cfg
 
 B. Set up the test cfg
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 Let's examine the parts of the test cfg.
 
@@ -237,13 +237,13 @@ First, the unit tests. There are two blocks, starting with:
 
 .. code-block::
 
-    Running zppy unit tests...
+    Running zppy-interfaces unit tests...
 
 and
 
 .. code-block::
 
-    Running zppy-interfaces unit tests...
+    Running zppy unit tests...
 
 Second, the output directories status. It should look like the following:
 
