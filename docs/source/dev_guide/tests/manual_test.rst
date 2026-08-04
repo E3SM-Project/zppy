@@ -1,8 +1,8 @@
-.. _testing-zppy:
+.. _manually-testing-zppy:
 
-*************
-Testing zppy
-*************
+*********************
+Manually testing zppy
+*********************
 
 Follow the steps below to test ``zppy``. As you do so, please produce a Markdown report summarizing your results.
 
@@ -93,6 +93,11 @@ Chrysalis:
         lcrc_conda # Or however you activate conda
         rm -rf build
         conda clean --all --y
+        # The dev.yml file may be in a different directory.
+        # e3sm_to_cmip, e3sm_diags: use conda-dev/
+        # zppy-interfaces, zppy: use conda/
+        # MPAS-Analysis: don't use this command, instead use:
+        # conda create --name ${env_name} --file dev-spec.txt --yes
         conda env create -f conda/dev.yml -n ${env_name}
         conda activate ${env_name}
         pre-commit run --all-files # Confirm this passes
