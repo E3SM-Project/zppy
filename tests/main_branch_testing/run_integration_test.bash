@@ -4,7 +4,7 @@
 # Usage:
 #   1. Copy this file AND the sample config OUT of the zppy repo
 #      (this script will change branches).
-#   2. Edit your config file (see zppy_test.cfg.sample).
+#   2. Edit your config file (see zppy_test.cfg).
 #   3. Run: ./run_integration_test.bash --config path/to/your.cfg
 #
 # Phases (set START_PHASE in your config):
