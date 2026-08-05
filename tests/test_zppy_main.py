@@ -279,3 +279,25 @@ def test_default_ini_rejects_invalid_simulation_type(tmp_path: Path) -> None:
 
     assert result is not True
     assert result["simboard"]["simulation_type"] is False
+
+
+@pytest.mark.parametrize(
+    ("case_group", "expected_suffix"),
+    [
+        ("v3.LR", "diagnostics_archive/production/v3.LR/"),
+        ("", "diagnostics_archive/production/"),
+    ],
+)
+def test_infer_simboard_www_groups_by_case_group(
+    case_group: str, expected_suffix: str
+) -> None:
+    inferred = infer_simboard_www(_fake_machine_info(), _base_config(), case_group)
+
+    assert inferred == f"/global/cfs/cdirs/e3sm/www/{expected_suffix}"
+
+
+def test_infer_simboard_www_rejects_multi_component_case_group() -> None:
+    # The case group becomes a single directory name, so it must not be able to
+    # redirect output elsewhere in the archive.
+    with pytest.raises(ValueError, match="Invalid case_group"):
+        infer_simboard_www(_fake_machine_info(), _base_config(), "v3.LR/historical")

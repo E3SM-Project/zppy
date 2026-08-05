@@ -15,7 +15,13 @@ Mache for the current machine:
 
 .. code-block:: text
 
-   <web_portal_base_path>/diagnostics_archive/<simulation_type>/
+   <web_portal_base_path>/diagnostics_archive/<simulation_type>/<case_group>/
+
+``<case_group>`` is included only when the simulation has one. It is read from
+``CASE_GROUP`` in ``env_case.xml`` (e.g. ``v3.LR``), falling back to the
+``case_group`` parameter in ``[default]``. ``CASE_GROUP`` is optional in CIME,
+so when neither is set ``zppy`` warns and publishes directly under
+``<simulation_type>/``.
 
 This gives SimBoard a single, predictable archive root to scan for
 diagnostics.

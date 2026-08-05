@@ -23,7 +23,12 @@ from zppy.livvkit import livvkit
 from zppy.logger import _setup_custom_logger
 from zppy.mpas_analysis import mpas_analysis
 from zppy.pcmdi_diags import pcmdi_diags
-from zppy.provenance import build_provenance_extras, write_provenance_settings
+from zppy.provenance import (
+    build_provenance_extras,
+    parse_env_case_xml,
+    resolve_case_group,
+    write_provenance_settings,
+)
 from zppy.simboard import (
     infer_simboard_www,
     simboard,
@@ -297,7 +302,16 @@ def _set_default_www(machine_info: MachineInfo, config: ConfigObj) -> None:
             "web_portal.base_path in Mache configuration."
         )
 
-    config["default"]["www"] = infer_simboard_www(machine_info, config)
+    # The case group adds a grouping level to the inferred path. It comes from
+    # env_case.xml, falling back to cfg `case_group`; `resolve_case_group`
+    # warns when neither is set.
+    config_default = config["default"]
+    input_dir = config_default.get("input", "")
+    xml_case_group = (
+        parse_env_case_xml(input_dir).get("case_group", "") if input_dir else ""
+    )
+    case_group = resolve_case_group(config_default, xml_case_group)
+    config["default"]["www"] = infer_simboard_www(machine_info, config, case_group)
 
 
 def _launch_scripts(config: ConfigObj, script_dir, job_ids_file, plugins) -> None:

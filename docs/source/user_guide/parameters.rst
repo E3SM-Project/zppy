@@ -81,6 +81,10 @@ There are 6 output-specific parameters:
      - No
      - ``False``
      - Set to True to have ``zppy`` produce more verbose output and retain temporary workdirs. This is helpful for debugging.
+   * - ``case_group``
+     - No
+     - ``""``
+     - The group this simulation belongs to (e.g. ``"v3.LR"``). Normally read from ``CASE_GROUP`` in ``env_case.xml``; set this only when the simulation has no ``CASE_GROUP`` there, or to override it. When set, SimBoard-inferred ``www`` paths gain a ``<case_group>`` level.
    * - ``dry_run``
      - No
      - ``False``

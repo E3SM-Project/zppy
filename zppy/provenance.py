@@ -20,6 +20,7 @@ _ENV_CASE_FIELDS = {
     "case_name": "CASE",
     "machine": "MACH",
     "hpc_username": "REALUSER",
+    "case_group": "CASE_GROUP",
 }
 
 
@@ -51,13 +52,16 @@ def parse_env_case_xml(input_dir: str) -> Dict[str, str]:
         # CIME nests <entry> elements inside <group id="..."> wrappers, so we
         # need a descendant search rather than a direct-child lookup.
         entry = root.find(f".//entry[@id='{entry_id}']")
-        if entry is None or entry.get("value") is None:
+        # CASE_GROUP is optional in CIME, so the entry is often present but
+        # empty. Treat that the same as absent.
+        value = "" if entry is None else (entry.get("value") or "").strip()
+        if not value:
             logger.warning(
                 f"env_case.xml at {xml_path} has no '{entry_id}' entry; "
                 f"'{field}' will be omitted from provenance."
             )
             continue
-        values[field] = entry.get("value", "")
+        values[field] = value
     return values
 
 
@@ -110,12 +114,46 @@ def write_provenance_settings(
             f.write(f"{key} = {value}\n")
 
 
+def resolve_case_group(config_default: Dict[str, str], xml_case_group: str) -> str:
+    """Return the case group, preferring `env_case.xml` over the cfg.
+
+    `env_case.xml` is authoritative when it has a `CASE_GROUP`, matching how
+    `case_name` is handled. Cfg `case_group` is the fallback for simulations
+    that were never assigned one -- it is optional in CIME, so plenty of cases
+    have no value. When neither is set, warn: without a case group, SimBoard
+    output lands directly under `<simulation_type>/` rather than being grouped.
+    """
+    cfg_case_group = (config_default.get("case_group", "") or "").strip()
+
+    if xml_case_group:
+        if cfg_case_group and cfg_case_group != xml_case_group:
+            logger.warning(
+                f"cfg case_group='{cfg_case_group}' does not match env_case.xml "
+                f"CASE_GROUP='{xml_case_group}'; using the env_case.xml value."
+            )
+        return xml_case_group
+
+    if cfg_case_group:
+        return cfg_case_group
+
+    logger.warning(
+        "No case group found: env_case.xml has no CASE_GROUP and cfg "
+        "'case_group' is unset. Set `case_group` in [default] (e.g. "
+        '`case_group = "v3.LR"`) to group this simulation in the SimBoard '
+        "archive; otherwise its output is published directly under the "
+        "simulation type."
+    )
+    return ""
+
+
 def build_provenance_extras(
     config_default: Dict[str, str], machine_info: MachineInfo
 ) -> Dict[str, str]:
     """Assemble the dict of extra provenance metadata fields.
 
-    - `case_name`, `machine`, `hpc_username` from `env_case.xml` under cfg `input`.
+    - `case_name`, `machine`, `hpc_username`, `case_group` from `env_case.xml`
+      under cfg `input`.
+    - `case_group` falls back to cfg `case_group` when `env_case.xml` has none.
     - `diagnostics_url` from cfg `www` + `case` + machine `web_portal` config.
     - Warns (but does not fail) when cfg `case` disagrees with env_case.xml `CASE`.
     """
@@ -138,6 +176,12 @@ def build_provenance_extras(
             f"cfg case='{case}' does not match env_case.xml CASE='{xml_case}'; "
             f"using env_case.xml value as authoritative case_name."
         )
+
+    case_group = resolve_case_group(config_default, extras.get("case_group", ""))
+    if case_group:
+        extras["case_group"] = case_group
+    else:
+        extras.pop("case_group", None)
 
     diag_url = build_diagnostics_url(www, case, machine_info)
     if diag_url:
