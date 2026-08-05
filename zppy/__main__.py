@@ -92,22 +92,27 @@ def main():
     shutil.copy(args.config, provenance)
     write_provenance_settings(provenance_settings, provenance_extras)
     # Web output directory
-    www = config["default"]["www"]
-    username = os.environ.get("USER")
-    www = www.replace("$USER", username)
-    www_case_dir = os.path.join(www, config["default"]["case"])
-    www_provenance = os.path.join(www_case_dir, f"provenance.{ts_utc}.cfg")
-    www_provenance_settings = os.path.join(
-        www_case_dir, f"provenance.{ts_utc}.settings"
-    )
-    try:
-        os.makedirs(www_case_dir)
-    except OSError as exc:
-        if exc.errno != errno.EEXIST:
-            raise OSError("Cannot create www case directory")
-    shutil.copy(args.config, www_provenance)
-    if os.path.isfile(provenance_settings):
-        shutil.copy(provenance_settings, www_provenance_settings)
+    # A dry run must not touch `www`. It is a shared, published location --
+    # with `[simboard] enabled = True` it is inferred to the machine-wide
+    # diagnostics_archive -- so creating directories and copying provenance
+    # there would publish artifacts for a run that never happens.
+    if not config["default"]["dry_run"]:
+        www = config["default"]["www"]
+        username = os.environ.get("USER")
+        www = www.replace("$USER", username)
+        www_case_dir = os.path.join(www, config["default"]["case"])
+        www_provenance = os.path.join(www_case_dir, f"provenance.{ts_utc}.cfg")
+        www_provenance_settings = os.path.join(
+            www_case_dir, f"provenance.{ts_utc}.settings"
+        )
+        try:
+            os.makedirs(www_case_dir)
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise OSError("Cannot create www case directory")
+        shutil.copy(args.config, www_provenance)
+        if os.path.isfile(provenance_settings):
+            shutil.copy(provenance_settings, www_provenance_settings)
     if args.last_year:
         config["default"]["last_year"] = args.last_year
     _launch_scripts(config, script_dir, job_ids_file, plugins)

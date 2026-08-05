@@ -84,7 +84,7 @@ There are 6 output-specific parameters:
    * - ``dry_run``
      - No
      - ``False``
-     - This should be set to True if you don't want the batch jobs to be submitted. I.e., you only want to see what *would* be submitted.
+     - This should be set to True if you don't want the batch jobs to be submitted. I.e., you only want to see what *would* be submitted. A dry run does not write anything to ``www``, since that is a shared, published location; the generated scripts and settings still go to ``output``.
    * - ``fail_on_dependency_skip``
      - No
      - ``False``
