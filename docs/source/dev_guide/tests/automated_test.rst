@@ -68,6 +68,30 @@ In your Markdown report, make a table like:
     | [package name](link to package's commit log) | Links to all PRs merged since the expected results were updated |
     ...
 
+Step 2.5: Refresh frozen dependency lock files (if needed)
+============================================================
+
+The test script freezes dependencies for ``e3sm_to_cmip``, ``e3sm_diags``, ``mpas_analysis``, ``zppy-interfaces``, and ``zppy`` so that ``test_images.py`` diffs can be attributed to the package under test rather than to an unrelated dependency (e.g. ``matplotlib``) that happened to move between runs. Each of these five gets its own dedicated, fully-resolved conda env (a "frozen base"); the test env for a given run is created by *cloning* that frozen base and ``pip install``-ing the branch under test on top, so nothing else in the environment can drift.
+
+This means each of the five needs a lock file -- an exact-version ``conda list --explicit`` snapshot, not a ``dev.yml`` (a ``dev.yml`` re-solves and can drift between runs even unmodified). You only need to regenerate a component's lock file when:
+
+* You don't have one yet (first-time setup), or
+* That component's ``dev.yml`` changed in a way that should be picked up (a new or updated dependency), or
+* The test script warned that ``pip install .`` pulled in something beyond the frozen base for that component (see Step C below) and you've decided to bake that change in.
+
+To (re)generate a lock file for a component:
+
+.. code-block:: bash
+
+    cd ${repo_parent_dir}/<component>          # e.g. e3sm_diags, MPAS-Analysis, zppy-interfaces, zppy, e3sm_to_cmip
+    conda env create -f <conda_dir>/dev.yml -n tmp-lock-gen   # or --file dev-spec.txt for mpas_analysis
+    conda activate tmp-lock-gen
+    conda list --explicit > ${EZ_DIR}/frozen-base-<component>.txt
+    conda deactivate
+    conda remove --yes --all --name tmp-lock-gen
+
+Repeat for each of the five components, using the exact filenames referenced by ``BASE_ENV_LOCK_FILE_<COMPONENT>`` in your ``zppy_test.cfg`` (see Section B below). If ``FREEZE_DEPENDENCIES=false`` in your config, you can skip this step entirely -- every component will solve its own ``dev.yml`` fresh, as before.
+
 The automated test script
 =========================
 
@@ -178,6 +202,30 @@ Update these two parameters to configure which jobs run.
     # Comma-separated list of tasks to enable in utils.py.
     TASKS_TO_RUN="e3sm_diags,mpas_analysis,global_time_series,ilamb,livvkit,pcmdi_diags"
 
+These parameters control the frozen dependency base discussed in Step 2.5 above. In most runs you won't need to touch these beyond making sure ``FREEZE_DEPENDENCIES=true`` and that a lock file exists for each component in ``FROZEN_BASE_COMPONENTS``.
+
+.. code-block::
+
+    # Master switch. false = every component solves its own dev.yml fresh,
+    # as before this feature existed.
+    FREEZE_DEPENDENCIES=true
+
+    # Which components get their own dedicated frozen base. Defaults to all
+    # five dev-env components, since image-check diffs can come from any of
+    # them, not just e3sm_diags/pcmdi_diags.
+    FROZEN_BASE_COMPONENTS="e3sm_to_cmip,e3sm_diags,mpas_analysis,zppy_interfaces,zppy"
+
+Further down, after ``EZ_DIR`` is defined (see below), each frozen component's lock file path is set:
+
+.. code-block::
+
+    BASE_ENV_LOCK_FILE_E3SM_TO_CMIP="$EZ_DIR/frozen-base-e3sm_to_cmip.txt"
+    BASE_ENV_LOCK_FILE_E3SM_DIAGS="$EZ_DIR/frozen-base-e3sm_diags.txt"
+    BASE_ENV_LOCK_FILE_MPAS_ANALYSIS="$EZ_DIR/frozen-base-mpas_analysis.txt"
+    BASE_ENV_LOCK_FILE_ZPPY_INTERFACES="$EZ_DIR/frozen-base-zppy_interfaces.txt"
+    BASE_ENV_LOCK_FILE_ZPPY="$EZ_DIR/frozen-base-zppy.txt"
+
+If ``FREEZE_DEPENDENCIES=false``, or a component is removed from ``FROZEN_BASE_COMPONENTS``, its corresponding ``BASE_ENV_LOCK_FILE_*`` value is simply ignored.
 
 These parameters are unlikely to change between runs. They just let the test script know where to find files in your particular workspace. It is recommended to clone a new copy of the repos and use that for each ``_DIR`` parameter listed below. The script will change branches, so using a distinct copy means you won't get your work overwritten.
 
@@ -219,6 +267,16 @@ Follow the ``tail`` output until you get to:
     ✓ Phase 3 automated tests complete!
     ✓ Remember to run test_images.py manually from a compute node.
     ✓ Integration test automation complete!
+
+If ``FREEZE_DEPENDENCIES=true``, watch for warnings like the following while Phase 1 sets up environments:
+
+.. code-block::
+
+    ⚠ 'test-diags-main-yyyymmdd_runN': package set changed beyond the frozen base after 'pip install .'.
+    ⚠ This is expected ONLY if 'e3sm_diags' itself added or bumped a dependency:
+    < some diff lines >
+
+This means the branch under test needed something beyond what's pinned in that component's lock file. It's not necessarily a problem -- just confirm the added/bumped package is one you'd expect that branch to need, and consider regenerating that component's lock file (Step 2.5) so future runs pick it up without the warning. The full diff is also saved as ``pre_install_<env>_<TAG>.txt`` / ``post_install_<env>_<TAG>.txt`` in your run directory.
 
 D. Review the output
 ~~~~~~~~~~~~~~~~~~~~
@@ -336,6 +394,8 @@ Process
     cat test_images_summary.md
     exit # Exit bash shell
     exit # Exit compute note
+
+If ``FREEZE_DEPENDENCIES=true`` was used for this run, any diffs reported here should trace back to the branches under test in ``FROZEN_BASE_COMPONENTS`` rather than to incidental dependency movement -- that's the isolation this feature is for. If a diff still looks like it could be dependency-related, double check the ``pre_install_*``/``post_install_*`` files and any warnings from Step C for that component.
 
 In your Markdown report:
 

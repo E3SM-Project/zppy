@@ -17,6 +17,16 @@
 #   - To resume from Phase 2 or 3 on a later day, set EXPLICIT_TAG in your config
 #     to the TAG printed at the start of Phase 1 (or stored in ~/.zppy_test_tag),
 #     and set START_PHASE accordingly.
+#
+# Frozen dependency base (see FREEZE_DEPENDENCIES in the config):
+#   - Each component listed in FROZEN_BASE_COMPONENTS gets its OWN dedicated,
+#     fully-resolved conda env (BASE_ENV_LOCK_FILE_<COMPONENT>) instead of
+#     solving its dev.yml fresh every run. A test env for that component is
+#     then built by cloning its frozen base and `pip install`ing the branch
+#     under test on top, so unrelated dependency drift (e.g. matplotlib)
+#     can't produce false-positive diffs in test_images.py. See the README
+#     section "Regenerating a component's frozen base lock file" for how/when
+#     to update a BASE_ENV_LOCK_FILE_<COMPONENT> entry.
 
 set -e  # Exit on error
 set -u  # Exit on undefined variable
@@ -82,6 +92,10 @@ MPAS_EXISTING_ENV="${MPAS_EXISTING_ENV:-}"
 ZI_EXISTING_ENV="${ZI_EXISTING_ENV:-}"
 ZPPY_EXISTING_ENV="${ZPPY_EXISTING_ENV:-}"
 
+# Apply defaults for the optional frozen-dependency-base variables.
+FREEZE_DEPENDENCIES="${FREEZE_DEPENDENCIES:-false}"
+FROZEN_BASE_COMPONENTS="${FROZEN_BASE_COMPONENTS:-}"
+
 # Validate MACHINE value.
 case "$MACHINE" in
     chrysalis|compy|perlmutter) ;;
@@ -124,6 +138,7 @@ esac
 # IFS = Internal Field Separator
 IFS=',' read -ra CFGS_ARRAY  <<< "$CFGS_TO_RUN"
 IFS=',' read -ra TASKS_ARRAY <<< "$TASKS_TO_RUN"
+IFS=',' read -ra FROZEN_BASE_ARRAY <<< "$FROZEN_BASE_COMPONENTS"
 # ============================================================================
 #
 # Priority:
@@ -301,15 +316,100 @@ activate_unified_env() {
     set -u
 }
 
-# Create (if needed) and activate a conda environment.
+# Return 0 (true) if the given component key uses a dedicated frozen base
+# env (rather than solving its own dev.yml fresh each run). component_key is
+# one of: e3sm_to_cmip, e3sm_diags, mpas_analysis, zppy_interfaces, zppy
+uses_frozen_base() {
+    local component="$1"
+    [[ "$FREEZE_DEPENDENCIES" == true ]] || return 1
+    local c
+    for c in "${FROZEN_BASE_ARRAY[@]}"; do
+        c="${c// /}"
+        if [[ "$c" == "$component" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Resolve the lock file for a component's dedicated frozen base.
+# Each component in FROZEN_BASE_COMPONENTS must have its own
+# BASE_ENV_LOCK_FILE_<COMPONENT> (uppercase) set in the config -- there is no
+# shared/fallback lock file. Each component gets its own resolved environment
+# because their dependency stacks don't need to (and may not be able to)
+# co-resolve into one universal env -- e3sm_diags's cdat-based stack,
+# mpas_analysis's ESMF/MPAS libs, and e3sm_to_cmip's cmor can each be frozen
+# independently without needing to agree with one another.
+get_component_lock_file() {
+    local component="$1"
+    local var="BASE_ENV_LOCK_FILE_${component^^}"
+    echo "${!var:-}"
+}
+
+# Build (once per TAG) the dedicated, pinned base env for one component.
+# The lock file must be a FULLY RESOLVED spec (e.g. the output of
+# `conda list --explicit` from a known-good env for that component), not a
+# dev.yml -- a dev.yml re-solves and can silently drift between runs even
+# unmodified.
+#
+# This is what makes "freeze everything else" possible: every test env
+# cloned from base_env_name starts from byte-identical package versions, so
+# any image diff that shows up after `pip install .`-ing the branch under
+# test can be attributed to that branch rather than to incidental dependency
+# movement.
+setup_base_env() {
+    local component="$1"
+    local base_env_name="$2"
+    local lock_file="$3"
+
+    activate_env  # Ensure conda itself is available
+
+    if conda env list | grep -q "^${base_env_name} "; then
+        log "Base env '$base_env_name' already exists, skipping creation"
+        return 0
+    fi
+
+    if [[ -z "$lock_file" || ! -f "$lock_file" ]]; then
+        log_error "FREEZE_DEPENDENCIES=true and '${component}' is in FROZEN_BASE_COMPONENTS, but BASE_ENV_LOCK_FILE_${component^^} is missing or not found: '${lock_file}'"
+        log_error "Generate one from a known-good env for this component, e.g.:"
+        log_error "  conda env create -f <${component}'s dev.yml> -n tmp-lock-gen"
+        log_error "  conda activate tmp-lock-gen"
+        log_error "  conda list --explicit > /path/to/frozen-base-${component}.txt"
+        log_error "Then set BASE_ENV_LOCK_FILE_${component^^} in your config to that path."
+        exit 1
+    fi
+
+    log "Creating dedicated frozen base '$base_env_name' for '${component}' from ${lock_file}..."
+    conda create --name "$base_env_name" --file "$lock_file" --yes
+    log_success "Base env '$base_env_name' ready"
+}
+
+# Create (if needed) and activate a conda environment for a component.
+#
+# component_key: one of e3sm_to_cmip, e3sm_diags, mpas_analysis,
+#                zppy_interfaces, zppy -- used to check FROZEN_BASE_COMPONENTS
+#                via uses_frozen_base() and to look up this component's own
+#                BASE_ENV_LOCK_FILE_<COMPONENT>.
+# conda_dir:     directory containing dev.yml (e.g. "conda" or "conda-env"),
+#                or "none" to use dev-spec.txt instead. Ignored when this
+#                component is using its frozen base.
+# env_name:      name of the environment to create/activate.
 setup_conda_env() {
-    local conda_dir="$1"   # Directory containing dev.yml (e.g. "conda" or "conda-env")
-    local env_name="$2"
+    local component_key="$1"
+    local conda_dir="$2"
+    local env_name="$3"
 
     activate_env  # Ensure conda itself is available
 
     if conda env list | grep -q "^${env_name} "; then
         log "Environment '$env_name' already exists, skipping creation"
+    elif uses_frozen_base "$component_key"; then
+        local base_env_name lock_file
+        base_env_name="test-frozen-base-${component_key}-${TAG}"
+        lock_file="$(get_component_lock_file "$component_key")"
+        setup_base_env "$component_key" "$base_env_name" "$lock_file"  # no-op if it already exists this run
+        log "Cloning '$env_name' from '${component_key}'s frozen base '$base_env_name' (deps pinned)..."
+        conda create --name "$env_name" --clone "$base_env_name" --yes
     else
         log "Creating environment '$env_name' from ${conda_dir}/dev.yml..."
         rm -rf build
@@ -321,8 +421,26 @@ setup_conda_env() {
         fi
     fi
 
+    # For frozen-base envs, snapshot the exact package set before the
+    # `pip install .` that activate_env() below performs, so we can tell
+    # whether the package under test pulled in anything beyond itself.
+    local _pre_install_file="${SCRIPT_RUN_DIR}/pre_install_${env_name}_${TAG}.txt"
+    if uses_frozen_base "$component_key"; then
+        conda list --explicit > "$_pre_install_file" 2>/dev/null || true
+    fi
+
     activate_env "$env_name"
     log_success "Environment '$env_name' ready"
+
+    if uses_frozen_base "$component_key"; then
+        local _post_install_file="${SCRIPT_RUN_DIR}/post_install_${env_name}_${TAG}.txt"
+        conda list --explicit > "$_post_install_file" 2>/dev/null || true
+        if [[ -f "$_pre_install_file" ]] && ! diff -q "$_pre_install_file" "$_post_install_file" > /dev/null 2>&1; then
+            log_warning "'$env_name': package set changed beyond the frozen base after 'pip install .'."
+            log_warning "This is expected ONLY if '${component_key}' itself added or bumped a dependency:"
+            diff "$_pre_install_file" "$_post_install_file" || true
+        fi
+    fi
 }
 
 
@@ -464,6 +582,11 @@ phase_1_setup() {
     log "Date stamp:  $DATE_STAMP"
     log "TAG:         $TAG  (saved to ${TAG_CACHE_FILE})"
     log "Unique ID:   $UNIQUE_ID"
+    if [[ "$FREEZE_DEPENDENCIES" == true ]]; then
+        log "Frozen base: ENABLED for components: ${FROZEN_BASE_COMPONENTS} (each has its own dedicated frozen base env)"
+    else
+        log "Frozen base: disabled (each dev env solves its own dev.yml)"
+    fi
     log ""
     log "To resume from a later phase, set in your config:"
     log "  START_PHASE=2"
@@ -500,7 +623,7 @@ phase_1_setup() {
                 log "Reusing existing 'e3sm_to_cmip' env: $E3SM_TO_CMIP_EXISTING_ENV (skipping creation)"
                 activate_env "$E3SM_TO_CMIP_EXISTING_ENV"
             else
-                setup_conda_env "conda-env" "$E3SM_TO_CMIP_ENV"
+                setup_conda_env "e3sm_to_cmip" "conda-env" "$E3SM_TO_CMIP_ENV"
             fi
         else
             log "Using unified env for e3sm_to_cmip (skipping conda env creation)"
@@ -533,7 +656,7 @@ phase_1_setup() {
                 log "Reusing existing 'e3sm_diags' env: $DIAGS_EXISTING_ENV (skipping creation)"
                 activate_env "$DIAGS_EXISTING_ENV"
             else
-                setup_conda_env "conda-env" "$DIAGS_ENV"
+                setup_conda_env "e3sm_diags" "conda-env" "$DIAGS_ENV"
             fi
         else
             log "Using unified env for e3sm_diags (skipping conda env creation)"
@@ -577,7 +700,7 @@ phase_1_setup() {
                 debug_env_snapshot "mpas-subshell-after-activate-existing"
                 debug_mpas_preflight "mpas-existing-env"
             else
-                setup_conda_env "none" "$MPAS_ENV"
+                setup_conda_env "mpas_analysis" "none" "$MPAS_ENV"
                 # Snapshot after a fresh env creation + activation. Check that
                 # CONDA_PREFIX is clean and LD_LIBRARY_PATH only contains paths
                 # from this env, not any prior one.
@@ -619,7 +742,7 @@ phase_1_setup() {
                 log "Reusing existing 'zppy-interfaces' env: $ZI_EXISTING_ENV (skipping creation)"
                 activate_env "$ZI_EXISTING_ENV"
             else
-                setup_conda_env "conda" "$ZI_ENV"
+                setup_conda_env "zppy_interfaces" "conda" "$ZI_ENV"
             fi
         else
             log "Using unified env for zppy-interfaces..."
@@ -656,7 +779,7 @@ phase_1_setup() {
             log "Reusing existing 'zppy' env: $ZPPY_EXISTING_ENV (skipping creation)"
             activate_env "$ZPPY_ENV"
         else
-            setup_conda_env "conda" "$ZPPY_ENV"
+            setup_conda_env "zppy" "conda" "$ZPPY_ENV"
         fi
 
         log "Running zppy unit tests..."
@@ -894,6 +1017,10 @@ phase_3_validation() {
     log "  cd ${ZPPY_DIR}"
     log "  pytest tests/integration/test_images.py"
     log "  cat test_images_summary.md"
+    if [[ "$FREEZE_DEPENDENCIES" == true ]]; then
+        log "  (Frozen base was used for: ${FROZEN_BASE_COMPONENTS} -- any diffs here"
+        log "   should trace back to those packages, not unrelated dependency drift.)"
+    fi
 
     log_success "Phase 3 automated tests complete!"
     log_success "Remember to run test_images.py manually from a compute node."

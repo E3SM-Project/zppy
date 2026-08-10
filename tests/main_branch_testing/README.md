@@ -20,7 +20,7 @@ Set `AUTO_MODE=true` in your config file. All checkpoints are bypassed and the s
 
 ## Configuration
 
-Copy `zppy_test.cfg` and edit it before each test run. It has three sections:
+Copy `zppy_test.cfg` and edit it before each test run. It has four sections:
 
 ### Runtime settings (update as needed each run)
 
@@ -64,6 +64,29 @@ ZPPY_EXISTING_ENV="test-zppy-main-20250601_run1"
 CFGS_TO_RUN="weekly_bundles,weekly_comprehensive_v3,weekly_legacy_3.1.0_bundles,weekly_legacy_3.1.0_comprehensive_v3,weekly_legacy_3.0.0_bundles,weekly_legacy_3.0.0_comprehensive_v3"
 ```
 
+### Frozen dependency base (isolates image-diff root causes)
+
+`test_images.py` can show diffs for `e3sm_diags` or `pcmdi_diags` plots that are actually caused by an unrelated dependency (e.g. `matplotlib` moving a plot a pixel to the right) rather than by the package under test. To isolate root causes, any component listed in `FROZEN_BASE_COMPONENTS` gets its **own dedicated, fully-resolved conda env**, built once per run from that component's lock file. A test env for that component is then created by **cloning** its frozen base (fast — no solve, no network) and `pip install`ing the branch under test on top, so every dependency other than that component's own code stays pinned to exactly what's in its lock file.
+
+Each component's frozen base is independent — `e3sm_diags`'s cdat-based stack, `mpas_analysis`'s ESMF/MPAS libs, and `e3sm_to_cmip`'s `cmor` never need to be resolved into one shared environment together.
+
+| Variable | Description |
+| --- | --- |
+| `FREEZE_DEPENDENCIES` | Master switch. `false` restores the original behavior for every component (solve its own `dev.yml` fresh each run) regardless of the settings below. |
+| `FROZEN_BASE_COMPONENTS` | Comma-separated subset of `e3sm_to_cmip,e3sm_diags,mpas_analysis,zppy_interfaces,zppy` that should use a frozen base. Defaults to all five, since image diffs can come from any plotting-adjacent tool, not just `e3sm_diags`/`pcmdi_diags`. |
+| `BASE_ENV_LOCK_FILE_<COMPONENT>` | Path to a fully-resolved environment spec (uppercase component name, e.g. `BASE_ENV_LOCK_FILE_E3SM_DIAGS`). Required for every component listed in `FROZEN_BASE_COMPONENTS`. |
+
+**Generating/updating a lock file** for a component (repeat per component in `FROZEN_BASE_COMPONENTS`):
+```bash
+conda env create -f <component's dev.yml> -n tmp-lock-gen
+conda activate tmp-lock-gen
+conda list --explicit > $EZ_DIR/frozen-base-<component>.txt
+conda deactivate && conda remove --yes --all --name tmp-lock-gen
+```
+A `dev.yml` is **not** sufficient on its own — it re-solves and can drift between runs even when unmodified, which is exactly the noise this feature exists to remove. Regenerate a component's lock file whenever that component's branch genuinely needs a new or updated dependency; the script will tell you when that's happened (see below).
+
+If a component's branch pulls in a dependency beyond what's frozen, `pip install .` still installs it — the script just makes that visible instead of letting it pass silently. It snapshots `conda list --explicit` before and after `pip install .` for every frozen component and logs a warning with the diff (also saved to `pre_install_<env>_<TAG>.txt` / `post_install_<env>_<TAG>.txt` in the run directory) whenever the two don't match.
+
 ### One-time setup (paths that rarely change)
 
 | Variable | Description |
@@ -84,6 +107,7 @@ Machine-specific settings (`OUTPUT_WORKSPACE`, conda activation command, unified
 
 ### Phase 1: Setup
 - Creates conda environments for each component where `ENV_TYPE="dev"` and no `*_EXISTING_ENV` is set; reuses the named env when `*_EXISTING_ENV` is set; skips env handling entirely for any component where `ENV_TYPE="unified"`
+  - For components in `FROZEN_BASE_COMPONENTS` (when `FREEZE_DEPENDENCIES=true`), the env is created by cloning that component's dedicated frozen base instead of solving `dev.yml` fresh
 - Runs unit tests for zppy-interfaces and zppy
 - Patches `tests/integration/utils.py` with test-specific environment commands, config list, and unique ID
 - Generates config files via `python tests/integration/utils.py`
@@ -148,6 +172,7 @@ Check the error message. The script uses `set -e`, so it exits on any error. Com
 - A unit test failure during Phase 1 setup
 - A SLURM timeout (increase the max-wait argument to `wait_for_slurm_jobs`)
 - `DependencyNeverSatisfied` on all queued jobs (check your cfg files and SLURM account)
+- `FREEZE_DEPENDENCIES=true` with a missing/not-yet-generated `BASE_ENV_LOCK_FILE_<COMPONENT>` for a component in `FROZEN_BASE_COMPONENTS` (the error message names the exact variable and gives the `conda list --explicit` command to generate it)
 
 Phase 2 checks bundle status files before resubmitting and warns if any are non-OK. Resolve any failures in the Phase 1 bundle runs before proceeding. You can restart from Phase 2 by setting `START_PHASE=2` in your config (the TAG from Phase 1 is saved in `~/.zppy_test_tag` and picked up automatically, or set `EXPLICIT_TAG` to be explicit):
 ```bash
@@ -163,6 +188,14 @@ conda remove --yes --all --name test-diags-main-YYYYMMDD_runN
 conda remove --yes --all --name test-mpas-develop-YYYYMMDD_runN
 conda remove --yes --all --name test-zi-main-YYYYMMDD_runN
 conda remove --yes --all --name test-zppy-main-YYYYMMDD_runN
+
+# If using FREEZE_DEPENDENCIES=true, also remove that run's frozen base envs
+# (one per component in FROZEN_BASE_COMPONENTS):
+conda remove --yes --all --name test-frozen-base-e3sm_to_cmip-YYYYMMDD_runN
+conda remove --yes --all --name test-frozen-base-e3sm_diags-YYYYMMDD_runN
+conda remove --yes --all --name test-frozen-base-mpas_analysis-YYYYMMDD_runN
+conda remove --yes --all --name test-frozen-base-zppy_interfaces-YYYYMMDD_runN
+conda remove --yes --all --name test-frozen-base-zppy-YYYYMMDD_runN
 
 # Then re-run from Phase 1
 ./run_integration_test.bash --config zppy_test.cfg
@@ -195,6 +228,13 @@ conda remove --yes --all --name test-zppy-main-YYYYMMDD_runN
 ├── zppy_weekly_legacy_3.0.0_comprehensive_v2_output/zppy_main_branch_test_YYYYMMDD_runN/
 └── zppy_weekly_legacy_3.0.0_comprehensive_v3_output/zppy_main_branch_test_YYYYMMDD_runN/
 ```
+
+If `FREEZE_DEPENDENCIES=true`, each frozen component's run directory also gains:
+```
+pre_install_<env_name>_<TAG>.txt   # `conda list --explicit` right after cloning the frozen base
+post_install_<env_name>_<TAG>.txt  # `conda list --explicit` right after `pip install .`
+```
+These only differ if the branch under test pulled in a new or updated dependency — check `integration_test.log` for a warning with the diff when that happens.
 
 ## Example Run
 
