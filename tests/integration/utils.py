@@ -180,29 +180,81 @@ def get_expansions():
     expansions["environment_commands"] = TEST_SPECIFICS["environment_commands"]
 
     # Activate requested tests
-    expansions["active_e3sm_to_cmip"] = "False"
+
+    # Dependencies
+    expansions["active_climo_month_atm"] = "False"  # For e3sm_diags
+    expansions["active_climo_month_lnd"] = "False"  # For e3sm_diags
+    expansions["active_climo_month_lnd_for_livvkit"] = "False"  # For livvkit
+    expansions["active_climo_diurnal_atm"] = "False"  # For e3sm_diags
+
+    expansions["active_ts_daily_atm"] = "False"  # For e3sm_diags
+    expansions["active_ts_month_atm"] = "False"  # For e3sm_diags, ilamb, pcmdi_diags
+    expansions["active_ts_month_atm_glb"] = "False"  # For global_time_series
+    expansions["active_ts_month_lnd"] = "False"  # For ilamb
+    expansions["active_ts_month_lnd_for_livvkit"] = "False"  # For livvkit
+    expansions["active_ts_month_lnd_glb"] = "False"  # For global_time_series
+    expansions["active_ts_month_rof"] = "False"  # For e3sm_diags
+
+    expansions["active_e3sm_to_cmip_month_atm"] = "False"  # For ilamb, pcmdi_diags
+    expansions["active_e3sm_to_cmip_month_lnd"] = "False"  # For ilamb
+
+    expansions["active_tc_analysis"] = "False"  # For e3sm_diags
+
+    # Plotting packages
     expansions["active_e3sm_diags"] = "False"
-    expansions["active_mpas_analysis"] = "False"
+    expansions["active_mpas_analysis"] = "False"  # Also used for global_time_series
     expansions["active_global_time_series"] = "False"
     expansions["active_ilamb"] = "False"
     expansions["active_livvkit"] = "False"
     expansions["active_pcmdi_diags"] = "False"
+
     if "e3sm_diags" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_e3sm_diags"] = "True"
+
+        expansions["active_climo_month_atm"] = "True"
+        expansions["active_climo_month_lnd"] = "True"
+        expansions["active_climo_diurnal_atm"] = "True"
+
+        expansions["active_ts_month_atm"] = "True"
+        expansions["active_ts_month_rof"] = "True"
+        expansions["active_ts_daily_atm"] = "True"
+
+        expansions["active_tc_analysis"] = "True"
+
     if "mpas_analysis" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_mpas_analysis"] = "True"
+
     if "global_time_series" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_global_time_series"] = "True"
-        expansions["active_mpas_analysis"] = "True"  # For ocn plots
-        expansions["active_e3sm_to_cmip"] = "True"  # For lnd plots
-    if "livvkit" in TEST_SPECIFICS["tasks_to_run"]:
-        expansions["active_livvkit"] = "True"
+
+        expansions["active_ts_month_atm_glb"] = "True"
+        expansions["active_ts_month_lnd_glb"] = "True"
+
+        expansions["active_mpas_analysis"] = "True"
+
     if "ilamb" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_ilamb"] = "True"
-        expansions["active_e3sm_to_cmip"] = "True"
+
+        expansions["active_ts_month_atm"] = "True"
+        expansions["active_ts_month_lnd"] = "True"
+
+        expansions["active_e3sm_to_cmip_month_atm"] = "True"
+        expansions["active_e3sm_to_cmip_month_lnd"] = "True"
+
+    if "livvkit" in TEST_SPECIFICS["tasks_to_run"]:
+        expansions["active_livvkit"] = "True"
+
+        expansions["active_climo_month_lnd_for_livvkit"] = "True"
+
+        expansions["active_ts_month_lnd_for_livvkit"] = "True"
+
     if "pcmdi_diags" in TEST_SPECIFICS["tasks_to_run"]:
         expansions["active_pcmdi_diags"] = "True"
-        expansions["active_e3sm_to_cmip"] = "True"
+
+        expansions["active_ts_month_atm"] = "True"
+
+        expansions["active_e3sm_to_cmip_month_atm"] = "True"
+
     expansions["cfgs_to_run"] = TEST_SPECIFICS["cfgs_to_run"]
     expansions["tasks_to_run"] = TEST_SPECIFICS["tasks_to_run"]
 
