@@ -42,7 +42,7 @@ Process
 
     ls -lt ${expected_results_dir}
 
-In your Markdown report, note the date the expected results were last updated.
+In your Markdown report, note the date the expected results were last updated, and whether they were generated using the E3SM-Unified environment or a dev environment (check the run's cfg/logs for the relevant ``_ENV_TYPE`` settings, or ask if it's unclear). This matters for Step 2.5 below.
 
 Step 2: Review changes since expected results were updated
 ==========================================================
@@ -79,12 +79,84 @@ This means each of the five needs a lock file -- an exact-version ``conda list -
 * That component's ``dev.yml`` changed in a way that should be picked up (a new or updated dependency), or
 * The test script warned that ``pip install .`` pulled in something beyond the frozen base for that component (see Step C below) and you've decided to bake that change in.
 
+Reviewing dependency-setup changes since expected results were updated
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The expected results may have been generated using either the E3SM-Unified environment or a dev environment -- see the note you made in Step 1. In practice, the first test run(s) after a new Unified release are likely to use Unified-produced results as the baseline "expected results," since a Unified release is usually the occasion for refreshing them; at other times, a dev environment may have been used instead.
+
+Regardless of which one produced the *current* expected results, the goal for the frozen base (below) is to track Unified's dependency versions as closely as possible -- Unified is the stable common target, independent of which source happens to be backing the expected results at any given moment. What's useful to check here, before getting to that, is narrower: whether each component's *own* dependency-setup file has changed since the expected results were updated. If it has, any image-check diffs in that component's task carry extra ambiguity (dependency version change vs. a code change in the branch under test) until dependencies have been reconciled with Unified as described in the next subsection.
+
+Review each of the following, comparing from the commit that was current on the date the expected results were last updated (Step 1) to the current commit on the relevant base branch:
+
+* ``e3sm_to_cmip``: `conda-env/dev.yml <https://github.com/E3SM-Project/e3sm_to_cmip/commits/master/conda-env/dev.yml>`__
+* ``e3sm_diags``: `conda-env/dev.yml <https://github.com/E3SM-Project/e3sm_diags/commits/main/conda-env/dev.yml>`__
+* ``MPAS-Analysis``: `dev-spec.txt <https://github.com/MPAS-Dev/MPAS-Analysis/commits/develop/dev-spec.txt>`__
+* ``zppy-interfaces``: `conda/dev.yml <https://github.com/E3SM-Project/zppy-interfaces/commits/main/conda/dev.yml>`__
+* ``zppy``: `conda/dev.yml <https://github.com/E3SM-Project/zppy/commits/main/conda/dev.yml>`__
+
+In your Markdown report, make a table like:
+
+.. code-block::
+
+    | Package | Dev setup changes since expected results were updated? |
+    | --- | --- |
+    | [package name](compare link, e.g. .../compare/<old-sha>...<new-sha>/<dev-file-path>) | "No changes" or a description of what changed |
+    ...
+
+Pinning dev-env dependencies to match the Unified environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The frozen base for each component should default to matching Unified's resolved dependency versions as closely as possible -- treat Unified as the target state regardless of whether the *current* expected results happen to have come from Unified or from a dev environment. Only deviate from Unified's version for a given package when the dev environment genuinely requires it: for example, a new feature merged into one of our packages needs a dependency newer than what Unified currently ships. In that case, keep the ``dev.yml``'s own (newer) constraint for that package instead of overriding it with Unified's older version, and note the deviation explicitly in your report so it isn't mistaken for accidental drift later.
+
+This does not make the dev env identical to Unified -- the two cover different package sets, and conda's solver can still pick different transitive dependencies than Unified's solver did for the same top-level pin -- but it removes version drift in whatever packages they *do* share as an avoidable source of ambiguity in later image-check diffs.
+
+Two scripts automate the matching part (both are standard-library-only, so no ``pip install`` is needed to run them):
+
+* ``get_unified_versions.sh`` -- sources the Unified load script for the target machine and captures the resolved package versions of the resulting environment (via ``pip list --format=json``, with an ``importlib.metadata`` fallback, plus the interpreter's own version, since ``pip list`` doesn't report Python itself).
+* ``pin_dev_env_to_unified.py`` -- cross-references those versions against a component's ``dev.yml``, sorting every dependency into one of four buckets:
+
+  * **Pinned to Unified** -- no conflict (either the dep was unconstrained in dev.yml, or dev.yml's own constraint is satisfied by Unified's version).
+  * **Forced deviation** -- dev.yml has an explicit range constraint (e.g. ``>=0.23``) that Unified's version fails to satisfy. This is detected automatically and mechanically: the constraint is parsed and checked against Unified's version, so it isn't a guess -- dev.yml's own requirement rules Unified out.
+  * **Flagged for manual review** -- either an *exact* pin (e.g. ``numpy=1.24.3``) that differs from Unified's version, or a range constraint where the versions involved aren't plain dotted-numeric (e.g. a pre-release like ``1.11.0rc1``) and so can't be compared with confidence by a stdlib-only comparator. Both cases are genuinely ambiguous or unresolvable without more context, and the script deliberately doesn't guess -- it keeps dev.yml's version and leaves the decision to a human.
+  * **No Unified match** -- the package isn't in Unified at all; left as-is.
+
+.. code-block:: bash
+
+    # 1. Capture Unified's resolved versions (once; reused for all five components).
+    #    On Chrysalis, the Unified load script is:
+    #    /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh
+    ./get_unified_versions.sh <path-to-unified-load-script> unified_versions.json
+
+    # 2. For each of the five components, cross-reference and resolve:
+    python pin_dev_env_to_unified.py \
+        --unified unified_versions.json \
+        --devyml <path-to-component's-dev.yml-or-dev-spec.txt> \
+        --out-devyml pinned-dev-<component>.yml \
+        --out-report pin-report-<component>.md \
+        --component <component>
+
+Use the resulting ``pinned-dev-<component>.yml`` in place of the stock ``dev.yml`` in the "To (re)generate a lock file for a component" steps below.
+
+.. note::
+
+    Only the "flagged for manual review" bucket needs a human -- check ``pin-report-<component>.md`` for those packages and decide by hand whether to accept Unified's version or keep the dev.yml pin, editing the pinned file directly if you keep it. "Forced deviation" packages need no action; the script already kept dev.yml's constraint because Unified's version provably fails it.
+
+.. important::
+
+    Confirm the Unified load script you point at is the exact release that generated the expected results (if they came from Unified) before trusting the pin. ``load_latest_...`` tracks whichever release is currently newest -- if Unified has moved on since the expected-results date, source an archived/dated load script for that specific release instead, if your site keeps one, or you'll be comparing against a newer Unified than the one that actually produced the expected-results images.
+
+In your Markdown report, include (or summarize) each component's ``pin-report-<component>.md``, calling out any forced deviations and any packages still flagged for manual review -- both are relevant context for interpreting later image-check diffs for that component's task.
+
+If ``FREEZE_DEPENDENCIES=false`` in your config, you can skip this step (and the pinning step above) entirely -- every component will solve its own ``dev.yml`` fresh, as before.
+
 To (re)generate a lock file for a component:
 
 .. code-block:: bash
 
     cd ${repo_parent_dir}/<component>          # e.g. e3sm_diags, MPAS-Analysis, zppy-interfaces, zppy, e3sm_to_cmip
     conda env create -f <conda_dir>/dev.yml -n tmp-lock-gen   # or --file dev-spec.txt for mpas_analysis
+    # If you pinned dependencies to Unified above, use that file instead:
+    #   conda env create -f pinned-dev-<component>.yml -n tmp-lock-gen
     conda activate tmp-lock-gen
     conda list --explicit > ${EZ_DIR}/frozen-base-<component>.txt
     conda deactivate
