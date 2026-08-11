@@ -10,6 +10,9 @@ test_images_summary.md
 test_*_output
 tests/*.cfg.txt
 tests/integration/image_check_failures*
+tests/main_branch_testing/frozen_env_setup/pin-report-*.md
+tests/main_branch_testing/frozen_env_setup/pinned-dev-*.txt
+tests/main_branch_testing/frozen_env_setup/pinned-dev-*.yml
 
 # Sphinx documentation
 docs/_build/

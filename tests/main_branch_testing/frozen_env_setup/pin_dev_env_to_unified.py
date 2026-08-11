@@ -204,6 +204,11 @@ def parse_dep_spec(spec: str):
       'exact'         - pinned to one exact version              detail=version string
       'range'         - a comparison constraint (>=, >, <=, <, !=, or a
                          comma-separated combination of these)    detail=constraint string
+      'wildcard'      - a conda build-string selector where the version
+                         itself is '*' (e.g. "esmf=*=mpi_mpich_*") -- this
+                         is not a version pin at all, just a build-variant
+                         selector, so there's nothing to compare against
+                         Unified.                                 detail=raw remainder
       'unparseable'   - didn't match a recognized shape           detail=raw remainder
     """
     spec = spec.strip()
@@ -219,6 +224,10 @@ def parse_dep_spec(spec: str):
     # e.g. "numpy=1.24.3" or "numpy=1.24.3=py311h1234abc_0"
     if rest.startswith("=") and not rest.startswith("=="):
         version = rest[1:].split("=")[0].strip()
+        if version == "*":
+            # e.g. "esmf=*=mpi_mpich_*" -- selecting a build variant, not a
+            # version. Nothing to compare against Unified here.
+            return name, "wildcard", rest
         return name, "exact", version
 
     if rest.startswith("=="):
@@ -308,6 +317,19 @@ def resolve_dependency(spec: str, unified_versions: dict, buckets: dict) -> str:
             )
             return spec
 
+    if kind == "wildcard":
+        buckets["flagged"].append(
+            (
+                name,
+                spec,
+                unified_version,
+                f"'{detail}' is a build-string selector (version is '*'), not a "
+                "version pin -- there's nothing to compare against Unified's "
+                "version. Left as-is.",
+            )
+        )
+        return spec
+
     # unparseable
     buckets["flagged"].append(
         (
@@ -353,7 +375,12 @@ def process_block(lines, start_idx, base_indent, unified_versions, buckets):
         line = lines[i]
         stripped = line.strip()
 
-        if stripped == "":
+        # Blank lines and full-line comments (e.g. section-divider comments
+        # like "# Base" / "# ===...===", or a commented-out dependency like
+        # "# - somepkg 1.2.3") don't affect YAML structure -- pass them
+        # through and keep scanning for the next real item rather than
+        # treating them as the end of the list.
+        if stripped == "" or stripped.startswith("#"):
             out.append(line)
             i += 1
             continue
@@ -367,8 +394,11 @@ def process_block(lines, start_idx, base_indent, unified_versions, buckets):
         if PIP_KEY_RE.match(item_text):
             out.append(line)
             i += 1
-            # Skip/pass through any blank lines before the nested block.
-            while i < len(lines) and lines[i].strip() == "":
+            # Skip/pass through any blank or comment-only lines before the
+            # nested block.
+            while i < len(lines) and (
+                lines[i].strip() == "" or lines[i].strip().startswith("#")
+            ):
                 out.append(lines[i])
                 i += 1
             if i < len(lines) and _line_indent(lines[i]) > base_indent:
@@ -418,9 +448,13 @@ def process_devyml_text(text: str, unified_versions: dict, buckets: dict) -> str
     if dep_idx is None:
         raise ValueError("Could not find a top-level 'dependencies:' key in this file.")
 
-    # Find the indentation of the first list item after the key.
+    # Find the indentation of the first list item after the key, skipping
+    # any blank or comment-only lines (e.g. a "# Base" section-divider
+    # comment right after "dependencies:").
     j = dep_idx + 1
-    while j < len(lines) and lines[j].strip() == "":
+    while j < len(lines) and (
+        lines[j].strip() == "" or lines[j].strip().startswith("#")
+    ):
         j += 1
     if j >= len(lines) or not lines[j].strip().startswith("-"):
         raise ValueError("'dependencies:' key has no list items after it.")
@@ -428,11 +462,72 @@ def process_devyml_text(text: str, unified_versions: dict, buckets: dict) -> str
 
     body, end_idx = process_block(lines, j, base_indent, unified_versions, buckets)
 
-    new_lines = lines[: dep_idx + 1] + body + lines[end_idx:]
+    # lines[:j] includes the 'dependencies:' line itself plus any blank/
+    # comment lines we skipped over while locating the first real item
+    # (e.g. a "# Base" section-divider comment) -- keep them.
+    new_lines = lines[:j] + body + lines[end_idx:]
     result = "\n".join(new_lines)
     if had_trailing_newline:
         result += "\n"
     return result
+
+
+def process_flat_spec_text(text: str, unified_versions: dict, buckets: dict) -> str:
+    """
+    Handle the other real dev-env format in use here: a plain spec-list file
+    consumed via `conda create --file dev-spec.txt` (as MPAS-Analysis does).
+    One package spec per line, comment lines start with '#', operators are
+    typically space-separated from the name (e.g. "python >=3.11"). No YAML
+    structure at all -- just rewrite each non-comment, non-blank line in
+    place.
+    """
+    had_trailing_newline = text.endswith("\n")
+    lines = text.splitlines()
+    out = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped == "" or stripped.startswith("#"):
+            out.append(line)
+            continue
+
+        indent_len = len(line) - len(line.lstrip(" "))
+        leading_ws = line[:indent_len]
+        content = line[indent_len:]
+
+        comment = ""
+        hash_idx = content.find("#")
+        if hash_idx != -1:
+            comment = content[hash_idx:]
+            content = content[:hash_idx].rstrip()
+
+        new_spec = resolve_dependency(content.strip(), unified_versions, buckets)
+        rebuilt = f"{leading_ws}{new_spec}"
+        if comment:
+            rebuilt += f"  {comment}"
+        out.append(rebuilt)
+
+    result = "\n".join(out)
+    if had_trailing_newline:
+        result += "\n"
+    return result
+
+
+def process_env_file_text(text: str, unified_versions: dict, buckets: dict) -> str:
+    """
+    Dispatch to the right format handler. The two dev-env formats actually
+    in use here are a YAML `dependencies:` list (dev.yml, conda/dev.yml,
+    conda-env/dev.yml) and a flat one-spec-per-line file consumed via
+    `conda create --file ...` (dev-spec.txt). Detect which one this is by
+    checking for a top-level `dependencies:` key.
+    """
+    lines = text.splitlines()
+    has_dependencies_key = any(
+        _line_indent(line) == 0 and DEPENDENCIES_KEY_RE.match(line.strip())
+        for line in lines
+    )
+    if has_dependencies_key:
+        return process_devyml_text(text, unified_versions, buckets)
+    return process_flat_spec_text(text, unified_versions, buckets)
 
 
 # ---------------------------------------------------------------------------
@@ -571,7 +666,7 @@ def main():
 
     original_text = args.devyml.read_text()
     try:
-        new_text = process_devyml_text(original_text, unified_versions, buckets)
+        new_text = process_env_file_text(original_text, unified_versions, buckets)
     except ValueError as e:
         sys.exit(f"Could not process {args.devyml}: {e}")
 
