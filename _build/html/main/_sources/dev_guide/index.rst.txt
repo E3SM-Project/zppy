@@ -12,9 +12,8 @@ This guide covers everything needed to develop, test, and release ``zppy``.
    parameters
    provenance
    tasks/index
-   test
-   update_expected_results
-   releases/index.rst
+   tests/index
+   releases/index
    new_task
    new_diags_set
    archive/index

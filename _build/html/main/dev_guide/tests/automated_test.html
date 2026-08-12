@@ -1,0 +1,452 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automated testing of zppy &mdash; zppy  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Updating expected results for the tests" href="update_expected_results.html" />
+    <link rel="prev" title="Manually testing zppy" href="manual_test.html" />
+    <link href="../../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html">User Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../project-standards.html">Project Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contributing.html">Contributing to This Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parameters.html">Parameter checking &amp; inferring – for developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../provenance.html">Provenance (Developer Reference)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tasks/index.html">Tasks (Developer Reference)</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tests</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="manual_test.html">Manually testing zppy</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Automated testing of zppy</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#step-1-determine-what-the-current-expected-results-are">Step 1: Determine what the current expected results are</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#step-2-review-changes-since-expected-results-were-updated">Step 2: Review changes since expected results were updated</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-automated-test-script">The automated test script</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#step-8-run-python-tests">Step 8: Run Python tests</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="update_expected_results.html">Updating expected results for the tests</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../releases/index.html">How to Prepare a Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../new_task.html">Adding a new task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../new_diags_set.html">Examples: Adding a new set to the E3SM Diagnostics task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../archive/index.html">Archive</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Developer Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Tests</a></li>
+      <li class="breadcrumb-item active">Automated testing of zppy</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/dev_guide/tests/automated_test.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="automated-testing-of-zppy">
+<span id="automated-testing-zppy"></span><h1>Automated testing of zppy<a class="headerlink" href="#automated-testing-of-zppy" title="Link to this heading"></a></h1>
+<p>Follow the steps below to test <code class="docutils literal notranslate"><span class="pre">zppy</span></code>. As you do so, please produce a Markdown report summarizing your results.</p>
+<section id="step-1-determine-what-the-current-expected-results-are">
+<h2>Step 1: Determine what the current expected results are<a class="headerlink" href="#step-1-determine-what-the-current-expected-results-are" title="Link to this heading"></a></h2>
+<section id="machine-specific-setup">
+<h3>Machine-specific setup<a class="headerlink" href="#machine-specific-setup" title="Link to this heading"></a></h3>
+<p>Chrysalis:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">expected_results_dir</span><span class="o">=</span>/lcrc/group/e3sm/public_html/zppy_test_resources
+<span class="nv">expected_results_records_dir</span><span class="o">=</span>/lcrc/group/e3sm/public_html/zppy_test_resources_previous
+</pre></div>
+</div>
+<p>Compy:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">expected_results_dir</span><span class="o">=</span>/compyfs/www/zppy_test_resources
+<span class="nv">expected_results_records_dir</span><span class="o">=</span>/compyfs/fors729/zppy_test_resources_previous
+</pre></div>
+</div>
+<p>Note that Compy doesn’t give write access to <code class="docutils literal notranslate"><span class="pre">/compyfs/www/</span></code>, so we can’t add a new directory there. That’s why <code class="docutils literal notranslate"><span class="pre">zppy_test_resources_previous</span></code> is in a separate path.</p>
+<p>Perlmutter:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">expected_results_dir</span><span class="o">=</span>/global/cfs/cdirs/e3sm/www/zppy_test_resources
+<span class="nv">expected_results_records_dir</span><span class="o">=</span>/global/cfs/cdirs/e3sm/www/zppy_test_resources_previous
+</pre></div>
+</div>
+</section>
+<section id="process">
+<h3>Process<a class="headerlink" href="#process" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ls<span class="w"> </span>-lt<span class="w"> </span><span class="si">${</span><span class="nv">expected_results_dir</span><span class="si">}</span>
+</pre></div>
+</div>
+<p>In your Markdown report, note the date the expected results were last updated.</p>
+</section>
+</section>
+<section id="step-2-review-changes-since-expected-results-were-updated">
+<h2>Step 2: Review changes since expected results were updated<a class="headerlink" href="#step-2-review-changes-since-expected-results-were-updated" title="Link to this heading"></a></h2>
+<p>Now that we know the date the expected results are from, we can review what changes we’ll be testing.</p>
+<p>Review each of the following commit logs and note commits made since the date the expected results were updated:</p>
+<ul class="simple">
+<li><p>For the <code class="docutils literal notranslate"><span class="pre">e3sm_to_cmip</span></code> task: <a class="reference external" href="https://github.com/E3SM-Project/e3sm_to_cmip/commits/master">e3sm_to_cmip</a></p></li>
+<li><p>For the <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> task: <a class="reference external" href="https://github.com/E3SM-Project/e3sm_diags/commits/main">e3sm_diags</a></p></li>
+<li><p>For the <code class="docutils literal notranslate"><span class="pre">mpas_analysis</span></code> task: <a class="reference external" href="https://github.com/MPAS-Dev/MPAS-Analysis/commits/develop/">MPAS-Analysis</a></p></li>
+<li><p>For the <code class="docutils literal notranslate"><span class="pre">global_time_series</span></code> and <code class="docutils literal notranslate"><span class="pre">pcmdi_diags</span></code> tasks: <a class="reference external" href="https://github.com/E3SM-Project/zppy-interfaces/commits/main">zppy-interfaces</a></p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">zppy</span></code> itself: <a class="reference external" href="https://github.com/E3SM-Project/zppy/commits/main">zppy</a></p></li>
+</ul>
+<p>For the remaining tasks (<code class="docutils literal notranslate"><span class="pre">climo</span></code>, <code class="docutils literal notranslate"><span class="pre">ts</span></code>, <code class="docutils literal notranslate"><span class="pre">tc_analysis</span></code>, <code class="docutils literal notranslate"><span class="pre">ilamb</span></code>, <code class="docutils literal notranslate"><span class="pre">livvkit</span></code>), we typically just use the associated package’s latest release rather than making dev environments. As such, their latest development will have no impact on our tests unless we have started using one of their newer releases.</p>
+<p>In your Markdown report, make a table like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">|</span> <span class="n">Package</span> <span class="o">|</span> <span class="n">Changes</span> <span class="n">since</span> <span class="n">expected</span> <span class="n">results</span> <span class="n">were</span> <span class="n">updated</span> <span class="o">|</span>
+<span class="o">|</span> <span class="o">---</span> <span class="o">|</span> <span class="o">---</span> <span class="o">|</span>
+<span class="o">|</span> <span class="p">[</span><span class="n">package</span> <span class="n">name</span><span class="p">](</span><span class="n">link</span> <span class="n">to</span> <span class="n">package</span><span class="s1">&#39;s commit log) | Links to all PRs merged since the expected results were updated |</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</section>
+<section id="the-automated-test-script">
+<h2>The automated test script<a class="headerlink" href="#the-automated-test-script" title="Link to this heading"></a></h2>
+<p>The automated test script handles the following steps from the manual testing process:</p>
+<ul class="simple">
+<li><p>Step 3: Set up environments for called packages</p></li>
+<li><p>Step 4: Set up zppy environment</p></li>
+<li><p>Step 5: Launch zppy jobs</p></li>
+<li><p>Step 6: Launch zppy jobs – bundles part 2</p></li>
+<li><p>Step 7: Review finished returns</p></li>
+<li><p>Step 8: Run Python tests (excluding the final <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">tests/integration/test_images.py</span></code> call from a compute node)</p></li>
+</ul>
+<section id="a-set-up-the-test-script">
+<h3>A. Set up the test script<a class="headerlink" href="#a-set-up-the-test-script" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">repo_parent_dir</span><span class="si">}</span>/zppy
+git<span class="w"> </span>status<span class="w"> </span><span class="c1"># Check for uncommitted changes</span>
+
+<span class="c1"># If there are uncommitted changes,</span>
+<span class="c1"># commit them so we can move cleanly to a new branch:</span>
+git<span class="w"> </span>add<span class="w"> </span>-A
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Checkpoint&quot;</span>
+
+git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span>main<span class="w"> </span><span class="c1"># This assumes you&#39;ve named your remote for the main repo as &quot;upstream&quot;</span>
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>test-zppy-yyyymmdd<span class="w"> </span>upstream/main<span class="w"> </span><span class="c1"># Use today&#39;s date</span>
+git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span>
+<span class="c1"># Check that this matches the corresponding commit log:</span>
+<span class="c1"># https://github.com/E3SM-Project/zppy/commits/main</span>
+
+<span class="c1"># Now, copy the test script and cfg from the zppy repo into the directory</span>
+<span class="c1"># that you&#39;ll be running the test script from.</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span><span class="si">${</span><span class="nv">test_script_dir</span><span class="si">}</span>/test_yyyymmdd_runN
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">test_script_dir</span><span class="si">}</span>/test_yyyymmdd_runN
+cp<span class="w"> </span><span class="si">${</span><span class="nv">repo_parent_dir</span><span class="si">}</span>/zppy/tests/main_branch_testing/run_integration_test.bash<span class="w"> </span>.
+cp<span class="w"> </span><span class="si">${</span><span class="nv">repo_parent_dir</span><span class="si">}</span>/zppy/tests/main_branch_testing/zppy_test.cfg<span class="w"> </span>.
+
+<span class="c1"># Now, edit the test cfg as needed</span>
+emacs<span class="w"> </span>zppy_test.cfg
+</pre></div>
+</div>
+</section>
+<section id="b-set-up-the-test-cfg">
+<h3>B. Set up the test cfg<a class="headerlink" href="#b-set-up-the-test-cfg" title="Link to this heading"></a></h3>
+<p>Let’s examine the parts of the test cfg.</p>
+<p>You’ll likely just need to update the <code class="docutils literal notranslate"><span class="pre">MACHINE</span></code> name if you’re not running on Chrysalis.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># For these,</span>
+
+<span class="n">MACHINE</span><span class="o">=</span><span class="n">chrysalis</span>       <span class="c1"># chrysalis | compy | perlmutter</span>
+<span class="n">START_PHASE</span><span class="o">=</span><span class="mi">1</span>           <span class="c1"># 1 | 2 | 3</span>
+<span class="n">AUTO_MODE</span><span class="o">=</span><span class="n">true</span>          <span class="c1"># true = skip all interactive checkpoints</span>
+<span class="n">EXPLICIT_TAG</span><span class="o">=</span><span class="s2">&quot;&quot;</span>         <span class="c1"># Leave empty to auto-generate; set to resume a prior run</span>
+</pre></div>
+</div>
+<p>Update the <code class="docutils literal notranslate"><span class="pre">RUN_NUMBER</span></code> if you’ve already done a test run today.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">RUN_NUMBER</span><span class="o">=</span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>Update the <code class="docutils literal notranslate"><span class="pre">_BASE_BRANCH</span></code> parameters if you plan to test new features or bug fixes that aren’t yet included on whatever the repo calls its “official” branch.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DIAGS_BASE_BRANCH</span><span class="o">=</span><span class="s2">&quot;main&quot;</span>
+<span class="n">E3SM_TO_CMIP_BASE_BRANCH</span><span class="o">=</span><span class="s2">&quot;master&quot;</span>
+<span class="n">MPAS_BASE_BRANCH</span><span class="o">=</span><span class="s2">&quot;develop&quot;</span>
+<span class="n">ZI_BASE_BRANCH</span><span class="o">=</span><span class="s2">&quot;main&quot;</span>
+<span class="n">ZPPY_BASE_BRANCH</span><span class="o">=</span><span class="s2">&quot;main&quot;</span>
+</pre></div>
+</div>
+<p>Update the <code class="docutils literal notranslate"><span class="pre">_ENV_TYPE</span></code> parameters if you want to use E3SM-Unified rather than a dev environment. If you plan to only run a subset of tasks, you can set the ones you aren’t running to use E3SM-Unified, so that the script doesn’t spend time building a dev environment that won’t be used.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># &quot;dev&quot;     = build a dedicated conda env from the repo&#39;s dev.yml</span>
+<span class="c1"># &quot;unified&quot; = use the machine&#39;s e3sm-unified env (UNIFIED_ENV_CMD)</span>
+<span class="n">DIAGS_ENV_TYPE</span><span class="o">=</span><span class="s2">&quot;dev&quot;</span>
+<span class="n">E3SM_TO_CMIP_ENV_TYPE</span><span class="o">=</span><span class="s2">&quot;dev&quot;</span>
+<span class="n">MPAS_ENV_TYPE</span><span class="o">=</span><span class="s2">&quot;dev&quot;</span>
+<span class="n">ZI_ENV_TYPE</span><span class="o">=</span><span class="s2">&quot;dev&quot;</span>
+</pre></div>
+</div>
+<p>Update the <code class="docutils literal notranslate"><span class="pre">_EXISTING_ENV</span></code> parameters if you already have an environment from a previous test run to use.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Optional: reuse an existing named conda env instead of creating a new one.</span>
+<span class="c1"># When non-empty AND the corresponding ENV_TYPE is &quot;dev&quot;, the script skips</span>
+<span class="c1"># conda env creation and activates this env directly.</span>
+<span class="c1"># Leave empty to let the script auto-name and create the env as usual.</span>
+<span class="n">DIAGS_EXISTING_ENV</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+<span class="n">E3SM_TO_CMIP_EXISTING_ENV</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+<span class="n">MPAS_EXISTING_ENV</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+<span class="n">ZI_EXISTING_ENV</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+<span class="n">ZPPY_EXISTING_ENV</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+</pre></div>
+</div>
+<p>Update these two parameters to configure which jobs run.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Comma-separated list of zppy cfg names to generate and submit.</span>
+<span class="c1"># These correspond to generated filenames: test_weekly_&lt;name&gt;_&lt;machine&gt;.cfg</span>
+<span class="c1"># Any name containing &quot;bundle&quot; is treated as a bundle cfg and re-submitted in Phase 2.</span>
+<span class="n">CFGS_TO_RUN</span><span class="o">=</span><span class="s2">&quot;weekly_bundles,weekly_comprehensive_v2,weekly_comprehensive_v3,weekly_legacy_3.1.0_bundles,weekly_legacy_3.1.0_comprehensive_v2,weekly_legacy_3.1.0_comprehensive_v3,weekly_legacy_3.0.0_bundles,weekly_legacy_3.0.0_comprehensive_v2,weekly_legacy_3.0.0_comprehensive_v3&quot;</span>
+
+<span class="c1"># Comma-separated list of tasks to enable in utils.py.</span>
+<span class="n">TASKS_TO_RUN</span><span class="o">=</span><span class="s2">&quot;e3sm_diags,mpas_analysis,global_time_series,ilamb,livvkit,pcmdi_diags&quot;</span>
+</pre></div>
+</div>
+<p>These parameters are unlikely to change between runs. They just let the test script know where to find files in your particular workspace. It is recommended to clone a new copy of the repos and use that for each <code class="docutils literal notranslate"><span class="pre">_DIR</span></code> parameter listed below. The script will change branches, so using a distinct copy means you won’t get your work overwritten.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HOME_DIR</span><span class="o">=</span><span class="s2">&quot;$HOME&quot;</span>
+<span class="n">EZ_DIR</span><span class="o">=</span><span class="s2">&quot;$HOME_DIR/ez&quot;</span>
+
+<span class="n">E3SM_DIAGS_DIR</span><span class="o">=</span><span class="s2">&quot;$EZ_DIR/e3sm_diags&quot;</span>
+<span class="n">E3SM_TO_CMIP_DIR</span><span class="o">=</span><span class="s2">&quot;$EZ_DIR/e3sm_to_cmip&quot;</span>
+<span class="n">MPAS_ANALYSIS_DIR</span><span class="o">=</span><span class="s2">&quot;$EZ_DIR/MPAS-Analysis&quot;</span>
+<span class="n">ZPPY_INTERFACES_DIR</span><span class="o">=</span><span class="s2">&quot;$EZ_DIR/zppy-interfaces&quot;</span>
+<span class="n">ZPPY_DIR</span><span class="o">=</span><span class="s2">&quot;$EZ_DIR/zppy&quot;</span>
+
+<span class="n">CONDA_PROFILE</span><span class="o">=</span><span class="s2">&quot;$HOME_DIR/miniforge3/etc/profile.d/conda.sh&quot;</span>
+<span class="n">TAG_CACHE_FILE</span><span class="o">=</span><span class="s2">&quot;$HOME_DIR/.zppy_test_tag&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="c-run-the-test-script">
+<h3>C. Run the test script<a class="headerlink" href="#c-run-the-test-script" title="Link to this heading"></a></h3>
+<p>Now that we have the test cfg set up, we can run it.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>screen<span class="w"> </span><span class="c1"># Use `screen`` so that even if the terminal connection is interrupted, the script will keep running.</span>
+<span class="nb">ulimit</span><span class="w"> </span>-s<span class="w"> </span>unlimited<span class="w"> </span><span class="c1"># This is necessary for MPAS-Analysis to work inside `screen`</span>
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">test_script_dir</span><span class="si">}</span>/test_yyyymmdd_runN
+cat<span class="w"> </span>zppy_test.cfg<span class="w"> </span><span class="c1"># Make sure changes are there</span>
+<span class="nb">time</span><span class="w"> </span>./run_integration_test.bash<span class="w"> </span>--config<span class="w"> </span>zppy_test.cfg<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tee<span class="w"> </span>integration_test_runN.log
+<span class="c1"># Ctrl-A D to detach from screen</span>
+screen<span class="w"> </span>-ls<span class="w"> </span><span class="c1"># See what screen sessions you have</span>
+tail<span class="w"> </span>-f<span class="w"> </span>integration_test_runN.log
+</pre></div>
+</div>
+<p>Follow the <code class="docutils literal notranslate"><span class="pre">tail</span></code> output until you get to:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>✓ Phase 3 automated tests complete!
+✓ Remember to run test_images.py manually from a compute node.
+✓ Integration test automation complete!
+</pre></div>
+</div>
+</section>
+<section id="d-review-the-output">
+<h3>D. Review the output<a class="headerlink" href="#d-review-the-output" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># CTRL C # Exit tail</span>
+screen<span class="w"> </span>-R<span class="w"> </span><span class="c1"># The script should have finished and there should be ``time`` output: real, user, sys</span>
+<span class="nb">exit</span><span class="w"> </span><span class="c1"># Exit screen</span>
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">test_script_dir</span><span class="si">}</span>/test_yyyymmdd_runN
+cat<span class="w"> </span>integration_test_runN.log
+</pre></div>
+</div>
+<p>Let’s review the test script’s output log.</p>
+<p>First, the unit tests. There are two blocks, starting with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Running</span> <span class="n">zppy</span><span class="o">-</span><span class="n">interfaces</span> <span class="n">unit</span> <span class="n">tests</span><span class="o">...</span>
+</pre></div>
+</div>
+<p>and</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Running</span> <span class="n">zppy</span> <span class="n">unit</span> <span class="n">tests</span><span class="o">...</span>
+</pre></div>
+</div>
+<p>Second, the output directories status. It should look like the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Checking all status files...
+...
+✓ All status files clean!
+</pre></div>
+</div>
+<p>If some status files were unsuccessful, you’ll want to run the following to review the errors:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">dir_with_failures</span><span class="si">}</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*<span class="w"> </span>status<span class="w"> </span><span class="c1"># See what jobs failed</span>
+<span class="c1"># Review errors:</span>
+tail<span class="w"> </span><span class="si">${</span><span class="nv">job_that_failed</span><span class="si">}</span>.o<span class="si">${</span><span class="nv">id_of_job_that_failed</span><span class="si">}</span>
+grep<span class="w"> </span>-i<span class="w"> </span>error<span class="w"> </span><span class="si">${</span><span class="nv">job_that_failed</span><span class="si">}</span>.o<span class="si">${</span><span class="nv">id_of_job_that_failed</span><span class="si">}</span>
+</pre></div>
+</div>
+<p>Third, the integration tests.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">test_last_year</span><span class="o">.</span><span class="n">py</span>
+<span class="n">test_bash_generation</span><span class="o">.</span><span class="n">py</span>
+<span class="n">test_campaign</span><span class="o">.</span><span class="n">py</span>
+<span class="n">test_defaults</span><span class="o">.</span><span class="n">py</span>
+<span class="n">test_bundles</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>Errors here may actually be expected if the expected results haven’t been updated yet to reflect a recently merged pull request. Another reason for errors on <code class="docutils literal notranslate"><span class="pre">test_bundles.py</span></code> in particular is if you didn’t run all the jobs necessary (i.e., if you’re running a partial test).</p>
+<p>If all 3 pieces look good, you can proceed with the final integration test, the image checker.</p>
+</section>
+</section>
+<section id="step-8-run-python-tests">
+<h2>Step 8: Run Python tests<a class="headerlink" href="#step-8-run-python-tests" title="Link to this heading"></a></h2>
+<section id="id1">
+<h3>Machine-specific setup<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>Chrysalis:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>launch_compute_node<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span>salloc<span class="w"> </span>--nodes<span class="o">=</span><span class="m">1</span><span class="w"> </span>--partition<span class="o">=</span>debug<span class="w"> </span>--time<span class="o">=</span><span class="m">02</span>:00:00<span class="w"> </span>--account<span class="o">=</span>e3sm
+<span class="o">}</span>
+</pre></div>
+</div>
+<p>Compy:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>launch_compute_node<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span>salloc<span class="w"> </span>--nodes<span class="o">=</span><span class="m">1</span><span class="w"> </span>--partition<span class="o">=</span>short<span class="w"> </span>--time<span class="o">=</span><span class="m">01</span>:00:00<span class="w"> </span>--account<span class="o">=</span>e3sm
+<span class="o">}</span>
+</pre></div>
+</div>
+<p>Perlmutter:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>launch_compute_node<span class="o">()</span>
+<span class="o">{</span>
+<span class="w">    </span>salloc<span class="w"> </span>--nodes<span class="o">=</span><span class="m">1</span><span class="w"> </span>--qos<span class="o">=</span>interactive<span class="w"> </span>--time<span class="o">=</span><span class="m">01</span>:00:00<span class="w"> </span>--constraint<span class="o">=</span>cpu<span class="w"> </span>--account<span class="o">=</span>e3sm
+<span class="o">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Process<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">repo_parent_dir</span><span class="si">}</span>/zppy
+git<span class="w"> </span>status
+<span class="c1"># You might have changed branches while you were waiting for jobs to finish.</span>
+<span class="c1"># Make sure you&#39;re now back on the correct branch: test-zppy-yyyymmdd</span>
+<span class="c1"># Also confirm you&#39;re back in the correct env: zppy-yyyymmdd or the Unified env</span>
+
+<span class="c1"># The image checker test, which we&#39;ll run from a compute node:</span>
+launch_compute_node
+
+start_bash_subshell
+<span class="c1"># EITHER:</span>
+<span class="c1"># Activate EITHER a dev environment or the Unified env:</span>
+conda<span class="w"> </span>activate<span class="w"> </span>zppy-yyyymmdd
+<span class="c1"># OR: the command from `activate_unified_env`</span>
+
+pytest<span class="w"> </span>tests/integration/test_images.py
+<span class="c1"># Typically takes between 10 and 20 minutes on Chrysalis and Perlmutter.</span>
+<span class="c1"># Typically takes closer to 50 minutes on Compy.</span>
+cat<span class="w"> </span>test_images_summary.md
+<span class="nb">exit</span><span class="w"> </span><span class="c1"># Exit bash shell</span>
+<span class="nb">exit</span><span class="w"> </span><span class="c1"># Exit compute note</span>
+</pre></div>
+</div>
+<p>In your Markdown report:</p>
+<ul class="simple">
+<li><p>From the <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">tests/integration/test_images.py</span> <span class="pre">``</span> <span class="pre">command-line</span> <span class="pre">output,</span> <span class="pre">copy</span> <span class="pre">everything</span> <span class="pre">after</span> <span class="pre">``Captured</span> <span class="pre">stdout</span> <span class="pre">call</span></code> to a code block labeled “Output”</p></li>
+<li><p>Copy the results of <code class="docutils literal notranslate"><span class="pre">cat</span> <span class="pre">test_images_summary.md</span></code> to a section labeled “Complete summary table”</p></li>
+<li><p>Make a new section named “Summary table – only failing image-check tests, sorted by task”. For each task that has missing and/or mismatched images, copy the relevant rows from the summary table. Skip this section if there were no failing image-check tests.</p></li>
+<li><p>Note any test failures from the other Python tests.</p></li>
+<li><p>If there were no failures at all, print “All tests pass”</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="manual_test.html" class="btn btn-neutral float-left" title="Manually testing zppy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="update_expected_results.html" class="btn btn-neutral float-right" title="Updating expected results for the tests" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../../../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../../../v2.0.0/index.html">v2.0.0</a></dd>
+      <dd><a href="../../../v2.1.0/index.html">v2.1.0</a></dd>
+      <dd><a href="../../../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../../../v2.3.0/index.html">v2.3.0</a></dd>
+      <dd><a href="../../../v2.3.1/index.html">v2.3.1</a></dd>
+      <dd><a href="../../../v2.4.0/index.html">v2.4.0</a></dd>
+      <dd><a href="../../../v2.5.0/index.html">v2.5.0</a></dd>
+      <dd><a href="../../../v3.0.0/index.html">v3.0.0</a></dd>
+      <dd><a href="../../../v3.1.0/index.html">v3.1.0</a></dd>
+      <dd><a href="../../../v3.2.0/index.html">v3.2.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="automated_test.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

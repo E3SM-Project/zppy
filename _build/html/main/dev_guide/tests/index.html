@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ts (Developer Reference) &mdash; zppy  documentation</title>
+  <title>Tests &mdash; zppy  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
 
@@ -19,8 +19,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="e3sm_to_cmip (Developer Reference)" href="e3sm_to_cmip.html" />
-    <link rel="prev" title="climo (Developer Reference)" href="climo.html" />
+    <link rel="next" title="Manually testing zppy" href="manual_test.html" />
+    <link rel="prev" title="pcmdi_diags (Developer Reference)" href="../tasks/pcmdi_diags.html" />
     <link href="../../_static/style.css" rel="stylesheet" type="text/css">
 
 </head>
@@ -55,24 +55,13 @@
 <li class="toctree-l2"><a class="reference internal" href="../contributing.html">Contributing to This Documentation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../parameters.html">Parameter checking &amp; inferring – for developers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../provenance.html">Provenance (Developer Reference)</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tasks (Developer Reference)</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="bundle.html">bundle (Developer Reference)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="climo.html">climo (Developer Reference)</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">ts (Developer Reference)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tasks/index.html">Tasks (Developer Reference)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="manual_test.html">Manually testing zppy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="automated_test.html">Automated testing of zppy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="update_expected_results.html">Updating expected results for the tests</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="e3sm_to_cmip.html">e3sm_to_cmip (Developer Reference)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tc_analysis.html">tc_analysis (Developer Reference)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="e3sm_diags.html">e3sm_diags (Developer Reference)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mpas_analysis.html">mpas_analysis (Developer Reference)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="global_time_series.html">global_time_series (Developer Reference)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ilamb.html">ilamb (Developer Reference)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="livvkit.html">livvkit (Developer Reference)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pcmdi_diags.html">pcmdi_diags (Developer Reference)</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../tests/index.html">Tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../releases/index.html">How to Prepare a Release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../new_task.html">Adding a new task</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../new_diags_set.html">Examples: Adding a new set to the E3SM Diagnostics task</a></li>
@@ -96,10 +85,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">Developer Guide</a></li>
-          <li class="breadcrumb-item"><a href="index.html">Tasks (Developer Reference)</a></li>
-      <li class="breadcrumb-item active">ts (Developer Reference)</li>
+      <li class="breadcrumb-item active">Tests</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../../_sources/dev_guide/tasks/ts.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../../_sources/dev_guide/tests/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -107,44 +95,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="ts-developer-reference">
-<span id="dev-task-ts"></span><h1>ts (Developer Reference)<a class="headerlink" href="#ts-developer-reference" title="Link to this heading"></a></h1>
-<section id="implementation">
-<h2>Implementation<a class="headerlink" href="#implementation" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p><strong>Python module</strong>: <code class="docutils literal notranslate"><span class="pre">zppy/ts.py</span></code></p></li>
-<li><p><strong>Jinja2 template</strong>: <code class="docutils literal notranslate"><span class="pre">zppy/templates/ts.bash</span></code></p></li>
+  <section id="tests">
+<span id="id1"></span><h1>Tests<a class="headerlink" href="#tests" title="Link to this heading"></a></h1>
+<p>This page collects documentation on testing <code class="docutils literal notranslate"><span class="pre">zppy</span></code>.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="manual_test.html">Manually testing zppy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="automated_test.html">Automated testing of zppy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="update_expected_results.html">Updating expected results for the tests</a></li>
 </ul>
-<p>The <code class="docutils literal notranslate"><span class="pre">ts</span></code> function iterates over all <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> tasks and generates a SLURM
-bash script from the <code class="docutils literal notranslate"><span class="pre">ts.bash</span></code> Jinja2 template for each
-year-range/subsection combination.</p>
-<p>Key steps in <code class="docutils literal notranslate"><span class="pre">ts.py</span></code>:</p>
-<ol class="arabic simple">
-<li><p>Load the <code class="docutils literal notranslate"><span class="pre">ts.bash</span></code> template.</p></li>
-<li><p>Call <code class="docutils literal notranslate"><span class="pre">get_tasks(config,</span> <span class="pre">&quot;ts&quot;)</span></code> for all subtasks.</p></li>
-<li><p>For each task:</p>
-<ol class="loweralpha simple">
-<li><p>Resolve mapping file, grid, and component type.</p></li>
-<li><p>Render the template and write the bash script.</p></li>
-<li><p>Submit the script.</p></li>
-</ol>
-</li>
-</ol>
-<section id="vertical-remapping">
-<h3>Vertical remapping<a class="headerlink" href="#vertical-remapping" title="Link to this heading"></a></h3>
-<p>When <code class="docutils literal notranslate"><span class="pre">vrt_remap_vars</span></code> is non-empty, the template also calls <code class="docutils literal notranslate"><span class="pre">ncremap</span></code>
-after <code class="docutils literal notranslate"><span class="pre">ncclimo</span></code> to remap specified variables from model levels to pressure
-levels. Output is written to a sibling <code class="docutils literal notranslate"><span class="pre">ts_vrt_remap/</span></code> directory.</p>
-</section>
-</section>
+</div>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="climo.html" class="btn btn-neutral float-left" title="climo (Developer Reference)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="e3sm_to_cmip.html" class="btn btn-neutral float-right" title="e3sm_to_cmip (Developer Reference)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../tasks/pcmdi_diags.html" class="btn btn-neutral float-left" title="pcmdi_diags (Developer Reference)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="manual_test.html" class="btn btn-neutral float-right" title="Manually testing zppy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
@@ -188,7 +156,7 @@ levels. Output is written to a sibling <code class="docutils literal notranslate
     </dl>
     <dl>
       <dt>Branches</dt>
-      <dd><a href="ts.html">main</a></dd>
+      <dd><a href="index.html">main</a></dd>
     </dl>
   </div>
 </div><script>
