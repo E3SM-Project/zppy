@@ -18,16 +18,16 @@ tests=("comprehensive_v2" "comprehensive_v3" "bundles" "legacy_3.1.0_comprehensi
 #tests=("legacy_3.0.0_comprehensive_v2" "legacy_3.0.0_comprehensive_v3" "legacy_3.0.0_bundles")
 
 # ------------------------------------------------------------------------------
-# NEW: restrict updates to specific diagnostic subdirectories, e.g. e3sm_diags,
+# Restrict updates to specific diagnostic subdirectories, e.g. e3sm_diags,
 # mpas_analysis, global_time_series, ilamb, livvkit, pcmdi_diags.
-# Leave empty (diags=()) to update every diag subdirectory (old/full behavior).
+# Leave empty (tasks=()) to update every task subdirectory (old/full behavior).
 # Example -- only refresh e3sm_diags:
-# diags=("e3sm_diags")
+# tasks=("e3sm_diags")
 # This applies uniformly across every entry in `tests` above.
 # "bundle_files" (the bundle*.bash files, only relevant when "bundles" is in
-# `tests`) is treated as its own selectable name -- include it in `diags` if you
+# `tests`) is treated as its own selectable name -- include it in `tasks` if you
 # want it refreshed during a partial update; it's always refreshed on a full one.
-diags=()
+tasks=()
 # ------------------------------------------------------------------------------
 
 for test_name in "${tests[@]}"
@@ -45,7 +45,7 @@ do
     # Each of those subdirectories has a corresponding image list of the form:
     # `image_list_<subdir_name>.txt`
     #
-    # Each of those subdirectories in turn contains diagnostic subdirectories,
+    # Each of those subdirectories in turn contains task subdirectories,
     # e.g.: e3sm_diags, global_time_series, ilamb, livvkit, mpas_analysis, pcmdi_diags
 
     expected_dir=#expand expected_dir#expected_${test_name}
@@ -58,26 +58,26 @@ do
       output_case_dir=#expand user_www#zppy_weekly_${test_name}_www/#expand unique_id#/#expand case_name#
     fi
 
-    if [[ ${#diags[@]} -eq 0 ]]; then
+    if [[ ${#tasks[@]} -eq 0 ]]; then
       # Full update: remove old expected files, copy the entire output over.
       rm -rf ${expected_dir}
       # Your output will now become the new expectation.
       # Copy output so you don't have to rerun zppy to generate the output.
       cp -r ${output_case_dir} ${expected_dir}
     else
-      # Partial update: only refresh the named diag subdirectories, leaving the
+      # Partial update: only refresh the named task subdirectories, leaving the
       # rest of expected_${test_name} untouched.
       mkdir -p ${expected_dir}
-      for diag_name in "${diags[@]}"
+      for task_name in "${tasks[@]}"
       do
-        if [[ "${diag_name}" == "bundle_files" ]]; then
+        if [[ "${task_name}" == "bundle_files" ]]; then
           continue # handled below, alongside the "bundles" test_name check
         fi
-        if [[ -d ${output_case_dir}/${diag_name} ]]; then
-          rm -rf ${expected_dir}/${diag_name}
-          cp -r ${output_case_dir}/${diag_name} ${expected_dir}/${diag_name}
+        if [[ -d ${output_case_dir}/${task_name} ]]; then
+          rm -rf ${expected_dir}/${task_name}
+          cp -r ${output_case_dir}/${task_name} ${expected_dir}/${task_name}
         else
-          echo "WARNING: ${output_case_dir}/${diag_name} does not exist -- skipping (test_name=${test_name})."
+          echo "WARNING: ${output_case_dir}/${task_name} does not exist -- skipping (test_name=${test_name})."
         fi
       done
     fi
@@ -85,7 +85,7 @@ do
     # test_bundles.py also needs the bash files transferred.
     # Note that for legacy cfgs, we're only testing test_images.py
     if [[ "${test_name,,}" == "bundles" ]]; then
-      if [[ ${#diags[@]} -eq 0 ]] || [[ " ${diags[*]} " =~ " bundle_files " ]]; then
+      if [[ ${#tasks[@]} -eq 0 ]] || [[ " ${tasks[*]} " =~ " bundle_files " ]]; then
         mkdir -p ${expected_dir}/bundle_files
         cp -r #expand user_output#zppy_weekly_bundles_output/#expand unique_id#/#expand case_name#/post/scripts/bundle*.bash ${expected_dir}/bundle_files
       fi
@@ -96,7 +96,7 @@ do
     # Remove the image check failures, so they don't end up in the expected files.
     rm -rf image_check_failures_${test_name}
     # This file will list all the expected images -- a mix of freshly-updated
-    # and previously-existing diag subdirectories, if `diags` restricted scope.
+    # and previously-existing task subdirectories, if `tasks` restricted scope.
     find . -type f -name '*.png' > ../image_list_expected_${test_name}.txt
     cd ${zppy_top_level}
 done
