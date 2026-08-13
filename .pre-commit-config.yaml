@@ -1,6 +1,7 @@
 exclude: "docs|node_modules|migrations|.git|.tox"
 fail_fast: true
 
+# (run `python scripts/sync_pre_commit_versions.py` to sync them)
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -37,6 +38,7 @@ repos:
     hooks:
       - id: mypy
         args: ["--config=pyproject.toml"]
+        additional_dependencies: [types-PyYAML]
 
 # https://pre-commit.ci/#configuration
 ci:
