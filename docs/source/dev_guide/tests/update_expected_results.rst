@@ -118,7 +118,7 @@ Only do this part if you're updating the Official Results (i.e., the results we'
 Partial updates
 ~~~~~~~~~~~~~~~
 
-Sometimes you only want to refresh results for one diagnostic (e.g. ``e3sm_diags``)
+Sometimes you only want to refresh results for one task (e.g. ``e3sm_diags``)
 without touching others (e.g. ``mpas_analysis``) that aren't ready yet. Both the
 weekly and campaign update scripts support this via a selector array near the top
 of the generated script:
@@ -126,8 +126,8 @@ of the generated script:
 .. code-block:: bash
 
     # In update_weekly_expected_files_${machine_name}.sh:
-    # Leave empty to update every diag subdirectory (default/old behavior).
-    diags=("e3sm_diags")
+    # Leave empty to update every task subdirectory.
+    tasks=("e3sm_diags")
 
     # In update_campaign_expected_files_${machine_name}.sh:
     # Restrict which campaigns get refreshed.
@@ -135,7 +135,7 @@ of the generated script:
 
 Notes:
 
-- ``diags`` applies uniformly to every entry in ``tests`` -- e.g. if ``tests``
+- ``tasks`` applies uniformly to every entry in ``tests`` -- e.g. if ``tests``
   includes both ``comprehensive_v2`` and ``comprehensive_v3``, ``e3sm_diags`` is
   refreshed in both.
 - ``update_bash_generation_expected_files_${machine_name}.sh`` and
