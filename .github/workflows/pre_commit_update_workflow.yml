@@ -19,7 +19,7 @@ permissions:
 env:
   UP_TO_DATE: false
   PYTHON_VERSION: "3.14"
-  REVIEWERS: "xylar,forsyth2"
+  REVIEWERS: "forsyth2"
 jobs:
   auto-update:
     runs-on: ubuntu-latest
