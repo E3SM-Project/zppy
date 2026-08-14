@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Sync pinned QA tool versions from ``.pre-commit-config.yaml``.
 
 ``.pre-commit-config.yaml`` is the source of truth for the versions of the

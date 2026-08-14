@@ -42,7 +42,7 @@ Repository = "https://github.com/E3SM-Project/zppy.git"
 [project.scripts]
 zppy = "zppy.__main__:main"
 
-# make sure these always match conda/dev.yml and .pre-commit-config.yaml
+# make sure these always match pinned versions in conda/dev.yml and .pre-commit-config.yaml
 # (run `python scripts/sync_pre_commit_versions.py` to sync them)
 [project.optional-dependencies]
 qa = [
