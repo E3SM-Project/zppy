@@ -327,7 +327,7 @@ def _compare_actual_and_expected(
 def _draw_box(image, diff, output_path: str):
     # https://stackoverflow.com/questions/41405632/draw-a-rectangle-and-a-text-in-it-using-pil
     draw = ImageDraw.Draw(image)
-    (left, upper, right, lower) = (
+    left, upper, right, lower = (
         diff.getbbox()
     )  # We specifically want the diff's bounding box
     draw.rectangle(((left, upper), (right, lower)), outline="red")

@@ -465,7 +465,7 @@ def submit_script(
 
         # Actual submission
         p1 = Popen(shlex.split(command), stdout=PIPE, stderr=PIPE)
-        (stdout, stderr) = p1.communicate()
+        stdout, stderr = p1.communicate()
         status = p1.returncode
         out = stdout.decode().strip()
         print(f"...{out}")
