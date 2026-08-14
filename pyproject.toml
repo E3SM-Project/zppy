@@ -42,6 +42,24 @@ Repository = "https://github.com/E3SM-Project/zppy.git"
 [project.scripts]
 zppy = "zppy.__main__:main"
 
+# make sure these always match conda/dev.yml and .pre-commit-config.yaml
+# (run `python scripts/sync_pre_commit_versions.py` to sync them)
+[project.optional-dependencies]
+qa = [
+  "black==25.1.0",
+  "flake8==7.3.0",
+  "flake8-isort==6.1.1",
+  "isort==6.0.1",
+  "mypy==1.18.2",
+  "pre-commit==4.3.0",
+  "types-PyYAML>=6.0.0",
+]
+
+dev = [
+  "tbump==6.9.0",
+  "ipykernel",
+]
+
 [tool.setuptools]
 include-package-data = true
 
@@ -58,6 +76,15 @@ zppy = [
   "**/*.json",
   "**/*.jinja",
 ]
+
+# `pre-commit-update` rewrites .pre-commit-config.yaml with ruamel.yaml.  Without
+# this, it defaults to `indent(sequence=4)`, which puts the `-` of each list item
+# in column 0 and reformats the whole file.  These settings keep its output in
+# the conventional `  - item` style, so an update is a diff of just the revs.
+[tool.pre-commit-update.yaml]
+mapping = 2
+sequence = 4
+offset = 2
 
 [tool.black]
 line-length = 88
