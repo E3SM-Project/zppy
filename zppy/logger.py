@@ -7,7 +7,7 @@ import logging.handlers
 log_format = (
     "%(asctime)s [%(levelname)s]: %(filename)s(%(funcName)s:%(lineno)s) >> %(message)s"
 )
-logging.basicConfig(format=log_format, filemode="w", level=logging.INFO)
+logging.basicConfig(format=log_format, level=logging.INFO)
 
 # Console handler setup
 console_handler = logging.StreamHandler()

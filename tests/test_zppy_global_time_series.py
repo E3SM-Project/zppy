@@ -195,8 +195,7 @@ def test_determine_and_add_dependencies():
 
 def test_get_mpas_analysis_prefixes(tmp_path):
     config_path = tmp_path / "mpas_analysis.cfg"
-    config_path.write_text(
-        """
+    config_path.write_text("""
 [default]
 case = "case_name"
 input = "input_dir"
@@ -220,8 +219,7 @@ mesh = "EC30to60E2r2"
   [[ mvm ]]
   reference_data_path = [[ reference ]]
   test_data_path = [[ test ]]
-""".strip()
-    )
+""".strip())
 
     config = ConfigObj(
         str(config_path), configspec=os.path.join("zppy", "defaults", "default.ini")
