@@ -48,7 +48,7 @@ zppy = "zppy.__main__:main"
 qa = [
   "black==25.1.0",
   "flake8==7.3.0",
-  "flake8-isort==6.1.1",
+  "flake8-isort==6.1.2",
   "isort==6.0.1",
   "mypy==1.18.2",
   "pre-commit==4.3.0",
