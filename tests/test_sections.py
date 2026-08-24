@@ -69,6 +69,7 @@ def test_sections():
         "bundle": "",
         "campaign": "none",
         "case": "CASE",
+        "case_group": "",
         "constraint": "",
         "debug": False,
         "dry_run": False,
@@ -107,6 +108,15 @@ def test_sections():
     }
     compare(actual_default, expected_default)
 
+    # simboard
+    section_name = "simboard"
+    actual_section = config[section_name]
+    expected_section = {
+        "enabled": False,
+        "simulation_type": "development",
+    }
+    compare(actual_section, expected_section)
+
     # ts
     section_name = "ts"
     actual_section = config[section_name]
@@ -136,6 +146,7 @@ def test_sections():
         "area_nm": "area",
         "campaign": "none",
         "case": "CASE",
+        "case_group": "",
         "constraint": "",
         "debug": False,
         "default_case": "CASE",
@@ -208,6 +219,7 @@ def test_sections():
         "bundle": "",
         "campaign": "none",
         "case": "CASE",
+        "case_group": "",
         "climo_jobs": 0,
         "constraint": "",
         "debug": False,
@@ -277,6 +289,7 @@ def test_subsections():
         "bundle": "",
         "campaign": "none",
         "case": "CASE",
+        "case_group": "",
         "constraint": "",
         "debug": False,
         "dry_run": False,
@@ -368,6 +381,7 @@ def test_subsections():
         "bundle": "",
         "campaign": "none",
         "case": "CASE",
+        "case_group": "",
         "constraint": "",
         "debug": False,
         "default_case": "CASE",
@@ -423,6 +437,7 @@ def test_subsections():
         "bundle": "",
         "campaign": "none",
         "case": "CASE",
+        "case_group": "",
         "constraint": "",
         "debug": False,
         "default_case": "CASE",
@@ -513,6 +528,7 @@ def test_subsections():
         "bundle": "",
         "campaign": "none",
         "case": "CASE",
+        "case_group": "",
         "climo_jobs": 0,
         "constraint": "",
         "debug": False,
@@ -562,6 +578,7 @@ def test_subsections():
         "bundle": "",
         "campaign": "none",
         "case": "CASE",
+        "case_group": "",
         "climo_jobs": 0,
         "constraint": "",
         "debug": False,

@@ -9,6 +9,7 @@ from zppy.provenance import (
     build_diagnostics_url,
     build_provenance_extras,
     parse_env_case_xml,
+    resolve_case_group,
     write_provenance_settings,
 )
 
@@ -61,6 +62,23 @@ def _fake_machine_info(
 
 
 # ---------------------------------------------------------------------------
+# resolve_case_group
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_case_group_prefers_env_case_xml():
+    assert resolve_case_group({"case_group": "ignored"}, "v3.LR") == "v3.LR"
+
+
+def test_resolve_case_group_falls_back_to_cfg():
+    assert resolve_case_group({"case_group": "v3.HR"}, "") == "v3.HR"
+
+
+def test_resolve_case_group_returns_empty_when_unset():
+    assert resolve_case_group({}, "") == ""
+
+
+# ---------------------------------------------------------------------------
 # parse_env_case_xml
 # ---------------------------------------------------------------------------
 
@@ -76,6 +94,27 @@ def test_parse_env_case_xml_happy(tmp_path):
         "machine": "chrysalis",
         "hpc_username": "ac.wlin",
     }
+
+
+def test_parse_env_case_xml_reads_case_group(tmp_path):
+    _write_env_case_xml(
+        str(tmp_path),
+        {
+            "CASE": "v3.LR.historical_0051",
+            "MACH": "chrysalis",
+            "REALUSER": "ac.wlin",
+            "CASE_GROUP": "v3.LR",
+        },
+    )
+    assert parse_env_case_xml(str(tmp_path))["case_group"] == "v3.LR"
+
+
+def test_parse_env_case_xml_omits_empty_case_group(tmp_path):
+    # CASE_GROUP is optional in CIME, so the entry is often present but empty.
+    _write_env_case_xml(
+        str(tmp_path), {"CASE": "v3.LR.historical_0051", "CASE_GROUP": ""}
+    )
+    assert "case_group" not in parse_env_case_xml(str(tmp_path))
 
 
 def test_parse_env_case_xml_missing_file(tmp_path):

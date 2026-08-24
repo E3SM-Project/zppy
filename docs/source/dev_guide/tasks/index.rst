@@ -11,6 +11,7 @@ other tasks.
    :maxdepth: 1
 
    bundle
+   simboard
    climo
    ts
    e3sm_to_cmip

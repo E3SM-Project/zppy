@@ -68,9 +68,11 @@ There are 6 output-specific parameters:
      - *(none)*
      - Where the post-processing results (``post/`` directory) should go.
    * - ``www``
-     - **Yes**
-     - *(none)*
+     - No
+     - ``""``
      - Where the post-processing visuals should go (to be viewed online).
+       Leave empty and set ``[simboard] enabled = True`` to have ``zppy``
+       infer this path from Mache. See :doc:`tasks/simboard` for details.
    * - ``campaign``
      - No
      - ``"none"``
@@ -79,10 +81,14 @@ There are 6 output-specific parameters:
      - No
      - ``False``
      - Set to True to have ``zppy`` produce more verbose output and retain temporary workdirs. This is helpful for debugging.
+   * - ``case_group``
+     - No
+     - ``""``
+     - The group this simulation belongs to (e.g. ``"v3.LR"``). Normally read from ``CASE_GROUP`` in ``env_case.xml``; set this only when the simulation has no ``CASE_GROUP`` there, or to override it. When set, SimBoard-inferred ``www`` paths gain a ``<case_group>`` level.
    * - ``dry_run``
      - No
      - ``False``
-     - This should be set to True if you don't want the batch jobs to be submitted. I.e., you only want to see what *would* be submitted.
+     - This should be set to True if you don't want the batch jobs to be submitted. I.e., you only want to see what *would* be submitted. A dry run does not write anything to ``www``, since that is a shared, published location; the generated scripts and settings still go to ``output``.
    * - ``fail_on_dependency_skip``
      - No
      - ``False``
@@ -404,6 +410,34 @@ These are no longer defined in ``zppy/defaults/default.ini``:
 These are still defined in ``zppy/defaults/default.ini``, but have no effect:
 
 .. code-block:: text
+
    ncclimo_cmd
    nrows
    ncols
+
+SimBoard section parameters
+============================
+
+The ``[simboard]`` section controls SimBoard-compatible publishing. It is
+a configuration-only hook; see :doc:`tasks/simboard` for full details.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 10 18 50
+
+   * - Parameter
+     - Required
+     - Default
+     - Description
+   * - ``enabled``
+     - No
+     - ``False``
+     - Set to ``True`` to enable SimBoard-compatible publishing.
+       When ``True`` and ``[default] www`` is empty, ``zppy`` infers
+       ``www`` from Mache's ``web_portal.base_path``.
+   * - ``simulation_type``
+     - No
+     - ``"development"``
+     - Archive sub-directory for the run. One of ``"production"``,
+       ``"development"``, or ``"none"``.
+       Must not be ``"none"`` when ``enabled = True``.

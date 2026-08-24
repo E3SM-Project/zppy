@@ -1,4 +1,5 @@
 import argparse
+import configparser
 import errno
 import importlib
 import io
@@ -22,7 +23,18 @@ from zppy.livvkit import livvkit
 from zppy.logger import _setup_custom_logger
 from zppy.mpas_analysis import mpas_analysis
 from zppy.pcmdi_diags import pcmdi_diags
-from zppy.provenance import build_provenance_extras, write_provenance_settings
+from zppy.provenance import (
+    build_provenance_extras,
+    parse_env_case_xml,
+    resolve_case_group,
+    write_provenance_settings,
+)
+from zppy.simboard import (
+    infer_simboard_www,
+    simboard,
+    simboard_enabled,
+    validate_simboard_config,
+)
 from zppy.tc_analysis import tc_analysis
 from zppy.ts import ts
 from zppy.utils import check_status, submit_script
@@ -85,22 +97,27 @@ def main():
     shutil.copy(args.config, provenance)
     write_provenance_settings(provenance_settings, provenance_extras)
     # Web output directory
-    www = config["default"]["www"]
-    username = os.environ.get("USER")
-    www = www.replace("$USER", username)
-    www_case_dir = os.path.join(www, config["default"]["case"])
-    www_provenance = os.path.join(www_case_dir, f"provenance.{ts_utc}.cfg")
-    www_provenance_settings = os.path.join(
-        www_case_dir, f"provenance.{ts_utc}.settings"
-    )
-    try:
-        os.makedirs(www_case_dir)
-    except OSError as exc:
-        if exc.errno != errno.EEXIST:
-            raise OSError("Cannot create www case directory")
-    shutil.copy(args.config, www_provenance)
-    if os.path.isfile(provenance_settings):
-        shutil.copy(provenance_settings, www_provenance_settings)
+    # A dry run must not touch `www`. It is a shared, published location --
+    # with `[simboard] enabled = True` it is inferred to the machine-wide
+    # diagnostics_archive -- so creating directories and copying provenance
+    # there would publish artifacts for a run that never happens.
+    if not config["default"]["dry_run"]:
+        www = config["default"]["www"]
+        username = os.environ.get("USER")
+        www = www.replace("$USER", username)
+        www_case_dir = os.path.join(www, config["default"]["case"])
+        www_provenance = os.path.join(www_case_dir, f"provenance.{ts_utc}.cfg")
+        www_provenance_settings = os.path.join(
+            www_case_dir, f"provenance.{ts_utc}.settings"
+        )
+        try:
+            os.makedirs(www_case_dir)
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise OSError("Cannot create www case directory")
+        shutil.copy(args.config, www_provenance)
+        if os.path.isfile(provenance_settings):
+            shutil.copy(provenance_settings, www_provenance_settings)
     if args.last_year:
         config["default"]["last_year"] = args.last_year
     _launch_scripts(config, script_dir, job_ids_file, plugins)
@@ -219,12 +236,18 @@ def _determine_parameters(machine_info: MachineInfo, config: ConfigObj) -> Confi
     config["default"]["diagnostics_base_path"] = machine_info.config.get(
         "diagnostics", "base_path"
     )
-    config["default"]["web_portal_base_path"] = machine_info.config.get(
-        "web_portal", "base_path"
-    )
-    config["default"]["web_portal_base_url"] = machine_info.config.get(
-        "web_portal", "base_url"
-    )
+    try:
+        config["default"]["web_portal_base_path"] = machine_info.config.get(
+            "web_portal", "base_path"
+        )
+    except (configparser.NoSectionError, configparser.NoOptionError):
+        config["default"]["web_portal_base_path"] = ""
+    try:
+        config["default"]["web_portal_base_url"] = machine_info.config.get(
+            "web_portal", "base_url"
+        )
+    except (configparser.NoSectionError, configparser.NoOptionError):
+        config["default"]["web_portal_base_url"] = ""
 
     # Determine machine to decide which header files to use
     if ("machine" not in config["default"]) or (config["default"]["machine"] == ""):
@@ -259,7 +282,36 @@ def _determine_parameters(machine_info: MachineInfo, config: ConfigObj) -> Confi
         config["default"][
             "environment_commands"
         ] = f"source {unified_base}/load_latest_e3sm_unified_{machine}.sh"
+    _set_default_www(machine_info, config)
     return config
+
+
+def _set_default_www(machine_info: MachineInfo, config: ConfigObj) -> None:
+    # Keep SimBoard-specific validation active even when `www` is already set,
+    # because `[simboard] enabled = True` still requires validating
+    # `simulation_type`.
+    validate_simboard_config(config)
+    if config["default"]["www"] != "":
+        return
+
+    if not simboard_enabled(config):
+        raise ValueError(
+            "www is empty. Provide [default] www or set `enabled = True` in "
+            "the [simboard] section to infer a SimBoard-compatible "
+            "diagnostics_archive path. Note: inference requires "
+            "web_portal.base_path in Mache configuration."
+        )
+
+    # The case group adds a grouping level to the inferred path. It comes from
+    # env_case.xml, falling back to cfg `case_group`; `resolve_case_group`
+    # warns when neither is set.
+    config_default = config["default"]
+    input_dir = config_default.get("input", "")
+    xml_case_group = (
+        parse_env_case_xml(input_dir).get("case_group", "") if input_dir else ""
+    )
+    case_group = resolve_case_group(config_default, xml_case_group)
+    config["default"]["www"] = infer_simboard_www(machine_info, config, case_group)
 
 
 def _launch_scripts(config: ConfigObj, script_dir, job_ids_file, plugins) -> None:
@@ -267,6 +319,9 @@ def _launch_scripts(config: ConfigObj, script_dir, job_ids_file, plugins) -> Non
 
     # predefined bundles
     existing_bundles = predefined_bundles(config, script_dir, existing_bundles)
+
+    # simboard configuration task
+    existing_bundles = simboard(config, script_dir, existing_bundles, job_ids_file)
 
     # climo tasks
     existing_bundles = climo(config, script_dir, existing_bundles, job_ids_file)
