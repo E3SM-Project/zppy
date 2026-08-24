@@ -1,0 +1,394 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simboard — SimBoard Publishing Configuration &mdash; zppy  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="climo — Climatology Files" href="climo.html" />
+    <link rel="prev" title="bundle — Job Bundling" href="bundle.html" />
+    <link href="../../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../schematics.html">A schematic view of zppy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../campaigns.html">Campaigns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parameters.html">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dependencies.html">Dependencies</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tasks</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="bundle.html">bundle — Job Bundling</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">simboard — SimBoard Publishing Configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#expected-behavior">Expected behavior</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration-example">Configuration example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#before-you-publish">Before you publish</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#publishing-diagnostics-and-linking-the-case">Publishing diagnostics and linking the case</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#promoting-diagnostics-from-development-to-production">Promoting diagnostics from development to production</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#stable-urls-and-moved-deleted-or-missing-output">Stable URLs and moved, deleted, or missing output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="climo.html">climo — Climatology Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ts.html">ts — Time Series Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="e3sm_to_cmip.html">e3sm_to_cmip — CMIP6 Conversion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tc_analysis.html">tc_analysis — Tropical Cyclone Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="e3sm_diags.html">e3sm_diags — E3SM Diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mpas_analysis.html">mpas_analysis — Ocean and Sea-Ice Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="global_time_series.html">global_time_series — Global Time Series Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ilamb.html">ilamb — Land Benchmarking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="livvkit.html">livvkit — Ice Sheet Validation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pcmdi_diags.html">pcmdi_diags — PCMDI Metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../components/index.html">Model Components</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dev_guide/index.html">Developer Guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">User Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Tasks</a></li>
+      <li class="breadcrumb-item active">simboard — SimBoard Publishing Configuration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/tasks/simboard.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="simboard-simboard-publishing-configuration">
+<span id="task-simboard"></span><h1>simboard — SimBoard Publishing Configuration<a class="headerlink" href="#simboard-simboard-publishing-configuration" title="Link to this heading"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">simboard</span></code> section is a configuration-only hook that controls
+SimBoard-compatible publishing behavior. Like <a class="reference internal" href="bundle.html"><span class="doc">bundle — Job Bundling</span></a>, it does not
+launch an HPC job of its own; instead it influences how other tasks are
+configured — specifically, it can infer the <code class="docutils literal notranslate"><span class="pre">www</span></code> output path from the
+machine’s Mache configuration.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">enabled</span> <span class="pre">=</span> <span class="pre">True</span></code> and <code class="docutils literal notranslate"><span class="pre">www</span></code> is left empty in <code class="docutils literal notranslate"><span class="pre">[default]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">zppy</span></code> derives <code class="docutils literal notranslate"><span class="pre">www</span></code> from the <code class="docutils literal notranslate"><span class="pre">web_portal.base_path</span></code> recorded in
+Mache for the current machine:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;web_portal_base_path&gt;/diagnostics_archive/&lt;simulation_type&gt;/&lt;case_group&gt;/
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;case_group&gt;</span></code> is included only when the simulation has one. It is read from
+<code class="docutils literal notranslate"><span class="pre">CASE_GROUP</span></code> in <code class="docutils literal notranslate"><span class="pre">env_case.xml</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">v3.LR</span></code>), falling back to the
+<code class="docutils literal notranslate"><span class="pre">case_group</span></code> parameter in <code class="docutils literal notranslate"><span class="pre">[default]</span></code>. <code class="docutils literal notranslate"><span class="pre">CASE_GROUP</span></code> is optional in CIME,
+so when neither is set <code class="docutils literal notranslate"><span class="pre">zppy</span></code> warns and publishes directly under
+<code class="docutils literal notranslate"><span class="pre">&lt;simulation_type&gt;/</span></code>.</p>
+<p>This gives SimBoard a single, predictable archive root to scan for
+diagnostics.</p>
+<section id="expected-behavior">
+<h2>Expected behavior<a class="headerlink" href="#expected-behavior" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 15.0%" />
+<col style="width: 65.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">simboard.enabled</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">www</span></code></p></th>
+<th class="head"><p>Behavior</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>any</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">zppy</span></code> does nothing SimBoard-specific.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>empty</p></td>
+<td><p>Infer the SimBoard archive path from Mache’s
+<code class="docutils literal notranslate"><span class="pre">web_portal.base_path</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>set</p></td>
+<td><p>Use the explicit <code class="docutils literal notranslate"><span class="pre">www</span></code> path and do not override it.
+<code class="docutils literal notranslate"><span class="pre">simboard.enabled</span></code> still controls SimBoard-specific validation
+(e.g., <code class="docutils literal notranslate"><span class="pre">simulation_type</span></code> must not be <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>empty, but path cannot be inferred</p></td>
+<td><p>Raise a clear configuration error.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="configuration-example">
+<h2>Configuration example<a class="headerlink" href="#configuration-example" title="Link to this heading"></a></h2>
+<div class="highlight-cfg notranslate"><div class="highlight"><pre><span></span><span class="k">[default]</span>
+<span class="na">case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">v3.LR.historical_0051</span>
+<span class="na">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/input</span>
+<span class="na">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/path/to/output</span>
+<span class="c1"># Leave www empty to let zppy infer it from Mache when simboard is enabled.</span>
+<span class="na">www</span><span class="w"> </span><span class="o">=</span>
+
+<span class="k">[simboard]</span>
+<span class="na">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
+<span class="na">simulation_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">development</span>
+</pre></div>
+</div>
+</section>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 10.0%" />
+<col style="width: 18.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Required</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enabled</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to enable SimBoard-compatible publishing behavior.
+When enabled and <code class="docutils literal notranslate"><span class="pre">[default]</span> <span class="pre">www</span></code> is empty, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> infers
+<code class="docutils literal notranslate"><span class="pre">www</span></code> from Mache’s <code class="docutils literal notranslate"><span class="pre">web_portal.base_path</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">simulation_type</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;development&quot;</span></code></p></td>
+<td><p>Diagnostic classification for the archive path. One of
+<code class="docutils literal notranslate"><span class="pre">&quot;production&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;development&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>.
+Must not be <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> when <code class="docutils literal notranslate"><span class="pre">enabled</span> <span class="pre">=</span> <span class="pre">True</span></code>.
+Defaults to <code class="docutils literal notranslate"><span class="pre">&quot;development&quot;</span></code> — see <a class="reference internal" href="#simboard-promotion"><span class="std std-ref">Promoting diagnostics from development to production</span></a> below.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">[simboard]</span></code> section does not support subsections.</p>
+</div>
+</section>
+<section id="before-you-publish">
+<h2>Before you publish<a class="headerlink" href="#before-you-publish" title="Link to this heading"></a></h2>
+<p>SimBoard links diagnostics to an <em>existing</em> SimBoard case; it does not
+create the case for you. Before running zppy with <code class="docutils literal notranslate"><span class="pre">[simboard]</span> <span class="pre">enabled</span> <span class="pre">=</span>
+<span class="pre">True</span></code>, confirm the following:</p>
+<ol class="arabic simple">
+<li><p>The intended case is already visible in SimBoard. If it is not,
+contact the SimBoard administrator (<a class="reference external" href="mailto:vo13&#37;&#52;&#48;llnl&#46;gov">Tom Vo</a>)
+before publishing.</p></li>
+<li><p>The provenance that zppy will record — <code class="docutils literal notranslate"><span class="pre">case_name</span></code>, <code class="docutils literal notranslate"><span class="pre">machine</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">hpc_username</span></code> — matches that SimBoard case.</p></li>
+<li><p>The archive layout that results from your <code class="docutils literal notranslate"><span class="pre">[simboard]</span></code> and
+<code class="docutils literal notranslate"><span class="pre">[default]</span></code> settings agrees with that provenance:</p>
+<ul class="simple">
+<li><p>Ungrouped output must land at <code class="docutils literal notranslate"><span class="pre">&lt;simulation_type&gt;/&lt;case&gt;</span></code>.</p></li>
+<li><p>Grouped output must land at
+<code class="docutils literal notranslate"><span class="pre">&lt;simulation_type&gt;/&lt;case_group&gt;/&lt;case&gt;</span></code>, using the <code class="docutils literal notranslate"><span class="pre">CASE_GROUP</span></code>
+value from your E3SM run script configuration (see the <code class="docutils literal notranslate"><span class="pre">&lt;case_group&gt;</span></code>
+inference described above). <code class="docutils literal notranslate"><span class="pre">CASE_GROUP</span></code> is not itself a zppy
+configuration option — zppy only reads it to build the path.</p></li>
+</ul>
+</li>
+</ol>
+<p>If the layout and the provenance disagree, SimBoard’s discovery process
+will not find the output, even if the diagnostics are otherwise published
+correctly.</p>
+</section>
+<section id="publishing-diagnostics-and-linking-the-case">
+<h2>Publishing diagnostics and linking the case<a class="headerlink" href="#publishing-diagnostics-and-linking-the-case" title="Link to this heading"></a></h2>
+<p>Once <code class="docutils literal notranslate"><span class="pre">[simboard]</span></code> is configured and the checklist above is satisfied:</p>
+<ol class="arabic simple">
+<li><p>Run and publish the zppy diagnostics using the configured
+<code class="docutils literal notranslate"><span class="pre">simulation_type</span></code>. This produces the <code class="docutils literal notranslate"><span class="pre">provenance.settings</span></code> file
+that SimBoard uses to discover and link the output.</p></li>
+<li><p>Confirm the published diagnostics output is complete and opens
+successfully in a browser.</p></li>
+<li><p>Confirm the completed output is at the archive path matching the
+grouped or ungrouped layout described above.</p></li>
+<li><p>Wait for the scheduled SimBoard scanner to link the case — linking is
+not immediate, and the scanner runs periodically (currently every 15
+minutes).</p></li>
+<li><p>Once the link appears, open the case in SimBoard and follow its
+diagnostics link.</p></li>
+</ol>
+<p>SimBoard’s discovery always uses the <em>latest valid</em> provenance for a
+published diagnostics case. If a run’s provenance is incomplete or
+invalid, re-run and re-publish the zppy diagnostics to regenerate it
+rather than editing the provenance file by hand — manually edited or
+stale provenance files are not used for discovery.</p>
+</section>
+<section id="promoting-diagnostics-from-development-to-production">
+<span id="simboard-promotion"></span><h2>Promoting diagnostics from development to production<a class="headerlink" href="#promoting-diagnostics-from-development-to-production" title="Link to this heading"></a></h2>
+<p>The default <code class="docutils literal notranslate"><span class="pre">simulation_type</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;development&quot;</span></code> rather than
+<code class="docutils literal notranslate"><span class="pre">&quot;production&quot;</span></code>. Accidentally placing development diagnostics under the
+<code class="docutils literal notranslate"><span class="pre">production</span></code> archive is more harmful than placing production diagnostics
+under <code class="docutils literal notranslate"><span class="pre">development</span></code>, so production is an explicit opt-in.</p>
+<p>To promote a run’s diagnostics to the production archive:</p>
+<ol class="arabic simple">
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">simulation_type</span></code> to be <code class="docutils literal notranslate"><span class="pre">production</span></code> on the SimBoard UI itself.</p></li>
+<li><p>Manually move (or copy) the existing diagnostic output from
+<code class="docutils literal notranslate"><span class="pre">&lt;web_portal_base_path&gt;/diagnostics_archive/development/&lt;case&gt;/</span></code> to
+<code class="docutils literal notranslate"><span class="pre">&lt;web_portal_base_path&gt;/diagnostics_archive/production/&lt;case&gt;/</span></code>.</p></li>
+</ol>
+<p>This move/copy is the only supported way to promote diagnostics.
+Promotion is a zppy-side archive change, not a SimBoard link update — do
+not expect SimBoard to move or re-link existing output on its own.</p>
+</section>
+<section id="stable-urls-and-moved-deleted-or-missing-output">
+<h2>Stable URLs and moved, deleted, or missing output<a class="headerlink" href="#stable-urls-and-moved-deleted-or-missing-output" title="Link to this heading"></a></h2>
+<p>The external URL SimBoard links to is stable for a given published case
+path: once a case is first linked, updating the content at that same
+path keeps working with the existing link.</p>
+<p>If diagnostics output is later deleted or moved to a different path:</p>
+<ul class="simple">
+<li><p>Restore the output at its original URL to keep the existing SimBoard
+link working, <strong>or</strong></p></li>
+<li><p>Manually update or remove the link in SimBoard.</p></li>
+</ul>
+<p>SimBoard does not dynamically check for or remove links whose external
+output has become unavailable, so a link left pointing at deleted or
+moved output will continue to appear valid in SimBoard until it is
+corrected.</p>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h2>
+<p><strong>The case does not receive a diagnostics link.</strong>
+Check, in order: the configured <code class="docutils literal notranslate"><span class="pre">simulation_type</span></code>; whether the output
+follows the correct grouped or ungrouped archive layout; whether the
+latest provenance and its paired settings file are present and valid;
+whether the case identity (<code class="docutils literal notranslate"><span class="pre">case_name</span></code>, <code class="docutils literal notranslate"><span class="pre">machine</span></code>, <code class="docutils literal notranslate"><span class="pre">hpc_username</span></code>)
+matches the SimBoard case; and whether the completed output is publicly
+accessible. If the link is still missing after checking all of these,
+contact <a class="reference external" href="mailto:vo13&#37;&#52;&#48;llnl&#46;gov">Tom Vo</a>.</p>
+<p><strong>The link opens the wrong output.</strong>
+Check <code class="docutils literal notranslate"><span class="pre">simulation_type</span></code>, <code class="docutils literal notranslate"><span class="pre">case_group</span></code>, and the published path.
+SimBoard does not semantically validate whether the <code class="docutils literal notranslate"><span class="pre">simulation_type</span></code>
+you chose is appropriate for the output — an incorrect value will still
+produce a link, just to the wrong place.</p>
+<p><strong>The link no longer opens.</strong>
+Restore the output at its original URL, or manually update or remove the
+SimBoard link — see <a class="reference internal" href="#stable-urls-and-moved-deleted-or-missing-output">Stable URLs and moved, deleted, or missing output</a>
+above.</p>
+<p>For SimBoard scanner implementation details beyond zppy’s configuration,
+see SimBoard’s own <a class="reference external" href="https://github.com/E3SM-Project/SimBoard/blob/main/docs/architecture/diagnostics-linkage.md">Diagnostics Linkage Architecture</a>
+documentation.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="bundle.html" class="btn btn-neutral float-left" title="bundle — Job Bundling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="climo.html" class="btn btn-neutral float-right" title="climo — Climatology Files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../../../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../../../v2.0.0/index.html">v2.0.0</a></dd>
+      <dd><a href="../../../v2.1.0/index.html">v2.1.0</a></dd>
+      <dd><a href="../../../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../../../v2.3.0/index.html">v2.3.0</a></dd>
+      <dd><a href="../../../v2.3.1/index.html">v2.3.1</a></dd>
+      <dd><a href="../../../v2.4.0/index.html">v2.4.0</a></dd>
+      <dd><a href="../../../v2.5.0/index.html">v2.5.0</a></dd>
+      <dd><a href="../../../v3.0.0/index.html">v3.0.0</a></dd>
+      <dd><a href="../../../v3.1.0/index.html">v3.1.0</a></dd>
+      <dd><a href="../../../v3.2.0/index.html">v3.2.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="simboard.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

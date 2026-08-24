@@ -127,16 +127,16 @@ Most of the file is task-specific, so it is difficult to describe precise steps.
 Some key parts, however, are displayed below:</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>#!/bin/bash
-{% include &#39;inclusions/slurm_header.bash&#39; %}
-{% include &#39;inclusions/boilerplate.bash&#39; %}
+{% include 'inclusions/slurm_header.bash' %}
+{% include 'inclusions/boilerplate.bash' %}
 
 set -e
 {{ environment_commands }}
 set +e
 
 set_pkg_manager
-echo &quot;${pkg_manager} list package-this-task-calls:&quot;
-${pkg_manager} list package-this-task-calls || true # If we can&#39;t print this, just continue on.
+echo "${pkg_manager} list package-this-task-calls:"
+${pkg_manager} list package-this-task-calls || true # If we can't print this, just continue on.
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Update status file and exit
@@ -145,9 +145,9 @@ ENDTIME=$(date +%s)
 ELAPSEDTIME=$(($ENDTIME - $STARTTIME))
 {% endraw %}
 echo ==============================================
-echo &quot;Elapsed time: $ELAPSEDTIME seconds&quot;
+echo "Elapsed time: $ELAPSEDTIME seconds"
 echo ==============================================
-echo &#39;OK&#39; &gt; {{ prefix }}.status
+echo 'OK' &gt; {{ prefix }}.status
 exit 0
 </pre></div>
 </div>
@@ -179,13 +179,13 @@ below example, adapted from <code class="docutils literal notranslate"><span cla
 
     <span class="c1"># Initialize jinja2 template engine</span>
     <span class="n">templateLoader</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">FileSystemLoader</span><span class="p">(</span>
-        <span class="n">searchpath</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">][</span><span class="s2">&quot;templateDir&quot;</span><span class="p">]</span>
+        <span class="n">searchpath</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">"default"</span><span class="p">][</span><span class="s2">"templateDir"</span><span class="p">]</span>
     <span class="p">)</span>
     <span class="n">templateEnv</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">templateLoader</span><span class="p">)</span>
-    <span class="n">template</span> <span class="o">=</span> <span class="n">templateEnv</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s2">&quot;&lt;task-name&gt;.bash&quot;</span><span class="p">)</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">templateEnv</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s2">"&lt;task-name&gt;.bash"</span><span class="p">)</span>
 
     <span class="c1"># --- List of &lt;task-name&gt; tasks ---</span>
-    <span class="n">tasks</span> <span class="o">=</span> <span class="n">getTasks</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;&lt;task-name&gt;&quot;</span><span class="p">)</span>
+    <span class="n">tasks</span> <span class="o">=</span> <span class="n">getTasks</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"&lt;task-name&gt;"</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span>
 
@@ -193,32 +193,32 @@ below example, adapted from <code class="docutils literal notranslate"><span cla
     <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
 
         <span class="c1"># Loop over year sets</span>
-        <span class="n">year_sets</span> <span class="o">=</span> <span class="n">getYears</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s2">&quot;years&quot;</span><span class="p">])</span>
+        <span class="n">year_sets</span> <span class="o">=</span> <span class="n">getYears</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s2">"years"</span><span class="p">])</span>
         <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">year_sets</span><span class="p">:</span>
-            <span class="n">c</span><span class="p">[</span><span class="s2">&quot;year1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">c</span><span class="p">[</span><span class="s2">&quot;year2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">c</span><span class="p">[</span><span class="s2">&quot;scriptDir&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scriptDir</span>
-            <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;subsection&quot;</span><span class="p">]:</span>
-                <span class="n">sub</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;subsection&quot;</span><span class="p">]</span>
+            <span class="n">c</span><span class="p">[</span><span class="s2">"year1"</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">c</span><span class="p">[</span><span class="s2">"year2"</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">c</span><span class="p">[</span><span class="s2">"scriptDir"</span><span class="p">]</span> <span class="o">=</span> <span class="n">scriptDir</span>
+            <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s2">"subsection"</span><span class="p">]:</span>
+                <span class="n">sub</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s2">"subsection"</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">sub</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;grid&quot;</span><span class="p">]</span>
-            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;&lt;task-name&gt;_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%04d</span><span class="s2">-</span><span class="si">%04d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">sub</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s2">"grid"</span><span class="p">]</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="s2">"&lt;task-name&gt;_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%04d</span><span class="s2">-</span><span class="si">%04d</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span>
                 <span class="n">sub</span><span class="p">,</span>
-                <span class="n">c</span><span class="p">[</span><span class="s2">&quot;tag&quot;</span><span class="p">],</span>
-                <span class="n">c</span><span class="p">[</span><span class="s2">&quot;year1&quot;</span><span class="p">],</span>
-                <span class="n">c</span><span class="p">[</span><span class="s2">&quot;year2&quot;</span><span class="p">],</span>
+                <span class="n">c</span><span class="p">[</span><span class="s2">"tag"</span><span class="p">],</span>
+                <span class="n">c</span><span class="p">[</span><span class="s2">"year1"</span><span class="p">],</span>
+                <span class="n">c</span><span class="p">[</span><span class="s2">"year2"</span><span class="p">],</span>
             <span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
-            <span class="n">c</span><span class="p">[</span><span class="s2">&quot;prefix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefix</span>
-            <span class="n">scriptFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.bash&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">))</span>
-            <span class="n">statusFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.status&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">))</span>
-            <span class="n">settingsFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.settings&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">))</span>
+            <span class="n">c</span><span class="p">[</span><span class="s2">"prefix"</span><span class="p">]</span> <span class="o">=</span> <span class="n">prefix</span>
+            <span class="n">scriptFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s2">"</span><span class="si">%s</span><span class="s2">.bash"</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">))</span>
+            <span class="n">statusFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s2">"</span><span class="si">%s</span><span class="s2">.status"</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">))</span>
+            <span class="n">settingsFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s2">"</span><span class="si">%s</span><span class="s2">.settings"</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">))</span>
             <span class="n">skip</span> <span class="o">=</span> <span class="n">checkStatus</span><span class="p">(</span><span class="n">statusFile</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">skip</span><span class="p">:</span>
                 <span class="k">continue</span>
 
             <span class="c1"># Create script</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">scriptFile</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">scriptFile</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">c</span><span class="p">))</span>
 
             <span class="c1"># List of dependencies</span>
@@ -226,23 +226,23 @@ below example, adapted from <code class="docutils literal notranslate"><span cla
 
            <span class="c1"># Add dependencies</span>
            <span class="c1"># Example:</span>
-           <span class="n">dependencies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_</span><span class="si">%04d</span><span class="s2">-</span><span class="si">%04d</span><span class="s2">.status&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="o">&lt;</span><span class="n">name</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">dependency</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;year1&quot;</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;year2&quot;</span><span class="p">]),))</span>
+           <span class="n">dependencies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s2">"</span><span class="si">%s</span><span class="s2">_</span><span class="si">%04d</span><span class="s2">-</span><span class="si">%04d</span><span class="s2">.status"</span> <span class="o">%</span> <span class="p">(</span><span class="o">&lt;</span><span class="n">name</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">dependency</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">c</span><span class="p">[</span><span class="s2">"year1"</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="s2">"year2"</span><span class="p">]),))</span>
 
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">settingsFile</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">sf</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">settingsFile</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">sf</span><span class="p">:</span>
                 <span class="n">p</span> <span class="o">=</span> <span class="n">pprint</span><span class="o">.</span><span class="n">PrettyPrinter</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">sf</span><span class="p">)</span>
                 <span class="n">p</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
                 <span class="n">p</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;dry_run&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="p">[</span><span class="s2">"dry_run"</span><span class="p">]:</span>
                 <span class="c1"># Submit job</span>
                 <span class="n">jobid</span> <span class="o">=</span> <span class="n">submitScript</span><span class="p">(</span>
-                    <span class="n">scriptFile</span><span class="p">,</span> <span class="n">dependFiles</span><span class="o">=</span><span class="n">dependencies</span><span class="p">,</span> <span class="n">export</span><span class="o">=</span><span class="s2">&quot;NONE&quot;</span>
+                    <span class="n">scriptFile</span><span class="p">,</span> <span class="n">dependFiles</span><span class="o">=</span><span class="n">dependencies</span><span class="p">,</span> <span class="n">export</span><span class="o">=</span><span class="s2">"NONE"</span>
                 <span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">jobid</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
                     <span class="c1"># Update status file</span>
-                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">statusFile</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;WAITING </span><span class="si">%d</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">jobid</span><span class="p">))</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">statusFile</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"WAITING </span><span class="si">%d</span><span class="se">\n</span><span class="s2">"</span> <span class="o">%</span> <span class="p">(</span><span class="n">jobid</span><span class="p">))</span>
 </pre></div>
 </div>
 </div></blockquote>

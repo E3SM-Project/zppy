@@ -153,7 +153,7 @@
 <p>In your Markdown report, make a table like:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">|</span> <span class="n">Package</span> <span class="o">|</span> <span class="n">Changes</span> <span class="n">since</span> <span class="n">expected</span> <span class="n">results</span> <span class="n">were</span> <span class="n">updated</span> <span class="o">|</span>
 <span class="o">|</span> <span class="o">---</span> <span class="o">|</span> <span class="o">---</span> <span class="o">|</span>
-<span class="o">|</span> <span class="p">[</span><span class="n">package</span> <span class="n">name</span><span class="p">](</span><span class="n">link</span> <span class="n">to</span> <span class="n">package</span><span class="s1">&#39;s commit log) | Links to all PRs merged since the expected results were updated |</span>
+<span class="o">|</span> <span class="p">[</span><span class="n">package</span> <span class="n">name</span><span class="p">](</span><span class="n">link</span> <span class="n">to</span> <span class="n">package</span><span class="s1">'s commit log) | Links to all PRs merged since the expected results were updated |</span>
 <span class="o">...</span>
 </pre></div>
 </div>
@@ -181,7 +181,7 @@ activate_dev_env<span class="o">()</span>
 <span class="w">    </span><span class="c1"># The dev.yml file may be in a different directory.</span>
 <span class="w">    </span><span class="c1"># e3sm_to_cmip, e3sm_diags: use conda-dev/</span>
 <span class="w">    </span><span class="c1"># zppy-interfaces, zppy: use conda/</span>
-<span class="w">    </span><span class="c1"># MPAS-Analysis: don&#39;t use this command, instead use:</span>
+<span class="w">    </span><span class="c1"># MPAS-Analysis: don't use this command, instead use:</span>
 <span class="w">    </span><span class="c1"># conda create --name ${env_name} --file dev-spec.txt --yes</span>
 <span class="w">    </span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>conda/dev.yml<span class="w"> </span>-n<span class="w"> </span><span class="si">${</span><span class="nv">env_name</span><span class="si">}</span>
 <span class="w">    </span>conda<span class="w"> </span>activate<span class="w"> </span><span class="si">${</span><span class="nv">env_name</span><span class="si">}</span>
@@ -265,9 +265,9 @@ activate_unified_env<span class="o">()</span>
 <span class="w">    </span><span class="c1"># If there are uncommitted changes,</span>
 <span class="w">    </span><span class="c1"># commit them so we can move cleanly to a new branch:</span>
 <span class="w">    </span>git<span class="w"> </span>add<span class="w"> </span>-A
-<span class="w">    </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Checkpoint&quot;</span>
+<span class="w">    </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Checkpoint"</span>
 
-<span class="w">    </span>git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span><span class="si">${</span><span class="nv">main_branch_name</span><span class="si">}</span><span class="w"> </span><span class="c1"># This assumes you&#39;ve named your remote for the main repo as &quot;upstream&quot;</span>
+<span class="w">    </span>git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span><span class="si">${</span><span class="nv">main_branch_name</span><span class="si">}</span><span class="w"> </span><span class="c1"># This assumes you've named your remote for the main repo as "upstream"</span>
 <span class="w">    </span>git<span class="w"> </span>checkout<span class="w"> </span><span class="si">${</span><span class="nv">main_branch_name</span><span class="si">}</span>
 <span class="w">    </span>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>upstream/<span class="si">${</span><span class="nv">main_branch_name</span><span class="si">}</span>
 <span class="w">    </span>git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span>
@@ -280,8 +280,8 @@ activate_unified_env<span class="o">()</span>
 <span class="w">    </span><span class="c1"># Activate EITHER a dev environment or the Unified env:</span>
 <span class="w">    </span><span class="c1"># Dev environment -- test latest development</span>
 <span class="w">    </span><span class="c1"># Unified environment -- test latest Unified environment</span>
-<span class="w">    </span>activate_dev_env<span class="w"> </span><span class="si">${</span><span class="nv">repo_name</span><span class="si">}</span>-yyyymmdd<span class="w"> </span><span class="c1"># Use today&#39;s date</span>
-<span class="w">    </span><span class="c1"># OR: activate_unified_env ${repo_name}-yyyymmdd # Use today&#39;s date</span>
+<span class="w">    </span>activate_dev_env<span class="w"> </span><span class="si">${</span><span class="nv">repo_name</span><span class="si">}</span>-yyyymmdd<span class="w"> </span><span class="c1"># Use today's date</span>
+<span class="w">    </span><span class="c1"># OR: activate_unified_env ${repo_name}-yyyymmdd # Use today's date</span>
 <span class="o">}</span>
 </pre></div>
 </div>
@@ -316,10 +316,10 @@ git<span class="w"> </span>status<span class="w"> </span><span class="c1"># Chec
 <span class="c1"># If there are uncommitted changes,</span>
 <span class="c1"># commit them so we can move cleanly to a new branch:</span>
 git<span class="w"> </span>add<span class="w"> </span>-A
-git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Checkpoint&quot;</span>
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Checkpoint"</span>
 
-git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span>main<span class="w"> </span><span class="c1"># This assumes you&#39;ve named your remote for the main repo as &quot;upstream&quot;</span>
-git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>test-zppy-yyyymmdd<span class="w"> </span>upstream/main<span class="w"> </span><span class="c1"># Use today&#39;s date</span>
+git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span>main<span class="w"> </span><span class="c1"># This assumes you've named your remote for the main repo as "upstream"</span>
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>test-zppy-yyyymmdd<span class="w"> </span>upstream/main<span class="w"> </span><span class="c1"># Use today's date</span>
 git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span>
 <span class="c1"># Check that this matches the corresponding commit log:</span>
 <span class="c1"># https://github.com/E3SM-Project/zppy/commits/main</span>
@@ -328,8 +328,8 @@ start_bash_subshell
 <span class="c1"># Activate EITHER a dev environment or the Unified env:</span>
 <span class="c1"># Dev environment -- test latest development</span>
 <span class="c1"># Unified environment -- test latest Unified environment</span>
-activate_dev_env<span class="w"> </span>zppy-yyyymmdd<span class="w"> </span><span class="c1"># Use today&#39;s date</span>
-<span class="c1"># OR: activate_unified_env zppy-yyyymmdd # Use today&#39;s date</span>
+activate_dev_env<span class="w"> </span>zppy-yyyymmdd<span class="w"> </span><span class="c1"># Use today's date</span>
+<span class="c1"># OR: activate_unified_env zppy-yyyymmdd # Use today's date</span>
 
 <span class="c1"># Note the Python version being used</span>
 <span class="c1"># If you activated dev env:</span>
@@ -370,46 +370,46 @@ pytest<span class="w"> </span>tests/test_*.py<span class="w"> </span><span class
 <p>Be sure to set the <code class="docutils literal notranslate"><span class="pre">unique_id</span></code>; this allows us to avoid path name collisions.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">TEST_SPECIFICS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
     <span class="c1"># This is the NCO path.</span>
-    <span class="c1"># Keep as &quot;&quot; to use the production-version NCO commands.</span>
+    <span class="c1"># Keep as "" to use the production-version NCO commands.</span>
     <span class="c1"># Set to a specific path to use development-version NCO commands.</span>
-    <span class="s2">&quot;nco_path&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="s2">"nco_path"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
     <span class="c1"># These are custom environment_commands for specific tasks.</span>
-    <span class="c1"># Never set these to &quot;&quot;, because they will print the line</span>
-    <span class="c1"># `environment_commands = &quot;&quot;` for the corresponding task,</span>
+    <span class="c1"># Never set these to "", because they will print the line</span>
+    <span class="c1"># `environment_commands = ""` for the corresponding task,</span>
     <span class="c1"># thus overriding the value set higher up in the cfg.</span>
     <span class="c1"># That is, there will be no environment set.</span>
-    <span class="c1"># (`environment_commands = &quot;&quot;` only redirects to Unified</span>
+    <span class="c1"># (`environment_commands = ""` only redirects to Unified</span>
     <span class="c1"># if specified under the [default] task)</span>
-    <span class="s2">&quot;e3sm_to_cmip_environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;diags_environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;mpas_analysis_environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;global_time_series_environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;livvkit_environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;pcmdi_diags_environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="s2">"e3sm_to_cmip_environment_commands"</span><span class="p">:</span> <span class="s2">"</span><span class="si">{env_cmd}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="s2">"diags_environment_commands"</span><span class="p">:</span> <span class="s2">"</span><span class="si">{env_cmd}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="s2">"mpas_analysis_environment_commands"</span><span class="p">:</span> <span class="s2">"</span><span class="si">{env_cmd}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="s2">"global_time_series_environment_commands"</span><span class="p">:</span> <span class="s2">"</span><span class="si">{env_cmd}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="s2">"livvkit_environment_commands"</span><span class="p">:</span> <span class="s2">"</span><span class="si">{env_cmd}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="s2">"pcmdi_diags_environment_commands"</span><span class="p">:</span> <span class="s2">"</span><span class="si">{env_cmd}</span><span class="s2">"</span><span class="p">,</span>
     <span class="c1"># This is the environment setup for other tasks.</span>
-    <span class="c1"># Leave as &quot;&quot; to use the latest Unified environment.</span>
-    <span class="s2">&quot;environment_commands&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{env_cmd}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="c1"># Leave as "" to use the latest Unified environment.</span>
+    <span class="s2">"environment_commands"</span><span class="p">:</span> <span class="s2">"</span><span class="si">{env_cmd}</span><span class="s2">"</span><span class="p">,</span>
     <span class="c1"># For a complete test, run the set of latest cfgs and at least one set of legacy cfgs</span>
-    <span class="s2">&quot;cfgs_to_run&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="s2">&quot;weekly_bundles&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis, Compy</span>
-        <span class="s2">&quot;weekly_comprehensive_v2&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis, Compy</span>
-        <span class="s2">&quot;weekly_comprehensive_v3&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on all 3 machines</span>
-        <span class="s2">&quot;weekly_legacy_3.1.0_bundles&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
-        <span class="s2">&quot;weekly_legacy_3.1.0_comprehensive_v2&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
-        <span class="s2">&quot;weekly_legacy_3.1.0_comprehensive_v3&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
-        <span class="s2">&quot;weekly_legacy_3.0.0_bundles&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
-        <span class="s2">&quot;weekly_legacy_3.0.0_comprehensive_v2&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
-        <span class="s2">&quot;weekly_legacy_3.0.0_comprehensive_v3&quot;</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
+    <span class="s2">"cfgs_to_run"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"weekly_bundles"</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis, Compy</span>
+        <span class="s2">"weekly_comprehensive_v2"</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis, Compy</span>
+        <span class="s2">"weekly_comprehensive_v3"</span><span class="p">,</span> <span class="c1"># Typically, we run on all 3 machines</span>
+        <span class="s2">"weekly_legacy_3.1.0_bundles"</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
+        <span class="s2">"weekly_legacy_3.1.0_comprehensive_v2"</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
+        <span class="s2">"weekly_legacy_3.1.0_comprehensive_v3"</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
+        <span class="s2">"weekly_legacy_3.0.0_bundles"</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
+        <span class="s2">"weekly_legacy_3.0.0_comprehensive_v2"</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
+        <span class="s2">"weekly_legacy_3.0.0_comprehensive_v3"</span><span class="p">,</span> <span class="c1"># Typically, we run on Chrysalis</span>
     <span class="p">],</span>
-    <span class="s2">&quot;tasks_to_run&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="s2">&quot;e3sm_diags&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;mpas_analysis&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;global_time_series&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;ilamb&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;livvkit&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;pcmdi_diags&quot;</span><span class="p">,</span>
+    <span class="s2">"tasks_to_run"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"e3sm_diags"</span><span class="p">,</span>
+        <span class="s2">"mpas_analysis"</span><span class="p">,</span>
+        <span class="s2">"global_time_series"</span><span class="p">,</span>
+        <span class="s2">"ilamb"</span><span class="p">,</span>
+        <span class="s2">"livvkit"</span><span class="p">,</span>
+        <span class="s2">"pcmdi_diags"</span><span class="p">,</span>
     <span class="p">],</span>
-    <span class="s2">&quot;unique_id&quot;</span><span class="p">:</span> <span class="s2">&quot;test_zppy_yyyymmdd&quot;</span><span class="p">,</span> <span class="c1"># Use today&#39;s date</span>
+    <span class="s2">"unique_id"</span><span class="p">:</span> <span class="s2">"test_zppy_yyyymmdd"</span><span class="p">,</span> <span class="c1"># Use today's date</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -418,12 +418,12 @@ python<span class="w"> </span>tests/integration/utils.py
 <span class="c1"># This will generate the actual test cfgs based off the templates.</span>
 
 <span class="c1"># Set up an alias for checking jobs:</span>
-<span class="nb">alias</span><span class="w"> </span><span class="nv">sqa</span><span class="o">=</span><span class="s1">&#39;squeue -o &quot;%8u %.7a %.4D %.9P %7i %.2t %.10r %.10M %.10l %.8Q %j&quot; --sort=P,-t,-p&#39;</span>
-<span class="nb">alias</span><span class="w"> </span><span class="nv">sq</span><span class="o">=</span><span class="s1">&#39;sqa -u $USER&#39;</span>
+<span class="nb">alias</span><span class="w"> </span><span class="nv">sqa</span><span class="o">=</span><span class="s1">'squeue -o "%8u %.7a %.4D %.9P %7i %.2t %.10r %.10M %.10l %.8Q %j" --sort=P,-t,-p'</span>
+<span class="nb">alias</span><span class="w"> </span><span class="nv">sq</span><span class="o">=</span><span class="s1">'sqa -u $USER'</span>
 
 sq
 <span class="c1"># Check that you have no jobs currently queued.</span>
-<span class="c1"># It&#39;s ok if you do, but it makes counting remaining zppy jobs easier if you don&#39;t have any existing jobs.</span>
+<span class="c1"># It's ok if you do, but it makes counting remaining zppy jobs easier if you don't have any existing jobs.</span>
 
 <span class="c1"># Typically run on Chrysalis, Compy, Perlmutter:</span>
 zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_comprehensive_v3_chrysalis.cfg
@@ -452,20 +452,20 @@ sq<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<spa
 <p>This section is only relevant only if you’re running the <code class="docutils literal notranslate"><span class="pre">_bundles_</span></code> jobs. Only run the lines relevant to the jobs you launched in step 5.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check on bundles status</span>
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_bundles_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
 
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.1.0_bundles_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
 
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.0.0_bundles_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
 
 <span class="c1"># Now, run bundles part 2</span>
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">repo_parent_dir</span><span class="si">}</span>/zppy
 git<span class="w"> </span>status
 <span class="c1"># You might have changed branches while you were waiting for jobs to finish.</span>
-<span class="c1"># Make sure you&#39;re now back on the correct branch: test-zppy-yyyymmdd</span>
-<span class="c1"># Also confirm you&#39;re back in the correct env: zppy-yyyymmdd or the Unified env</span>
+<span class="c1"># Make sure you're now back on the correct branch: test-zppy-yyyymmdd</span>
+<span class="c1"># Also confirm you're back in the correct env: zppy-yyyymmdd or the Unified env</span>
 
 
 zppy<span class="w"> </span>-c<span class="w"> </span>tests/integration/generated/test_weekly_bundles_chrysalis.cfg
@@ -481,33 +481,33 @@ sq<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<spa
 <p>Only run the lines relevant to the jobs you launched in steps 5/6.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1">### v2  ###</span>
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_comprehensive_v2_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v2.LR.historical_0201/post/scripts
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
 
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.0.0_comprehensive_v2_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v2.LR.historical_0201/post/scripts
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
 
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.1.0_comprehensive_v2_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v2.LR.historical_0201/post/scripts
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
 
 <span class="c1">### v3 ###</span>
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_comprehensive_v3_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
 
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.0.0_comprehensive_v3_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
 
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.1.0_comprehensive_v3_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
 
 <span class="c1">### bundles ###</span>
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_bundles_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
 
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.0.0_bundles_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
 
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">output_dir</span><span class="si">}</span>/zppy_weekly_legacy_3.1.0_bundles_output/<span class="si">${</span><span class="nv">unique_id</span><span class="si">}</span>/v3.LR.historical_0051/post/scripts
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># Confirm no non-OK statuses appear</span>
 </pre></div>
 </div>
 <p>In your Markdown report, any of the output subdirectories that had non-OK statuses.</p>
@@ -543,10 +543,10 @@ grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">repo_parent_dir</span><span class="si">}</span>/zppy
 git<span class="w"> </span>status
 <span class="c1"># You might have changed branches while you were waiting for jobs to finish.</span>
-<span class="c1"># Make sure you&#39;re now back on the correct branch: test-zppy-yyyymmdd</span>
-<span class="c1"># Also confirm you&#39;re back in the correct env: zppy-yyyymmdd or the Unified env</span>
+<span class="c1"># Make sure you're now back on the correct branch: test-zppy-yyyymmdd</span>
+<span class="c1"># Also confirm you're back in the correct env: zppy-yyyymmdd or the Unified env</span>
 
-<span class="c1"># This test doesn&#39;t make use of an expected results directory.</span>
+<span class="c1"># This test doesn't make use of an expected results directory.</span>
 pytest<span class="w"> </span>tests/integration/test_last_year.py
 
 <span class="c1"># These tests do make use of an expected results directory.</span>
@@ -559,7 +559,7 @@ pytest<span class="w"> </span>tests/integration/test_defaults.py
 <span class="c1"># AND rely on the jobs we just ran:</span>
 <span class="c1"># 1. The bundles test:</span>
 pytest<span class="w"> </span>tests/integration/test_bundles.py
-<span class="c1"># 2. The image checker test, which we&#39;ll run from a compute node:</span>
+<span class="c1"># 2. The image checker test, which we'll run from a compute node:</span>
 launch_compute_node
 
 start_bash_subshell

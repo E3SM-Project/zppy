@@ -115,132 +115,132 @@ must be changed for use on other machines. These include the paths for
 <span class="linenos">  5</span><span class="na">case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">20210122.v2_test01.piControl.ne30pg2_EC30to60E2r2-1900_ICG.chrysalis</span>
 <span class="linenos">  6</span><span class="na">www</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&lt;www&gt;</span>
 <span class="linenos">  7</span><span class="na">partition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">compute</span>
-<span class="linenos">  8</span><span class="na">campaign</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;water_cycle&quot;</span>
+<span class="linenos">  8</span><span class="na">campaign</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"water_cycle"</span>
 <span class="linenos">  9</span>
 <span class="linenos"> 10</span><span class="c1"># Regridded atmosphere climatologies every 20 and 50 years</span>
 <span class="linenos"> 11</span><span class="k">[climo]</span>
 <span class="linenos"> 12</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos"> 13</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1:100:20&quot;</span><span class="na">, &quot;1</span><span class="o">:</span><span class="s">100:50&quot;,</span>
+<span class="linenos"> 13</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1:100:20"</span><span class="na">, "1</span><span class="o">:</span><span class="s">100:50",</span>
 <span class="linenos"> 14</span><span class="c1"># Use default vars</span>
 <span class="linenos"> 15</span>
 <span class="linenos"> 16</span><span class="w">  </span><span class="c1"># Monthly climatology</span>
 <span class="linenos"> 17</span><span class="w">  </span><span class="k">[[ atm_monthly_180x360_aave ]]</span>
 <span class="linenos"> 18</span><span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/home/ac.zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</span>
-<span class="linenos"> 19</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;monthly&quot;</span>
+<span class="linenos"> 19</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"monthly"</span>
 <span class="linenos"> 20</span>
 <span class="linenos"> 21</span><span class="w">  </span><span class="c1"># Diurnal climatology (specifically, 3-hour increments of a day averaged over every day of a month)</span>
 <span class="linenos"> 22</span><span class="w">  </span><span class="k">[[ atm_monthly_diurnal_8xdaily_180x360_aave ]]</span>
-<span class="linenos"> 23</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;archive/atm/hist&quot;</span>
-<span class="linenos"> 24</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;eam.h4&quot;</span>
+<span class="linenos"> 23</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"archive/atm/hist"</span>
+<span class="linenos"> 24</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"eam.h4"</span>
 <span class="linenos"> 25</span><span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/home/ac.zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</span>
-<span class="linenos"> 26</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;PRECT&quot;</span>
-<span class="linenos"> 27</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;diurnal_8xdaily&quot;</span>
+<span class="linenos"> 26</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"PRECT"</span>
+<span class="linenos"> 27</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"diurnal_8xdaily"</span>
 <span class="linenos"> 28</span>
 <span class="linenos"> 29</span><span class="c1"># Regridded atmosphere monthly time series files in 10 year chunks</span>
 <span class="linenos"> 30</span><span class="k">[ts]</span>
 <span class="linenos"> 31</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos"> 32</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1:100:10&quot;</span><span class="na">,</span>
+<span class="linenos"> 32</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1:100:10"</span><span class="na">,</span>
 <span class="linenos"> 33</span>
 <span class="linenos"> 34</span><span class="w">  </span><span class="c1"># Monthly time series</span>
 <span class="linenos"> 35</span><span class="w">  </span><span class="k">[[ atm_monthly_180x360_aave ]]</span>
-<span class="linenos"> 36</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;archive/atm/hist&quot;</span>
-<span class="linenos"> 37</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;eam.h0&quot;</span>
-<span class="linenos"> 38</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;monthly&quot;</span>
+<span class="linenos"> 36</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"archive/atm/hist"</span>
+<span class="linenos"> 37</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"eam.h0"</span>
+<span class="linenos"> 38</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"monthly"</span>
 <span class="linenos"> 39</span><span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/home/ac.zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</span>
 <span class="linenos"> 40</span><span class="w">  </span><span class="c1"># Use default vars</span>
 <span class="linenos"> 41</span>
 <span class="linenos"> 42</span><span class="w">  </span><span class="c1"># Daily time series</span>
 <span class="linenos"> 43</span><span class="w">  </span><span class="k">[[ atm_daily_180x360_aave ]]</span>
-<span class="linenos"> 44</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;archive/atm/hist&quot;</span>
-<span class="linenos"> 45</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;eam.h1&quot;</span>
-<span class="linenos"> 46</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;daily&quot;</span>
+<span class="linenos"> 44</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"archive/atm/hist"</span>
+<span class="linenos"> 45</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"eam.h1"</span>
+<span class="linenos"> 46</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"daily"</span>
 <span class="linenos"> 47</span><span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/home/ac.zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</span>
-<span class="linenos"> 48</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;PRECT&quot;</span>
+<span class="linenos"> 48</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"PRECT"</span>
 <span class="linenos"> 49</span>
 <span class="linenos"> 50</span><span class="w">  </span><span class="c1"># Monthly global time series</span>
 <span class="linenos"> 51</span><span class="w">  </span><span class="k">[[ atm_monthly_glb ]]</span>
-<span class="linenos"> 52</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;archive/atm/hist&quot;</span>
-<span class="linenos"> 53</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;eam.h0&quot;</span>
-<span class="linenos"> 54</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;monthly&quot;</span>
-<span class="linenos"> 55</span><span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;glb&quot;</span>
+<span class="linenos"> 52</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"archive/atm/hist"</span>
+<span class="linenos"> 53</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"eam.h0"</span>
+<span class="linenos"> 54</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"monthly"</span>
+<span class="linenos"> 55</span><span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"glb"</span>
 <span class="linenos"> 56</span><span class="w">  </span><span class="c1"># Use default vars</span>
 <span class="linenos"> 57</span>
 <span class="linenos"> 58</span><span class="w">  </span><span class="c1"># Monthly land time series</span>
 <span class="linenos"> 59</span><span class="w">  </span><span class="k">[[ land_monthly ]]</span>
-<span class="linenos"> 60</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;archive/lnd/hist&quot;</span>
-<span class="linenos"> 61</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;elm.h0&quot;</span>
-<span class="linenos"> 62</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;monthly&quot;</span>
+<span class="linenos"> 60</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"archive/lnd/hist"</span>
+<span class="linenos"> 61</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"elm.h0"</span>
+<span class="linenos"> 62</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"monthly"</span>
 <span class="linenos"> 63</span><span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/home/ac.zender/data/maps/map_ne30pg2_to_cmip6_180x360_aave.20200201.nc</span>
-<span class="linenos"> 64</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;FSH,RH2M&quot;</span>
+<span class="linenos"> 64</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"FSH,RH2M"</span>
 <span class="linenos"> 65</span>
 <span class="linenos"> 66</span><span class="w">  </span><span class="k">[[ rof_monthly ]]</span>
-<span class="linenos"> 67</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;archive/rof/hist&quot;</span>
-<span class="linenos"> 68</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;mosart.h0&quot;</span>
-<span class="linenos"> 69</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;monthly&quot;</span>
-<span class="linenos"> 70</span><span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;&quot;</span>
-<span class="linenos"> 71</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;RIVER_DISCHARGE_OVER_LAND_LIQ&quot;</span>
-<span class="linenos"> 72</span><span class="w">  </span><span class="na">extra_vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;areatotal2&#39;</span>
+<span class="linenos"> 67</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"archive/rof/hist"</span>
+<span class="linenos"> 68</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"mosart.h0"</span>
+<span class="linenos"> 69</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"monthly"</span>
+<span class="linenos"> 70</span><span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">""</span>
+<span class="linenos"> 71</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"RIVER_DISCHARGE_OVER_LAND_LIQ"</span>
+<span class="linenos"> 72</span><span class="w">  </span><span class="na">extra_vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'areatotal2'</span>
 <span class="linenos"> 73</span>
 <span class="linenos"> 74</span><span class="k">[tc_analysis]</span>
 <span class="linenos"> 75</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">boolean(default=True)</span>
-<span class="linenos"> 76</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1:100:20&quot;</span><span class="na">, &quot;1</span><span class="o">:</span><span class="s">100:50&quot;,</span>
+<span class="linenos"> 76</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1:100:20"</span><span class="na">, "1</span><span class="o">:</span><span class="s">100:50",</span>
 <span class="linenos"> 77</span>
 <span class="linenos"> 78</span><span class="c1"># E3SM Diags every 20 and 50 years</span>
 <span class="linenos"> 79</span><span class="k">[e3sm_diags]</span>
 <span class="linenos"> 80</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos"> 81</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1:100:20&quot;</span><span class="na">, &quot;1</span><span class="o">:</span><span class="s">100:50&quot;,</span>
+<span class="linenos"> 81</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1:100:20"</span><span class="na">, "1</span><span class="o">:</span><span class="s">100:50",</span>
 <span class="linenos"> 82</span><span class="na">ts_num_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">10</span>
 <span class="linenos"> 83</span>
 <span class="linenos"> 84</span><span class="w">  </span><span class="c1"># Monthly diagnostics</span>
 <span class="linenos"> 85</span><span class="w">  </span><span class="k">[[ atm_monthly_180x360_aave ]]</span>
-<span class="linenos"> 86</span><span class="w">  </span><span class="na">short_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;20210122.v2_test01.piControl.ne30pg2_EC30to60E2r2-1900_ICG.chrysalis&#39;</span>
-<span class="linenos"> 87</span><span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;180x360_aave&#39;</span>
-<span class="linenos"> 88</span><span class="w">  </span><span class="na">reference_data_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/climatology&#39;</span>
+<span class="linenos"> 86</span><span class="w">  </span><span class="na">short_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'20210122.v2_test01.piControl.ne30pg2_EC30to60E2r2-1900_ICG.chrysalis'</span>
+<span class="linenos"> 87</span><span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'180x360_aave'</span>
+<span class="linenos"> 88</span><span class="w">  </span><span class="na">reference_data_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/climatology'</span>
 <span class="linenos"> 89</span><span class="w">  </span><span class="c1"># These two lines need to be included if sets requiring time series files are being run.</span>
-<span class="linenos"> 90</span><span class="w">  </span><span class="na">obs_ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/time-series&#39;</span>
+<span class="linenos"> 90</span><span class="w">  </span><span class="na">obs_ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/time-series'</span>
 <span class="linenos"> 91</span><span class="w">  </span><span class="na">ref_start_yr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1979</span>
 <span class="linenos"> 92</span><span class="w">  </span><span class="c1"># This needs to be set for QBO Diags</span>
 <span class="linenos"> 93</span><span class="w">  </span><span class="na">ref_final_yr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">2016</span>
 <span class="linenos"> 94</span><span class="w">  </span><span class="c1"># This needs to be set for streamflow diags</span>
-<span class="linenos"> 95</span><span class="w">  </span><span class="na">streamflow_obs_ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/time-series/&#39;</span>
+<span class="linenos"> 95</span><span class="w">  </span><span class="na">streamflow_obs_ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/time-series/'</span>
 <span class="linenos"> 96</span><span class="w">  </span><span class="c1"># These three lines need to be included if diurnal cycle diagnostics are being run.</span>
-<span class="linenos"> 97</span><span class="w">  </span><span class="na">dc_obs_climo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/climatology&#39;</span>
-<span class="linenos"> 98</span><span class="w">  </span><span class="na">climo_diurnal_subsection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;atm_monthly_diurnal_8xdaily_180x360_aave&quot;</span>
-<span class="linenos"> 99</span><span class="w">  </span><span class="na">climo_diurnal_frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;diurnal_8xdaily&quot;</span>
+<span class="linenos"> 97</span><span class="w">  </span><span class="na">dc_obs_climo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/climatology'</span>
+<span class="linenos"> 98</span><span class="w">  </span><span class="na">climo_diurnal_subsection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"atm_monthly_diurnal_8xdaily_180x360_aave"</span>
+<span class="linenos"> 99</span><span class="w">  </span><span class="na">climo_diurnal_frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"diurnal_8xdaily"</span>
 <span class="linenos">100</span><span class="w">  </span><span class="c1"># This is for tropical cyclone diags</span>
-<span class="linenos">101</span><span class="w">  </span><span class="na">tc_obs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/tc-analysis/&#39;</span>
+<span class="linenos">101</span><span class="w">  </span><span class="na">tc_obs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'/lcrc/group/e3sm/public_html/diagnostics/observations/Atm/tc-analysis/'</span>
 <span class="linenos">102</span>
 <span class="linenos">103</span><span class="c1"># MPAS-Analysis</span>
 <span class="linenos">104</span><span class="k">[mpas_analysis]</span>
 <span class="linenos">105</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">106</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;24:00:00&quot;</span>
+<span class="linenos">106</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"24:00:00"</span>
 <span class="linenos">107</span><span class="na">parallelTaskCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">6</span>
-<span class="linenos">108</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1-50&quot;</span><span class="na">, &quot;1-100&quot;,</span>
-<span class="linenos">109</span><span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;11-50&quot;</span><span class="na">, &quot;11-100&quot;,</span>
-<span class="linenos">110</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;21-50&quot;</span><span class="na">, &quot;51-100&quot;,</span>
-<span class="linenos">111</span><span class="na">mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;EC30to60E2r2&quot;</span>
+<span class="linenos">108</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1-50"</span><span class="na">, "1-100",</span>
+<span class="linenos">109</span><span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"11-50"</span><span class="na">, "11-100",</span>
+<span class="linenos">110</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"21-50"</span><span class="na">, "51-100",</span>
+<span class="linenos">111</span><span class="na">mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"EC30to60E2r2"</span>
 <span class="linenos">112</span>
 <span class="linenos">113</span><span class="c1"># Global time series plots</span>
 <span class="linenos">114</span><span class="k">[global_time_series]</span>
 <span class="linenos">115</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">116</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1-100&quot;</span><span class="na">,</span>
+<span class="linenos">116</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1-100"</span><span class="na">,</span>
 <span class="linenos">117</span><span class="na">ts_num_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">10</span>
 <span class="linenos">118</span><span class="na">figstr</span><span class="o">=</span><span class="s">coupled_v2_test01</span>
 <span class="linenos">119</span><span class="na">moc_file</span><span class="o">=</span><span class="s">mocTimeSeries_0001-0100.nc</span>
 <span class="linenos">120</span><span class="na">experiment_name</span><span class="o">=</span><span class="s">20210122.v2_test01.piControl.chrysalis</span>
-<span class="linenos">121</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1-50&quot;</span><span class="na">, &quot;1-100&quot;,</span>
-<span class="linenos">122</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;21-50&quot;</span><span class="na">, &quot;51-100&quot;,</span>
+<span class="linenos">121</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1-50"</span><span class="na">, "1-100",</span>
+<span class="linenos">122</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"21-50"</span><span class="na">, "51-100",</span>
 <span class="linenos">123</span>
 <span class="linenos">124</span><span class="c1"># LIVVkit (Ice sheet analysis)</span>
 <span class="linenos">125</span><span class="k">[livvkit]</span>
 <span class="linenos">126</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
 <span class="linenos">127</span><span class="na">nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1</span>
-<span class="linenos">128</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;0:30:00&quot;</span>
-<span class="linenos">129</span><span class="c1"># qos = &quot;debug&quot;</span>
-<span class="linenos">130</span><span class="na">icesheets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;gis,ais&quot;</span>
-<span class="linenos">131</span><span class="na">sets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;cmb,smb,energy_racmo,energy_era5,energy_merra2,energy_ceres&quot;</span>
-<span class="linenos">132</span><span class="na">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;inclusions/livvkit/livvkit_r05.jinja&quot;</span>
-<span class="linenos">133</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1:100:50&quot;</span>
+<span class="linenos">128</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"0:30:00"</span>
+<span class="linenos">129</span><span class="c1"># qos = "debug"</span>
+<span class="linenos">130</span><span class="na">icesheets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"gis,ais"</span>
+<span class="linenos">131</span><span class="na">sets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"cmb,smb,energy_racmo,energy_era5,energy_merra2,energy_ceres"</span>
+<span class="linenos">132</span><span class="na">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"inclusions/livvkit/livvkit_r05.jinja"</span>
+<span class="linenos">133</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1:100:50"</span>
 </pre></div>
 </div>
 <p>Now we can run <code class="docutils literal notranslate"><span class="pre">zppy</span> <span class="pre">-c</span> <span class="pre">post.mysimulation.cfg</span></code>.</p>
@@ -274,70 +274,70 @@ allowing for easy configuration changes. For example, a user could set
 <span class="linenos"> 5</span><span class="na">case</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">20210603.v2rc3c.piControl.northamericax4v1pg2_WC14to60E2r3.chrysalis</span>
 <span class="linenos"> 6</span><span class="na">www</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&lt;www&gt;</span>
 <span class="linenos"> 7</span><span class="na">partition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">debug</span>
-<span class="linenos"> 8</span><span class="na">campaign</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;water_cycle&quot;</span>
+<span class="linenos"> 8</span><span class="na">campaign</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"water_cycle"</span>
 <span class="linenos"> 9</span>
 <span class="linenos">10</span><span class="k">[climo]</span>
 <span class="linenos">11</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">12</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1:60:20&quot;</span><span class="na">,</span>
+<span class="linenos">12</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1:60:20"</span><span class="na">,</span>
 <span class="linenos">13</span>
 <span class="linenos">14</span><span class="w">  </span><span class="k">[[atm_monthly_180x360_aave]]</span>
 <span class="linenos">15</span><span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/home/ac.zender/data/maps/map_northamericax4v1pg2_to_cmip6_180x360_aave.20200401.nc</span>
 <span class="linenos">16</span>
 <span class="linenos">17</span><span class="w">  </span><span class="k">[[conus_0.23x0.31_aave]]</span>
-<span class="linenos">18</span><span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;conus_0.23x0.31_aave&#39;</span>
+<span class="linenos">18</span><span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'conus_0.23x0.31_aave'</span>
 <span class="linenos">19</span><span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/home/ac.zender/data/maps/map_northamericax4v1pg2_to_conus_0.23x0.31_nco.20210301.nc</span>
 <span class="linenos">20</span>
 <span class="linenos">21</span><span class="k">[ts]</span>
 <span class="linenos">22</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">23</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1:60:10&quot;</span><span class="na">,</span>
+<span class="linenos">23</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1:60:10"</span><span class="na">,</span>
 <span class="linenos">24</span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">/home/ac.zender/data/maps/map_northamericax4v1pg2_to_cmip6_180x360_aave.20200401.nc</span>
 <span class="linenos">25</span>
 <span class="linenos">26</span><span class="w">  </span><span class="k">[[ atm_monthly_180x360_aave ]]</span>
-<span class="linenos">27</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;archive/atm/hist&quot;</span>
-<span class="linenos">28</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;eam.h0&quot;</span>
-<span class="linenos">29</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,TAUX,TAUY,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT,CLDTOT,CLDHGH,CLDMED,CLDLOW,U&quot;</span>
+<span class="linenos">27</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"archive/atm/hist"</span>
+<span class="linenos">28</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"eam.h0"</span>
+<span class="linenos">29</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,TAUX,TAUY,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT,CLDTOT,CLDHGH,CLDMED,CLDLOW,U"</span>
 <span class="linenos">30</span>
 <span class="linenos">31</span><span class="w">  </span><span class="k">[[ atm_monthly_glb ]]</span>
-<span class="linenos">32</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;archive/atm/hist&quot;</span>
-<span class="linenos">33</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;eam.h0&quot;</span>
-<span class="linenos">34</span><span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;glb&quot;</span>
-<span class="linenos">35</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,TAUX,TAUY,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT,CLDTOT,CLDHGH,CLDMED,CLDLOW&quot;</span>
+<span class="linenos">32</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"archive/atm/hist"</span>
+<span class="linenos">33</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"eam.h0"</span>
+<span class="linenos">34</span><span class="w">  </span><span class="na">mapping_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"glb"</span>
+<span class="linenos">35</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"FSNTOA,FLUT,FSNT,FLNT,FSNS,FLNS,SHFLX,QFLX,TAUX,TAUY,PRECC,PRECL,PRECSC,PRECSL,TS,TREFHT,CLDTOT,CLDHGH,CLDMED,CLDLOW"</span>
 <span class="linenos">36</span>
 <span class="linenos">37</span><span class="w">  </span><span class="k">[[ land_monthly ]]</span>
-<span class="linenos">38</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;archive/lnd/hist&quot;</span>
-<span class="linenos">39</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;elm.h0&quot;</span>
-<span class="linenos">40</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;monthly&quot;</span>
-<span class="linenos">41</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;FSH,RH2M&quot;</span>
+<span class="linenos">38</span><span class="w">  </span><span class="na">input_subdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"archive/lnd/hist"</span>
+<span class="linenos">39</span><span class="w">  </span><span class="na">input_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"elm.h0"</span>
+<span class="linenos">40</span><span class="w">  </span><span class="na">frequency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"monthly"</span>
+<span class="linenos">41</span><span class="w">  </span><span class="na">vars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"FSH,RH2M"</span>
 <span class="linenos">42</span>
 <span class="linenos">43</span><span class="k">[e3sm_diags]</span>
 <span class="linenos">44</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">45</span><span class="na">reference_data_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/climatology&#39;</span>
-<span class="linenos">46</span><span class="na">output_format_subplot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;pdf&quot;</span><span class="na">,</span>
-<span class="linenos">47</span><span class="na">short_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;20210603.v2rc3c.piControl.naRRM&#39;</span>
-<span class="linenos">48</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1:60:20&quot;</span><span class="na">,</span>
+<span class="linenos">45</span><span class="na">reference_data_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/climatology'</span>
+<span class="linenos">46</span><span class="na">output_format_subplot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"pdf"</span><span class="na">,</span>
+<span class="linenos">47</span><span class="na">short_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'20210603.v2rc3c.piControl.naRRM'</span>
+<span class="linenos">48</span><span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1:60:20"</span><span class="na">,</span>
 <span class="linenos">49</span>
 <span class="linenos">50</span><span class="w">  </span><span class="k">[[atm_monthly_180x360_aave]]</span>
-<span class="linenos">51</span><span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;180x360_aave&#39;</span>
-<span class="linenos">52</span><span class="w">  </span><span class="na">sets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;lat_lon&quot;</span><span class="na">,&quot;zonal_mean_xy&quot;,&quot;zonal_mean_2d&quot;,&quot;polar&quot;,&quot;cosp_histogram&quot;,&quot;meridional_mean_2d&quot;,&quot;enso_diags&quot;,&quot;qbo&quot;,&quot;area_mean_time_series&quot;,</span>
+<span class="linenos">51</span><span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'180x360_aave'</span>
+<span class="linenos">52</span><span class="w">  </span><span class="na">sets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"lat_lon"</span><span class="na">,"zonal_mean_xy","zonal_mean_2d","polar","cosp_histogram","meridional_mean_2d","enso_diags","qbo","area_mean_time_series",</span>
 <span class="linenos">53</span><span class="w">  </span><span class="na">ts_num_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">10</span>
-<span class="linenos">54</span><span class="w">  </span><span class="na">obs_ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/time-series&#39;</span>
+<span class="linenos">54</span><span class="w">  </span><span class="na">obs_ts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'/lcrc/soft/climate/e3sm_diags_data/obs_for_e3sm_diags/time-series'</span>
 <span class="linenos">55</span><span class="w">  </span><span class="na">ref_start_yr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1990</span>
 <span class="linenos">56</span><span class="w">  </span><span class="na">ref_end_yr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">1999</span>
 <span class="linenos">57</span><span class="w">  </span><span class="na">ref_final_yr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">2016</span>
 <span class="linenos">58</span>
 <span class="linenos">59</span><span class="w">  </span><span class="k">[[conus_0.23x0.31_aave]]</span>
-<span class="linenos">60</span><span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;conus_0.23x0.31_aave&#39;</span>
-<span class="linenos">61</span><span class="w">  </span><span class="na">sets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;lat_lon&#39;</span><span class="na">,</span>
-<span class="linenos">62</span><span class="w">  </span><span class="na">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;inclusions/e3sm_diags/lat_lon_conus.cfg&quot;</span><span class="w"> </span><span class="c1"># Built-in cfg for users to use</span>
+<span class="linenos">60</span><span class="w">  </span><span class="na">grid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'conus_0.23x0.31_aave'</span>
+<span class="linenos">61</span><span class="w">  </span><span class="na">sets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">'lat_lon'</span><span class="na">,</span>
+<span class="linenos">62</span><span class="w">  </span><span class="na">cfg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"inclusions/e3sm_diags/lat_lon_conus.cfg"</span><span class="w"> </span><span class="c1"># Built-in cfg for users to use</span>
 <span class="linenos">63</span>
 <span class="linenos">64</span><span class="k">[mpas_analysis]</span>
 <span class="linenos">65</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">False</span>
-<span class="linenos">66</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;24:00:00&quot;</span>
+<span class="linenos">66</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"24:00:00"</span>
 <span class="linenos">67</span><span class="na">parallelTaskCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">6</span>
-<span class="linenos">68</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1-50&quot;</span><span class="na">,</span>
-<span class="linenos">69</span><span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1-50&quot;</span><span class="na">,</span>
-<span class="linenos">70</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="s">&quot;1-50&quot;</span><span class="na">,</span>
-<span class="linenos">71</span><span class="na">mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;WC14to60E2r3&quot;</span>
+<span class="linenos">68</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1-50"</span><span class="na">,</span>
+<span class="linenos">69</span><span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1-50"</span><span class="na">,</span>
+<span class="linenos">70</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="s">"1-50"</span><span class="na">,</span>
+<span class="linenos">71</span><span class="na">mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"WC14to60E2r3"</span>
 <span class="linenos">72</span><span class="na">partition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">compute</span>
 <span class="linenos">73</span>
 <span class="linenos">74</span><span class="k">[global_time_series]</span>
@@ -369,19 +369,19 @@ or <code class="docutils literal notranslate"><span class="pre">test_comparison_
 <span class="linenos"> 6</span><span class="na">www</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&lt;www&gt;</span>
 <span class="linenos"> 7</span><span class="na">partition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&lt;partition&gt;</span>
 <span class="linenos"> 8</span>
-<span class="linenos"> 9</span><span class="c1"># MPAS-Analysis: model vs. model (&quot;test&quot; vs. &quot;reference&quot;)</span>
+<span class="linenos"> 9</span><span class="c1"># MPAS-Analysis: model vs. model ("test" vs. "reference")</span>
 <span class="linenos">10</span><span class="k">[mpas_analysis]</span>
 <span class="linenos">11</span><span class="na">active</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
-<span class="linenos">12</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;4:00:00&quot;</span>
+<span class="linenos">12</span><span class="na">walltime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"4:00:00"</span>
 <span class="linenos">13</span><span class="na">parallelTaskCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">6</span>
-<span class="linenos">14</span><span class="na">mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;EC30to60E2r2&quot;</span>
+<span class="linenos">14</span><span class="na">mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"EC30to60E2r2"</span>
 <span class="linenos">15</span><span class="na">shortTermArchive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">True</span>
 <span class="linenos">16</span>
 <span class="linenos">17</span><span class="c1"># Test run year ranges (these determine the identifier used for the generated</span>
 <span class="linenos">18</span><span class="c1"># MPAS-Analysis cfg: mpas_analysis_ts_&lt;ts&gt;_climo_&lt;climo&gt;.cfg)</span>
-<span class="linenos">19</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1850-2014&quot;</span><span class="na">,</span>
-<span class="linenos">20</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1985-2014&quot;</span><span class="na">,</span>
-<span class="linenos">21</span><span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1850-2014&quot;</span><span class="na">,</span>
+<span class="linenos">19</span><span class="na">ts_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1850-2014"</span><span class="na">,</span>
+<span class="linenos">20</span><span class="na">climo_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1985-2014"</span><span class="na">,</span>
+<span class="linenos">21</span><span class="na">enso_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1850-2014"</span><span class="na">,</span>
 <span class="linenos">22</span>
 <span class="linenos">23</span><span class="c1"># Point at a *previous zppy run output directory* for the reference simulation.</span>
 <span class="linenos">24</span><span class="c1"># zppy will locate the matching MPAS-Analysis cfg file under:</span>
@@ -389,9 +389,9 @@ or <code class="docutils literal notranslate"><span class="pre">test_comparison_
 <span class="linenos">26</span><span class="na">reference_data_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&lt;reference zppy output directory&gt;</span>
 <span class="linenos">27</span>
 <span class="linenos">28</span><span class="c1"># Optional: override how zppy resolves the referenced prior run.</span>
-<span class="linenos">29</span><span class="c1"># Usually &quot;auto&quot; is sufficient. Set this only if both mvo and mvm outputs exist</span>
+<span class="linenos">29</span><span class="c1"># Usually "auto" is sufficient. Set this only if both mvo and mvm outputs exist</span>
 <span class="linenos">30</span><span class="c1"># for the same year range under the referenced run.</span>
-<span class="linenos">31</span><span class="c1"># reference_comparison_type = &quot;auto&quot;</span>
+<span class="linenos">31</span><span class="c1"># reference_comparison_type = "auto"</span>
 <span class="linenos">32</span>
 <span class="linenos">33</span><span class="c1"># Required when reference_data_path is not a [[subsection]].</span>
 <span class="linenos">34</span><span class="c1"># Used to build the MVM output directory name.</span>
@@ -399,27 +399,27 @@ or <code class="docutils literal notranslate"><span class="pre">test_comparison_
 <span class="linenos">36</span>
 <span class="linenos">37</span><span class="c1"># Optional: point at a previous zppy output directory for the test simulation,</span>
 <span class="linenos">38</span><span class="c1"># if you want MPAS-Analysis to reuse a completed test run as well.</span>
-<span class="linenos">39</span><span class="c1"># If set to [[subsection]], zppy will use that subsection&#39;s year ranges</span>
+<span class="linenos">39</span><span class="c1"># If set to [[subsection]], zppy will use that subsection's year ranges</span>
 <span class="linenos">40</span><span class="c1"># when ts_years/climo_years/enso_years are not provided.</span>
 <span class="linenos">41</span><span class="c1"># test_data_path = &lt;test zppy output directory&gt;</span>
-<span class="linenos">42</span><span class="c1"># test_comparison_type = &quot;auto&quot;</span>
+<span class="linenos">42</span><span class="c1"># test_comparison_type = "auto"</span>
 <span class="linenos">43</span>
 <span class="linenos">44</span><span class="c1"># Optional: override the reference year ranges (defaults to the test ranges).</span>
 <span class="linenos">45</span><span class="c1"># If reference_data_path points to a prior [mpas_analysis] subsection using</span>
-<span class="linenos">46</span><span class="c1"># the form [[subsection]], these default to that subsection&#39;s year ranges.</span>
+<span class="linenos">46</span><span class="c1"># the form [[subsection]], these default to that subsection's year ranges.</span>
 <span class="linenos">47</span><span class="c1"># If you provide a single range, it will be reused for each test range.</span>
-<span class="linenos">48</span><span class="c1"># ref_ts_years = &quot;451-500&quot;,</span>
-<span class="linenos">49</span><span class="c1"># ref_climo_years = &quot;451-500&quot;,</span>
-<span class="linenos">50</span><span class="c1"># ref_enso_years = &quot;451-500&quot;,</span>
+<span class="linenos">48</span><span class="c1"># ref_ts_years = "451-500",</span>
+<span class="linenos">49</span><span class="c1"># ref_climo_years = "451-500",</span>
+<span class="linenos">50</span><span class="c1"># ref_enso_years = "451-500",</span>
 </pre></div>
 </div>
 </section>
 </section>
 <section id="debugging-failures">
 <h2>Debugging failures<a class="headerlink" href="#debugging-failures" title="Link to this heading"></a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>grep<span class="w"> </span><span class="s2">&quot;output =&quot;</span><span class="w"> </span>your_zppy_config.cfg<span class="w"> </span><span class="c1"># Easy way to remember your output directory</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>grep<span class="w"> </span><span class="s2">"output ="</span><span class="w"> </span>your_zppy_config.cfg<span class="w"> </span><span class="c1"># Easy way to remember your output directory</span>
 <span class="nb">cd</span><span class="w"> </span>your_output_dir/post/scripts
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># See what failed</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*status<span class="w"> </span><span class="c1"># See what failed</span>
 
 <span class="c1"># Say failing_task.status is showing a non-OK status, then:</span>
 ls<span class="w"> </span>failing_task*<span class="w"> </span><span class="c1"># See everything associated with it</span>

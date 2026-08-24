@@ -120,8 +120,8 @@
 <p>Similar to the release-candidate directions, we’ll use <code class="docutils literal notranslate"><span class="pre">v1.2.3</span></code> as an example verison number here.</p>
 <blockquote>
 <div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>zppy
-git<span class="w"> </span>status<span class="w"> </span><span class="c1"># Confirm there&#39;s no uncommitted changes</span>
-git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span>main<span class="w"> </span><span class="c1"># This assumes you&#39;ve named your remote for the main repo as &quot;upstream&quot;</span>
+git<span class="w"> </span>status<span class="w"> </span><span class="c1"># Confirm there's no uncommitted changes</span>
+git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span>main<span class="w"> </span><span class="c1"># This assumes you've named your remote for the main repo as "upstream"</span>
 git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>prepare-docs-for-1.2.3<span class="w"> </span>upstream/main
 </pre></div>
 </div>
@@ -132,7 +132,7 @@ git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </
 conda<span class="w"> </span>activate<span class="w"> </span>env-name<span class="w"> </span><span class="c1"># Activate any zppy dev environment you have; we just need the pre-commit hooks</span>
 conda<span class="w"> </span>activate<span class="w"> </span>env-name
 pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files
-git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Update parameter documentation pointer for v1.2.3&quot;</span>
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Update parameter documentation pointer for v1.2.3"</span>
 git<span class="w"> </span>push<span class="w"> </span>upstream<span class="w"> </span>prepare-docs-for-1.2.3
 </pre></div>
 </div>
@@ -144,15 +144,15 @@ git<span class="w"> </span>push<span class="w"> </span>upstream<span class="w"> 
 <blockquote>
 <div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># On Perlmutter</span>
 <span class="nb">cd</span><span class="w"> </span>zppy
-git<span class="w"> </span>status<span class="w"> </span><span class="c1"># Confirm there&#39;s no uncommitted changes</span>
-git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span>main<span class="w"> </span><span class="c1"># This assumes you&#39;ve named your remote for the main repo as &quot;upstream&quot;</span>
+git<span class="w"> </span>status<span class="w"> </span><span class="c1"># Confirm there's no uncommitted changes</span>
+git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span>main<span class="w"> </span><span class="c1"># This assumes you've named your remote for the main repo as "upstream"</span>
 git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>v1.2.3<span class="w"> </span>upstream/main
 git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">5</span>
-<span class="c1"># Check that the latest commits match what&#39;s on https://github.com/E3SM-Project/zppy/commits/main/</span>
+<span class="c1"># Check that the latest commits match what's on https://github.com/E3SM-Project/zppy/commits/main/</span>
 tbump<span class="w"> </span><span class="m">1</span>.2.3<span class="w"> </span>--no-tag
-<span class="c1"># This creates a commit, but won&#39;t push it (because the branch isn&#39;t named `main`)</span>
+<span class="c1"># This creates a commit, but won't push it (because the branch isn't named `main`)</span>
 git<span class="w"> </span>push<span class="w"> </span>upstream<span class="w"> </span>v1.2.3
-<span class="c1"># Create, and &quot;Update version&quot; label&quot; to, and merge the PR; delete the branch on GitHub</span>
+<span class="c1"># Create, and "Update version" label" to, and merge the PR; delete the branch on GitHub</span>
 </pre></div>
 </div>
 </div></blockquote>

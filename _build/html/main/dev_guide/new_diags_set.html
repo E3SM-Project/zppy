@@ -136,20 +136,20 @@ has replaced <code class="docutils literal notranslate"><span class="pre">/lcrc/
 <p>In <code class="docutils literal notranslate"><span class="pre">zppy/e3sm_diags.py</span></code></p>
 <p>Diurnal Cycle: <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> had to be set up to depend on a new climatology subtask:</p>
 <blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="s2">&quot;diurnal_cycle&quot;</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s1">&#39;sets&#39;</span><span class="p">]:</span>
-    <span class="n">dependencies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s1">&#39;climo_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%04d</span><span class="s1">-</span><span class="si">%04d</span><span class="s1">.status&#39;</span> <span class="o">%</span> <span class="p">(</span>
-        <span class="n">c</span><span class="p">[</span><span class="s1">&#39;climo_diurnal_subsection&#39;</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="s1">&#39;year1&#39;</span><span class="p">],</span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;year2&#39;</span><span class="p">])))</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="s2">"diurnal_cycle"</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s1">'sets'</span><span class="p">]:</span>
+    <span class="n">dependencies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scriptDir</span><span class="p">,</span> <span class="s1">'climo_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%04d</span><span class="s1">-</span><span class="si">%04d</span><span class="s1">.status'</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="n">c</span><span class="p">[</span><span class="s1">'climo_diurnal_subsection'</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="s1">'year1'</span><span class="p">],</span><span class="n">c</span><span class="p">[</span><span class="s1">'year2'</span><span class="p">])))</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>Streamflow: <code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> had to be set up to depend on a new time series subtask:</p>
 <blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="s2">&quot;streamflow&quot;</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;sets&quot;</span><span class="p">]:</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="s2">"streamflow"</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="s2">"sets"</span><span class="p">]:</span>
     <span class="n">dependencies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
         <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
             <span class="n">scriptDir</span><span class="p">,</span>
-            <span class="s2">&quot;ts_rof_monthly_</span><span class="si">%04d</span><span class="s2">-</span><span class="si">%04d</span><span class="s2">-</span><span class="si">%04d</span><span class="s2">.status&quot;</span>
-            <span class="o">%</span> <span class="p">(</span><span class="n">start_yr</span><span class="p">,</span> <span class="n">end_yr</span><span class="p">,</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;ts_num_years&quot;</span><span class="p">]),</span>
+            <span class="s2">"ts_rof_monthly_</span><span class="si">%04d</span><span class="s2">-</span><span class="si">%04d</span><span class="s2">-</span><span class="si">%04d</span><span class="s2">.status"</span>
+            <span class="o">%</span> <span class="p">(</span><span class="n">start_yr</span><span class="p">,</span> <span class="n">end_yr</span><span class="p">,</span> <span class="n">c</span><span class="p">[</span><span class="s2">"ts_num_years"</span><span class="p">]),</span>
         <span class="p">)</span>
     <span class="p">)</span>
 </pre></div>
@@ -161,9 +161,9 @@ has replaced <code class="docutils literal notranslate"><span class="pre">/lcrc/
 <p>In <code class="docutils literal notranslate"><span class="pre">zppy/templates/climo.bash</span></code> or <code class="docutils literal notranslate"><span class="pre">zppy/templates/ts.bash</span></code></p>
 <p>Diurnal Cycle: <code class="docutils literal notranslate"><span class="pre">climo.bash</span></code> needed some changes:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>{% elif frequency.startswith(&#39;monthly_diurnal&#39;) %}
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>{% elif frequency.startswith('monthly_diurnal') %}
 {
-  dest={{ output }}/post/{{ component }}/{{ grid }}/clim_{{ subsection }}/{{ &#39;%dyr&#39; % (yr_end-yr_start+1) }}
+  dest={{ output }}/post/{{ component }}/{{ grid }}/clim_{{ subsection }}/{{ '%dyr' % (yr_end-yr_start+1) }}
   mkdir -p ${dest}
   mv output/*.nc ${dest}
 }
@@ -177,9 +177,9 @@ has replaced <code class="docutils literal notranslate"><span class="pre">/lcrc/
 <p>In <code class="docutils literal notranslate"><span class="pre">zppy/templates/e3sm_diags.bash</span></code></p>
 <p>Diurnal Cycle:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>{%- if &quot;diurnal_cycle&quot; in sets %}
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>{%- if "diurnal_cycle" in sets %}
 # Create local links to input diurnal cycle climo files
-climoDir={{ output }}/post/atm/{{ grid }}/clim_{{ climo_diurnal_subsection }}/{{ &#39;%dyr&#39; % (year2-year1+1) }}
+climoDir={{ output }}/post/atm/{{ grid }}/clim_{{ climo_diurnal_subsection }}/{{ '%dyr' % (year2-year1+1) }}
 climoDirCopy=climo_{{ climo_diurnal_subsection }}
 mkdir -p ${climoDirCopy}
 cd ${climoDirCopy}
@@ -191,11 +191,11 @@ cd ..
 </div></blockquote>
 <p>Streamflow:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>{%- if &quot;streamflow&quot; in sets %}
-rofDir=&quot;{{ output }}/post/rof/native/ts/monthly/{{ ts_num_years }}yr&quot;
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>{%- if "streamflow" in sets %}
+rofDir="{{ output }}/post/rof/native/ts/monthly/{{ ts_num_years }}yr"
 mkdir -p rof_links
 cd rof_links
-v=&quot;RIVER_DISCHARGE_OVER_LAND_LIQ&quot;
+v="RIVER_DISCHARGE_OVER_LAND_LIQ"
 xml_name=${v}_${Y1}01_${Y2}12.xml
 cdscan -x ${xml_name} ${rofDir}/${v}_*.nc
 cd ..
@@ -211,12 +211,12 @@ cd ..
 to the tutorial documentation:</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[[</span> <span class="n">rof_monthly</span> <span class="p">]]</span>
-<span class="n">input_subdir</span> <span class="o">=</span> <span class="s2">&quot;archive/rof/hist&quot;</span>
-<span class="n">input_files</span> <span class="o">=</span> <span class="s2">&quot;mosart.h0&quot;</span>
-<span class="n">frequency</span> <span class="o">=</span> <span class="s2">&quot;monthly&quot;</span>
-<span class="n">mapping_file</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-<span class="nb">vars</span> <span class="o">=</span> <span class="s2">&quot;RIVER_DISCHARGE_OVER_LAND_LIQ&quot;</span>
-<span class="n">extra_vars</span> <span class="o">=</span> <span class="s1">&#39;areatotal2&#39;</span>
+<span class="n">input_subdir</span> <span class="o">=</span> <span class="s2">"archive/rof/hist"</span>
+<span class="n">input_files</span> <span class="o">=</span> <span class="s2">"mosart.h0"</span>
+<span class="n">frequency</span> <span class="o">=</span> <span class="s2">"monthly"</span>
+<span class="n">mapping_file</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="nb">vars</span> <span class="o">=</span> <span class="s2">"RIVER_DISCHARGE_OVER_LAND_LIQ"</span>
+<span class="n">extra_vars</span> <span class="o">=</span> <span class="s1">'areatotal2'</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -227,12 +227,12 @@ to the tutorial documentation:</p>
 <p>Streamflow: the <code class="docutils literal notranslate"><span class="pre">rof_monthly</span></code> subtask of <code class="docutils literal notranslate"><span class="pre">ts</span></code> had to be included:</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[[</span> <span class="n">rof_monthly</span> <span class="p">]]</span>
-<span class="n">input_subdir</span> <span class="o">=</span> <span class="s2">&quot;archive/rof/hist&quot;</span>
-<span class="n">input_files</span> <span class="o">=</span> <span class="s2">&quot;mosart.h0&quot;</span>
-<span class="n">frequency</span> <span class="o">=</span> <span class="s2">&quot;monthly&quot;</span>
-<span class="n">mapping_file</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-<span class="nb">vars</span> <span class="o">=</span> <span class="s2">&quot;RIVER_DISCHARGE_OVER_LAND_LIQ&quot;</span>
-<span class="n">extra_vars</span> <span class="o">=</span> <span class="s1">&#39;areatotal2&#39;</span>
+<span class="n">input_subdir</span> <span class="o">=</span> <span class="s2">"archive/rof/hist"</span>
+<span class="n">input_files</span> <span class="o">=</span> <span class="s2">"mosart.h0"</span>
+<span class="n">frequency</span> <span class="o">=</span> <span class="s2">"monthly"</span>
+<span class="n">mapping_file</span> <span class="o">=</span> <span class="s2">""</span>
+<span class="nb">vars</span> <span class="o">=</span> <span class="s2">"RIVER_DISCHARGE_OVER_LAND_LIQ"</span>
+<span class="n">extra_vars</span> <span class="o">=</span> <span class="s1">'areatotal2'</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -246,13 +246,13 @@ to the tutorial documentation:</p>
 <p>In <code class="docutils literal notranslate"><span class="pre">zppy/templates/default.ini</span></code></p>
 <p>Diurnal Cycle: <code class="docutils literal notranslate"><span class="pre">diurnal_cycle</span></code> was added:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sets</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;lat_lon&quot;</span><span class="p">,</span><span class="s2">&quot;zonal_mean_xy&quot;</span><span class="p">,</span><span class="s2">&quot;zonal_mean_2d&quot;</span><span class="p">,</span><span class="s2">&quot;polar&quot;</span><span class="p">,</span><span class="s2">&quot;cosp_histogram&quot;</span><span class="p">,</span><span class="s2">&quot;meridional_mean_2d&quot;</span><span class="p">,</span><span class="s2">&quot;enso_diags&quot;</span><span class="p">,</span><span class="s2">&quot;qbo&quot;</span><span class="p">,</span><span class="s2">&quot;area_mean_time_series&quot;</span><span class="p">,</span><span class="s2">&quot;diurnal_cycle&quot;</span><span class="p">))</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sets</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">"lat_lon"</span><span class="p">,</span><span class="s2">"zonal_mean_xy"</span><span class="p">,</span><span class="s2">"zonal_mean_2d"</span><span class="p">,</span><span class="s2">"polar"</span><span class="p">,</span><span class="s2">"cosp_histogram"</span><span class="p">,</span><span class="s2">"meridional_mean_2d"</span><span class="p">,</span><span class="s2">"enso_diags"</span><span class="p">,</span><span class="s2">"qbo"</span><span class="p">,</span><span class="s2">"area_mean_time_series"</span><span class="p">,</span><span class="s2">"diurnal_cycle"</span><span class="p">))</span>
 </pre></div>
 </div>
 </div></blockquote>
 <p>Streamflow: <code class="docutils literal notranslate"><span class="pre">streamflow</span></code> was added:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sets</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">&quot;lat_lon&quot;</span><span class="p">,</span><span class="s2">&quot;zonal_mean_xy&quot;</span><span class="p">,</span><span class="s2">&quot;zonal_mean_2d&quot;</span><span class="p">,</span><span class="s2">&quot;polar&quot;</span><span class="p">,</span><span class="s2">&quot;cosp_histogram&quot;</span><span class="p">,</span><span class="s2">&quot;meridional_mean_2d&quot;</span><span class="p">,</span><span class="s2">&quot;enso_diags&quot;</span><span class="p">,</span><span class="s2">&quot;qbo&quot;</span><span class="p">,</span><span class="s2">&quot;diurnal_cycle&quot;</span><span class="p">,</span><span class="s2">&quot;annual_cycle_zonal_mean&quot;</span><span class="p">,</span><span class="s2">&quot;streamflow&quot;</span><span class="p">))</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sets</span> <span class="o">=</span> <span class="n">string_list</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="s2">"lat_lon"</span><span class="p">,</span><span class="s2">"zonal_mean_xy"</span><span class="p">,</span><span class="s2">"zonal_mean_2d"</span><span class="p">,</span><span class="s2">"polar"</span><span class="p">,</span><span class="s2">"cosp_histogram"</span><span class="p">,</span><span class="s2">"meridional_mean_2d"</span><span class="p">,</span><span class="s2">"enso_diags"</span><span class="p">,</span><span class="s2">"qbo"</span><span class="p">,</span><span class="s2">"diurnal_cycle"</span><span class="p">,</span><span class="s2">"annual_cycle_zonal_mean"</span><span class="p">,</span><span class="s2">"streamflow"</span><span class="p">))</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -262,15 +262,15 @@ to the tutorial documentation:</p>
 <p>In <code class="docutils literal notranslate"><span class="pre">zppy/templates/e3sm_diags.bash</span></code></p>
 <p>Diurnal Cycle:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%-</span> <span class="k">if</span> <span class="s2">&quot;diurnal_cycle&quot;</span> <span class="ow">in</span> <span class="n">sets</span> <span class="o">%</span><span class="p">}</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%-</span> <span class="k">if</span> <span class="s2">"diurnal_cycle"</span> <span class="ow">in</span> <span class="n">sets</span> <span class="o">%</span><span class="p">}</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">acme_diags.parameter.diurnal_cycle_parameter</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiurnalCycleParameter</span>
 <span class="p">{</span><span class="o">%-</span> <span class="n">endif</span> <span class="o">%</span><span class="p">}</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%-</span> <span class="k">if</span> <span class="s2">&quot;diurnal_cycle&quot;</span> <span class="ow">in</span> <span class="n">sets</span> <span class="o">%</span><span class="p">}</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%-</span> <span class="k">if</span> <span class="s2">"diurnal_cycle"</span> <span class="ow">in</span> <span class="n">sets</span> <span class="o">%</span><span class="p">}</span>
 <span class="n">dc_param</span> <span class="o">=</span> <span class="n">DiurnalCycleParameter</span><span class="p">()</span>
-<span class="n">dc_param</span><span class="o">.</span><span class="n">reference_data_path</span> <span class="o">=</span> <span class="s1">&#39;{{ dc_obs_climo }}&#39;</span>
-<span class="n">dc_param</span><span class="o">.</span><span class="n">test_data_path</span> <span class="o">=</span> <span class="s1">&#39;climo_{{ climo_diurnal_subsection }}&#39;</span>
+<span class="n">dc_param</span><span class="o">.</span><span class="n">reference_data_path</span> <span class="o">=</span> <span class="s1">'{{ dc_obs_climo }}'</span>
+<span class="n">dc_param</span><span class="o">.</span><span class="n">test_data_path</span> <span class="o">=</span> <span class="s1">'climo_{{ climo_diurnal_subsection }}'</span>
 <span class="n">dc_param</span><span class="o">.</span><span class="n">test_name</span> <span class="o">=</span> <span class="n">short_name</span>
 <span class="n">dc_param</span><span class="o">.</span><span class="n">short_test_name</span> <span class="o">=</span> <span class="n">short_name</span>
 <span class="c1"># Plotting diurnal cycle amplitude on different scales. Default is True</span>
@@ -282,20 +282,20 @@ to the tutorial documentation:</p>
 </div></blockquote>
 <p>Streamflow:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%-</span> <span class="k">if</span> <span class="s2">&quot;streamflow&quot;</span> <span class="ow">in</span> <span class="n">sets</span> <span class="o">%</span><span class="p">}</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%-</span> <span class="k">if</span> <span class="s2">"streamflow"</span> <span class="ow">in</span> <span class="n">sets</span> <span class="o">%</span><span class="p">}</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">e3sm_diags.parameter.streamflow_parameter</span><span class="w"> </span><span class="kn">import</span> <span class="n">StreamflowParameter</span>
 <span class="p">{</span><span class="o">%-</span> <span class="n">endif</span> <span class="o">%</span><span class="p">}</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%-</span> <span class="k">if</span> <span class="s2">&quot;streamflow&quot;</span> <span class="ow">in</span> <span class="n">sets</span> <span class="o">%</span><span class="p">}</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">%-</span> <span class="k">if</span> <span class="s2">"streamflow"</span> <span class="ow">in</span> <span class="n">sets</span> <span class="o">%</span><span class="p">}</span>
 <span class="n">streamflow_param</span> <span class="o">=</span> <span class="n">StreamflowParameter</span><span class="p">()</span>
-<span class="n">streamflow_param</span><span class="o">.</span><span class="n">reference_data_path</span> <span class="o">=</span> <span class="s1">&#39;{{ streamflow_obs_ts }}&#39;</span>
-<span class="n">streamflow_param</span><span class="o">.</span><span class="n">test_data_path</span> <span class="o">=</span> <span class="s1">&#39;rof_links&#39;</span>
+<span class="n">streamflow_param</span><span class="o">.</span><span class="n">reference_data_path</span> <span class="o">=</span> <span class="s1">'{{ streamflow_obs_ts }}'</span>
+<span class="n">streamflow_param</span><span class="o">.</span><span class="n">test_data_path</span> <span class="o">=</span> <span class="s1">'rof_links'</span>
 <span class="n">streamflow_param</span><span class="o">.</span><span class="n">test_name</span> <span class="o">=</span> <span class="n">short_name</span>
 <span class="n">streamflow_param</span><span class="o">.</span><span class="n">test_start_yr</span> <span class="o">=</span> <span class="n">start_yr</span>
 <span class="n">streamflow_param</span><span class="o">.</span><span class="n">test_end_yr</span> <span class="o">=</span> <span class="n">end_yr</span> <span class="c1"># Streamflow gauge station data range from year 1986 to 1995</span>
-<span class="n">streamflow_param</span><span class="o">.</span><span class="n">ref_start_yr</span> <span class="o">=</span> <span class="s2">&quot;1986&quot;</span>
-<span class="n">streamflow_param</span><span class="o">.</span><span class="n">ref_end_yr</span> <span class="o">=</span> <span class="s2">&quot;1995&quot;</span>
+<span class="n">streamflow_param</span><span class="o">.</span><span class="n">ref_start_yr</span> <span class="o">=</span> <span class="s2">"1986"</span>
+<span class="n">streamflow_param</span><span class="o">.</span><span class="n">ref_end_yr</span> <span class="o">=</span> <span class="s2">"1995"</span>
 <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">streamflow_param</span><span class="p">)</span>
 <span class="p">{</span><span class="o">%-</span> <span class="n">endif</span> <span class="o">%</span><span class="p">}</span>
 </pre></div>
@@ -319,7 +319,7 @@ to the tutorial documentation:</p>
 <p>Streamflow: The new parameter had to be included:</p>
 <blockquote>
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># This needs to be set for streamflow diags</span>
-<span class="n">streamflow_obs_ts</span> <span class="o">=</span> <span class="s1">&#39;/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/time-series/&#39;</span>
+<span class="n">streamflow_obs_ts</span> <span class="o">=</span> <span class="s1">'/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/time-series/'</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -329,7 +329,7 @@ to the tutorial documentation:</p>
 <p>In <code class="docutils literal notranslate"><span class="pre">tests/integration/test_*.cfg</span></code>.</p>
 <p>Streamflow: The new parameter had to be included:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">streamflow_obs_ts</span> <span class="o">=</span> <span class="s1">&#39;/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/time-series/&#39;</span>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">streamflow_obs_ts</span> <span class="o">=</span> <span class="s1">'/lcrc/group/e3sm/public_html/e3sm_diags_test_data/unit_test_complete_run/obs/time-series/'</span>
 </pre></div>
 </div>
 </div></blockquote>

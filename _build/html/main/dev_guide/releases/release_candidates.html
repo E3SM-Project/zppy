@@ -126,16 +126,16 @@
 <p>In this example, <code class="docutils literal notranslate"><span class="pre">v1.2.3rc4</span></code> is used – so, the major version is 1, the minor version is 2, and the patch version is 3. The release candidate number is 4.</p>
 <blockquote>
 <div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>zppy
-git<span class="w"> </span>status<span class="w"> </span><span class="c1"># Make sure you don&#39;t have any uncommitted changes</span>
-git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span>main<span class="w"> </span><span class="c1"># This assumes you&#39;ve named your remote for the main repo as &quot;upstream&quot;</span>
+git<span class="w"> </span>status<span class="w"> </span><span class="c1"># Make sure you don't have any uncommitted changes</span>
+git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span>main<span class="w"> </span><span class="c1"># This assumes you've named your remote for the main repo as "upstream"</span>
 git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>v1.2.3rc4<span class="w"> </span>upstream/main
 conda<span class="w"> </span>activate<span class="w"> </span>env-name<span class="w"> </span><span class="c1"># Activate any zppy dev environment you have; we just need `tbump`</span>
 tbump<span class="w"> </span><span class="m">1</span>.2.3rc4<span class="w"> </span>--no-tag
-<span class="c1"># This creates a commit, but won&#39;t push it (because the branch isn&#39;t named `main`)</span>
+<span class="c1"># This creates a commit, but won't push it (because the branch isn't named `main`)</span>
 git<span class="w"> </span>diff<span class="w"> </span>HEAD^<span class="w"> </span>HEAD<span class="w"> </span><span class="p">|</span><span class="w"> </span>cat
 <span class="c1"># Review the change `tbump`` added</span>
 git<span class="w"> </span>push<span class="w"> </span>upstream<span class="w"> </span>v1.2.3rc4
-<span class="c1"># Create, and &quot;Update version&quot; label&quot; to, and merge the PR; delete the branch on GitHub</span>
+<span class="c1"># Create, and "Update version" label" to, and merge the PR; delete the branch on GitHub</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -146,8 +146,8 @@ git<span class="w"> </span>push<span class="w"> </span>upstream<span class="w"> 
 <div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>checkout<span class="w"> </span>main
 git<span class="w"> </span>fetch<span class="w"> </span>upstream
 git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>upstream/main
-git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span>v1.2.3rc4<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;v1.2.3rc4&quot;</span><span class="w"> </span><span class="c1"># Add the tag for this RC</span>
-<span class="c1"># Delete the branch from the tbump step. Otherwise, the push command won&#39;t work.</span>
+git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span>v1.2.3rc4<span class="w"> </span>-m<span class="w"> </span><span class="s2">"v1.2.3rc4"</span><span class="w"> </span><span class="c1"># Add the tag for this RC</span>
+<span class="c1"># Delete the branch from the tbump step. Otherwise, the push command won't work.</span>
 git<span class="w"> </span>branch<span class="w"> </span>-D<span class="w"> </span>v1.2.3rc4
 git<span class="w"> </span>push<span class="w"> </span>upstream<span class="w"> </span>v1.2.3rc4<span class="w"> </span><span class="c1"># Push the new RC tag to GitHub</span>
 </pre></div>
@@ -159,15 +159,15 @@ git<span class="w"> </span>push<span class="w"> </span>upstream<span class="w"> 
 <h2>Step 6: zppy-feedstock repo<a class="headerlink" href="#step-6-zppy-feedstock-repo" title="Link to this heading"></a></h2>
 <p>If you don’t have a fork of zppy-feedstock, first go to the <a class="reference external" href="https://github.com/conda-forge/zppy-feedstock">zppy-feedstock_repo</a>, and click the “Fork” button in the top right.</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># If you don&#39;t have a clone of zppy-feedstock, first run:</span>
-<span class="c1"># Clone using the SSH from the green &quot;Code&quot; button in the top right of the repo home page.</span>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># If you don't have a clone of zppy-feedstock, first run:</span>
+<span class="c1"># Clone using the SSH from the green "Code" button in the top right of the repo home page.</span>
 git<span class="w"> </span>clone<span class="w"> </span>git@github.com:conda-forge/zppy-feedstock.git
 <span class="nb">cd</span><span class="w"> </span>zppy-feedstock
 git<span class="w"> </span>remote<span class="w"> </span>-v<span class="w"> </span><span class="c1"># See your remotes</span>
 <span class="c1"># Optional; this lets you use upstream to refer to the main repo:</span>
 git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>upstream<span class="w"> </span>git@github.com:conda-forge/zppy-feedstock.git
 <span class="c1"># Required; this allows you to push to your fork:</span>
-<span class="c1"># Copy the SSH path from your fork&#39;s green &quot;Code&quot; button and run:</span>
+<span class="c1"># Copy the SSH path from your fork's green "Code" button and run:</span>
 git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>your-fork-name<span class="w"> </span>git@github.com:your-fork-name/zppy-feedstock.git
 
 <span class="c1"># If you already have your clone set up, just run:</span>
@@ -189,10 +189,10 @@ emacs<span class="w"> </span>recipe/recipe.yaml
 <span class="c1"># - https://github.com/E3SM-Project/zppy/compare/v3.1.0...v3.2.0rc1</span>
 <span class="c1"># - https://github.com/E3SM-Project/zppy/compare/v1.2.3rc3...v1.2.3rc4</span>
 <span class="c1"># If there are changes in dependencies there (e.g., in `conda/dev.yml`, `pyproject.toml`),</span>
-<span class="c1"># You&#39;ll want to include them in this feedstock PR too.</span>
+<span class="c1"># You'll want to include them in this feedstock PR too.</span>
 
 git<span class="w"> </span>add<span class="w"> </span>-A
-git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;v1.2.3rc4&quot;</span>
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"v1.2.3rc4"</span>
 git<span class="w"> </span>push<span class="w"> </span>your-fork-name<span class="w"> </span>v1.2.3rc4
 </pre></div>
 </div>

@@ -158,14 +158,14 @@ a conda environment that pulls together Python and other E3SM tools such as
 
 <span class="c1"># Set up your fork:</span>
 <span class="c1"># Go to https://github.com/E3SM-Project/zppy</span>
-<span class="c1"># Click the green &quot;Code&quot; button</span>
+<span class="c1"># Click the green "Code" button</span>
 <span class="c1"># Choose the SSH option and paste it here:</span>
 git<span class="w"> </span>clone<span class="w"> </span>git@github.com:E3SM-Project/zppy.git
 <span class="nb">cd</span><span class="w"> </span>zppy
 git<span class="w"> </span>remote<span class="w"> </span>-v<span class="w"> </span><span class="c1"># You should see the main repo listed as `origin`</span>
 
 <span class="c1"># A couple optional steps:</span>
-git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>upstream<span class="w"> </span>git@github.com:E3SM-Project/zppy.git<span class="w"> </span><span class="c1"># Use the name &quot;upstream&quot; instead of origin</span>
+git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>upstream<span class="w"> </span>git@github.com:E3SM-Project/zppy.git<span class="w"> </span><span class="c1"># Use the name "upstream" instead of origin</span>
 git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>your-fork-name<span class="w"> </span>git@github.com:your-fork-name/zppy.git<span class="w"> </span><span class="c1"># Use your fork, if you have one</span>
 
 <span class="c1"># To use the latest code:</span>
@@ -180,7 +180,7 @@ rm<span class="w"> </span>-rf<span class="w"> </span>build<span class="w"> </spa
 conda<span class="w"> </span>clean<span class="w"> </span>--all<span class="w"> </span>--y<span class="w"> </span><span class="c1"># This makes sure conda will pick up the latest information.</span>
 conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>conda/dev.yml<span class="w"> </span>-n<span class="w"> </span>env-name
 conda<span class="w"> </span>activate<span class="w"> </span>env-name
-pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files<span class="w"> </span><span class="c1"># This is only necessary if you&#39;ve made changes</span>
+pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files<span class="w"> </span><span class="c1"># This is only necessary if you've made changes</span>
 python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.<span class="w"> </span><span class="c1"># Install the code into your development environment (env-name)</span>
 </pre></div>
 </div>

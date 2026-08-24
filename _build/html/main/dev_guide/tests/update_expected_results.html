@@ -144,18 +144,18 @@ launch_compute_node<span class="o">()</span>
 </section>
 <section id="process">
 <h2>Process<a class="headerlink" href="#process" title="Link to this heading"></a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># First, let&#39;s copy over the old expected results #############################</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># First, let's copy over the old expected results #############################</span>
 cp<span class="w"> </span>-r<span class="w"> </span><span class="si">${</span><span class="nv">expected_results_dir</span><span class="si">}</span><span class="w"> </span><span class="si">${</span><span class="nv">expected_results_records_dir</span><span class="si">}</span>/expected_results_until_yyyymmdd
-<span class="c1"># Use today&#39;s date</span>
+<span class="c1"># Use today's date</span>
 <span class="c1"># Chrysalis -- takes between 20 and 60 minutes</span>
 
 <span class="c1"># Second, update the expected results #########################################</span>
-<span class="c1"># Let&#39;s update the simpler tests&#39; results first:</span>
+<span class="c1"># Let's update the simpler tests' results first:</span>
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">repo_parent_dir</span><span class="si">}</span>/zppy
 git<span class="w"> </span>status
 <span class="c1"># You might have changed branches since you ran the tests.</span>
-<span class="c1"># Make sure you&#39;re now back on the correct branch: test-zppy-yyyymmdd</span>
-<span class="c1"># Also confirm you&#39;re back in the correct env: zppy-yyyymmdd or the Unified env</span>
+<span class="c1"># Make sure you're now back on the correct branch: test-zppy-yyyymmdd</span>
+<span class="c1"># Also confirm you're back in the correct env: zppy-yyyymmdd or the Unified env</span>
 
 <span class="c1"># Make sure the update script permissions are set up</span>
 chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>tests/integration/generated/update_bash_generation_expected_files_<span class="si">${</span><span class="nv">machine_name</span><span class="si">}</span>.sh
@@ -193,7 +193,7 @@ pytest<span class="w"> </span>tests/integration/test_images.py
 <p>Only do this part if you’re updating the Official Results (i.e., the results we’d expect from a specific <code class="docutils literal notranslate"><span class="pre">zppy</span></code> version):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">alias</span><span class="w"> </span><span class="nv">this_release</span><span class="o">=</span>unified_1.13.0<span class="w"> </span><span class="c1"># Or whatever the release is</span>
 
-<span class="c1"># Third, let&#39;s copy the expected results into a special official results dir ##</span>
+<span class="c1"># Third, let's copy the expected results into a special official results dir ##</span>
 cp<span class="w"> </span>-r<span class="w"> </span><span class="si">${</span><span class="nv">expected_results_dir</span><span class="si">}</span><span class="w"> </span><span class="si">${</span><span class="nv">expected_results_records_dir</span><span class="si">}</span>/expected_results_for_<span class="si">${</span><span class="nv">this_release</span><span class="si">}</span>
 <span class="c1"># Compy -- takes about 1h20m</span>
 ls<span class="w"> </span><span class="si">${</span><span class="nv">expected_results_records_dir</span><span class="si">}</span>/expected_results_for_<span class="si">${</span><span class="nv">this_release</span><span class="si">}</span>

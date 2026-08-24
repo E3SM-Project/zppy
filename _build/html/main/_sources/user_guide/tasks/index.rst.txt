@@ -21,6 +21,8 @@ Listed for reference (bundle jobs are submitted after task jobs are generated in
      - Description
    * - :doc:`bundle`
      - Bundle multiple tasks into a single SLURM job
+   * - :doc:`simboard`
+     - Configure SimBoard-compatible diagnostics publishing
    * - :doc:`climo`
      - Generate climatology files using NCO's ``ncclimo``
    * - :doc:`ts`
@@ -50,6 +52,7 @@ Listed for reference (bundle jobs are submitted after task jobs are generated in
    :hidden:
 
    bundle
+   simboard
    climo
    ts
    e3sm_to_cmip

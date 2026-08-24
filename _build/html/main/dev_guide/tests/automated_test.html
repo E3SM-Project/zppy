@@ -149,7 +149,7 @@
 <p>In your Markdown report, make a table like:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">|</span> <span class="n">Package</span> <span class="o">|</span> <span class="n">Changes</span> <span class="n">since</span> <span class="n">expected</span> <span class="n">results</span> <span class="n">were</span> <span class="n">updated</span> <span class="o">|</span>
 <span class="o">|</span> <span class="o">---</span> <span class="o">|</span> <span class="o">---</span> <span class="o">|</span>
-<span class="o">|</span> <span class="p">[</span><span class="n">package</span> <span class="n">name</span><span class="p">](</span><span class="n">link</span> <span class="n">to</span> <span class="n">package</span><span class="s1">&#39;s commit log) | Links to all PRs merged since the expected results were updated |</span>
+<span class="o">|</span> <span class="p">[</span><span class="n">package</span> <span class="n">name</span><span class="p">](</span><span class="n">link</span> <span class="n">to</span> <span class="n">package</span><span class="s1">'s commit log) | Links to all PRs merged since the expected results were updated |</span>
 <span class="o">...</span>
 </pre></div>
 </div>
@@ -173,16 +173,16 @@ git<span class="w"> </span>status<span class="w"> </span><span class="c1"># Chec
 <span class="c1"># If there are uncommitted changes,</span>
 <span class="c1"># commit them so we can move cleanly to a new branch:</span>
 git<span class="w"> </span>add<span class="w"> </span>-A
-git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Checkpoint&quot;</span>
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Checkpoint"</span>
 
-git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span>main<span class="w"> </span><span class="c1"># This assumes you&#39;ve named your remote for the main repo as &quot;upstream&quot;</span>
-git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>test-zppy-yyyymmdd<span class="w"> </span>upstream/main<span class="w"> </span><span class="c1"># Use today&#39;s date</span>
+git<span class="w"> </span>fetch<span class="w"> </span>upstream<span class="w"> </span>main<span class="w"> </span><span class="c1"># This assumes you've named your remote for the main repo as "upstream"</span>
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>test-zppy-yyyymmdd<span class="w"> </span>upstream/main<span class="w"> </span><span class="c1"># Use today's date</span>
 git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span>
 <span class="c1"># Check that this matches the corresponding commit log:</span>
 <span class="c1"># https://github.com/E3SM-Project/zppy/commits/main</span>
 
 <span class="c1"># Now, copy the test script and cfg from the zppy repo into the directory</span>
-<span class="c1"># that you&#39;ll be running the test script from.</span>
+<span class="c1"># that you'll be running the test script from.</span>
 mkdir<span class="w"> </span>-p<span class="w"> </span><span class="si">${</span><span class="nv">test_script_dir</span><span class="si">}</span>/test_yyyymmdd_runN
 <span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">test_script_dir</span><span class="si">}</span>/test_yyyymmdd_runN
 cp<span class="w"> </span><span class="si">${</span><span class="nv">repo_parent_dir</span><span class="si">}</span>/zppy/tests/main_branch_testing/run_integration_test.bash<span class="w"> </span>.
@@ -202,7 +202,7 @@ emacs<span class="w"> </span>zppy_test.cfg
 <span class="n">MACHINE</span><span class="o">=</span><span class="n">chrysalis</span>       <span class="c1"># chrysalis | compy | perlmutter</span>
 <span class="n">START_PHASE</span><span class="o">=</span><span class="mi">1</span>           <span class="c1"># 1 | 2 | 3</span>
 <span class="n">AUTO_MODE</span><span class="o">=</span><span class="n">true</span>          <span class="c1"># true = skip all interactive checkpoints</span>
-<span class="n">EXPLICIT_TAG</span><span class="o">=</span><span class="s2">&quot;&quot;</span>         <span class="c1"># Leave empty to auto-generate; set to resume a prior run</span>
+<span class="n">EXPLICIT_TAG</span><span class="o">=</span><span class="s2">""</span>         <span class="c1"># Leave empty to auto-generate; set to resume a prior run</span>
 </pre></div>
 </div>
 <p>Update the <code class="docutils literal notranslate"><span class="pre">RUN_NUMBER</span></code> if you’ve already done a test run today.</p>
@@ -210,56 +210,56 @@ emacs<span class="w"> </span>zppy_test.cfg
 </pre></div>
 </div>
 <p>Update the <code class="docutils literal notranslate"><span class="pre">_BASE_BRANCH</span></code> parameters if you plan to test new features or bug fixes that aren’t yet included on whatever the repo calls its “official” branch.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DIAGS_BASE_BRANCH</span><span class="o">=</span><span class="s2">&quot;main&quot;</span>
-<span class="n">E3SM_TO_CMIP_BASE_BRANCH</span><span class="o">=</span><span class="s2">&quot;master&quot;</span>
-<span class="n">MPAS_BASE_BRANCH</span><span class="o">=</span><span class="s2">&quot;develop&quot;</span>
-<span class="n">ZI_BASE_BRANCH</span><span class="o">=</span><span class="s2">&quot;main&quot;</span>
-<span class="n">ZPPY_BASE_BRANCH</span><span class="o">=</span><span class="s2">&quot;main&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DIAGS_BASE_BRANCH</span><span class="o">=</span><span class="s2">"main"</span>
+<span class="n">E3SM_TO_CMIP_BASE_BRANCH</span><span class="o">=</span><span class="s2">"master"</span>
+<span class="n">MPAS_BASE_BRANCH</span><span class="o">=</span><span class="s2">"develop"</span>
+<span class="n">ZI_BASE_BRANCH</span><span class="o">=</span><span class="s2">"main"</span>
+<span class="n">ZPPY_BASE_BRANCH</span><span class="o">=</span><span class="s2">"main"</span>
 </pre></div>
 </div>
 <p>Update the <code class="docutils literal notranslate"><span class="pre">_ENV_TYPE</span></code> parameters if you want to use E3SM-Unified rather than a dev environment. If you plan to only run a subset of tasks, you can set the ones you aren’t running to use E3SM-Unified, so that the script doesn’t spend time building a dev environment that won’t be used.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># &quot;dev&quot;     = build a dedicated conda env from the repo&#39;s dev.yml</span>
-<span class="c1"># &quot;unified&quot; = use the machine&#39;s e3sm-unified env (UNIFIED_ENV_CMD)</span>
-<span class="n">DIAGS_ENV_TYPE</span><span class="o">=</span><span class="s2">&quot;dev&quot;</span>
-<span class="n">E3SM_TO_CMIP_ENV_TYPE</span><span class="o">=</span><span class="s2">&quot;dev&quot;</span>
-<span class="n">MPAS_ENV_TYPE</span><span class="o">=</span><span class="s2">&quot;dev&quot;</span>
-<span class="n">ZI_ENV_TYPE</span><span class="o">=</span><span class="s2">&quot;dev&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># "dev"     = build a dedicated conda env from the repo's dev.yml</span>
+<span class="c1"># "unified" = use the machine's e3sm-unified env (UNIFIED_ENV_CMD)</span>
+<span class="n">DIAGS_ENV_TYPE</span><span class="o">=</span><span class="s2">"dev"</span>
+<span class="n">E3SM_TO_CMIP_ENV_TYPE</span><span class="o">=</span><span class="s2">"dev"</span>
+<span class="n">MPAS_ENV_TYPE</span><span class="o">=</span><span class="s2">"dev"</span>
+<span class="n">ZI_ENV_TYPE</span><span class="o">=</span><span class="s2">"dev"</span>
 </pre></div>
 </div>
 <p>Update the <code class="docutils literal notranslate"><span class="pre">_EXISTING_ENV</span></code> parameters if you already have an environment from a previous test run to use.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Optional: reuse an existing named conda env instead of creating a new one.</span>
-<span class="c1"># When non-empty AND the corresponding ENV_TYPE is &quot;dev&quot;, the script skips</span>
+<span class="c1"># When non-empty AND the corresponding ENV_TYPE is "dev", the script skips</span>
 <span class="c1"># conda env creation and activates this env directly.</span>
 <span class="c1"># Leave empty to let the script auto-name and create the env as usual.</span>
-<span class="n">DIAGS_EXISTING_ENV</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
-<span class="n">E3SM_TO_CMIP_EXISTING_ENV</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
-<span class="n">MPAS_EXISTING_ENV</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
-<span class="n">ZI_EXISTING_ENV</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
-<span class="n">ZPPY_EXISTING_ENV</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+<span class="n">DIAGS_EXISTING_ENV</span><span class="o">=</span><span class="s2">""</span>
+<span class="n">E3SM_TO_CMIP_EXISTING_ENV</span><span class="o">=</span><span class="s2">""</span>
+<span class="n">MPAS_EXISTING_ENV</span><span class="o">=</span><span class="s2">""</span>
+<span class="n">ZI_EXISTING_ENV</span><span class="o">=</span><span class="s2">""</span>
+<span class="n">ZPPY_EXISTING_ENV</span><span class="o">=</span><span class="s2">""</span>
 </pre></div>
 </div>
 <p>Update these two parameters to configure which jobs run.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Comma-separated list of zppy cfg names to generate and submit.</span>
 <span class="c1"># These correspond to generated filenames: test_weekly_&lt;name&gt;_&lt;machine&gt;.cfg</span>
-<span class="c1"># Any name containing &quot;bundle&quot; is treated as a bundle cfg and re-submitted in Phase 2.</span>
-<span class="n">CFGS_TO_RUN</span><span class="o">=</span><span class="s2">&quot;weekly_bundles,weekly_comprehensive_v2,weekly_comprehensive_v3,weekly_legacy_3.1.0_bundles,weekly_legacy_3.1.0_comprehensive_v2,weekly_legacy_3.1.0_comprehensive_v3,weekly_legacy_3.0.0_bundles,weekly_legacy_3.0.0_comprehensive_v2,weekly_legacy_3.0.0_comprehensive_v3&quot;</span>
+<span class="c1"># Any name containing "bundle" is treated as a bundle cfg and re-submitted in Phase 2.</span>
+<span class="n">CFGS_TO_RUN</span><span class="o">=</span><span class="s2">"weekly_bundles,weekly_comprehensive_v2,weekly_comprehensive_v3,weekly_legacy_3.1.0_bundles,weekly_legacy_3.1.0_comprehensive_v2,weekly_legacy_3.1.0_comprehensive_v3,weekly_legacy_3.0.0_bundles,weekly_legacy_3.0.0_comprehensive_v2,weekly_legacy_3.0.0_comprehensive_v3"</span>
 
 <span class="c1"># Comma-separated list of tasks to enable in utils.py.</span>
-<span class="n">TASKS_TO_RUN</span><span class="o">=</span><span class="s2">&quot;e3sm_diags,mpas_analysis,global_time_series,ilamb,livvkit,pcmdi_diags&quot;</span>
+<span class="n">TASKS_TO_RUN</span><span class="o">=</span><span class="s2">"e3sm_diags,mpas_analysis,global_time_series,ilamb,livvkit,pcmdi_diags"</span>
 </pre></div>
 </div>
 <p>These parameters are unlikely to change between runs. They just let the test script know where to find files in your particular workspace. It is recommended to clone a new copy of the repos and use that for each <code class="docutils literal notranslate"><span class="pre">_DIR</span></code> parameter listed below. The script will change branches, so using a distinct copy means you won’t get your work overwritten.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HOME_DIR</span><span class="o">=</span><span class="s2">&quot;$HOME&quot;</span>
-<span class="n">EZ_DIR</span><span class="o">=</span><span class="s2">&quot;$HOME_DIR/ez&quot;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HOME_DIR</span><span class="o">=</span><span class="s2">"$HOME"</span>
+<span class="n">EZ_DIR</span><span class="o">=</span><span class="s2">"$HOME_DIR/ez"</span>
 
-<span class="n">E3SM_DIAGS_DIR</span><span class="o">=</span><span class="s2">&quot;$EZ_DIR/e3sm_diags&quot;</span>
-<span class="n">E3SM_TO_CMIP_DIR</span><span class="o">=</span><span class="s2">&quot;$EZ_DIR/e3sm_to_cmip&quot;</span>
-<span class="n">MPAS_ANALYSIS_DIR</span><span class="o">=</span><span class="s2">&quot;$EZ_DIR/MPAS-Analysis&quot;</span>
-<span class="n">ZPPY_INTERFACES_DIR</span><span class="o">=</span><span class="s2">&quot;$EZ_DIR/zppy-interfaces&quot;</span>
-<span class="n">ZPPY_DIR</span><span class="o">=</span><span class="s2">&quot;$EZ_DIR/zppy&quot;</span>
+<span class="n">E3SM_DIAGS_DIR</span><span class="o">=</span><span class="s2">"$EZ_DIR/e3sm_diags"</span>
+<span class="n">E3SM_TO_CMIP_DIR</span><span class="o">=</span><span class="s2">"$EZ_DIR/e3sm_to_cmip"</span>
+<span class="n">MPAS_ANALYSIS_DIR</span><span class="o">=</span><span class="s2">"$EZ_DIR/MPAS-Analysis"</span>
+<span class="n">ZPPY_INTERFACES_DIR</span><span class="o">=</span><span class="s2">"$EZ_DIR/zppy-interfaces"</span>
+<span class="n">ZPPY_DIR</span><span class="o">=</span><span class="s2">"$EZ_DIR/zppy"</span>
 
-<span class="n">CONDA_PROFILE</span><span class="o">=</span><span class="s2">&quot;$HOME_DIR/miniforge3/etc/profile.d/conda.sh&quot;</span>
-<span class="n">TAG_CACHE_FILE</span><span class="o">=</span><span class="s2">&quot;$HOME_DIR/.zppy_test_tag&quot;</span>
+<span class="n">CONDA_PROFILE</span><span class="o">=</span><span class="s2">"$HOME_DIR/miniforge3/etc/profile.d/conda.sh"</span>
+<span class="n">TAG_CACHE_FILE</span><span class="o">=</span><span class="s2">"$HOME_DIR/.zppy_test_tag"</span>
 </pre></div>
 </div>
 </section>
@@ -309,7 +309,7 @@ cat<span class="w"> </span>integration_test_runN.log
 </div>
 <p>If some status files were unsuccessful, you’ll want to run the following to review the errors:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">dir_with_failures</span><span class="si">}</span>
-grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;OK&quot;</span><span class="w"> </span>*<span class="w"> </span>status<span class="w"> </span><span class="c1"># See what jobs failed</span>
+grep<span class="w"> </span>-v<span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span>*<span class="w"> </span>status<span class="w"> </span><span class="c1"># See what jobs failed</span>
 <span class="c1"># Review errors:</span>
 tail<span class="w"> </span><span class="si">${</span><span class="nv">job_that_failed</span><span class="si">}</span>.o<span class="si">${</span><span class="nv">id_of_job_that_failed</span><span class="si">}</span>
 grep<span class="w"> </span>-i<span class="w"> </span>error<span class="w"> </span><span class="si">${</span><span class="nv">job_that_failed</span><span class="si">}</span>.o<span class="si">${</span><span class="nv">id_of_job_that_failed</span><span class="si">}</span>
@@ -358,10 +358,10 @@ grep<span class="w"> </span>-i<span class="w"> </span>error<span class="w"> </sp
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">repo_parent_dir</span><span class="si">}</span>/zppy
 git<span class="w"> </span>status
 <span class="c1"># You might have changed branches while you were waiting for jobs to finish.</span>
-<span class="c1"># Make sure you&#39;re now back on the correct branch: test-zppy-yyyymmdd</span>
-<span class="c1"># Also confirm you&#39;re back in the correct env: zppy-yyyymmdd or the Unified env</span>
+<span class="c1"># Make sure you're now back on the correct branch: test-zppy-yyyymmdd</span>
+<span class="c1"># Also confirm you're back in the correct env: zppy-yyyymmdd or the Unified env</span>
 
-<span class="c1"># The image checker test, which we&#39;ll run from a compute node:</span>
+<span class="c1"># The image checker test, which we'll run from a compute node:</span>
 launch_compute_node
 
 start_bash_subshell
