@@ -36,6 +36,13 @@ common_smb: &common_smb
       - {{ livvproj_dir }}/smb/smb_icecores.bib
       - {{ livvproj_dir }}/livvkit.bib
 
+common_snow: &common_snow
+    cmap: YlGnBu
+    cmap_diff: BrBG
+    units: mm
+    References:
+      - {{ livvproj_dir }}/livvkit.bib
+
 common_energy: &common_energy
   desc: Surface energy balance component {component}{comment} from {data_var_names}
   references:
@@ -45,6 +52,15 @@ common_energy: &common_energy
     - {{ livvproj_dir }}/livvkit.bib
   cmap: plasma
   cmap_diff: RdBu_r
+
+common_elm: &common_elm
+  dataset_names: { model: ELM }
+  timeseries_dirs:
+    model: "{{ dir_ts_native }}"
+  ts_file_patterns:
+    model: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+  masks:
+    model: /global/cfs/cdirs/e3sm/diagnostics/livvkit_data/grids/msk_{icesheet}_rcm_r05.nc
 
 common_racmo: &common_racmo
   clim_years:
@@ -126,6 +142,18 @@ common_ceres: &common_ceres
     dset_a: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_remap_cmip6.traave.nc
     model_remap: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_remap_cmip6.traave.nc
     model_native: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
+
+common_modis: &common_modis
+  climo_remap: {{ dir_native }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
+  dataset_names: {model: 'ELM', dset_a: MODIS/Terra}
+  scales: {model: 100, dset_a: 1}
+  clim_years:
+    dset_a: { year_s: 2001, year_e: 2025}
+  in_dirs: {dset_a: /global/cfs/cdirs/e3sm/zender/mod10cm/rgr/}
+  file_patterns: {dset_a: 'mod10cm_{season}_{sea_s}_{sea_e}_climo.nc'}
+  masks:
+    dset_a: /global/cfs/cdirs/e3sm/diagnostics/livvkit_data/grids/msk_{icesheet}_rcm_r05.nc
+    model: /global/cfs/cdirs/e3sm/diagnostics/livvkit_data/grids/msk_{icesheet}_rcm_r05.nc
 
 common_racmo_gis: &common_racmo_gis
   climo_remap: {{ dir_racmo_gis }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
@@ -320,6 +348,61 @@ common_racmo_cmb_vars: &common_racmo_cmb_vars
     aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
     mask_weight: true
     units: mm w. e. yr^-1
+
+common_snow_storage_vars: &common_snow_storage_vars
+  - title: Snow Depth (liquid water)
+    model: H2OSNO
+    sign: 1
+    scales: {model: 1}
+    units: "mm"
+    ac_axis: 0
+    cmin: 0.0
+    cmax: 25000
+    cmap: YlGnBu
+    cmin_d: -8000
+    cmax_d: 8000
+  - title: Snow ice
+    model: SNOWICE
+    sign: 1
+    scales: {model: 1}
+    units: "mm"
+    ac_axis: 0
+    cmin: 0.0
+    cmax: 25000
+    cmap: YlGnBu
+    cmin_d: -8000
+    cmax_d: 8000
+  - title: Snow liquid water
+    model: SNOWLIQ
+    sign: 1
+    scales: {model: 1}
+    ac_axis: 1
+    units: "mm"
+    cmin: 0.0
+    # cmax: 80
+    cmap: YlGnBu
+    cmin_d: -10
+    cmax_d: 10
+  - title: Surface water runoff
+    model: QH2OSFC
+    sign: 1
+    scales: {model: 365 * 24 * 3600}
+    units: "mm w. e. yr^-1"
+    cmin: 0.0
+    cmap: YlGnBu
+    ac_axis: 0
+
+common_snow_cover_vars: &common_snow_cover_vars
+  - title: Snow cover
+    model: FSNO
+    dset_a: Snow_Cover_Monthly_CMG
+    sign: 1
+    ac_contrib_sign: { model: 1, dset_a: 1 }
+    scales: {model: 100, dset_a: 1}
+    units: "%"
+    cmin: 0
+    cmax: 100
+    cmap: YlGnBu
 
 common_racmo_energy_vars: &common_racmo_energy_vars
   - title: Surface temperature
@@ -664,6 +747,30 @@ Surface_Mass_Balance_GIS:
   desc: "{component} component of SMB from {data_var_names}"
 {% endif %}
 
+{% if snow %}
+Snow_Storage_GIS:
+  module: /global/homes/m/mek/livvext/livvext/snow/snow.py
+  data_vars: *common_snow_storage_vars
+  icesheet: gis
+  <<: [*common, *common_snow, *common_elm]
+  scales:
+    { model: 1, }
+  primary_var: H2OSNO
+  desc: "{component} component of snow storage from {data_var_names}"
+
+Snow_Cover_GIS:
+  module: /global/homes/m/mek/livvext/livvext/snow/snow.py
+  data_vars: *common_snow_cover_vars
+  icesheet: gis
+  <<: [*common, *common_snow, *common_modis]
+  scales:
+    { model: 100, dset_a: 1}
+  primary_var: FSNO
+  desc: "{component} snow cover from {data_var_names}"
+  references:
+    - /global/cfs/cdirs/e3sm/diagnostics/livvkit_data/livvkit.bib
+{% endif %}
+
 {% if energy_racmo %}
 Energy_Balance_RACMO_GIS:
   module: {{ livvext_root }}/energy/energy.py
@@ -722,6 +829,31 @@ Surface_Mass_Balance_AIS:
     { model: 365 * 24 * 3600, dset_a: 365 * 24 * 3600 }
   primary_var: smbgl
   desc: "{component} component of SMB from {data_var_names}"
+{% endif %}
+
+{% if snow %}
+Snow_Storage_AIS:
+  module: /global/homes/m/mek/livvext/livvext/snow/snow.py
+  data_vars: *common_snow_storage_vars
+  icesheet: ais
+  <<: [*common, *common_snow, *common_elm]
+  scales:
+    { model: 1, }
+  primary_var: H2OSNO
+  desc: "{component} component of snow storage from {data_var_names}"
+
+Snow_Cover_AIS:
+  module: /global/homes/m/mek/livvext/livvext/snow/snow.py
+  data_vars: *common_snow_cover_vars
+  icesheet: gis
+  <<: [*common, *common_snow, *common_modis]
+  scales:
+    { model: 100, dset_a: 1}
+  primary_var: FSNO
+  desc: "{component} snow storage from {data_var_names}"
+  icesheet: ais
+  references:
+    - /global/cfs/cdirs/e3sm/diagnostics/livvkit_data/livvkit.bib
 {% endif %}
 
 {% if energy_racmo %}
