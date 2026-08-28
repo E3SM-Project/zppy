@@ -318,7 +318,7 @@ def _compare_actual_and_expected(
             )
 
 
-def _get_mismatched_fraction(diff: Image.Image, size: tuple[int, int]) -> float:
+def _get_mismatched_fraction(diff: Image.Image, size: Tuple[int, int]) -> float:
     # Sometimes, a few pixels will differ, but the two images appear identical.
     # https://codereview.stackexchange.com/questions/55902/fastest-way-to-count-non-zero-pixels-using-python-and-pillow
     bbox = diff.getbbox()
@@ -340,7 +340,6 @@ def _images_match_after_shift(actual_png: Image.Image, expected_png: Image.Image
 
     minimum_difference: Optional[float] = None
     best_diff: Optional[Image.Image] = None
-    best_size: Optional[Tuple[int, int]] = None
     for horizontal_shift in range(-MAXIMUM_PIXEL_SHIFT, MAXIMUM_PIXEL_SHIFT + 1):
         for vertical_shift in range(-MAXIMUM_PIXEL_SHIFT, MAXIMUM_PIXEL_SHIFT + 1):
             if horizontal_shift == 0 and vertical_shift == 0:
@@ -354,12 +353,11 @@ def _images_match_after_shift(actual_png: Image.Image, expected_png: Image.Image
             if minimum_difference is None or difference < minimum_difference:
                 minimum_difference = difference
                 best_diff = shifted_diff
-                best_size = shifted_diff.size
 
-    if best_diff is None or best_size is None:
+    if best_diff is None:
         return False
     return (
-        _get_mismatched_fraction(best_diff, best_size)
+        _get_mismatched_fraction(best_diff, best_diff.size)
         < MAXIMUM_MISMATCH_FRACTION
     )
 
