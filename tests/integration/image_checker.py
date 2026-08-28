@@ -1,7 +1,7 @@
 import os
 import shutil
 from math import ceil
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple
 
 import matplotlib.backends.backend_pdf
 import matplotlib.image as mpimg
@@ -338,26 +338,62 @@ def _images_match_after_shift(actual_png: Image.Image, expected_png: Image.Image
     if actual_png.size != expected_png.size:
         return False
 
-    minimum_difference = None
-    best_diff = None
+    minimum_difference: Optional[float] = None
+    best_diff: Optional[Image.Image] = None
+    best_size: Optional[Tuple[int, int]] = None
     for horizontal_shift in range(-MAXIMUM_PIXEL_SHIFT, MAXIMUM_PIXEL_SHIFT + 1):
         for vertical_shift in range(-MAXIMUM_PIXEL_SHIFT, MAXIMUM_PIXEL_SHIFT + 1):
             if horizontal_shift == 0 and vertical_shift == 0:
                 continue
-            shifted_actual_png = ImageChops.offset(
-                actual_png, horizontal_shift, vertical_shift
+            actual_overlap, expected_overlap = _get_overlapping_images(
+                actual_png, expected_png, horizontal_shift, vertical_shift
             )
-            shifted_diff = ImageChops.difference(shifted_actual_png, expected_png)
-            difference = sum(ImageStat.Stat(shifted_diff).sum)
+            shifted_diff = ImageChops.difference(actual_overlap, expected_overlap)
+            width, height = shifted_diff.size
+            difference = sum(ImageStat.Stat(shifted_diff).sum) / (width * height)
             if minimum_difference is None or difference < minimum_difference:
                 minimum_difference = difference
                 best_diff = shifted_diff
+                best_size = shifted_diff.size
 
-    assert best_diff is not None
+    if best_diff is None or best_size is None:
+        return False
     return (
-        _get_mismatched_fraction(best_diff, expected_png.size)
+        _get_mismatched_fraction(best_diff, best_size)
         < MAXIMUM_MISMATCH_FRACTION
     )
+
+
+def _get_overlapping_images(
+    actual_png: Image.Image,
+    expected_png: Image.Image,
+    horizontal_shift: int,
+    vertical_shift: int,
+) -> Tuple[Image.Image, Image.Image]:
+    width, height = actual_png.size
+    actual_left = max(0, -horizontal_shift)
+    actual_upper = max(0, -vertical_shift)
+    expected_left = max(0, horizontal_shift)
+    expected_upper = max(0, vertical_shift)
+    overlap_width = width - abs(horizontal_shift)
+    overlap_height = height - abs(vertical_shift)
+    actual_overlap = actual_png.crop(
+        (
+            actual_left,
+            actual_upper,
+            actual_left + overlap_width,
+            actual_upper + overlap_height,
+        )
+    )
+    expected_overlap = expected_png.crop(
+        (
+            expected_left,
+            expected_upper,
+            expected_left + overlap_width,
+            expected_upper + overlap_height,
+        )
+    )
+    return actual_overlap, expected_overlap
 
 
 def _draw_box(image, diff, output_path: str):
