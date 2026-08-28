@@ -2,14 +2,22 @@ import os
 from typing import List, Optional
 
 from mache import MachineInfo
+from PIL import Image, ImageDraw
 
 from tests.integration.image_checker import _compare_actual_and_expected
+
+
+def _write_image(path: str) -> None:
+    image = Image.new("RGB", (100, 100), "white")
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((20, 20, 80, 80), fill="black")
+    image.save(path)
 
 
 # Run this test with:
 # cd zppy
 # pytest tests/images/test_image_checker.py
-def test_compare():
+def test_compare() -> None:
     missing_images: List[str] = []
     mismatched_images: List[str] = []
 
@@ -42,3 +50,28 @@ def test_compare():
     )
     assert missing_images == []
     assert mismatched_images == ["CRU-TREFHT-ANN-land_60S90N"]
+
+
+def test_compare_ignores_small_pixel_shift(tmp_path) -> None:
+    expected_path = tmp_path / "expected.png"
+    actual_path = tmp_path / "actual.png"
+    _write_image(str(expected_path))
+
+    expected_image = Image.open(expected_path)
+    actual_image = Image.new("RGB", expected_image.size, "white")
+    actual_image.paste(expected_image, (1, -2))
+    actual_image.save(actual_path)
+
+    missing_images: List[str] = []
+    mismatched_images: List[str] = []
+    _compare_actual_and_expected(
+        missing_images,
+        mismatched_images,
+        "shifted.png",
+        str(actual_path),
+        str(expected_path),
+        str(tmp_path / "diffs"),
+    )
+
+    assert missing_images == []
+    assert mismatched_images == []

@@ -10,6 +10,10 @@ from matplotlib import pyplot as plt
 from PIL import Image, ImageChops, ImageDraw
 
 
+MAXIMUM_PIXEL_SHIFT = 2
+MAXIMUM_MISMATCH_FRACTION = 0.0002
+
+
 # Classes #####################################################################
 class Parameters(object):
     def __init__(self, args: Dict[str, str]):
@@ -271,21 +275,11 @@ def _compare_actual_and_expected(
         # If `diff.getbbox()` is None, then the images are in theory equal
         assert diff.getbbox() is None
     else:
-        # Sometimes, a few pixels will differ, but the two images appear identical.
-        # https://codereview.stackexchange.com/questions/55902/fastest-way-to-count-non-zero-pixels-using-python-and-pillow
-        nonzero_pixels = (
-            diff.crop(bbox)
-            .point(lambda x: 255 if x else 0)
-            .convert("L")
-            .point(bool)
-            .getdata()
-        )
-        num_nonzero_pixels = sum(nonzero_pixels)
-        width, height = expected_png.size
-        num_pixels = width * height
-        fraction = num_nonzero_pixels / num_pixels
+        fraction = _get_mismatched_fraction(diff, expected_png.size)
         # Fraction of mismatched pixels should be less than 0.02%
-        if fraction >= 0.0002:
+        if fraction >= MAXIMUM_MISMATCH_FRACTION and not _images_match_after_shift(
+            actual_png, expected_png
+        ):
             verbose = False
             if verbose:
                 print("\npath_to_actual_png={}".format(path_to_actual_png))
@@ -322,6 +316,42 @@ def _compare_actual_and_expected(
             _draw_box(
                 expected_png, diff, os.path.join(diff_dir, f"{image_name}_expected.png")
             )
+
+
+def _get_mismatched_fraction(diff: Image.Image, size: tuple[int, int]) -> float:
+    # Sometimes, a few pixels will differ, but the two images appear identical.
+    # https://codereview.stackexchange.com/questions/55902/fastest-way-to-count-non-zero-pixels-using-python-and-pillow
+    bbox = diff.getbbox()
+    if bbox is None:
+        return 0.0
+    nonzero_pixels = (
+        diff.crop(bbox)
+        .point(lambda x: 255 if x else 0)
+        .convert("L")
+        .point(bool)
+        .getdata()
+    )
+    return sum(nonzero_pixels) / (size[0] * size[1])
+
+
+def _images_match_after_shift(actual_png: Image.Image, expected_png: Image.Image) -> bool:
+    if actual_png.size != expected_png.size:
+        return False
+
+    for horizontal_shift in range(-MAXIMUM_PIXEL_SHIFT, MAXIMUM_PIXEL_SHIFT + 1):
+        for vertical_shift in range(-MAXIMUM_PIXEL_SHIFT, MAXIMUM_PIXEL_SHIFT + 1):
+            if horizontal_shift == 0 and vertical_shift == 0:
+                continue
+            shifted_actual_png = ImageChops.offset(
+                actual_png, horizontal_shift, vertical_shift
+            )
+            shifted_diff = ImageChops.difference(shifted_actual_png, expected_png)
+            if (
+                _get_mismatched_fraction(shifted_diff, expected_png.size)
+                < MAXIMUM_MISMATCH_FRACTION
+            ):
+                return True
+    return False
 
 
 def _draw_box(image, diff, output_path: str):
