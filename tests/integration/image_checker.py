@@ -7,7 +7,7 @@ import matplotlib.backends.backend_pdf
 import matplotlib.image as mpimg
 from mache import MachineInfo
 from matplotlib import pyplot as plt
-from PIL import Image, ImageChops, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageStat
 
 
 MAXIMUM_PIXEL_SHIFT = 2
@@ -338,6 +338,8 @@ def _images_match_after_shift(actual_png: Image.Image, expected_png: Image.Image
     if actual_png.size != expected_png.size:
         return False
 
+    minimum_difference = None
+    best_diff = None
     for horizontal_shift in range(-MAXIMUM_PIXEL_SHIFT, MAXIMUM_PIXEL_SHIFT + 1):
         for vertical_shift in range(-MAXIMUM_PIXEL_SHIFT, MAXIMUM_PIXEL_SHIFT + 1):
             if horizontal_shift == 0 and vertical_shift == 0:
@@ -346,12 +348,16 @@ def _images_match_after_shift(actual_png: Image.Image, expected_png: Image.Image
                 actual_png, horizontal_shift, vertical_shift
             )
             shifted_diff = ImageChops.difference(shifted_actual_png, expected_png)
-            if (
-                _get_mismatched_fraction(shifted_diff, expected_png.size)
-                < MAXIMUM_MISMATCH_FRACTION
-            ):
-                return True
-    return False
+            difference = sum(ImageStat.Stat(shifted_diff).sum)
+            if minimum_difference is None or difference < minimum_difference:
+                minimum_difference = difference
+                best_diff = shifted_diff
+
+    assert best_diff is not None
+    return (
+        _get_mismatched_fraction(best_diff, expected_png.size)
+        < MAXIMUM_MISMATCH_FRACTION
+    )
 
 
 def _draw_box(image, diff, output_path: str):

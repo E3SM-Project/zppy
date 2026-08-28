@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import List, Optional
 
 from mache import MachineInfo
@@ -52,7 +53,7 @@ def test_compare() -> None:
     assert mismatched_images == ["CRU-TREFHT-ANN-land_60S90N"]
 
 
-def test_compare_ignores_small_pixel_shift(tmp_path) -> None:
+def test_compare_ignores_small_pixel_shift(tmp_path: Path) -> None:
     expected_path = tmp_path / "expected.png"
     actual_path = tmp_path / "actual.png"
     _write_image(str(expected_path))
