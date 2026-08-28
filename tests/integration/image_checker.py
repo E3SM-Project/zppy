@@ -1,14 +1,13 @@
 import os
 import shutil
 from math import ceil
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import matplotlib.backends.backend_pdf
 import matplotlib.image as mpimg
 from mache import MachineInfo
 from matplotlib import pyplot as plt
-from PIL import Image, ImageChops, ImageDraw, ImageStat
-
+from PIL import Image, ImageChops, ImageDraw
 
 MAXIMUM_PIXEL_SHIFT = 2
 MAXIMUM_MISMATCH_FRACTION = 0.0002
@@ -284,8 +283,6 @@ def _compare_actual_and_expected(
             if verbose:
                 print("\npath_to_actual_png={}".format(path_to_actual_png))
                 print("path_to_expected_png={}".format(path_to_expected_png))
-                print("diff has {} nonzero pixels.".format(num_nonzero_pixels))
-                print("total number of pixels={}".format(num_pixels))
                 print("num_nonzero_pixels/num_pixels fraction={}".format(fraction))
 
             mismatched_images.append(image_name)
@@ -334,12 +331,12 @@ def _get_mismatched_fraction(diff: Image.Image, size: Tuple[int, int]) -> float:
     return sum(nonzero_pixels) / (size[0] * size[1])
 
 
-def _images_match_after_shift(actual_png: Image.Image, expected_png: Image.Image) -> bool:
+def _images_match_after_shift(
+    actual_png: Image.Image, expected_png: Image.Image
+) -> bool:
     if actual_png.size != expected_png.size:
         return False
 
-    minimum_difference: Optional[float] = None
-    best_diff: Optional[Image.Image] = None
     for horizontal_shift in range(-MAXIMUM_PIXEL_SHIFT, MAXIMUM_PIXEL_SHIFT + 1):
         for vertical_shift in range(-MAXIMUM_PIXEL_SHIFT, MAXIMUM_PIXEL_SHIFT + 1):
             if horizontal_shift == 0 and vertical_shift == 0:
@@ -348,18 +345,13 @@ def _images_match_after_shift(actual_png: Image.Image, expected_png: Image.Image
                 actual_png, expected_png, horizontal_shift, vertical_shift
             )
             shifted_diff = ImageChops.difference(actual_overlap, expected_overlap)
-            width, height = shifted_diff.size
-            difference = sum(ImageStat.Stat(shifted_diff).sum) / (width * height)
-            if minimum_difference is None or difference < minimum_difference:
-                minimum_difference = difference
-                best_diff = shifted_diff
+            if (
+                _get_mismatched_fraction(shifted_diff, shifted_diff.size)
+                < MAXIMUM_MISMATCH_FRACTION
+            ):
+                return True
 
-    if best_diff is None:
-        return False
-    return (
-        _get_mismatched_fraction(best_diff, best_diff.size)
-        < MAXIMUM_MISMATCH_FRACTION
-    )
+    return False
 
 
 def _get_overlapping_images(

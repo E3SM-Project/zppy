@@ -58,10 +58,11 @@ def test_compare_ignores_small_pixel_shift(tmp_path: Path) -> None:
     actual_path = tmp_path / "actual.png"
     _write_image(str(expected_path))
 
-    expected_image = Image.open(expected_path)
-    actual_image = Image.new("RGB", expected_image.size, "white")
-    actual_image.paste(expected_image, (1, -2))
-    actual_image.save(actual_path)
+    with Image.open(expected_path) as expected_image:
+        expected_image = expected_image.convert("RGB")
+        actual_image = Image.new("RGB", expected_image.size, "white")
+        actual_image.paste(expected_image, (1, -2))
+        actual_image.save(actual_path)
 
     missing_images: List[str] = []
     mismatched_images: List[str] = []
