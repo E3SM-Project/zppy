@@ -52,6 +52,22 @@ class Results(object):
 # Specialized setup ###########################################################
 
 
+def _get_unused_diff_dir(base_diff_dir: str) -> str:
+    """Return a diff_dir path that does not already exist.
+
+    If base_diff_dir does not exist, it is returned unchanged. Otherwise,
+    a "_tryN" suffix (starting at N=2) is appended until an unused
+    directory name is found. This prevents reruns of the image checker
+    from overwriting the results of previous runs.
+    """
+    if not os.path.exists(base_diff_dir):
+        return base_diff_dir
+    try_number = 2
+    while os.path.exists(f"{base_diff_dir}_try{try_number}"):
+        try_number += 1
+    return f"{base_diff_dir}_try{try_number}"
+
+
 def set_up_and_run_image_checker(
     cfg_specifier: str,
     case_name: str,
@@ -62,22 +78,19 @@ def set_up_and_run_image_checker(
 ):
     print(f"Image checking {cfg_specifier}")
     actual_images_dir = f"{expansions['user_www']}zppy_weekly_{cfg_specifier}_www/{expansions['unique_id']}/{case_name}/"
+    base_diff_dir = (
+        f"{actual_images_dir}image_check_failures_{cfg_specifier}{diff_dir_suffix}"
+    )
     d: Dict[str, str] = {
         "actual_images_dir": actual_images_dir,
         "expected_images_dir": f"{expansions['expected_dir']}expected_{cfg_specifier}",
-        "diff_dir": f"{actual_images_dir}image_check_failures_{cfg_specifier}{diff_dir_suffix}",
+        "diff_dir": _get_unused_diff_dir(base_diff_dir),
         "expected_images_list": f"{expansions['expected_dir']}image_list_expected_{cfg_specifier}.txt",
     }
-    print(f"Removing diff_dir={d['diff_dir']} to produce new results")
-    if os.path.exists(d["diff_dir"]):
-        try:
-            shutil.rmtree(d["diff_dir"])
-        except PermissionError:
-            print(
-                f"{d['diff_dir']} cannot be removed. Execute permissions are needed to remove files. Adding execute permission and trying again."
-            )
-            _chmod_recursive(d["diff_dir"], 0o744)
-            shutil.rmtree(d["diff_dir"])
+    if d["diff_dir"] != base_diff_dir:
+        print(
+            f"diff_dir={base_diff_dir} already exists; using {d['diff_dir']} instead to avoid overwriting previous results"
+        )
     print("Image checking dict:")
     for key in d:
         print(f"{key}: {d[key]}")
