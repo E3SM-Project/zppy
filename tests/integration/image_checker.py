@@ -5,11 +5,15 @@ from typing import Dict, List, Tuple
 
 import matplotlib.backends.backend_pdf
 import matplotlib.image as mpimg
+import numpy as np
 from mache import MachineInfo
 from matplotlib import pyplot as plt
 from PIL import Image, ImageChops, ImageDraw
 
-MAXIMUM_PIXEL_SHIFT = 2
+# The FFT-based shift estimate in `_estimate_shift` can in principle return
+# any shift up to half the image's width/height, but shifts larger than this
+# are treated as genuine mismatches rather than harmless translations.
+MAXIMUM_PIXEL_SHIFT = 10
 MAXIMUM_MISMATCH_FRACTION = 0.0002
 
 
@@ -337,21 +341,64 @@ def _images_match_after_shift(
     if actual_png.size != expected_png.size:
         return False
 
-    for horizontal_shift in range(-MAXIMUM_PIXEL_SHIFT, MAXIMUM_PIXEL_SHIFT + 1):
-        for vertical_shift in range(-MAXIMUM_PIXEL_SHIFT, MAXIMUM_PIXEL_SHIFT + 1):
-            if horizontal_shift == 0 and vertical_shift == 0:
-                continue
-            actual_overlap, expected_overlap = _get_overlapping_images(
-                actual_png, expected_png, horizontal_shift, vertical_shift
-            )
-            shifted_diff = ImageChops.difference(actual_overlap, expected_overlap)
-            if (
-                _get_mismatched_fraction(shifted_diff, shifted_diff.size)
-                < MAXIMUM_MISMATCH_FRACTION
-            ):
-                return True
+    # Rather than exhaustively trying every candidate shift (which costs up
+    # to (2 * MAXIMUM_PIXEL_SHIFT + 1)^2 image diffs), use phase correlation
+    # (an FFT-based technique) to find the single best-aligning shift in one
+    # pass. See: https://en.wikipedia.org/wiki/Phase_correlation
+    horizontal_shift, vertical_shift = _estimate_shift(actual_png, expected_png)
+    if horizontal_shift == 0 and vertical_shift == 0:
+        return False
+    if (
+        abs(horizontal_shift) > MAXIMUM_PIXEL_SHIFT
+        or abs(vertical_shift) > MAXIMUM_PIXEL_SHIFT
+    ):
+        return False
 
-    return False
+    actual_overlap, expected_overlap = _get_overlapping_images(
+        actual_png, expected_png, horizontal_shift, vertical_shift
+    )
+    shifted_diff = ImageChops.difference(actual_overlap, expected_overlap)
+    return (
+        _get_mismatched_fraction(shifted_diff, shifted_diff.size)
+        < MAXIMUM_MISMATCH_FRACTION
+    )
+
+
+def _estimate_shift(
+    actual_png: Image.Image, expected_png: Image.Image
+) -> Tuple[int, int]:
+    # Use phase correlation to estimate the (horizontal, vertical) pixel
+    # shift that best aligns `actual_png` with `expected_png`. This finds the
+    # shift in a single FFT-based operation, regardless of how large the
+    # shift is, rather than searching over every candidate shift.
+    actual_array = np.asarray(actual_png.convert("L"), dtype=np.float64)
+    expected_array = np.asarray(expected_png.convert("L"), dtype=np.float64)
+
+    actual_fft = np.fft.fft2(actual_array)
+    expected_fft = np.fft.fft2(expected_array)
+    # The order here matters: this yields a peak at (horizontal_shift,
+    # vertical_shift) such that actual(x, y) == expected(x + horizontal_shift,
+    # y + vertical_shift), matching the convention used by
+    # `_get_overlapping_images`.
+    cross_power = expected_fft * np.conj(actual_fft)
+    magnitude = np.abs(cross_power)
+    # Avoid division by zero where the cross power is (near) zero.
+    magnitude[magnitude < 1e-10] = 1e-10
+    correlation = np.abs(np.fft.ifft2(cross_power / magnitude))
+
+    height, width = correlation.shape
+    peak_row, peak_col = np.unravel_index(np.argmax(correlation), correlation.shape)
+
+    # The correlation surface wraps around at the image boundaries, so a peak
+    # in the second half of the axis corresponds to a negative shift.
+    horizontal_shift = int(peak_col)
+    if horizontal_shift > width // 2:
+        horizontal_shift -= width
+    vertical_shift = int(peak_row)
+    if vertical_shift > height // 2:
+        vertical_shift -= height
+
+    return horizontal_shift, vertical_shift
 
 
 def _get_overlapping_images(
