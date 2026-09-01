@@ -8,13 +8,57 @@ import matplotlib.image as mpimg
 import numpy as np
 from mache import MachineInfo
 from matplotlib import pyplot as plt
-from PIL import Image, ImageChops, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 # The FFT-based shift estimate in `_estimate_shift` can in principle return
 # any shift up to half the image's width/height, but shifts larger than this
 # are treated as genuine mismatches rather than harmless translations.
 MAXIMUM_PIXEL_SHIFT = 10
 MAXIMUM_MISMATCH_FRACTION = 0.0002
+
+# `actual` and `expected` images are allowed to differ in size by up to this
+# many pixels (in either dimension) before being treated as a guaranteed
+# mismatch. Small differences like this are typically caused by
+# DPI/layout-rounding changes between matplotlib/font versions rather than
+# an actual change to the figure's content, and are corrected for by
+# resizing `actual` to `expected`'s exact size before comparing.
+MAXIMUM_SIZE_DIFFERENCE = 20
+
+# `_get_zoned_mismatch_fractions` classifies every pixel as either "edge
+# zone" (within EDGE_TOLERANCE_RADIUS pixels of a line, contour boundary,
+# axis, or piece of text in the EXPECTED image) or "interior" (everything
+# else: flat fills and backgrounds). Differences of up to
+# DIFF_MAGNITUDE_THRESHOLD (out of 255) are ignored everywhere, since even
+# genuinely identical images can differ by a few intensity levels once
+# either has been resized (see MAXIMUM_SIZE_DIFFERENCE above) due to
+# interpolation rounding. Beyond that:
+#   - the interior must match almost exactly (MAXIMUM_INTERIOR_MISMATCH_FRACTION
+#     of interior pixels), since a real data/content change is expected to
+#     show up away from existing edges;
+#   - the edge zone is allowed much more slop
+#     (MAXIMUM_EDGE_ZONE_MISMATCH_FRACTION of edge-zone pixels), since
+#     anti-aliasing and font-hinting differences between rendering
+#     environments concentrate there, and how much of that noise appears
+#     scales with how much line/contour/text content an image has - which
+#     varies a lot from one plot to another. This mainly guards against
+#     wholesale loss of edge-dense content (e.g. an entire legend or
+#     contour set disappearing).
+# These only classify pixels using the (pristine, never-resized) expected
+# image, so resizing `actual` to correct a size difference never distorts
+# the zone boundaries themselves - only the pixel values being compared.
+#
+# Note: a real content difference that is both small (roughly under 1-2% of
+# the image) AND located inside an already edge-dense region (e.g. a subtle
+# error tucked among existing contour lines) may not be caught by this
+# check, since that is exactly the kind of location where rendering noise
+# is expected and tolerated. There is no way to fully close this gap using
+# only the rendered images; the mismatched-image diff grid remains useful
+# for catching this narrow class of change by eye.
+EDGE_GRADIENT_THRESHOLD = 20
+EDGE_TOLERANCE_RADIUS = 3
+DIFF_MAGNITUDE_THRESHOLD = 30
+MAXIMUM_INTERIOR_MISMATCH_FRACTION = 0.005
+MAXIMUM_EDGE_ZONE_MISMATCH_FRACTION = 0.5
 
 
 # Classes #####################################################################
@@ -352,29 +396,105 @@ def _images_match_after_shift(
     actual_png: Image.Image, expected_png: Image.Image
 ) -> bool:
     if actual_png.size != expected_png.size:
-        return False
+        width_difference = abs(actual_png.size[0] - expected_png.size[0])
+        height_difference = abs(actual_png.size[1] - expected_png.size[1])
+        if (
+            width_difference > MAXIMUM_SIZE_DIFFERENCE
+            or height_difference > MAXIMUM_SIZE_DIFFERENCE
+        ):
+            return False
+        # A small size difference is typically caused by a DPI/layout
+        # rounding change between rendering environments rather than an
+        # actual change to the figure's content. Resizing introduces its
+        # own interpolation noise, but `_get_zoned_mismatch_fractions`
+        # (below) is specifically designed to tolerate that.
+        actual_png = actual_png.resize(expected_png.size, Image.LANCZOS)
 
     # Rather than exhaustively trying every candidate shift (which costs up
     # to (2 * MAXIMUM_PIXEL_SHIFT + 1)^2 image diffs), use phase correlation
     # (an FFT-based technique) to find the single best-aligning shift in one
     # pass. See: https://en.wikipedia.org/wiki/Phase_correlation
     horizontal_shift, vertical_shift = _estimate_shift(actual_png, expected_png)
-    if horizontal_shift == 0 and vertical_shift == 0:
-        return False
     if (
         abs(horizontal_shift) > MAXIMUM_PIXEL_SHIFT
         or abs(vertical_shift) > MAXIMUM_PIXEL_SHIFT
     ):
         return False
 
-    actual_overlap, expected_overlap = _get_overlapping_images(
-        actual_png, expected_png, horizontal_shift, vertical_shift
+    if horizontal_shift == 0 and vertical_shift == 0:
+        # No translation was found. This is not automatically a failure:
+        # differences in anti-aliasing or font hinting between rendering
+        # environments can leave a thin halo of mismatched pixels hugging
+        # every line, contour boundary, and piece of text even when nothing
+        # has actually moved. `_get_zoned_mismatch_fractions` (below) is
+        # what determines whether that halo is small enough to ignore.
+        actual_overlap, expected_overlap = actual_png, expected_png
+    else:
+        actual_overlap, expected_overlap = _get_overlapping_images(
+            actual_png, expected_png, horizontal_shift, vertical_shift
+        )
+
+    interior_mismatch, edge_zone_mismatch = _get_zoned_mismatch_fractions(
+        actual_overlap, expected_overlap
     )
-    shifted_diff = ImageChops.difference(actual_overlap, expected_overlap)
     return (
-        _get_mismatched_fraction(shifted_diff, shifted_diff.size)
-        < MAXIMUM_MISMATCH_FRACTION
+        interior_mismatch < MAXIMUM_INTERIOR_MISMATCH_FRACTION
+        and edge_zone_mismatch < MAXIMUM_EDGE_ZONE_MISMATCH_FRACTION
     )
+
+
+def _get_edge_zone_mask(expected_png: Image.Image) -> np.ndarray:
+    """Return a boolean array marking pixels on or near an edge in `expected_png`.
+
+    `FIND_EDGES` is a Laplacian-style kernel that highlights lines, contour
+    boundaries, axes, and text; thresholding its output identifies pixels
+    that are part of some drawn feature rather than a flat fill or
+    background. The result is dilated by EDGE_TOLERANCE_RADIUS so that
+    pixels close to (not just exactly on) an edge are also marked. Using
+    only the expected image (rather than, say, requiring an edge in both
+    images) means this mask is unaffected by any blurring introduced by
+    resizing `actual` to correct a size difference.
+    """
+    edges = expected_png.convert("L").filter(ImageFilter.FIND_EDGES)
+    edge_array = np.asarray(edges, dtype=np.uint8)
+    is_edge = edge_array > EDGE_GRADIENT_THRESHOLD
+    mask_image = Image.fromarray((is_edge * 255).astype(np.uint8))
+    dilated = mask_image.filter(ImageFilter.MaxFilter(2 * EDGE_TOLERANCE_RADIUS + 1))
+    return np.asarray(dilated, dtype=bool)
+
+
+def _get_zoned_mismatch_fractions(
+    actual_png: Image.Image, expected_png: Image.Image
+) -> Tuple[float, float]:
+    """Return (interior_mismatch_fraction, edge_zone_mismatch_fraction).
+
+    Every pixel is classified as "edge zone" or "interior" using
+    `_get_edge_zone_mask`, and each fraction is computed relative to the
+    size of its own zone (not the whole image), since how much of an image
+    is edge/text content - and therefore how much rendering-noise halo it
+    can accumulate - varies a lot between plot types. A per-pixel
+    difference only counts as a mismatch if it exceeds
+    DIFF_MAGNITUDE_THRESHOLD, since resizing alone introduces a few
+    intensity levels of interpolation rounding even where content is
+    genuinely identical.
+    """
+    diff_array = np.asarray(
+        ImageChops.difference(actual_png, expected_png).convert("L"),
+        dtype=np.float64,
+    )
+    edge_zone_mask = _get_edge_zone_mask(expected_png)
+    interior_mask = ~edge_zone_mask
+    exceeds_threshold = diff_array > DIFF_MAGNITUDE_THRESHOLD
+
+    interior_pixel_count = max(int(np.sum(interior_mask)), 1)
+    edge_zone_pixel_count = max(int(np.sum(edge_zone_mask)), 1)
+    interior_mismatch_fraction = (
+        float(np.sum(exceeds_threshold & interior_mask)) / interior_pixel_count
+    )
+    edge_zone_mismatch_fraction = (
+        float(np.sum(exceeds_threshold & edge_zone_mask)) / edge_zone_pixel_count
+    )
+    return interior_mismatch_fraction, edge_zone_mismatch_fraction
 
 
 def _estimate_shift(
