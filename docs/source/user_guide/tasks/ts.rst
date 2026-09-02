@@ -87,10 +87,9 @@ These 9 parameters are specific to the ``ts`` task.
    * - ``vrt_in_file``
      - No
      - ``""``
-     - Path to the source vertical coordinate file for ``ncremap``. Required
-       for EAMxx (L128 grid). Defaults to a standard file under
-       ``diagnostics_base_path`` when ``input_component`` is ``eamxx`` and
-       this is left empty.
+     - Path to the source vertical coordinate file for ``ncremap``. Needed for
+       EAMxx, whose output carries no ``P0``. When left empty, ``zppy`` derives
+       it at run time from the run's own output.
 
 Parameters at the top-level
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
