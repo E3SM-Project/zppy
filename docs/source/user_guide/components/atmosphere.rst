@@ -72,13 +72,14 @@ Typical ``[climo]`` and ``[ts]`` subsection configuration for EAM:
 EAMxx configuration
 -------------------
 
-EAMxx uses a 128-level vertical grid (L128) and stores output differently
-from EAM. Key differences when configuring ``zppy`` for EAMxx:
+EAMxx uses a fine vertical grid (L128 in v3 and v4, though the grid itself
+changed between them) and stores output differently from EAM. Key differences
+when configuring ``zppy`` for EAMxx:
 
 - Set ``input_component = eamxx`` in ``[climo]`` and ``[ts]`` sections.
-- The ``vrt_in_file`` parameter may be needed for vertical remapping.
-  When ``input_component = eamxx``, ``zppy`` defaults to a
-  ``vert_L128.nc`` file under ``diagnostics_base_path``.
+- Vertical remapping needs a source vertical coordinate file. ``zppy`` derives
+  one at run time from the run's own output, so any EAMxx vertical grid works;
+  set ``vrt_in_file`` to override it with a file of your own.
 - Vertical remapping (``vrt_remap_vars``) is often needed to produce
   pressure-level data for diagnostics.
 

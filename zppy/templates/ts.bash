@@ -118,6 +118,28 @@ fi
 # When vrt_remap_vars is set, regrid the listed vars and write to a sibling
 # directory ts_vrt_remap/ alongside the standard ts/ output.
 mkdir output_plev
+{%- if prc_typ == 'eamxx' %}
+{%- if vrt_in_file == '' %}
+# ncremap needs an explicit source vertical grid file for EAMxx. Derive it from
+# this run's own output rather than a staged file, so any vertical grid (L72,
+# L128v1, L128v4, ...) works. Take P0 from the output too when it is there;
+# EAMxx does not write one yet, so fall back to the reference pressure.
+raw_file=`head -n 1 input.txt`
+run_nco ncks -O -v hyai,hybi,hyam,hybm,P0 ${raw_file} vrt_in.nc 2> /dev/null || \
+  { run_nco ncks -O -v hyai,hybi,hyam,hybm ${raw_file} vrt_in.nc && \
+    run_nco ncap2 -A -s 'P0=100000.0' vrt_in.nc ; }
+if [ $? != 0 ]; then
+  cd {{ scriptDir }}
+  echo 'Failed to derive source vertical grid file from '${raw_file}
+  echo 'Set vrt_in_file explicitly to work around this.'
+  echo 'ERROR (7)' > {{ prefix }}.status
+  exit 7
+fi
+vrt_in_file=vrt_in.nc
+{%- else %}
+vrt_in_file='{{ vrt_in_file }}'
+{%- endif %}
+{%- endif %}
 IFS=',' read -ra vremap_vars <<< "{{ vrt_remap_vars }}"
 for var in "${vremap_vars[@]}"
 do
@@ -136,7 +158,7 @@ do
       --vrt_out='{{ vrt_remap_file }}' \
       {%- if prc_typ == 'eamxx' %}
       --ps_nm=${file}/ps \
-      --vrt_in='{{ vrt_in_file }}' \
+      --vrt_in="${vrt_in_file}" \
       {%- endif %}
       ${file} ${out_file}
     if [ $? != 0 ]; then
