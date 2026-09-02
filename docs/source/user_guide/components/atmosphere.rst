@@ -77,10 +77,9 @@ changed between them) and stores output differently from EAM. Key differences
 when configuring ``zppy`` for EAMxx:
 
 - Set ``input_component = eamxx`` in ``[climo]`` and ``[ts]`` sections.
-- Vertical remapping needs a source vertical coordinate file, since EAMxx
-  output carries no ``P0``. ``zppy`` derives one at run time from the run's own
-  output, so any EAMxx vertical grid works; set ``vrt_in_file`` to override it
-  with a file of your own.
+- Vertical remapping needs a source vertical coordinate file. ``zppy`` derives
+  one at run time from the run's own output, so any EAMxx vertical grid works;
+  set ``vrt_in_file`` to override it with a file of your own.
 - Vertical remapping (``vrt_remap_vars``) is often needed to produce
   pressure-level data for diagnostics.
 

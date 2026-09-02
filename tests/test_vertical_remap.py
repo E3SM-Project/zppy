@@ -50,6 +50,7 @@ BASE_PARAMETERS: Dict[str, Any] = {
 }
 
 DERIVATION = "ncks -O -v hyai,hybi,hyam,hybm"
+DERIVATION_WITH_P0 = "ncks -O -v hyai,hybi,hyam,hybm,P0"
 
 
 def render(template_name: str, **overrides: Any) -> str:
@@ -67,6 +68,9 @@ def test_eamxx_derives_the_source_vertical_grid():
         script = render(template_name)
         assert "vert_L128" not in script
         assert DERIVATION in script
+        # P0 is taken from the source when present, and only synthesized when the
+        # extraction fails -- EAMxx does not write one yet, but later versions will.
+        assert DERIVATION_WITH_P0 in script
         assert "P0=100000.0" in script
         assert '--vrt_in="${vrt_in_file}"' in script
 

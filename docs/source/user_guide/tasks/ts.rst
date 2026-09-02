@@ -88,8 +88,8 @@ These 9 parameters are specific to the ``ts`` task.
      - No
      - ``""``
      - Path to the source vertical coordinate file for ``ncremap``. Needed for
-       EAMxx, whose output carries no ``P0``. When left empty, ``zppy`` derives
-       it at run time from the run's own output.
+       EAMxx. When left empty, ``zppy`` derives it at run time from the run's
+       own output.
 
 Parameters at the top-level
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

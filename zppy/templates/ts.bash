@@ -120,12 +120,14 @@ fi
 mkdir output_plev
 {%- if prc_typ == 'eamxx' %}
 {%- if vrt_in_file == '' %}
-# EAMxx output carries no P0, so ncremap needs an explicit source vertical grid
-# file. Derive it from this run's own output rather than a staged file, so any
-# vertical grid (L72, L128v1, L128v4, ...) works.
+# ncremap needs an explicit source vertical grid file for EAMxx. Derive it from
+# this run's own output rather than a staged file, so any vertical grid (L72,
+# L128v1, L128v4, ...) works. Take P0 from the output too when it is there;
+# EAMxx does not write one yet, so fall back to the reference pressure.
 raw_file=`head -n 1 input.txt`
-run_nco ncks -O -v hyai,hybi,hyam,hybm ${raw_file} vrt_in.nc && \
-  run_nco ncap2 -A -s 'P0=100000.0' vrt_in.nc
+run_nco ncks -O -v hyai,hybi,hyam,hybm,P0 ${raw_file} vrt_in.nc 2> /dev/null || \
+  { run_nco ncks -O -v hyai,hybi,hyam,hybm ${raw_file} vrt_in.nc && \
+    run_nco ncap2 -A -s 'P0=100000.0' vrt_in.nc ; }
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'Failed to derive source vertical grid file from '${raw_file}
