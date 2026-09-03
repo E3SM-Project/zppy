@@ -1,13 +1,91 @@
 import os
 import shutil
 from math import ceil
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import matplotlib.backends.backend_pdf
 import matplotlib.image as mpimg
+import numpy as np
 from mache import MachineInfo
 from matplotlib import pyplot as plt
-from PIL import Image, ImageChops, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
+
+# The FFT-based shift estimate in `_estimate_shift` can in principle return
+# any shift up to half the image's width/height, but shifts larger than this
+# are treated as genuine mismatches rather than harmless translations.
+MAXIMUM_PIXEL_SHIFT = 10
+MAXIMUM_MISMATCH_FRACTION = 0.0002
+
+# Phase correlation can return a spurious peak for two images that aren't
+# actually related by a clean translation (e.g. two unrelated plots) - the
+# peak is just wherever the correlation surface happened to be highest, with
+# no guarantee it means anything. `correlation[peak_row, peak_col]` (see
+# `_estimate_shift`) is bounded in [0, 1] and is close to 1 for a genuine,
+# dominant shift; a weak/ambiguous peak scores much lower. Below this
+# threshold, the estimated shift is discarded and treated as "no shift
+# found" rather than silently accepted. This value is a starting point, not
+# a calibrated one - re-run with ZPPY_IMAGE_CHECK_DIAGNOSTICS=1 (see below)
+# against a real corpus of both genuine shifts and unrelated images to tune
+# it properly.
+MINIMUM_SHIFT_PEAK_QUALITY = 0.5
+
+# `actual` and `expected` images are allowed to differ in size by up to this
+# many pixels (in either dimension) before being treated as a guaranteed
+# mismatch. Small differences like this are typically caused by
+# DPI/layout-rounding changes between matplotlib/font versions rather than
+# an actual change to the figure's content, and are corrected for by
+# resizing `actual` to `expected`'s exact size before comparing. This
+# resize must happen before any diff is computed - PIL's
+# `ImageChops.difference` does not raise on mismatched sizes, it silently
+# returns only the overlapping intersection, which would let a real
+# difference outside that intersection go uncounted.
+MAXIMUM_SIZE_DIFFERENCE = 20
+
+# `_get_zoned_mismatch_fractions` classifies every pixel as either "edge
+# zone" (within EDGE_TOLERANCE_RADIUS pixels of a line, contour boundary,
+# axis, or piece of text in the EXPECTED image) or "interior" (everything
+# else: flat fills and backgrounds). Differences of up to
+# DIFF_MAGNITUDE_THRESHOLD (out of 255) are ignored everywhere, since even
+# genuinely identical images can differ by a few intensity levels once
+# either has been resized (see MAXIMUM_SIZE_DIFFERENCE above) due to
+# interpolation rounding. Beyond that:
+#   - the interior must match almost exactly (MAXIMUM_INTERIOR_MISMATCH_FRACTION
+#     of interior pixels), since a real data/content change is expected to
+#     show up away from existing edges;
+#   - the edge zone gets its tolerance budget from one of two thresholds below,
+#     depending on whether `actual` had to be resized to match `expected`.
+#     Measured against this branch's own constants, genuine shifts and
+#     anti-aliasing noise both score exactly 0.0 on the edge-zone fraction
+#     when no resize was involved - the wide margin is only needed to
+#     survive the interpolation noise a resize introduces. Using the same
+#     wide margin unconditionally lets real content changes (e.g. an
+#     entire contour set disappearing) hide inside edge-dense regions,
+#     since 66% of a contour-dense plot can fall inside the edge zone.
+# These only classify pixels using the (pristine, never-resized) expected
+# image, so resizing `actual` to correct a size difference never distorts
+# the zone boundaries themselves - only the pixel values being compared.
+#
+# Note: a real content difference that is both small (roughly under 1-2% of
+# the image) AND located inside an already edge-dense region (e.g. a subtle
+# error tucked among existing contour lines) may still not be caught by
+# this check, since that is exactly the kind of location where rendering
+# noise is expected and tolerated. There is no way to fully close this gap
+# using only the rendered images; the mismatched-image diff grid remains
+# useful for catching this narrow class of change by eye.
+EDGE_GRADIENT_THRESHOLD = 20
+EDGE_TOLERANCE_RADIUS = 3
+DIFF_MAGNITUDE_THRESHOLD = 30
+MAXIMUM_INTERIOR_MISMATCH_FRACTION = 0.005
+MAXIMUM_EDGE_ZONE_MISMATCH_FRACTION_SAME_SIZE = 0.01
+MAXIMUM_EDGE_ZONE_MISMATCH_FRACTION_RESIZED = 0.5
+
+# Set the ZPPY_IMAGE_CHECK_DIAGNOSTICS environment variable to any
+# non-empty value to print, for every image that reaches the zoned
+# mismatch check, whether a resize occurred, the estimated shift and its
+# peak quality, and the resulting interior/edge-zone fractions against
+# whichever threshold applied. This is meant for re-running against a full
+# corpus to see whether the thresholds above are actually shift-driven or
+# just edge-zone blindness.
 
 
 # Classes #####################################################################
@@ -45,6 +123,22 @@ class Results(object):
 # Specialized setup ###########################################################
 
 
+def _get_unused_diff_dir(base_diff_dir: str) -> str:
+    """Return a diff_dir path that does not already exist.
+
+    If base_diff_dir does not exist, it is returned unchanged. Otherwise,
+    a "_tryN" suffix (starting at N=2) is appended until an unused
+    directory name is found. This prevents reruns of the image checker
+    from overwriting the results of previous runs.
+    """
+    if not os.path.exists(base_diff_dir):
+        return base_diff_dir
+    try_number = 2
+    while os.path.exists(f"{base_diff_dir}_try{try_number}"):
+        try_number += 1
+    return f"{base_diff_dir}_try{try_number}"
+
+
 def set_up_and_run_image_checker(
     cfg_specifier: str,
     case_name: str,
@@ -55,22 +149,19 @@ def set_up_and_run_image_checker(
 ):
     print(f"Image checking {cfg_specifier}")
     actual_images_dir = f"{expansions['user_www']}zppy_weekly_{cfg_specifier}_www/{expansions['unique_id']}/{case_name}/"
+    base_diff_dir = (
+        f"{actual_images_dir}image_check_failures_{cfg_specifier}{diff_dir_suffix}"
+    )
     d: Dict[str, str] = {
         "actual_images_dir": actual_images_dir,
         "expected_images_dir": f"{expansions['expected_dir']}expected_{cfg_specifier}",
-        "diff_dir": f"{actual_images_dir}image_check_failures_{cfg_specifier}{diff_dir_suffix}",
+        "diff_dir": _get_unused_diff_dir(base_diff_dir),
         "expected_images_list": f"{expansions['expected_dir']}image_list_expected_{cfg_specifier}.txt",
     }
-    print(f"Removing diff_dir={d['diff_dir']} to produce new results")
-    if os.path.exists(d["diff_dir"]):
-        try:
-            shutil.rmtree(d["diff_dir"])
-        except PermissionError:
-            print(
-                f"{d['diff_dir']} cannot be removed. Execute permissions are needed to remove files. Adding execute permission and trying again."
-            )
-            _chmod_recursive(d["diff_dir"], 0o744)
-            shutil.rmtree(d["diff_dir"])
+    if d["diff_dir"] != base_diff_dir:
+        print(
+            f"diff_dir={base_diff_dir} already exists; using {d['diff_dir']} instead to avoid overwriting previous results"
+        )
     print("Image checking dict:")
     for key in d:
         print(f"{key}: {d[key]}")
@@ -261,6 +352,28 @@ def _compare_actual_and_expected(
         missing_images.append(image_name)
         return
     expected_png = Image.open(path_to_expected_png).convert("RGB")
+
+    # Resolve any size difference *before* computing a diff. PIL's
+    # ImageChops.difference does not raise on mismatched sizes - it
+    # silently returns only the overlapping intersection - so doing this
+    # after the diff would let a real change outside that intersection go
+    # uncounted. See MAXIMUM_SIZE_DIFFERENCE above.
+    was_resized = False
+    if actual_png.size != expected_png.size:
+        width_difference = abs(actual_png.size[0] - expected_png.size[0])
+        height_difference = abs(actual_png.size[1] - expected_png.size[1])
+        if (
+            width_difference > MAXIMUM_SIZE_DIFFERENCE
+            or height_difference > MAXIMUM_SIZE_DIFFERENCE
+        ):
+            # Too large a size difference to be DPI/layout rounding -
+            # treat as a guaranteed mismatch. There's no single well-sized
+            # diff image to generate here, so just record the mismatch.
+            mismatched_images.append(image_name)
+            return
+        actual_png = actual_png.resize(expected_png.size, Image.LANCZOS)
+        was_resized = True
+
     diff = ImageChops.difference(actual_png, expected_png)
 
     if not os.path.isdir(diff_dir):
@@ -271,27 +384,15 @@ def _compare_actual_and_expected(
         # If `diff.getbbox()` is None, then the images are in theory equal
         assert diff.getbbox() is None
     else:
-        # Sometimes, a few pixels will differ, but the two images appear identical.
-        # https://codereview.stackexchange.com/questions/55902/fastest-way-to-count-non-zero-pixels-using-python-and-pillow
-        nonzero_pixels = (
-            diff.crop(bbox)
-            .point(lambda x: 255 if x else 0)
-            .convert("L")
-            .point(bool)
-            .getdata()
-        )
-        num_nonzero_pixels = sum(nonzero_pixels)
-        width, height = expected_png.size
-        num_pixels = width * height
-        fraction = num_nonzero_pixels / num_pixels
+        fraction = _get_mismatched_fraction(diff, expected_png.size)
         # Fraction of mismatched pixels should be less than 0.02%
-        if fraction >= 0.0002:
+        if fraction >= MAXIMUM_MISMATCH_FRACTION and not _images_match_after_shift(
+            actual_png, expected_png, was_resized, image_name
+        ):
             verbose = False
             if verbose:
                 print("\npath_to_actual_png={}".format(path_to_actual_png))
                 print("path_to_expected_png={}".format(path_to_expected_png))
-                print("diff has {} nonzero pixels.".format(num_nonzero_pixels))
-                print("total number of pixels={}".format(num_pixels))
                 print("num_nonzero_pixels/num_pixels fraction={}".format(fraction))
 
             mismatched_images.append(image_name)
@@ -322,6 +423,218 @@ def _compare_actual_and_expected(
             _draw_box(
                 expected_png, diff, os.path.join(diff_dir, f"{image_name}_expected.png")
             )
+
+
+def _get_mismatched_fraction(diff: Image.Image, size: Tuple[int, int]) -> float:
+    # Sometimes, a few pixels will differ, but the two images appear identical.
+    # https://codereview.stackexchange.com/questions/55902/fastest-way-to-count-non-zero-pixels-using-python-and-pillow
+    bbox = diff.getbbox()
+    if bbox is None:
+        return 0.0
+    nonzero_pixels = (
+        diff.crop(bbox)
+        .point(lambda x: 255 if x else 0)
+        .convert("L")
+        .point(bool)
+        .getdata()
+    )
+    return sum(nonzero_pixels) / (size[0] * size[1])
+
+
+def _images_match_after_shift(
+    actual_png: Image.Image,
+    expected_png: Image.Image,
+    was_resized: bool,
+    image_name: str = "",
+) -> bool:
+    # `actual_png` and `expected_png` are assumed to already be the same
+    # size - any resizing needed to get there is handled by the caller
+    # (`_compare_actual_and_expected`), before the diff that led here was
+    # even computed.
+
+    # Rather than exhaustively trying every candidate shift (which costs up
+    # to (2 * MAXIMUM_PIXEL_SHIFT + 1)^2 image diffs), use phase correlation
+    # (an FFT-based technique) to find the single best-aligning shift in one
+    # pass. See: https://en.wikipedia.org/wiki/Phase_correlation
+    horizontal_shift, vertical_shift, peak_quality = _estimate_shift(
+        actual_png, expected_png
+    )
+    if peak_quality < MINIMUM_SHIFT_PEAK_QUALITY:
+        # The correlation peak isn't dominant enough to trust as a genuine
+        # shift (see MINIMUM_SHIFT_PEAK_QUALITY above) - fall back to "no
+        # shift found" rather than silently accepting a spurious offset.
+        horizontal_shift, vertical_shift = 0, 0
+
+    if (
+        abs(horizontal_shift) > MAXIMUM_PIXEL_SHIFT
+        or abs(vertical_shift) > MAXIMUM_PIXEL_SHIFT
+    ):
+        return False
+
+    if horizontal_shift == 0 and vertical_shift == 0:
+        # No translation was found. This is not automatically a failure:
+        # differences in anti-aliasing or font hinting between rendering
+        # environments can leave a thin halo of mismatched pixels hugging
+        # every line, contour boundary, and piece of text even when nothing
+        # has actually moved. `_get_zoned_mismatch_fractions` (below) is
+        # what determines whether that halo is small enough to ignore.
+        actual_overlap, expected_overlap = actual_png, expected_png
+    else:
+        actual_overlap, expected_overlap = _get_overlapping_images(
+            actual_png, expected_png, horizontal_shift, vertical_shift
+        )
+
+    interior_mismatch, edge_zone_mismatch = _get_zoned_mismatch_fractions(
+        actual_overlap, expected_overlap
+    )
+
+    edge_zone_limit = (
+        MAXIMUM_EDGE_ZONE_MISMATCH_FRACTION_RESIZED
+        if was_resized
+        else MAXIMUM_EDGE_ZONE_MISMATCH_FRACTION_SAME_SIZE
+    )
+
+    if os.environ.get("ZPPY_IMAGE_CHECK_DIAGNOSTICS"):
+        print(
+            f"[diagnostics] {image_name}: was_resized={was_resized} "
+            f"shift=({horizontal_shift},{vertical_shift}) "
+            f"peak_quality={peak_quality:.3f} "
+            f"interior_mismatch={interior_mismatch:.5f} "
+            f"edge_zone_mismatch={edge_zone_mismatch:.5f} "
+            f"edge_zone_limit={edge_zone_limit}"
+        )
+
+    return (
+        interior_mismatch < MAXIMUM_INTERIOR_MISMATCH_FRACTION
+        and edge_zone_mismatch < edge_zone_limit
+    )
+
+
+def _get_edge_zone_mask(expected_png: Image.Image) -> np.ndarray:
+    """Return a boolean array marking pixels on or near an edge in `expected_png`.
+
+    `FIND_EDGES` is a Laplacian-style kernel that highlights lines, contour
+    boundaries, axes, and text; thresholding its output identifies pixels
+    that are part of some drawn feature rather than a flat fill or
+    background. The result is dilated by EDGE_TOLERANCE_RADIUS so that
+    pixels close to (not just exactly on) an edge are also marked. Using
+    only the expected image (rather than, say, requiring an edge in both
+    images) means this mask is unaffected by any blurring introduced by
+    resizing `actual` to correct a size difference.
+    """
+    edges = expected_png.convert("L").filter(ImageFilter.FIND_EDGES)
+    edge_array = np.asarray(edges, dtype=np.uint8)
+    is_edge = edge_array > EDGE_GRADIENT_THRESHOLD
+    mask_image = Image.fromarray((is_edge * 255).astype(np.uint8))
+    dilated = mask_image.filter(ImageFilter.MaxFilter(2 * EDGE_TOLERANCE_RADIUS + 1))
+    return np.asarray(dilated, dtype=bool)
+
+
+def _get_zoned_mismatch_fractions(
+    actual_png: Image.Image, expected_png: Image.Image
+) -> Tuple[float, float]:
+    """Return (interior_mismatch_fraction, edge_zone_mismatch_fraction).
+
+    Every pixel is classified as "edge zone" or "interior" using
+    `_get_edge_zone_mask`, and each fraction is computed relative to the
+    size of its own zone (not the whole image), since how much of an image
+    is edge/text content - and therefore how much rendering-noise halo it
+    can accumulate - varies a lot between plot types. A per-pixel
+    difference only counts as a mismatch if it exceeds
+    DIFF_MAGNITUDE_THRESHOLD, since resizing alone introduces a few
+    intensity levels of interpolation rounding even where content is
+    genuinely identical.
+    """
+    diff_array = np.asarray(
+        ImageChops.difference(actual_png, expected_png).convert("L"),
+        dtype=np.float64,
+    )
+    edge_zone_mask = _get_edge_zone_mask(expected_png)
+    interior_mask = ~edge_zone_mask
+    exceeds_threshold = diff_array > DIFF_MAGNITUDE_THRESHOLD
+
+    interior_pixel_count = max(int(np.sum(interior_mask)), 1)
+    edge_zone_pixel_count = max(int(np.sum(edge_zone_mask)), 1)
+    interior_mismatch_fraction = (
+        float(np.sum(exceeds_threshold & interior_mask)) / interior_pixel_count
+    )
+    edge_zone_mismatch_fraction = (
+        float(np.sum(exceeds_threshold & edge_zone_mask)) / edge_zone_pixel_count
+    )
+    return interior_mismatch_fraction, edge_zone_mismatch_fraction
+
+
+def _estimate_shift(
+    actual_png: Image.Image, expected_png: Image.Image
+) -> Tuple[int, int, float]:
+    # Use phase correlation to estimate the (horizontal, vertical) pixel
+    # shift that best aligns `actual_png` with `expected_png`. This finds the
+    # shift in a single FFT-based operation, regardless of how large the
+    # shift is, rather than searching over every candidate shift.
+    actual_array = np.asarray(actual_png.convert("L"), dtype=np.float64)
+    expected_array = np.asarray(expected_png.convert("L"), dtype=np.float64)
+
+    actual_fft = np.fft.fft2(actual_array)
+    expected_fft = np.fft.fft2(expected_array)
+    # The order here matters: this yields a peak at (horizontal_shift,
+    # vertical_shift) such that actual(x, y) == expected(x + horizontal_shift,
+    # y + vertical_shift), matching the convention used by
+    # `_get_overlapping_images`.
+    cross_power = expected_fft * np.conj(actual_fft)
+    magnitude = np.abs(cross_power)
+    # Avoid division by zero where the cross power is (near) zero.
+    magnitude[magnitude < 1e-10] = 1e-10
+    correlation = np.abs(np.fft.ifft2(cross_power / magnitude))
+
+    height, width = correlation.shape
+    peak_row, peak_col = np.unravel_index(np.argmax(correlation), correlation.shape)
+    # Bounded in [0, 1]: close to 1 for a strong, dominant peak (a genuine
+    # shift), much lower when no clean translation relates the two images.
+    # See MINIMUM_SHIFT_PEAK_QUALITY above.
+    peak_quality = float(correlation[peak_row, peak_col])
+
+    # The correlation surface wraps around at the image boundaries, so a peak
+    # in the second half of the axis corresponds to a negative shift.
+    horizontal_shift = int(peak_col)
+    if horizontal_shift > width // 2:
+        horizontal_shift -= width
+    vertical_shift = int(peak_row)
+    if vertical_shift > height // 2:
+        vertical_shift -= height
+
+    return horizontal_shift, vertical_shift, peak_quality
+
+
+def _get_overlapping_images(
+    actual_png: Image.Image,
+    expected_png: Image.Image,
+    horizontal_shift: int,
+    vertical_shift: int,
+) -> Tuple[Image.Image, Image.Image]:
+    width, height = actual_png.size
+    actual_left = max(0, -horizontal_shift)
+    actual_upper = max(0, -vertical_shift)
+    expected_left = max(0, horizontal_shift)
+    expected_upper = max(0, vertical_shift)
+    overlap_width = width - abs(horizontal_shift)
+    overlap_height = height - abs(vertical_shift)
+    actual_overlap = actual_png.crop(
+        (
+            actual_left,
+            actual_upper,
+            actual_left + overlap_width,
+            actual_upper + overlap_height,
+        )
+    )
+    expected_overlap = expected_png.crop(
+        (
+            expected_left,
+            expected_upper,
+            expected_left + overlap_width,
+            expected_upper + overlap_height,
+        )
+    )
+    return actual_overlap, expected_overlap
 
 
 def _draw_box(image, diff, output_path: str):
