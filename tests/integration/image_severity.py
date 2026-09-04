@@ -56,6 +56,15 @@ NOTABLE_GEOMETRY_CHANGE = 0.006
 # Pixels within this of the corner color count as blank border.
 BACKGROUND_TOLERANCE = 6
 
+# A changed number in a statistics box is only a few dozen pixels -- far too
+# small to move `content_fraction`, which is why it needs its own check. These
+# settings look for compact spots of strong difference, using a much smaller
+# movement tolerance because at 4 pixels one digit simply looks like another.
+LOCALIZED_SHIFT_TOLERANCE_PIXELS = 1
+LOCALIZED_INTENSITY_TOLERANCE = 80
+LOCALIZED_MIN_SPOT_PIXELS = 8
+LOCALIZED_MIN_TOTAL_PIXELS = 20
+
 # Ordered least to most severe.
 NEGLIGIBLE = "NEGLIGIBLE"
 MINOR = "MINOR"
@@ -80,6 +89,7 @@ class Comparison(NamedTuple):
     actual_size: Optional[Tuple[int, int]]
     expected_size: Optional[Tuple[int, int]]
     cause: str  # short human-readable guess at the root cause
+    localized_pixels: int = 0  # size of small isolated changes, e.g. a changed number
 
     @property
     def needs_review(self) -> bool:
@@ -148,6 +158,34 @@ def tolerant_difference(
     return worst
 
 
+def localized_change_pixels(actual: np.ndarray, expected: np.ndarray) -> int:
+    """Total size of small, isolated, high-contrast differences.
+
+    ``content_fraction`` measures area, and area is not the same as importance.
+    A single wrong digit in a "Mean -0.18" label is about 13 pixels -- roughly
+    240 times smaller than the noise floor -- so it can never move an
+    area-based score. But it means the underlying data changed, which is
+    exactly what we must not miss.
+
+    This looks for it directly: spots where the two images differ strongly and
+    which are compact rather than spread out. Anti-aliasing noise is diffuse
+    and disappears here; a changed character does not. Measured on 5375
+    unchanged e3sm_diags images, 5357 return zero.
+
+    Only meaningful when the two images have the same shape, so that no
+    resampling has been applied to either one.
+    """
+    difference = tolerant_difference(actual, expected, LOCALIZED_SHIFT_TOLERANCE_PIXELS)
+    strong = difference > LOCALIZED_INTENSITY_TOLERANCE
+    if not strong.any():
+        return 0
+    labels, count = ndimage.label(strong)
+    if count == 0:
+        return 0
+    sizes = ndimage.sum(strong, labels, range(1, count + 1))
+    return int(sizes[sizes >= LOCALIZED_MIN_SPOT_PIXELS].sum())
+
+
 def _relative_size_change(actual: Tuple[int, int], expected: Tuple[int, int]) -> float:
     """Largest relative difference between two (height, width) pairs."""
     return max(
@@ -203,6 +241,12 @@ def compare(image_name: str, actual_path: str, expected_path: str) -> Comparison
             cause,
         )
 
+    # Look for a changed number or label. This must happen before any
+    # resampling below, which would smear the very thing it looks for.
+    localized_pixels = 0
+    if actual.shape == expected.shape:
+        localized_pixels = localized_change_pixels(actual, expected)
+
     # Put both on the same grid so they can be compared pixel by pixel.
     if actual.shape != expected.shape:
         height, width = expected.shape[:2]
@@ -217,6 +261,11 @@ def compare(image_name: str, actual_path: str, expected_path: str) -> Comparison
     # The layout moved measurably, so treat the change as one band worse.
     if geometry_change >= NOTABLE_GEOMETRY_CHANGE:
         severity = _promote(severity)
+    # Something small but possibly meaningful changed, such as a printed
+    # statistic. Too small to rank highly, but it must not be filtered out.
+    if localized_pixels >= LOCALIZED_MIN_TOTAL_PIXELS and severity == NEGLIGIBLE:
+        severity = MINOR
+        cause = "small isolated change (possible value change)"
 
     return Comparison(
         image_name,
@@ -226,6 +275,7 @@ def compare(image_name: str, actual_path: str, expected_path: str) -> Comparison
         actual_size,
         expected_size,
         cause,
+        localized_pixels,
     )
 
 

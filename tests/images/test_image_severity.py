@@ -13,6 +13,7 @@ from tests.integration.image_severity import (
     STRUCTURAL,
     Comparison,
     group_by_cause,
+    localized_change_pixels,
     tolerant_difference,
     trim_background,
 )
@@ -135,3 +136,38 @@ class TestGrouping:
     def test_only_real_changes_need_review(self, severity, expected):
         comparison = Comparison("a", severity, 0.0, 0.0, (1, 1), (1, 1), "x")
         assert comparison.needs_review is expected
+
+
+class TestLocalizedChanges:
+    """A changed number is far too small to move an area-based score.
+
+    These guard the case that area-based severity cannot see: the repository's
+    own e3sm_diags fixture differs only by "Mean -0.18" becoming "Mean -0.17".
+    """
+
+    def test_unchanged_images_report_nothing(self):
+        image = blank(200, 200)
+        image[50:150, 50:150] = (200, 30, 30)
+        assert localized_change_pixels(image, image) == 0
+
+    def test_a_small_solid_change_is_found(self):
+        """Stands in for a digit being redrawn."""
+        expected = blank(200, 200)
+        actual = blank(200, 200)
+        actual[100:106, 100:110] = 0
+        assert localized_change_pixels(actual, expected) > 0
+
+    def test_a_change_too_small_to_matter_is_ignored(self):
+        """A couple of stray pixels are noise, not a redrawn character."""
+        expected = blank(200, 200)
+        actual = blank(200, 200)
+        actual[100, 100] = 0
+        actual[120, 130] = 0
+        assert localized_change_pixels(actual, expected) == 0
+
+    def test_faint_differences_are_ignored(self):
+        """Anti-aliasing changes intensity slightly; that is not a real change."""
+        expected = blank(200, 200)
+        actual = blank(200, 200)
+        actual[50:150, 50:150] = 235  # well under the intensity tolerance
+        assert localized_change_pixels(actual, expected) == 0
