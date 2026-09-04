@@ -9,6 +9,7 @@ import pytest
 
 from tests.integration.image_severity import (
     MAJOR,
+    MINOR,
     NEGLIGIBLE,
     STRUCTURAL,
     Comparison,
@@ -179,3 +180,41 @@ class TestLocalizedChanges:
         actual = blank(200, 200)
         actual[50:150, 50:150] = 235  # well under the intensity tolerance
         assert localized_change_pixels(actual, expected) == 0
+
+
+class TestResultsOrdering:
+    """The ranked list feeds both severity_report.txt and the diff grid PDF."""
+
+    def test_mismatched_list_is_worst_first(self):
+        from tests.integration.image_checker import Results
+
+        comparisons = [
+            Comparison("minor.png", MINOR, 0.01, 0.0, (1, 1), (1, 1), "x"),
+            Comparison("structural.png", STRUCTURAL, 1.0, 0.5, (1, 1), (1, 1), "y"),
+            Comparison("major.png", MAJOR, 0.5, 0.0, (1, 1), (1, 1), "z"),
+        ]
+        results = Results(
+            diff_dir="/tmp/diff",
+            prefix="task",
+            image_count_total=3,
+            file_list_missing=[],
+            file_list_mismatched=["minor.png", "structural.png", "major.png"],
+            comparisons=comparisons,
+        )
+        assert results.file_list_mismatched == [
+            "structural.png",
+            "major.png",
+            "minor.png",
+        ]
+
+    def test_cosmetic_images_are_counted_separately(self):
+        from tests.integration.image_checker import Results
+
+        comparisons = [
+            Comparison("a.png", NEGLIGIBLE, 0.0, 0.0, (1, 1), (1, 1), "x"),
+            Comparison("b.png", NEGLIGIBLE, 0.0, 0.0, (1, 1), (1, 1), "x"),
+            Comparison("c.png", MAJOR, 0.5, 0.0, (1, 1), (1, 1), "y"),
+        ]
+        results = Results("/tmp/diff", "task", 3, [], ["c.png"], comparisons)
+        assert results.image_count_cosmetic == 2
+        assert results.image_count_mismatched == 1

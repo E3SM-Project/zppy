@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+import textwrap
 from math import ceil
 from typing import Dict, List, Optional
 
@@ -138,7 +139,11 @@ def check_images(parameters: Parameters, prefix: str):
     # Rank and group the failures so a reviewer knows where to start
     _write_severity_report(diff_subdir, test_results)
     # Create image diff grid, worst failures first
-    _make_image_diff_grid(diff_subdir, ordered_names=test_results.file_list_mismatched)
+    _make_image_diff_grid(
+        diff_subdir,
+        ordered_names=test_results.file_list_mismatched,
+        severities={c.image_name: c.severity for c in test_results.comparisons},
+    )
     return test_results
 
 
@@ -428,6 +433,7 @@ def _make_image_diff_grid(
     pdf_name="image_diff_grid.pdf",
     rows_per_page=2,
     ordered_names: Optional[List[str]] = None,
+    severities: Optional[Dict[str, str]] = None,
 ):
     """
     Path definitions:
@@ -472,12 +478,16 @@ def _make_image_diff_grid(
     print(f"Web page will be at:\n{web_portal_base_url}/{web_subdir}/{pdf_name}")
 
     prefixes = []
+    severity_by_prefix: Dict[str, str] = {}
     if ordered_names:
         # Keep the caller's order, which is worst failure first.
+        diff_dir = diff_subdir.removesuffix("/" + os.path.basename(diff_subdir))
         for name in ordered_names:
-            candidate = f"{diff_subdir.removesuffix('/' + os.path.basename(diff_subdir))}/{name}"
+            candidate = f"{diff_dir}/{name}"
             if os.path.exists(f"{candidate}_diff.png"):
                 prefixes.append(candidate)
+                if severities and name in severities:
+                    severity_by_prefix[candidate] = severities[name]
     if not prefixes:
         # print(f"Walking diff_subdir: {diff_subdir}")
         for root, _, files in os.walk(diff_subdir):
@@ -511,25 +521,25 @@ def _make_image_diff_grid(
             # short_title starts with a slash.
             diff_url = f"{web_portal_base_url}/{web_subdir}{short_title}_diff.png"
 
-            # Set title with hyperlink
-            title = ax_row[1].set_title(short_title, fontsize=6, color="blue")
+            # Set title with hyperlink. Lead with the severity so the reader
+            # can see how far down the ranking they have got. Wrap it, or a
+            # long path runs off both edges of the page and cannot be read.
+            severity = severity_by_prefix.get(prefixes[count])
+            label = f"[{severity}] {short_title}" if severity else short_title
+            title = ax_row[1].set_title(
+                "\n".join(textwrap.wrap(label, width=95)), fontsize=5, color="blue"
+            )
             title.set_url(diff_url)
 
-            # Load and display images
-            img = mpimg.imread(f"{prefixes[count]}_actual.png")
-            ax_row[0].imshow(img)
-            ax_row[0].set_xticks([])
-            ax_row[0].set_yticks([])
-            img = mpimg.imread(f"{prefixes[count]}_expected.png")
-            ax_row[1].imshow(img)
-            ax_row[1].set_xticks([])
-            ax_row[1].set_yticks([])
-            img = mpimg.imread(f"{prefixes[count]}_diff.png")
-            ax_row[2].imshow(img)
-            ax_row[2].set_xticks([])
-            ax_row[2].set_yticks([])
+            # Load and display images, naming each column so the reader does
+            # not have to remember which is which.
+            for ax, kind in zip(ax_row, ("actual", "expected", "diff")):
+                ax.imshow(mpimg.imread(f"{prefixes[count]}_{kind}.png"))
+                ax.set_xticks([])
+                ax.set_yticks([])
+                ax.set_xlabel(kind, fontsize=5)
         fig.tight_layout()
-        pdf.savefig(1)
+        pdf.savefig(fig)
         plt.close(fig)
     pdf.close()
     plt.close("all")
