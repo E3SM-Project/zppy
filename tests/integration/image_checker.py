@@ -142,7 +142,9 @@ def check_images(parameters: Parameters, prefix: str):
     _make_image_diff_grid(
         diff_subdir,
         ordered_names=test_results.file_list_mismatched,
-        severities={c.image_name: c.severity for c in test_results.comparisons},
+        labels={
+            c.image_name: f"[{c.severity}] {c.cause}" for c in test_results.comparisons
+        },
     )
     return test_results
 
@@ -433,7 +435,7 @@ def _make_image_diff_grid(
     pdf_name="image_diff_grid.pdf",
     rows_per_page=2,
     ordered_names: Optional[List[str]] = None,
-    severities: Optional[Dict[str, str]] = None,
+    labels: Optional[Dict[str, str]] = None,
 ):
     """
     Path definitions:
@@ -478,7 +480,7 @@ def _make_image_diff_grid(
     print(f"Web page will be at:\n{web_portal_base_url}/{web_subdir}/{pdf_name}")
 
     prefixes = []
-    severity_by_prefix: Dict[str, str] = {}
+    label_by_prefix: Dict[str, str] = {}
     if ordered_names:
         # Keep the caller's order, which is worst failure first.
         diff_dir = diff_subdir.removesuffix("/" + os.path.basename(diff_subdir))
@@ -486,8 +488,8 @@ def _make_image_diff_grid(
             candidate = f"{diff_dir}/{name}"
             if os.path.exists(f"{candidate}_diff.png"):
                 prefixes.append(candidate)
-                if severities and name in severities:
-                    severity_by_prefix[candidate] = severities[name]
+                if labels and name in labels:
+                    label_by_prefix[candidate] = labels[name]
     if not prefixes:
         # print(f"Walking diff_subdir: {diff_subdir}")
         for root, _, files in os.walk(diff_subdir):
@@ -528,14 +530,13 @@ def _make_image_diff_grid(
             # short_title starts with a slash.
             diff_url = f"{web_portal_base_url}/{web_subdir}{short_title}_diff.png"
 
-            # Set title with hyperlink. Lead with the severity so the reader
-            # can see how far down the ranking they have got. Wrap it, or a
-            # long path runs off both edges of the page and cannot be read.
-            severity = severity_by_prefix.get(prefixes[count])
-            label = f"[{severity}] {short_title}" if severity else short_title
-            title = ax_row[1].set_title(
-                "\n".join(textwrap.wrap(label, width=95)), fontsize=5, color="blue"
-            )
+            # Lead with the severity and likely cause so the reader can see
+            # how far down the ranking they are and which group this belongs
+            # to. Wrap the path, or it runs off both edges of the page.
+            prefix_label = label_by_prefix.get(prefixes[count])
+            wrapped = "\n".join(textwrap.wrap(short_title, width=95))
+            heading = f"{prefix_label}\n{wrapped}" if prefix_label else wrapped
+            title = ax_row[1].set_title(heading, fontsize=5, color="blue")
             title.set_url(diff_url)
 
             # Load and display images, naming each column so the reader does
