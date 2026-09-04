@@ -64,6 +64,10 @@ LOCALIZED_SHIFT_TOLERANCE_PIXELS = 1
 LOCALIZED_INTENSITY_TOLERANCE = 80
 LOCALIZED_MIN_SPOT_PIXELS = 8
 LOCALIZED_MIN_TOTAL_PIXELS = 20
+# A changed number is a few spots in one place. A plot whose gridlines and
+# coastlines all shifted by a pixel produces spots scattered over the whole
+# figure -- that is anti-aliasing, not a changed value, so ignore it.
+LOCALIZED_MAX_SPOTS = 20
 
 # Ordered least to most severe.
 NEGLIGIBLE = "NEGLIGIBLE"
@@ -183,7 +187,10 @@ def localized_change_pixels(actual: np.ndarray, expected: np.ndarray) -> int:
     if count == 0:
         return 0
     sizes = ndimage.sum(strong, labels, range(1, count + 1))
-    return int(sizes[sizes >= LOCALIZED_MIN_SPOT_PIXELS].sum())
+    spots = sizes[sizes >= LOCALIZED_MIN_SPOT_PIXELS]
+    if len(spots) > LOCALIZED_MAX_SPOTS:
+        return 0
+    return int(spots.sum())
 
 
 def _relative_size_change(actual: Tuple[int, int], expected: Tuple[int, int]) -> float:

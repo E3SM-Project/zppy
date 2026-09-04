@@ -165,6 +165,14 @@ class TestLocalizedChanges:
         actual[120, 130] = 0
         assert localized_change_pixels(actual, expected) == 0
 
+    def test_many_scattered_spots_are_ignored(self):
+        """Every gridline shifting a pixel is anti-aliasing, not a value change."""
+        expected = blank(400, 400)
+        actual = blank(400, 400)
+        for row in range(20, 380, 12):
+            actual[row : row + 4, 20:26] = 0  # spots all over the figure
+        assert localized_change_pixels(actual, expected) == 0
+
     def test_faint_differences_are_ignored(self):
         """Anti-aliasing changes intensity slightly; that is not a real change."""
         expected = blank(200, 200)
