@@ -505,11 +505,18 @@ def _make_image_diff_grid(
 
     num_pages = ceil(rows / rows_per_page)
     for page in range(num_pages):
-        fig, axes = plt.subplots(rows_per_page, cols)
+        # squeeze=False keeps `axes` two-dimensional even when rows_per_page
+        # is 1, so the row loop below works for any page size.
+        fig, axes = plt.subplots(rows_per_page, cols, squeeze=False)
         print(f"Page {page}")
         for i, ax_row in enumerate(axes):
             count = page * rows_per_page + i
             if count > len(prefixes) - 1:
+                # The last page is usually not full. Hide the leftover axes,
+                # or they are drawn as confusing empty boxes.
+                for unused_row in axes[i:]:
+                    for unused_ax in unused_row:
+                        unused_ax.set_visible(False)
                 break
             # We already know all the files are in `diff_subdir`; no need to repeat it.
             # short_title starts with a slash.
