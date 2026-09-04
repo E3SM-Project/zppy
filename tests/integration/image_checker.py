@@ -1,13 +1,17 @@
+import json
 import os
 import shutil
 from math import ceil
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import matplotlib.backends.backend_pdf
 import matplotlib.image as mpimg
 from mache import MachineInfo
 from matplotlib import pyplot as plt
 from PIL import Image, ImageChops, ImageDraw
+
+from tests.integration import image_severity
+from tests.integration.image_severity import Comparison
 
 
 # Classes #####################################################################
@@ -27,6 +31,7 @@ class Results(object):
         image_count_total: int,
         file_list_missing: List[str],
         file_list_mismatched: List[str],
+        comparisons: Optional[List[Comparison]] = None,
     ):
         if image_count_total == 0:
             raise ValueError(f"No images found for task {prefix} in {diff_dir}")
@@ -39,7 +44,34 @@ class Results(object):
             image_count_total - len(file_list_missing) - len(file_list_mismatched)
         )
         self.file_list_missing = sorted(file_list_missing)
-        self.file_list_mismatched = sorted(file_list_mismatched)
+        # Worst first, so a reviewer can work down the list and stop once the
+        # remaining differences are clearly cosmetic.
+        self.comparisons: List[Comparison] = comparisons or []
+        by_severity = {c.image_name: c for c in self.comparisons}
+        self.file_list_mismatched = sorted(
+            file_list_mismatched,
+            key=lambda name: (
+                by_severity[name].sort_key() if name in by_severity else (0, 0.0)
+            ),
+        )
+        self.severity_counts: Dict[str, int] = {}
+        for comparison in self.comparisons:
+            self.severity_counts[comparison.severity] = (
+                self.severity_counts.get(comparison.severity, 0) + 1
+            )
+        # Cosmetic differences are reported but do not require review.
+        self.image_count_cosmetic = self.severity_counts.get(
+            image_severity.NEGLIGIBLE, 0
+        )
+
+    def severity_summary(self) -> str:
+        """e.g. "2 structural, 15 major, 40 minor"."""
+        parts = [
+            f"{self.severity_counts[level]} {level.lower()}"
+            for level in reversed(image_severity.SEVERITY_ORDER)
+            if self.severity_counts.get(level)
+        ]
+        return ", ".join(parts) if parts else "none"
 
 
 # Specialized setup ###########################################################
@@ -103,9 +135,60 @@ def check_images(parameters: Parameters, prefix: str):
     for mismatched_image in test_results.file_list_mismatched:
         with open(mismatched_images_file, "a") as f:
             f.write(f"{mismatched_image}\n")
-    # Create image diff grid
-    _make_image_diff_grid(diff_subdir)
+    # Rank and group the failures so a reviewer knows where to start
+    _write_severity_report(diff_subdir, test_results)
+    # Create image diff grid, worst failures first
+    _make_image_diff_grid(diff_subdir, ordered_names=test_results.file_list_mismatched)
     return test_results
+
+
+def _write_severity_report(diff_subdir: str, test_results: Results) -> None:
+    """Write a ranked, grouped summary plus the raw scores.
+
+    The point of both files is to answer "where do I start?". The old flat
+    list of every differing image could not.
+    """
+    comparisons = sorted(test_results.comparisons, key=Comparison.sort_key)
+    needing_review = [c for c in comparisons if c.needs_review]
+
+    with open(f"{diff_subdir}/severity_report.txt", "w") as f:
+        f.write(f"Image check for {test_results.prefix}\n")
+        f.write(f"{test_results.image_count_total} images compared\n")
+        f.write(
+            f"{test_results.image_count_cosmetic} cosmetic "
+            f"(reported only, no review needed)\n"
+        )
+        f.write(f"{len(needing_review)} need review\n\n")
+
+        # Most failures share a handful of root causes. Showing the groups
+        # first means a reviewer can check one example instead of hundreds.
+        f.write("Grouped by cause (check one example from each):\n")
+        groups = image_severity.group_by_cause(needing_review)
+        for (severity, cause), count in sorted(
+            groups.items(), key=lambda item: -item[1]
+        ):
+            f.write(f"  {count:6d}  {severity:11s}  {cause}\n")
+
+        f.write("\nWorst first:\n")
+        for c in needing_review:
+            f.write(f"  {c.severity:11s} {c.content_fraction:8.4f}  {c.image_name}\n")
+
+    with open(f"{diff_subdir}/image_scores.json", "w") as f:
+        json.dump(
+            [
+                {
+                    "name": c.image_name,
+                    "severity": c.severity,
+                    "content_fraction": round(c.content_fraction, 6),
+                    "geometry_change": round(c.geometry_change, 6),
+                    "localized_pixels": c.localized_pixels,
+                    "cause": c.cause,
+                }
+                for c in comparisons
+            ],
+            f,
+            indent=1,
+        )
 
 
 def construct_markdown_summary_table(
@@ -122,9 +205,10 @@ def construct_markdown_summary_table(
     with open(output_file_path, "w") as f:
         f.write("# Summary of test results\n\n")
         f.write(
-            "| Test name | Total images | Correct images | Missing images | Mismatched images | \n"
+            "| Test name | Total images | Correct images | Cosmetic only |"
+            " Missing images | Needs review | Severity | \n"
         )
-        f.write("| --- | --- | --- | --- | --- | \n")
+        f.write("| --- | --- | --- | --- | --- | --- | --- | \n")
         for test_name, test_results in test_results_dict.items():
             missing_str = f"{test_results.image_count_missing}"
             mismatched_str = f"{test_results.image_count_mismatched}"
@@ -162,9 +246,15 @@ def construct_markdown_summary_table(
                         mismatched_str = f"{test_results.image_count_mismatched} (no list created, [grid]({web_link}/image_diff_grid.pdf))"
                     else:
                         mismatched_str = f"{test_results.image_count_mismatched} (no list/grid created)"
+                    if os.path.exists(f"{diff_subdir}/severity_report.txt"):
+                        mismatched_str += f", [ranked]({web_link}/severity_report.txt)"
 
             f.write(
-                f"| {test_name} | {test_results.image_count_total} | {test_results.image_count_correct} | {missing_str} | {mismatched_str} | \n"
+                f"| {test_name} | {test_results.image_count_total}"
+                f" | {test_results.image_count_correct}"
+                f" | {test_results.image_count_cosmetic}"
+                f" | {missing_str} | {mismatched_str}"
+                f" | {test_results.severity_summary()} | \n"
             )
     print(f"Copy the output of {output_file_path} to a Pull Request comment")
 
@@ -178,6 +268,7 @@ def _check_mismatched_images(
 ) -> Results:
     missing_images: List[str] = []
     mismatched_images: List[str] = []
+    comparisons: List[Comparison] = []
 
     counter = 0
     print(f"Opening expected images file {parameters.expected_images_list}")
@@ -203,6 +294,7 @@ def _check_mismatched_images(
                     path_to_actual_png,
                     path_to_expected_png,
                     parameters.diff_dir,
+                    comparisons,
                 )
 
     verbose: bool = False
@@ -219,12 +311,17 @@ def _check_mismatched_images(
     # Count summary
     print(f"Total: {counter}")
     print(f"Number of missing images: {len(missing_images)}")
-    print(f"Number of mismatched images: {len(mismatched_images)}")
+    print(f"Number of images needing review: {len(mismatched_images)}")
     print(
         f"Number of correct images: {counter - len(missing_images) - len(mismatched_images)}"
     )
     test_results = Results(
-        parameters.diff_dir, prefix, counter, missing_images, mismatched_images
+        parameters.diff_dir,
+        prefix,
+        counter,
+        missing_images,
+        mismatched_images,
+        comparisons,
     )
 
     # Make diff_dir readable
@@ -249,88 +346,65 @@ def _compare_actual_and_expected(
     path_to_actual_png,
     path_to_expected_png,
     diff_dir,
+    comparisons: Optional[List[Comparison]] = None,
 ):
-    # https://stackoverflow.com/questions/35176639/compare-images-python-pil
-    try:
-        actual_png = Image.open(path_to_actual_png).convert("RGB")
-    except FileNotFoundError:
+    """Score one image pair and record it if a human needs to look at it."""
+    comparison = image_severity.compare(
+        image_name, path_to_actual_png, path_to_expected_png
+    )
+    if comparisons is not None:
+        comparisons.append(comparison)
+
+    if comparison.severity == image_severity.MISSING:
         missing_images.append(image_name)
         return
-    except Exception as e:
-        print(f"Warning: could not open actual image {path_to_actual_png}: {e}")
-        missing_images.append(image_name)
+
+    if not comparison.needs_review:
+        # Cosmetic only -- typically anti-aliasing that moved a fraction of a
+        # pixel when matplotlib was upgraded. Counted in the summary, but not
+        # worth a reviewer's time.
         return
+
+    mismatched_images.append(image_name)
+    _save_comparison_images(
+        image_name, path_to_actual_png, path_to_expected_png, diff_dir
+    )
+
+
+def _save_comparison_images(
+    image_name, path_to_actual_png, path_to_expected_png, diff_dir
+):
+    """Write actual, expected and diff images for one failure, boxed."""
+    if not os.path.isdir(diff_dir):
+        os.makedirs(diff_dir, exist_ok=True)
+
+    actual_png = Image.open(path_to_actual_png).convert("RGB")
     expected_png = Image.open(path_to_expected_png).convert("RGB")
     diff = ImageChops.difference(actual_png, expected_png)
 
-    if not os.path.isdir(diff_dir):
-        os.mkdir(diff_dir)
+    diff_dir_actual_png = os.path.join(diff_dir, "{}_actual.png".format(image_name))
+    # image_name could contain a number of subdirectories.
+    os.makedirs(os.path.dirname(diff_dir_actual_png), exist_ok=True)
+    shutil.copy(path_to_actual_png, diff_dir_actual_png)
 
-    bbox = diff.getbbox()
-    if not bbox:
-        # If `diff.getbbox()` is None, then the images are in theory equal
-        assert diff.getbbox() is None
-    else:
-        # Sometimes, a few pixels will differ, but the two images appear identical.
-        # https://codereview.stackexchange.com/questions/55902/fastest-way-to-count-non-zero-pixels-using-python-and-pillow
-        nonzero_pixels = (
-            diff.crop(bbox)
-            .point(lambda x: 255 if x else 0)
-            .convert("L")
-            .point(bool)
-            .getdata()
-        )
-        num_nonzero_pixels = sum(nonzero_pixels)
-        width, height = expected_png.size
-        num_pixels = width * height
-        fraction = num_nonzero_pixels / num_pixels
-        # Fraction of mismatched pixels should be less than 0.02%
-        if fraction >= 0.0002:
-            verbose = False
-            if verbose:
-                print("\npath_to_actual_png={}".format(path_to_actual_png))
-                print("path_to_expected_png={}".format(path_to_expected_png))
-                print("diff has {} nonzero pixels.".format(num_nonzero_pixels))
-                print("total number of pixels={}".format(num_pixels))
-                print("num_nonzero_pixels/num_pixels fraction={}".format(fraction))
+    diff_dir_expected_png = os.path.join(diff_dir, "{}_expected.png".format(image_name))
+    os.makedirs(os.path.dirname(diff_dir_expected_png), exist_ok=True)
+    shutil.copy(path_to_expected_png, diff_dir_expected_png)
 
-            mismatched_images.append(image_name)
-
-            diff_dir_actual_png = os.path.join(
-                diff_dir, "{}_actual.png".format(image_name)
-            )
-            # image_name could contain a number of subdirectories.
-            os.makedirs(os.path.dirname(diff_dir_actual_png), exist_ok=True)
-            shutil.copy(
-                path_to_actual_png,
-                diff_dir_actual_png,
-            )
-            diff_dir_expected_png = os.path.join(
-                diff_dir, "{}_expected.png".format(image_name)
-            )
-            # image_name could contain a number of subdirectories.
-            os.makedirs(os.path.dirname(diff_dir_expected_png), exist_ok=True)
-            shutil.copy(
-                path_to_expected_png,
-                diff_dir_expected_png,
-            )
-            # Draw red box around diff-area on each of: diff, actual, expected
-            _draw_box(diff, diff, os.path.join(diff_dir, f"{image_name}_diff.png"))
-            _draw_box(
-                actual_png, diff, os.path.join(diff_dir, f"{image_name}_actual.png")
-            )
-            _draw_box(
-                expected_png, diff, os.path.join(diff_dir, f"{image_name}_expected.png")
-            )
+    # Draw red box around diff-area on each of: diff, actual, expected
+    _draw_box(diff, diff, os.path.join(diff_dir, f"{image_name}_diff.png"))
+    _draw_box(actual_png, diff, os.path.join(diff_dir, f"{image_name}_actual.png"))
+    _draw_box(expected_png, diff, os.path.join(diff_dir, f"{image_name}_expected.png"))
 
 
 def _draw_box(image, diff, output_path: str):
     # https://stackoverflow.com/questions/41405632/draw-a-rectangle-and-a-text-in-it-using-pil
     draw = ImageDraw.Draw(image)
-    left, upper, right, lower = (
-        diff.getbbox()
-    )  # We specifically want the diff's bounding box
-    draw.rectangle(((left, upper), (right, lower)), outline="red")
+    # We specifically want the diff's bounding box.
+    bbox = diff.getbbox()
+    if bbox is not None:
+        left, upper, right, lower = bbox
+        draw.rectangle(((left, upper), (right, lower)), outline="red")
     image.save(output_path, "PNG")
 
 
@@ -349,7 +423,12 @@ def _chmod_recursive(path: str, mode):
     os.chmod(path, mode)
 
 
-def _make_image_diff_grid(diff_subdir, pdf_name="image_diff_grid.pdf", rows_per_page=2):
+def _make_image_diff_grid(
+    diff_subdir,
+    pdf_name="image_diff_grid.pdf",
+    rows_per_page=2,
+    ordered_names: Optional[List[str]] = None,
+):
     """
     Path definitions:
     z = x.removeprefix(y) => x = y + z
@@ -393,13 +472,20 @@ def _make_image_diff_grid(diff_subdir, pdf_name="image_diff_grid.pdf", rows_per_
     print(f"Web page will be at:\n{web_portal_base_url}/{web_subdir}/{pdf_name}")
 
     prefixes = []
-    # print(f"Walking diff_subdir: {diff_subdir}")
-    for root, _, files in os.walk(diff_subdir):
-        # print(f"root: {root}")
-        for file_name in files:
-            # print(f"file_name: {file_name}")
-            if file_name.endswith("_diff.png"):
-                prefixes.append(f"{root}/{file_name.split('_diff.png')[0]}")
+    if ordered_names:
+        # Keep the caller's order, which is worst failure first.
+        for name in ordered_names:
+            candidate = f"{diff_subdir.removesuffix('/' + os.path.basename(diff_subdir))}/{name}"
+            if os.path.exists(f"{candidate}_diff.png"):
+                prefixes.append(candidate)
+    if not prefixes:
+        # print(f"Walking diff_subdir: {diff_subdir}")
+        for root, _, files in os.walk(diff_subdir):
+            # print(f"root: {root}")
+            for file_name in files:
+                # print(f"file_name: {file_name}")
+                if file_name.endswith("_diff.png"):
+                    prefixes.append(f"{root}/{file_name.split('_diff.png')[0]}")
     rows = len(prefixes)
     if rows == 0:
         # No diffs to collect into a PDF

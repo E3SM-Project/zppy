@@ -290,8 +290,14 @@ def _band(content_fraction: float) -> str:
 
 
 def _promote(severity: str) -> str:
+    """Bump one band, but never into STRUCTURAL.
+
+    STRUCTURAL means the figure's layout itself changed -- a panel came or
+    went -- which is decided by size alone. A change that is merely large and
+    slightly shifted is MAJOR, not structural.
+    """
     index = SEVERITY_ORDER.index(severity)
-    return SEVERITY_ORDER[min(index + 1, SEVERITY_ORDER.index(STRUCTURAL))]
+    return SEVERITY_ORDER[min(index + 1, SEVERITY_ORDER.index(MAJOR))]
 
 
 def group_by_cause(comparisons: List[Comparison]) -> Dict[Tuple[str, str], int]:
