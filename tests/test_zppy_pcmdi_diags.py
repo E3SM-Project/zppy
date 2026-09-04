@@ -542,6 +542,7 @@ def test_add_ts_dependencies():
     dependencies: List[str] = []
     c = {
         "current_set": "mean_climate",
+        "infer_section_parameters": True,
         "ts_num_years": 5,
     }
     script_dir = "/scripts"
