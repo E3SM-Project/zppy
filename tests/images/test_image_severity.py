@@ -115,12 +115,16 @@ class TestTrimBackground:
 class TestGrouping:
     def test_failures_are_counted_by_severity_and_cause(self):
         comparisons = [
-            Comparison("a", MAJOR, 0.5, 0.2, (1, 1), (1, 1), "panel added/removed"),
-            Comparison("b", MAJOR, 0.4, 0.2, (1, 1), (1, 1), "panel added/removed"),
+            Comparison(
+                "a", MAJOR, 0.5, 0.2, (1, 1), (1, 1), "panel or labels added/removed"
+            ),
+            Comparison(
+                "b", MAJOR, 0.4, 0.2, (1, 1), (1, 1), "panel or labels added/removed"
+            ),
             Comparison("c", NEGLIGIBLE, 0.0, 0.0, (1, 1), (1, 1), "layout shifted"),
         ]
         counts = group_by_cause(comparisons)
-        assert counts[(MAJOR, "panel added/removed")] == 2
+        assert counts[(MAJOR, "panel or labels added/removed")] == 2
         assert counts[(NEGLIGIBLE, "layout shifted")] == 1
 
     def test_worst_sorts_first(self):

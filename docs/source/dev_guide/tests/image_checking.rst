@@ -83,7 +83,7 @@ failures by cause before listing them:
 .. code-block:: none
 
     Grouped by cause (check one example from each):
-         381  STRUCTURAL   panel added/removed
+         381  STRUCTURAL   panel or labels added/removed
          302  MAJOR        title or label line added/removed
           53  MAJOR        layout shifted
           28  MODERATE     plotted content changed

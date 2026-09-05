@@ -210,7 +210,10 @@ def _describe_cause(
     width_lost = expected_size[1] - actual_size[1]
     height_lost = expected_size[0] - actual_size[0]
     if geometry_change >= STRUCTURAL_GEOMETRY_CHANGE:
-        return "panel added/removed"
+        # The figure changed size substantially. Usually a panel came or went,
+        # but axis labels or an extra statistic can do it too, so do not claim
+        # more than the size actually tells us.
+        return "panel or labels added/removed"
     if abs(height_lost) >= 20:
         return "title or label line added/removed"
     if geometry_change >= NOTABLE_GEOMETRY_CHANGE or abs(width_lost) > 3:
