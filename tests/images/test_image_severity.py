@@ -116,16 +116,18 @@ class TestGrouping:
     def test_failures_are_counted_by_severity_and_cause(self):
         comparisons = [
             Comparison(
-                "a", MAJOR, 0.5, 0.2, (1, 1), (1, 1), "panel or labels added/removed"
+                "a", MAJOR, 0.5, 0.2, (1, 1), (1, 1), "figure size changed a lot"
             ),
             Comparison(
-                "b", MAJOR, 0.4, 0.2, (1, 1), (1, 1), "panel or labels added/removed"
+                "b", MAJOR, 0.4, 0.2, (1, 1), (1, 1), "figure size changed a lot"
             ),
-            Comparison("c", NEGLIGIBLE, 0.0, 0.0, (1, 1), (1, 1), "layout shifted"),
+            Comparison(
+                "c", NEGLIGIBLE, 0.0, 0.0, (1, 1), (1, 1), "figure height changed"
+            ),
         ]
         counts = group_by_cause(comparisons)
-        assert counts[(MAJOR, "panel or labels added/removed")] == 2
-        assert counts[(NEGLIGIBLE, "layout shifted")] == 1
+        assert counts[(MAJOR, "figure size changed a lot")] == 2
+        assert counts[(NEGLIGIBLE, "figure height changed")] == 1
 
     def test_worst_sorts_first(self):
         negligible = Comparison("a", NEGLIGIBLE, 0.0, 0.0, (1, 1), (1, 1), "x")

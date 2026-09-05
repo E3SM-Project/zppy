@@ -83,14 +83,20 @@ failures by cause before listing them:
 .. code-block:: none
 
     Grouped by cause (check one example from each):
-         381  STRUCTURAL   panel or labels added/removed
-         302  MAJOR        title or label line added/removed
-          53  MAJOR        layout shifted
-          28  MODERATE     plotted content changed
-           9  MINOR        small isolated change (possible value change)
+         381  STRUCTURAL   figure size changed a lot
+         302  MAJOR        figure height changed
+          53  MAJOR        figure size changed slightly
+          28  MODERATE     same size, content differs
+           9  MINOR        small isolated difference
 
 Check one example from each group rather than every image. If the example is a
 genuine regression, the whole group almost certainly is too.
+
+These labels describe what was measured, not a diagnosis -- the check knows how
+the images differ, not why. They are useful because a single upstream change
+tends to alter many images the same way, so images sharing a label usually
+share a cause. In past runs "figure size changed a lot" has turned out to be a
+missing panel in one task and added axis labels in another.
 
 A note on small changes
 =======================
@@ -101,6 +107,6 @@ is about 13 pixels, far too small to affect an area-based score, but it means
 the data changed.
 
 Those are found by a separate check that looks for small, sharply-defined
-differences, and reported as ``MINOR`` with the cause "small isolated change
-(possible value change)". Do not skip that group just because it ranks low --
-it is the one place where a low rank does not mean a small problem.
+differences, and reported as ``MINOR`` with the cause "small isolated
+difference". Do not skip that group just because it ranks low -- it is the one
+place where a low rank does not mean a small problem.

@@ -206,19 +206,22 @@ def _describe_cause(
     actual_size: Tuple[int, int],
     expected_size: Tuple[int, int],
 ) -> str:
-    """A short guess at the root cause, used to group similar failures."""
-    width_lost = expected_size[1] - actual_size[1]
-    height_lost = expected_size[0] - actual_size[0]
+    """Describe *what was measured*, for grouping similar failures together.
+
+    Deliberately not a diagnosis. All we know is how the figure's dimensions
+    and pixels differ; why they differ is for the reviewer to see. A large
+    size change is often a panel coming or going, but axis labels or an extra
+    printed statistic can do the same thing, so the label does not say which.
+    """
+    height_change = abs(expected_size[0] - actual_size[0])
+    width_change = abs(expected_size[1] - actual_size[1])
     if geometry_change >= STRUCTURAL_GEOMETRY_CHANGE:
-        # The figure changed size substantially. Usually a panel came or went,
-        # but axis labels or an extra statistic can do it too, so do not claim
-        # more than the size actually tells us.
-        return "panel or labels added/removed"
-    if abs(height_lost) >= 20:
-        return "title or label line added/removed"
-    if geometry_change >= NOTABLE_GEOMETRY_CHANGE or abs(width_lost) > 3:
-        return "layout shifted"
-    return "plotted content changed"
+        return "figure size changed a lot"
+    if height_change >= 20:
+        return "figure height changed"
+    if geometry_change >= NOTABLE_GEOMETRY_CHANGE or width_change > 3:
+        return "figure size changed slightly"
+    return "same size, content differs"
 
 
 def _files_are_identical(path_a: str, path_b: str) -> bool:
@@ -304,7 +307,7 @@ def compare(image_name: str, actual_path: str, expected_path: str) -> Comparison
     # statistic. Too small to rank highly, but it must not be filtered out.
     if localized_pixels >= LOCALIZED_MIN_TOTAL_PIXELS and severity == NEGLIGIBLE:
         severity = MINOR
-        cause = "small isolated change (possible value change)"
+        cause = "small isolated difference"
 
     return Comparison(
         image_name,
