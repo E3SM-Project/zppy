@@ -218,12 +218,41 @@ def _describe_cause(
     return "plotted content changed"
 
 
+def _files_are_identical(path_a: str, path_b: str) -> bool:
+    """Compare two files byte by byte, without decoding them.
+
+    Most images in a passing test run are untouched, and reading bytes is far
+    cheaper than decoding two PNGs and comparing them pixel by pixel. Files
+    that differ here may still decode to identical images; that costs nothing,
+    because such a pair simply falls through to the full comparison.
+    """
+    if os.path.getsize(path_a) != os.path.getsize(path_b):
+        return False
+    chunk = 1 << 16
+    with open(path_a, "rb") as file_a, open(path_b, "rb") as file_b:
+        while True:
+            block_a = file_a.read(chunk)
+            if block_a != file_b.read(chunk):
+                return False
+            if not block_a:
+                return True
+
+
 def compare(image_name: str, actual_path: str, expected_path: str) -> Comparison:
     """Compare one image pair and return its severity."""
     if not os.path.exists(actual_path):
         return Comparison(
             image_name, MISSING, 1.0, 1.0, None, None, "image not created"
         )
+
+    # The overwhelming majority of images do not change from one run to the
+    # next -- 98.5% of the 2026-09-04 weekly test, for instance. Settling
+    # those from the file bytes alone keeps the check faster than comparing
+    # every pixel, which is what it replaces.
+    if _files_are_identical(actual_path, expected_path):
+        with Image.open(expected_path) as image:
+            size = (image.height, image.width)
+        return Comparison(image_name, NEGLIGIBLE, 0.0, 0.0, size, size, "identical")
 
     actual = np.asarray(Image.open(actual_path).convert("RGB"))
     expected = np.asarray(Image.open(expected_path).convert("RGB"))
