@@ -277,6 +277,11 @@ def _check_mismatched_images(
     mismatched_images: List[str] = []
     comparisons: List[Comparison] = []
 
+    # Create this up front. Only failures write images into it, so on a clean
+    # run nothing else would, and the permissions step below would then have
+    # no directory to act on.
+    os.makedirs(parameters.diff_dir, exist_ok=True)
+
     counter = 0
     print(f"Opening expected images file {parameters.expected_images_list}")
     with open(parameters.expected_images_list) as f:
@@ -331,17 +336,12 @@ def _check_mismatched_images(
         comparisons,
     )
 
-    # Make diff_dir readable
-    if os.path.exists(parameters.diff_dir):
-        # Execute permission for user is needed to remove diff_dir if we're re-running the image checks.
-        # Execute permission for others is needed to make diff_dir visible on the web server.
-        # 7 - rwx for user
-        # 5 - r-x for group, others
-        _chmod_recursive(parameters.diff_dir, 0o755)
-    else:
-        # diff_dir won't exist if all the expected images are missing
-        # That is, if we're in this case, we expect the following:
-        assert len(missing_images) == counter
+    # Make diff_dir readable.
+    # Execute permission for user is needed to remove diff_dir if we're re-running the image checks.
+    # Execute permission for others is needed to make diff_dir visible on the web server.
+    # 7 - rwx for user
+    # 5 - r-x for group, others
+    _chmod_recursive(parameters.diff_dir, 0o755)
 
     return test_results
 
