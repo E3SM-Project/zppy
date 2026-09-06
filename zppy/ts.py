@@ -45,16 +45,6 @@ def ts(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
                 default_vrt_remap_file,
                 ParameterInferenceType.PATH_INFERENCE,
             )
-            if c["prc_typ"] == "eamxx":
-                default_vrt_in_file = (
-                    f"{c['diagnostics_base_path']}/e3sm_to_cmip_data/grids/vert_L128.nc"
-                )
-                set_value_of_parameter_if_undefined(
-                    c,
-                    "vrt_in_file",
-                    default_vrt_in_file,
-                    ParameterInferenceType.PATH_INFERENCE,
-                )
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
         # Loop over year sets
         for s in year_sets:
