@@ -1,4 +1,7 @@
+import os
+import pwd
 from configparser import NoOptionError, NoSectionError
+from stat import filemode
 from typing import List
 
 from configobj import ConfigObj
@@ -87,6 +90,59 @@ def validate_simboard_config(config: ConfigObj) -> None:
         raise ValueError(
             "simboard.simulation_type must be 'production' or 'development' "
             "when simboard.enabled is True."
+        )
+
+
+def _owner_name(uid: int) -> str:
+    try:
+        return pwd.getpwuid(uid).pw_name
+    except KeyError:
+        return str(uid)
+
+
+def validate_www_access(config: ConfigObj, www: str, case: str) -> None:
+    """Fail before any task is launched if the www case directory is unusable.
+
+    `www` is a shared, published location. Without this check, a collision with
+    another user surfaces only when a task copies its results to the web
+    server, after the job has already consumed its full runtime.
+    """
+    www_case_dir = os.path.join(www, case)
+    if not os.path.exists(www_case_dir):
+        return
+
+    current_uid = os.getuid()
+    me = _owner_name(current_uid)
+    case_dir_stat = os.stat(www_case_dir)
+    if case_dir_stat.st_uid != current_uid:
+        owner = _owner_name(case_dir_stat.st_uid)
+        if simboard_enabled(config):
+            if config["simboard"]["simulation_type"] == "production":
+                raise ValueError(
+                    f"Cannot publish case '{case}': {www_case_dir} already "
+                    f"exists and is owned by {owner}, not {me}. A production "
+                    "case has one authoritative diagnostics path. Coordinate "
+                    f"with {owner}, or set [simboard] simulation_type = "
+                    "development."
+                )
+            raise ValueError(
+                f"Cannot publish case '{case}': {www_case_dir} already exists "
+                f"and is owned by {owner}, not {me}. Set [default] www to a "
+                "path you own to publish a separate copy."
+            )
+        logger.warning(
+            "%s already exists and is owned by %s, not %s. Tasks may fail or "
+            "overwrite existing results when they copy to the web server.",
+            www_case_dir,
+            owner,
+            me,
+        )
+
+    if not os.access(www_case_dir, os.W_OK | os.X_OK):
+        raise ValueError(
+            f"Cannot write to www case directory {www_case_dir} (owner "
+            f"{_owner_name(case_dir_stat.st_uid)}, mode "
+            f"{filemode(case_dir_stat.st_mode)}) as {me}."
         )
 
 
