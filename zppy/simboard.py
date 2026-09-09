@@ -114,16 +114,16 @@ def validate_www_access(config: ConfigObj, www: str, case: str) -> None:
     current_uid = os.getuid()
     me = _owner_name(current_uid)
     case_dir_stat = os.stat(www_case_dir)
+    owner = _owner_name(case_dir_stat.st_uid)
     if case_dir_stat.st_uid != current_uid:
-        owner = _owner_name(case_dir_stat.st_uid)
         if simboard_enabled(config):
             if config["simboard"]["simulation_type"] == "production":
                 raise ValueError(
                     f"Cannot publish case '{case}': {www_case_dir} already "
                     f"exists and is owned by {owner}, not {me}. A production "
                     "case has one authoritative diagnostics path. Coordinate "
-                    f"with {owner}, or set [simboard] simulation_type = "
-                    "development."
+                    f"with {owner}, or set [default] www to a path you own "
+                    "to publish a separate copy."
                 )
             raise ValueError(
                 f"Cannot publish case '{case}': {www_case_dir} already exists "
@@ -139,10 +139,15 @@ def validate_www_access(config: ConfigObj, www: str, case: str) -> None:
         )
 
     if not os.access(www_case_dir, os.W_OK | os.X_OK):
+        remedy = (
+            "Update its permissions"
+            if case_dir_stat.st_uid == current_uid
+            else f"Ask {owner} to grant write access"
+        )
         raise ValueError(
             f"Cannot write to www case directory {www_case_dir} (owner "
-            f"{_owner_name(case_dir_stat.st_uid)}, mode "
-            f"{filemode(case_dir_stat.st_mode)}) as {me}."
+            f"{owner}, mode {filemode(case_dir_stat.st_mode)}) as {me}. "
+            f"{remedy}, or set [default] www to a path you own."
         )
 
 

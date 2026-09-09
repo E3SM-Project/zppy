@@ -34,16 +34,20 @@ def test_foreign_production_case_dir_is_rejected(tmp_path, monkeypatch) -> None:
     case_dir = tmp_path / "case"
     case_dir.mkdir()
     _make_foreign(monkeypatch, case_dir)
-    with pytest.raises(ValueError, match="one authoritative diagnostics path"):
+    with pytest.raises(ValueError) as excinfo:
         validate_www_access(_config(True, "production"), str(tmp_path), "case")
+    assert "one authoritative diagnostics path" in str(excinfo.value)
+    assert "[default] www" in str(excinfo.value)
 
 
 def test_foreign_development_case_dir_is_rejected(tmp_path, monkeypatch) -> None:
     case_dir = tmp_path / "case"
     case_dir.mkdir()
     _make_foreign(monkeypatch, case_dir)
-    with pytest.raises(ValueError, match=r"\[default\] www"):
+    with pytest.raises(ValueError) as excinfo:
         validate_www_access(_config(True, "development"), str(tmp_path), "case")
+    assert "[default] www" in str(excinfo.value)
+    assert "authoritative" not in str(excinfo.value)
 
 
 def test_foreign_case_dir_only_warns_when_simboard_disabled(
@@ -61,7 +65,24 @@ def test_unwritable_case_dir_is_rejected(tmp_path) -> None:
     case_dir.mkdir()
     case_dir.chmod(0o555)
     try:
-        with pytest.raises(ValueError, match="Cannot write to www case directory"):
+        with pytest.raises(ValueError) as excinfo:
             validate_www_access(_config(True), str(tmp_path), "case")
+        assert "Cannot write to www case directory" in str(excinfo.value)
+        assert "Update its permissions" in str(excinfo.value)
+    finally:
+        case_dir.chmod(0o755)
+
+
+def test_unwritable_foreign_case_dir_suggests_asking_owner(
+    tmp_path, monkeypatch
+) -> None:
+    case_dir = tmp_path / "case"
+    case_dir.mkdir()
+    case_dir.chmod(0o555)
+    _make_foreign(monkeypatch, case_dir)
+    try:
+        with pytest.raises(ValueError) as excinfo:
+            validate_www_access(_config(False), str(tmp_path), "case")
+        assert "to grant write access" in str(excinfo.value)
     finally:
         case_dir.chmod(0o755)
