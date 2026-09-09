@@ -401,7 +401,8 @@ def write_settings_file(
         p.pprint(year_tuple)
 
 
-def submit_script(
+# C901 'submit_script' is too complex (22)
+def submit_script(  # noqa: C901
     script_file: str,
     status_file: str,
     export,
@@ -450,27 +451,23 @@ def submit_script(
             if len(dependIds) == 0:
                 command = f"sbatch --export={export} {script_file}"
             else:
-                jobs: str = ""
+                slurm_jobs: str = ""
                 for i in dependIds:
-                    jobs += ":{:d}".format(i)
+                    slurm_jobs += ":{:d}".format(i)
                 # Note that `--dependency` does handle bundles even though it lists individual tasks, not bundles.
                 # Since each task of a bundle lists "RUNNING <Job ID of bundle>", the bundle's job ID will be included.
-                command = (
-                    f"sbatch --export={export} --dependency=afterok{jobs} {script_file}"
-                )
+                command = f"sbatch --export={export} --dependency=afterok{slurm_jobs} {script_file}"
         elif scheduler == "pbs":
             if len(dependIds) == 0:
                 command = f"qsub {script_file}"
             else:
-                jobs: str = ""
+                pbs_jobs: str = ""
                 for i in dependIds:
-                    if jobs:
-                        jobs += ":"
-                    jobs += "{:d}".format(i)
+                    if pbs_jobs:
+                        pbs_jobs += ":"
+                    pbs_jobs += "{:d}".format(i)
                 # PBS dependency format: -W depend=afterok:jobid1:jobid2
-                command = (
-                    f"qsub -W depend=afterok:{jobs} {script_file}"
-                )
+                command = f"qsub -W depend=afterok:{pbs_jobs} {script_file}"
         else:
             raise ValueError(f"Unsupported scheduler: {scheduler}")
 
@@ -500,14 +497,14 @@ def submit_script(
             # PBS returns the job ID directly (e.g., "12345.server" or just "12345")
             # Extract numeric part by splitting on '.' and taking the first part
             try:
-                jobid_str = out.split('.')[0]
+                jobid_str = out.split(".")[0]
                 jobid = int(jobid_str)
             except (ValueError, IndexError) as e:
                 error_str = f"Problem parsing PBS job ID from output: {out}"
                 logger.critical(error_str)
                 logger.critical(command)
                 raise RuntimeError(error_str) from e
-        
+
         with open(job_ids_file, "a") as j:
             # To include the scriptFile, use this line:
             # j.write(f"{scriptFile}: {jobid}\n")
