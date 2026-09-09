@@ -7,7 +7,7 @@ import pytest
 from configobj import ConfigObj
 from validate import Validator
 
-from zppy.__main__ import _determine_parameters
+from zppy.__main__ import _determine_parameters, _expand_ensemble_configs
 from zppy.simboard import (
     infer_simboard_www,
     normalize_web_portal_base_path,
@@ -301,3 +301,54 @@ def test_infer_simboard_www_rejects_multi_component_case_group() -> None:
     # redirect output elsewhere in the archive.
     with pytest.raises(ValueError, match="Invalid case_group"):
         infer_simboard_www(_fake_machine_info(), _base_config(), "v3.LR/historical")
+
+
+def test_expand_ensemble_configs_replaces_member_placeholders() -> None:
+    config = {
+        "default": {
+            "case": "v3.LR.historical_{member}",
+            "dry_run": True,
+            "ensemble_members": ["0101", "0102"],
+            "input": "/archive/v3.LR.historical_{member}",
+            "output": "/output/v3.LR.historical_{member}",
+            "www": "/www/root",
+        },
+        "global_time_series": {
+            "active": True,
+            "experiment_name": "v3 ensemble {member}",
+        },
+    }
+
+    expanded = _expand_ensemble_configs(config)
+
+    assert len(expanded) == 2
+    assert expanded[0]["default"]["ensemble_member"] == "0101"
+    assert expanded[0]["default"]["case"] == "v3.LR.historical_0101"
+    assert expanded[0]["default"]["input"] == "/archive/v3.LR.historical_0101"
+    assert expanded[0]["default"]["output"] == "/output/v3.LR.historical_0101"
+    assert expanded[0]["global_time_series"]["experiment_name"] == "v3 ensemble 0101"
+    assert expanded[1]["default"]["ensemble_member"] == "0102"
+    assert expanded[1]["default"]["case"] == "v3.LR.historical_0102"
+    assert expanded[1]["global_time_series"]["experiment_name"] == "v3 ensemble 0102"
+
+
+def test_expand_ensemble_configs_requires_unique_member_specific_paths() -> None:
+    config = {
+        "default": {
+            "case": "v3.LR.historical_{member}",
+            "ensemble_members": ["0101", "0102"],
+            "input": "/archive/v3.LR.historical_{member}",
+            "output": "/output/shared",
+            "www": "/www/root",
+            "dry_run": True,
+        }
+    }
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"default\.ensemble_members requires `\{member\}` in \[default\] "
+            r"output so each member resolves to a unique case and path\."
+        ),
+    ):
+        _expand_ensemble_configs(config)
