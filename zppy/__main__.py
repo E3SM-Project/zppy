@@ -1,4 +1,5 @@
 import argparse
+import copy
 import configparser
 import errno
 import importlib
@@ -40,6 +41,7 @@ from zppy.ts import ts
 from zppy.utils import check_status, submit_script
 
 logger = _setup_custom_logger(__name__)
+ENSEMBLE_MEMBER_PLACEHOLDER = "{member}"
 
 
 def main():
@@ -69,58 +71,22 @@ def main():
     config: ConfigObj = _handle_campaigns(user_config, default_config, defaults_dir)
     # Validate
     _validate_config(config)
-    # Add templateDir to config
-    config["default"]["templateDir"] = template_dir
-    # Resolve machine info up-front so provenance can include machine-aware
-    # diagnostics URLs (see issue #831).
-    machine_info = _get_machine_info(config)
-    config = _determine_parameters(machine_info, config)
-    # Build provenance metadata (case_name, machine, hpc_username,
-    # diagnostics_url) from env_case.xml + mache web_portal config.
-    provenance_extras = build_provenance_extras(config["default"], machine_info)
-    # Get timestamp for provenance
-    # Provenance cfg/settings will be placed in both `output` and `www`
-    ts_utc = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
-    # Output script directory
-    output = config["default"]["output"]
-    username = os.environ.get("USER")
-    output = output.replace("$USER", username)
-    script_dir = os.path.join(output, "post/scripts")
-    job_ids_file = os.path.join(script_dir, "jobids.txt")
-    provenance = os.path.join(script_dir, f"provenance.{ts_utc}.cfg")
-    provenance_settings = os.path.join(script_dir, f"provenance.{ts_utc}.settings")
-    try:
-        os.makedirs(script_dir)
-    except OSError as exc:
-        if exc.errno != errno.EEXIST:
-            raise OSError("Cannot create script directory")
-    shutil.copy(args.config, provenance)
-    write_provenance_settings(provenance_settings, provenance_extras)
-    # Web output directory
-    # A dry run must not touch `www`. It is a shared, published location --
-    # with `[simboard] enabled = True` it is inferred to the machine-wide
-    # diagnostics_archive -- so creating directories and copying provenance
-    # there would publish artifacts for a run that never happens.
-    if not config["default"]["dry_run"]:
-        www = config["default"]["www"]
-        username = os.environ.get("USER")
-        www = www.replace("$USER", username)
-        www_case_dir = os.path.join(www, config["default"]["case"])
-        www_provenance = os.path.join(www_case_dir, f"provenance.{ts_utc}.cfg")
-        www_provenance_settings = os.path.join(
-            www_case_dir, f"provenance.{ts_utc}.settings"
+    for member_config in _expand_ensemble_configs(config):
+        provenance_config: ConfigObj = copy.deepcopy(member_config)
+        # Add templateDir to config
+        member_config["default"]["templateDir"] = template_dir
+        # Resolve machine info up-front so provenance can include machine-aware
+        # diagnostics URLs (see issue #831).
+        machine_info = _get_machine_info(member_config)
+        member_config = _determine_parameters(machine_info, member_config)
+        _run_config(
+            member_config,
+            provenance_config,
+            args.config,
+            args.last_year,
+            machine_info,
+            plugins,
         )
-        try:
-            os.makedirs(www_case_dir)
-        except OSError as exc:
-            if exc.errno != errno.EEXIST:
-                raise OSError("Cannot create www case directory")
-        shutil.copy(args.config, www_provenance)
-        if os.path.isfile(provenance_settings):
-            shutil.copy(provenance_settings, www_provenance_settings)
-    if args.last_year:
-        config["default"]["last_year"] = args.last_year
-    _launch_scripts(config, script_dir, job_ids_file, plugins)
 
 
 def _get_args():
@@ -286,6 +252,70 @@ def _determine_parameters(machine_info: MachineInfo, config: ConfigObj) -> Confi
     return config
 
 
+def _get_ensemble_members(config: ConfigObj) -> List[str]:
+    raw_members: Any = config["default"].get("ensemble_members", [])
+    if isinstance(raw_members, str):
+        members = [raw_members]
+    else:
+        members = list(raw_members)
+    return [member for member in members if member]
+
+
+def _replace_ensemble_member(value: Any, member: str) -> Any:
+    if isinstance(value, str):
+        return value.replace(ENSEMBLE_MEMBER_PLACEHOLDER, member)
+    if isinstance(value, list):
+        return [_replace_ensemble_member(item, member) for item in value]
+    if isinstance(value, dict):
+        for key, item in value.items():
+            value[key] = _replace_ensemble_member(item, member)
+    return value
+
+
+def _validate_ensemble_config(config: ConfigObj, members: List[str]) -> None:
+    if len(set(members)) != len(members):
+        raise ValueError(
+            "default.ensemble_members contains duplicate entries. "
+            "Each ensemble member must be unique."
+        )
+
+    required_placeholders = []
+    for key in ["case", "input", "output"]:
+        value = config["default"].get(key, "")
+        if ENSEMBLE_MEMBER_PLACEHOLDER not in value:
+            required_placeholders.append(key)
+
+    if required_placeholders:
+        joined = ", ".join(required_placeholders)
+        raise ValueError(
+            "default.ensemble_members requires `{member}` in [default] "
+            f"{joined} so each member resolves to a unique case and path."
+        )
+
+    if not config["default"]["dry_run"]:
+        logger.warning(
+            "Prototype ensemble support will submit the full task graph for "
+            f"{len(members)} members. Consider dry_run or bundles if queue "
+            "volume is a concern."
+        )
+
+
+def _expand_ensemble_configs(config: ConfigObj) -> List[ConfigObj]:
+    members = _get_ensemble_members(config)
+    if not members:
+        return [config]
+
+    _validate_ensemble_config(config, members)
+
+    expanded_configs = []
+    for member in members:
+        member_config: ConfigObj = copy.deepcopy(config)
+        _replace_ensemble_member(member_config, member)
+        member_config["default"]["ensemble_member"] = member
+        expanded_configs.append(member_config)
+    return expanded_configs
+
+
 def _set_default_www(machine_info: MachineInfo, config: ConfigObj) -> None:
     # Keep SimBoard-specific validation active even when `www` is already set,
     # because `[simboard] enabled = True` still requires validating
@@ -312,6 +342,72 @@ def _set_default_www(machine_info: MachineInfo, config: ConfigObj) -> None:
     )
     case_group = resolve_case_group(config_default, xml_case_group)
     config["default"]["www"] = infer_simboard_www(machine_info, config, case_group)
+
+
+def _write_provenance_config(
+    config: ConfigObj, source_config_path: str, destination: str
+) -> None:
+    if _get_ensemble_members(config):
+        with open(destination, "w") as handle:
+            config.write(outfile=handle)
+    else:
+        shutil.copy(source_config_path, destination)
+
+
+def _run_config(
+    config: ConfigObj,
+    provenance_config: ConfigObj,
+    source_config_path: str,
+    last_year: Any,
+    machine_info: MachineInfo,
+    plugins: List[Any],
+) -> None:
+    # Build provenance metadata (case_name, machine, hpc_username,
+    # diagnostics_url) from env_case.xml + mache web_portal config.
+    provenance_extras = build_provenance_extras(config["default"], machine_info)
+    # Get timestamp for provenance
+    # Provenance cfg/settings will be placed in both `output` and `www`
+    ts_utc = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+    # Output script directory
+    output = config["default"]["output"]
+    username = os.environ.get("USER")
+    output = output.replace("$USER", username)
+    script_dir = os.path.join(output, "post/scripts")
+    job_ids_file = os.path.join(script_dir, "jobids.txt")
+    provenance = os.path.join(script_dir, f"provenance.{ts_utc}.cfg")
+    provenance_settings = os.path.join(script_dir, f"provenance.{ts_utc}.settings")
+    try:
+        os.makedirs(script_dir)
+    except OSError as exc:
+        if exc.errno != errno.EEXIST:
+            raise OSError("Cannot create script directory")
+    _write_provenance_config(provenance_config, source_config_path, provenance)
+    write_provenance_settings(provenance_settings, provenance_extras)
+    # Web output directory
+    # A dry run must not touch `www`. It is a shared, published location --
+    # with `[simboard] enabled = True` it is inferred to the machine-wide
+    # diagnostics_archive -- so creating directories and copying provenance
+    # there would publish artifacts for a run that never happens.
+    if not config["default"]["dry_run"]:
+        www = config["default"]["www"]
+        username = os.environ.get("USER")
+        www = www.replace("$USER", username)
+        www_case_dir = os.path.join(www, config["default"]["case"])
+        www_provenance = os.path.join(www_case_dir, f"provenance.{ts_utc}.cfg")
+        www_provenance_settings = os.path.join(
+            www_case_dir, f"provenance.{ts_utc}.settings"
+        )
+        try:
+            os.makedirs(www_case_dir)
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise OSError("Cannot create www case directory")
+        _write_provenance_config(provenance_config, source_config_path, www_provenance)
+        if os.path.isfile(provenance_settings):
+            shutil.copy(provenance_settings, www_provenance_settings)
+    if last_year:
+        config["default"]["last_year"] = last_year
+    _launch_scripts(config, script_dir, job_ids_file, plugins)
 
 
 def _launch_scripts(config: ConfigObj, script_dir, job_ids_file, plugins) -> None:
