@@ -175,9 +175,14 @@ def infer_simboard_www(
     # Group the simulation under its case group when it has one, so SimBoard
     # sees e.g. `.../production/v3.LR/<case>/` instead of a flat list of cases.
     case_group_segment = _normalize_case_group(case_group)
+    # Development output is per-user: several people may run diagnostics on the
+    # same case. Production stays unnested -- one authoritative path per case.
+    user_segment = (
+        f"{machine_info.username}/" if simulation_type == "development" else ""
+    )
     inferred_www = (
         f"{web_portal_base_path}/diagnostics_archive/"
-        f"{simulation_type}/{case_group_segment}"
+        f"{simulation_type}/{case_group_segment}{user_segment}"
     )
     logger.info(
         "Inferred www=%s from mache web_portal.base_path because "
