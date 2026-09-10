@@ -175,6 +175,23 @@ class TestLocalizedChanges:
         actual[120, 130] = 0
         assert localized_change_pixels(actual, expected) == 0
 
+    def test_a_hairline_is_ignored(self):
+        """A curved plot boundary clipped differently at the figure edge.
+
+        Long, one or two pixels thick, and nothing like a character.
+        """
+        expected = blank(200, 200)
+        actual = blank(200, 200)
+        actual[198:200, 60:120] = 0
+        assert localized_change_pixels(actual, expected) == 0
+
+    def test_a_character_shaped_spot_is_found(self):
+        """Same pixel count as the hairline above, but compact."""
+        expected = blank(200, 200)
+        actual = blank(200, 200)
+        actual[100:112, 100:110] = 0
+        assert localized_change_pixels(actual, expected) > 0
+
     def test_many_scattered_spots_are_ignored(self):
         """Every gridline shifting a pixel is anti-aliasing, not a value change."""
         expected = blank(400, 400)

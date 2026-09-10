@@ -63,6 +63,10 @@ BACKGROUND_TOLERANCE = 6
 LOCALIZED_SHIFT_TOLERANCE_PIXELS = 1
 LOCALIZED_INTENSITY_TOLERANCE = 80
 LOCALIZED_MIN_SPOT_PIXELS = 8
+# A character is about as tall as it is wide. A spot only a pixel or two
+# across in either direction is a hairline -- typically a curved plot boundary
+# clipped a little differently at the edge of the figure -- not a changed value.
+LOCALIZED_MIN_SPOT_EXTENT = 3
 LOCALIZED_MIN_TOTAL_PIXELS = 20
 # A changed number is a few spots in one place. A plot whose gridlines and
 # coastlines all shifted by a pixel produces spots scattered over the whole
@@ -200,10 +204,27 @@ def localized_change_pixels(actual: np.ndarray, expected: np.ndarray) -> int:
     if count == 0:
         return 0
     sizes = ndimage.sum(strong, labels, range(1, count + 1))
-    spots = sizes[sizes >= LOCALIZED_MIN_SPOT_PIXELS]
-    if len(spots) > LOCALIZED_MAX_SPOTS:
+    boxes = ndimage.find_objects(labels)
+    big_enough = [
+        index for index, size in enumerate(sizes) if size >= LOCALIZED_MIN_SPOT_PIXELS
+    ]
+
+    # Scattered spots mean the whole figure moved, not that a value changed.
+    # This has to be judged before discarding hairlines below: a clipped plot
+    # boundary breaks into dozens of them, and dropping them first would leave
+    # a handful of survivors that look like a changed number.
+    if len(big_enough) > LOCALIZED_MAX_SPOTS:
         return 0
-    return int(spots.sum())
+
+    total = 0
+    for index in big_enough:
+        rows, columns = boxes[index]
+        height = rows.stop - rows.start
+        width = columns.stop - columns.start
+        if min(height, width) < LOCALIZED_MIN_SPOT_EXTENT:
+            continue
+        total += int(sizes[index])
+    return total
 
 
 def _relative_size_change(actual: Tuple[int, int], expected: Tuple[int, int]) -> float:
