@@ -14,8 +14,30 @@ from zppy.pcmdi_diags import (
     define_relevant_years,
     define_relevant_years_for_synthetic_plots,
     define_year_sets,
+    pcmdi_diags,
 )
 from zppy.utils import ParameterNotProvidedError
+
+
+def test_pcmdi_diags_processes_enso_tasks() -> None:
+    task = {
+        "current_set": "enso",
+        "infer_path_parameters": False,
+        "subsection": "enso",
+    }
+
+    with (
+        patch("zppy.pcmdi_diags.initialize_template", return_value=(None, None)),
+        patch("zppy.pcmdi_diags.get_tasks", return_value=[task]),
+        patch("zppy.pcmdi_diags.get_value_from_parameter", return_value="enso"),
+        patch("zppy.pcmdi_diags.check_parameters_for_bash") as check_bash,
+        patch("zppy.pcmdi_diags.check_parameters_for_pcmdi"),
+        patch("zppy.pcmdi_diags.define_year_sets", return_value=[]),
+    ):
+        existing_bundles = pcmdi_diags(None, "/scripts", set(), None)
+
+    check_bash.assert_called_once_with(task)
+    assert existing_bundles == set()
 
 
 def test_define_current_set():

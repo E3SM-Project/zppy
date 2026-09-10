@@ -343,7 +343,7 @@ There is 1 ENSO & synthetic_plots parameter:
      - Description
    * - ``enso_vars``
      - No
-     - ``"psl,pr,prsn,ts,tas,tauu,tauv,hflx,hfss,rlds,rsds,rlus,rlut,rsdt"``
+     - ``"psl,pr,ts,tas,tauu,tauv,hfls,hfss,rlds,rsds,rlus,rlut,rsdt"``
      - Variables used by ENSO diagnostics.
 
 Synthetic_plots parameters
