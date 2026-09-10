@@ -104,8 +104,9 @@ class Comparison(NamedTuple):
     geometry_change: float  # relative change in figure size
     actual_size: Optional[Tuple[int, int]]
     expected_size: Optional[Tuple[int, int]]
-    cause: str  # short human-readable guess at the root cause
+    cause: str  # short description of how the images differ
     localized_pixels: int = 0  # size of small isolated changes, e.g. a changed number
+    raw_fraction: float = 0.0  # pixels differing at all, before any tolerance
 
     @property
     def needs_review(self) -> bool:
@@ -236,6 +237,17 @@ def _describe_cause(
     return "same size, content differs"
 
 
+def _raw_difference_fraction(actual: np.ndarray, expected: np.ndarray) -> float:
+    """Fraction of pixels that differ at all, over the region the two share."""
+    height = min(actual.shape[0], expected.shape[0])
+    width = min(actual.shape[1], expected.shape[1])
+    if height == 0 or width == 0:
+        return 1.0
+    a = actual[:height, :width].astype(np.int16)
+    b = expected[:height, :width].astype(np.int16)
+    return float((np.abs(a - b).max(axis=2) > 0).mean())
+
+
 def _files_are_identical(path_a: str, path_b: str) -> bool:
     """Compare two files byte by byte, without decoding them.
 
@@ -283,6 +295,12 @@ def compare(image_name: str, actual_path: str, expected_path: str) -> Comparison
         return Comparison(
             image_name, IDENTICAL, 0.0, 0.0, actual_size, expected_size, "no change"
         )
+
+    # How much differs at all, measured on the images as they were saved.
+    # Cosmetic images score zero on content_fraction by definition, so this is
+    # what tells a barely-shifted figure from one worth a second look. It has
+    # to be taken before trimming, which would undo the very shift in question.
+    raw_fraction = _raw_difference_fraction(actual, expected)
 
     actual = trim_background(actual)
     expected = trim_background(expected)
@@ -337,6 +355,7 @@ def compare(image_name: str, actual_path: str, expected_path: str) -> Comparison
         expected_size,
         cause,
         localized_pixels,
+        raw_fraction,
     )
 
 

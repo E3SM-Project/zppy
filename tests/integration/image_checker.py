@@ -178,7 +178,7 @@ def _save_cosmetic_sample(
             for c in test_results.comparisons
             if c.severity == image_severity.NEGLIGIBLE
         ),
-        key=lambda c: -c.content_fraction,
+        key=lambda c: -c.raw_fraction,
     )
     if not cosmetic:
         return
@@ -195,7 +195,10 @@ def _save_cosmetic_sample(
         f"{sample_dir}/{prefix}",
         ordered_names=[c.image_name for c in sample],
         labels={
-            c.image_name: f"[COSMETIC {c.content_fraction:.5f}] {c.cause}"
+            c.image_name: (
+                f"[COSMETIC, {c.raw_fraction * 100:.1f}% of pixels differ]"
+                f" {c.cause}"
+            )
             for c in sample
         },
     )
@@ -235,6 +238,25 @@ def _write_severity_report(diff_subdir: str, test_results: Results) -> None:
         for c in needing_review:
             f.write(f"  {c.severity:11s} {c.content_fraction:8.4f}  {c.image_name}\n")
 
+        # Calling an image cosmetic is a judgement, so list every image it was
+        # applied to. The sample PDF renders only the first few of these.
+        cosmetic = sorted(
+            (c for c in comparisons if c.severity == image_severity.NEGLIGIBLE),
+            key=lambda c: -c.raw_fraction,
+        )
+        if cosmetic:
+            rendered = min(len(cosmetic), COSMETIC_SAMPLE_SIZE)
+            f.write(
+                f"\nCalled cosmetic, most raw pixel difference first."
+                f" The first {rendered} are rendered in"
+                f" cosmetic_sample/{test_results.prefix}/image_diff_grid.pdf:\n"
+            )
+            for c in cosmetic:
+                f.write(
+                    f"  {c.raw_fraction * 100:6.2f}% of pixels differ"
+                    f"  {c.image_name}\n"
+                )
+
     with open(f"{diff_subdir}/image_scores.json", "w") as f:
         json.dump(
             [
@@ -244,6 +266,7 @@ def _write_severity_report(diff_subdir: str, test_results: Results) -> None:
                     "content_fraction": round(c.content_fraction, 6),
                     "geometry_change": round(c.geometry_change, 6),
                     "localized_pixels": c.localized_pixels,
+                    "raw_fraction": round(c.raw_fraction, 6),
                     "cause": c.cause,
                 }
                 for c in comparisons

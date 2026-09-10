@@ -275,3 +275,29 @@ class TestIdenticalIsDistinctFromCosmetic:
         assert results.image_count_identical == 2
         assert results.image_count_cosmetic == 1
         assert results.image_count_correct == 3
+
+
+class TestCosmeticRanking:
+    """Cosmetic images all score zero on content, so ranking uses raw pixels."""
+
+    def _save(self, tmp_path, name, image):
+        path = tmp_path / name
+        Image.fromarray(image).save(path)
+        return str(path)
+
+    def test_raw_fraction_sees_a_shift_that_severity_forgives(self, tmp_path):
+        expected = blank(200, 200)
+        expected[60:140, 60:140] = 0
+        actual = np.roll(expected, 2, axis=0)  # shifted, within tolerance
+        a = self._save(tmp_path, "a.png", actual)
+        b = self._save(tmp_path, "b.png", expected)
+        result = compare("a.png", a, b)
+        assert result.severity == NEGLIGIBLE
+        assert result.content_fraction == 0.0
+        assert result.raw_fraction > 0.0
+
+    def test_identical_images_have_no_raw_difference(self, tmp_path):
+        image = blank(60, 60)
+        image[20:40, 20:40] = 0
+        path = self._save(tmp_path, "a.png", image)
+        assert compare("a.png", path, path).raw_fraction == 0.0
