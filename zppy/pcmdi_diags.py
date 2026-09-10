@@ -53,9 +53,7 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
         dependencies: List[str] = []
         define_current_set(c)
         if c["current_set"] == "enso":
-            logger.warning(
-                "The 'enso' set is currently experimental in PCMDI Diags."
-            )
+            logger.warning("The 'enso' set is currently experimental in PCMDI Diags.")
         c["sub"] = get_value_from_parameter(
             c, "subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
         )
