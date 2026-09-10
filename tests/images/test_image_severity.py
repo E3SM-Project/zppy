@@ -6,13 +6,16 @@ the large expected-image trees on Chrysalis.
 
 import numpy as np
 import pytest
+from PIL import Image
 
 from tests.integration.image_severity import (
+    IDENTICAL,
     MAJOR,
     MINOR,
     NEGLIGIBLE,
     STRUCTURAL,
     Comparison,
+    compare,
     group_by_cause,
     localized_change_pixels,
     tolerant_difference,
@@ -224,3 +227,51 @@ class TestResultsOrdering:
         results = Results("/tmp/diff", "task", 3, [], ["c.png"], comparisons)
         assert results.image_count_cosmetic == 2
         assert results.image_count_mismatched == 1
+
+
+class TestIdenticalIsDistinctFromCosmetic:
+    """ "Did not change" and "changed but looks cosmetic" are different claims."""
+
+    def _write(self, tmp_path, name, image):
+        path = tmp_path / name
+        Image.fromarray(image).save(path)
+        return str(path)
+
+    def test_same_file_is_identical(self, tmp_path):
+        image = blank(60, 60)
+        image[20:40, 20:40] = 0
+        path = self._write(tmp_path, "a.png", image)
+        assert compare("a.png", path, path).severity == IDENTICAL
+
+    def test_same_pixels_written_twice_is_identical(self, tmp_path):
+        """Two PNGs can encode one picture differently and still match."""
+        image = blank(60, 60)
+        image[20:40, 20:40] = 0
+        a = self._write(tmp_path, "a.png", image)
+        b = tmp_path / "b.png"
+        Image.fromarray(image).save(b, optimize=True)
+        assert compare("a.png", a, str(b)).severity == IDENTICAL
+
+    def test_a_faint_difference_is_cosmetic_not_identical(self, tmp_path):
+        expected = blank(60, 60)
+        expected[20:40, 20:40] = 0
+        actual = expected.copy()
+        actual[30, 30] = 250  # one nearly-white pixel: differs, but cosmetic
+        a = self._write(tmp_path, "a.png", actual)
+        b = self._write(tmp_path, "b.png", expected)
+        result = compare("a.png", a, b)
+        assert result.severity == NEGLIGIBLE
+        assert result.needs_review is False
+
+    def test_counts_are_reported_separately(self):
+        from tests.integration.image_checker import Results
+
+        comparisons = [
+            Comparison("a.png", IDENTICAL, 0.0, 0.0, (1, 1), (1, 1), "no change"),
+            Comparison("b.png", IDENTICAL, 0.0, 0.0, (1, 1), (1, 1), "no change"),
+            Comparison("c.png", NEGLIGIBLE, 0.001, 0.0, (1, 1), (1, 1), "x"),
+        ]
+        results = Results("/tmp/diff", "task", 3, [], [], comparisons)
+        assert results.image_count_identical == 2
+        assert results.image_count_cosmetic == 1
+        assert results.image_count_correct == 3

@@ -51,14 +51,18 @@ first. Work down the list and stop when the differences stop mattering.
      - Slightly different, or a small isolated change such as a printed number.
      - Skim.
    * - ``NEGLIGIBLE``
-     - Cosmetic only.
-     - Nothing. Counted in the summary, not reported as a failure.
+     - The images differ, but only in ways that look like rendering noise.
+     - Nothing, though a sample is rendered so you can confirm that.
+   * - ``IDENTICAL``
+     - The images do not differ at all.
+     - Nothing.
    * - ``MISSING``
      - The image was never created.
      - Always investigate.
 
-``NEGLIGIBLE`` images do not fail the test and no diff images are written for
-them. They are still counted, so the summary table always adds up.
+``IDENTICAL`` and ``NEGLIGIBLE`` images do not fail the test. They are counted
+separately in the summary, because "did not change" and "changed in a way that
+looks cosmetic" are different claims, and only the second is a judgement.
 
 What gets written
 =================
@@ -72,6 +76,12 @@ Alongside the existing outputs, each task's diff directory gets:
 ``image_scores.json``
     The same information as raw numbers, one entry per image. Useful for
     re-examining thresholds without re-running the comparison.
+
+``cosmetic_sample/<task>/image_diff_grid.pdf``
+    The most-different images that were called cosmetic, so that verdict can
+    be checked rather than trusted. Only the first twenty are rendered;
+    ``severity_report.txt`` lists all of them. They are the ones closest to
+    the line, so if the worst are genuinely cosmetic the rest are too.
 
 Reviewing efficiently
 =====================

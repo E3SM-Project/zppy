@@ -70,6 +70,7 @@ LOCALIZED_MIN_TOTAL_PIXELS = 20
 LOCALIZED_MAX_SPOTS = 20
 
 # Ordered least to most severe.
+IDENTICAL = "IDENTICAL"
 NEGLIGIBLE = "NEGLIGIBLE"
 MINOR = "MINOR"
 MODERATE = "MODERATE"
@@ -77,9 +78,20 @@ MAJOR = "MAJOR"
 STRUCTURAL = "STRUCTURAL"
 MISSING = "MISSING"
 
-SEVERITY_ORDER: List[str] = [NEGLIGIBLE, MINOR, MODERATE, MAJOR, STRUCTURAL, MISSING]
+SEVERITY_ORDER: List[str] = [
+    IDENTICAL,
+    NEGLIGIBLE,
+    MINOR,
+    MODERATE,
+    MAJOR,
+    STRUCTURAL,
+    MISSING,
+]
 
-# Bands at or below NEGLIGIBLE are reported but do not fail the test.
+# IDENTICAL and NEGLIGIBLE are reported but do not fail the test. They are kept
+# apart because "the image did not change at all" and "the image changed in a
+# way that looks cosmetic" are different claims, and only the second one is a
+# judgement that somebody may want to check.
 REVIEWABLE_SEVERITIES: List[str] = [MINOR, MODERATE, MAJOR, STRUCTURAL, MISSING]
 
 
@@ -258,12 +270,19 @@ def compare(image_name: str, actual_path: str, expected_path: str) -> Comparison
     if _files_are_identical(actual_path, expected_path):
         with Image.open(expected_path) as image:
             size = (image.height, image.width)
-        return Comparison(image_name, NEGLIGIBLE, 0.0, 0.0, size, size, "identical")
+        return Comparison(image_name, IDENTICAL, 0.0, 0.0, size, size, "no change")
 
     actual = np.asarray(Image.open(actual_path).convert("RGB"))
     expected = np.asarray(Image.open(expected_path).convert("RGB"))
     actual_size = actual.shape[:2]
     expected_size = expected.shape[:2]
+
+    # Two PNGs can encode the same picture differently, so a pair whose bytes
+    # differ may still be pixel for pixel the same. That is still "no change".
+    if actual.shape == expected.shape and np.array_equal(actual, expected):
+        return Comparison(
+            image_name, IDENTICAL, 0.0, 0.0, actual_size, expected_size, "no change"
+        )
 
     actual = trim_background(actual)
     expected = trim_background(expected)

@@ -14,6 +14,12 @@ from PIL import Image, ImageChops, ImageDraw
 from tests.integration import image_severity
 from tests.integration.image_severity import Comparison
 
+# How many cosmetic images to render so a reviewer can confirm they really are
+# cosmetic. Rendering every one would undo most of the work this check saves,
+# and the most-different ones are the informative sample: if the worst of them
+# is cosmetic, the milder ones are too.
+COSMETIC_SAMPLE_SIZE = 20
+
 
 # Classes #####################################################################
 class Parameters(object):
@@ -60,7 +66,12 @@ class Results(object):
             self.severity_counts[comparison.severity] = (
                 self.severity_counts.get(comparison.severity, 0) + 1
             )
-        # Cosmetic differences are reported but do not require review.
+        # "Did not change at all" and "changed in a way that looks cosmetic"
+        # are different claims. Only the second is a judgement worth checking,
+        # so they are counted separately rather than lumped together.
+        self.image_count_identical = self.severity_counts.get(
+            image_severity.IDENTICAL, 0
+        )
         self.image_count_cosmetic = self.severity_counts.get(
             image_severity.NEGLIGIBLE, 0
         )
@@ -138,6 +149,8 @@ def check_images(parameters: Parameters, prefix: str):
             f.write(f"{mismatched_image}\n")
     # Rank and group the failures so a reviewer knows where to start
     _write_severity_report(diff_subdir, test_results)
+    # Let a reviewer confirm the "cosmetic" verdict rather than trusting it
+    _save_cosmetic_sample(parameters, prefix, test_results)
     # Create image diff grid, worst failures first
     _make_image_diff_grid(
         diff_subdir,
@@ -147,6 +160,47 @@ def check_images(parameters: Parameters, prefix: str):
         },
     )
     return test_results
+
+
+def _save_cosmetic_sample(
+    parameters: Parameters, prefix: str, test_results: Results
+) -> None:
+    """Render the most-different cosmetic images, worst first.
+
+    Calling an image cosmetic is a judgement, and this is how somebody checks
+    it. Only the most-different ones are rendered: they are the ones where the
+    judgement is closest to the line, so if those are genuinely cosmetic the
+    milder ones are too.
+    """
+    cosmetic = sorted(
+        (
+            c
+            for c in test_results.comparisons
+            if c.severity == image_severity.NEGLIGIBLE
+        ),
+        key=lambda c: -c.content_fraction,
+    )
+    if not cosmetic:
+        return
+    sample = cosmetic[:COSMETIC_SAMPLE_SIZE]
+    sample_dir = f"{parameters.diff_dir}/cosmetic_sample"
+    for comparison in sample:
+        _save_comparison_images(
+            comparison.image_name,
+            os.path.join(parameters.actual_images_dir, comparison.image_name),
+            os.path.join(parameters.expected_images_dir, comparison.image_name),
+            sample_dir,
+        )
+    _make_image_diff_grid(
+        f"{sample_dir}/{prefix}",
+        ordered_names=[c.image_name for c in sample],
+        labels={
+            c.image_name: f"[COSMETIC {c.content_fraction:.5f}] {c.cause}"
+            for c in sample
+        },
+    )
+    _chmod_recursive(sample_dir, 0o755)
+    print(f"Rendered {len(sample)} of {len(cosmetic)} cosmetic images for checking")
 
 
 def _write_severity_report(diff_subdir: str, test_results: Results) -> None:
@@ -161,9 +215,10 @@ def _write_severity_report(diff_subdir: str, test_results: Results) -> None:
     with open(f"{diff_subdir}/severity_report.txt", "w") as f:
         f.write(f"Image check for {test_results.prefix}\n")
         f.write(f"{test_results.image_count_total} images compared\n")
+        f.write(f"{test_results.image_count_identical} identical\n")
         f.write(
             f"{test_results.image_count_cosmetic} cosmetic "
-            f"(reported only, no review needed)\n"
+            f"(differ, but the differences look like rendering noise)\n"
         )
         f.write(f"{len(needing_review)} need review\n\n")
 
@@ -212,10 +267,10 @@ def construct_markdown_summary_table(
     with open(output_file_path, "w") as f:
         f.write("# Summary of test results\n\n")
         f.write(
-            "| Test name | Total images | Correct images | Cosmetic only |"
-            " Missing images | Needs review | Severity | \n"
+            "| Test name | Total images | Correct images | Identical |"
+            " Cosmetic only | Missing images | Needs review | Severity | \n"
         )
-        f.write("| --- | --- | --- | --- | --- | --- | --- | \n")
+        f.write("| --- | --- | --- | --- | --- | --- | --- | --- | \n")
         for test_name, test_results in test_results_dict.items():
             missing_str = f"{test_results.image_count_missing}"
             mismatched_str = f"{test_results.image_count_mismatched}"
@@ -256,10 +311,25 @@ def construct_markdown_summary_table(
                     if os.path.exists(f"{diff_subdir}/severity_report.txt"):
                         mismatched_str += f", [ranked]({web_link}/severity_report.txt)"
 
+            # Point at the rendered sample so the cosmetic verdict can be
+            # checked rather than taken on trust.
+            cosmetic_str = f"{test_results.image_count_cosmetic}"
+            cosmetic_pdf = (
+                f"{test_results.diff_dir}/cosmetic_sample/{test_results.prefix}"
+                f"/image_diff_grid.pdf"
+            )
+            if web_link and os.path.exists(cosmetic_pdf):
+                cosmetic_link = web_link.replace(
+                    f"/{test_results.prefix}",
+                    f"/cosmetic_sample/{test_results.prefix}",
+                )
+                cosmetic_str += f" ([sample]({cosmetic_link}/image_diff_grid.pdf))"
+
             f.write(
                 f"| {test_name} | {test_results.image_count_total}"
                 f" | {test_results.image_count_correct}"
-                f" | {test_results.image_count_cosmetic}"
+                f" | {test_results.image_count_identical}"
+                f" | {cosmetic_str}"
                 f" | {missing_str} | {mismatched_str}"
                 f" | {test_results.severity_summary()} | \n"
             )
