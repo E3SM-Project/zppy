@@ -54,9 +54,8 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
         define_current_set(c)
         if c["current_set"] == "enso":
             logger.warning(
-                "The 'enso' set is not yet supported in PCMDI Diags. Skipping launching of associated jobs."
+                "The 'enso' set is currently experimental in PCMDI Diags."
             )
-            break  # Skip this task
         c["sub"] = get_value_from_parameter(
             c, "subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
         )
