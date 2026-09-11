@@ -266,6 +266,25 @@ def test_check_parameters_for_pcmdi():
     check_parameters_for_pcmdi(c)
     assert c["cmip_enso_dir"] == "placeholder_dir"
 
+    # Test enso_viewer=True (should infer cmip_enso_dir)
+    c = {
+        "current_set": "synthetic_plots",
+        "figure_sets": ["enso_metric"],
+        "cmip_enso_dir": "",
+        "cmip_clim_dir": "",
+        "cmip_movs_dir": "",
+        "enso_viewer": True,
+        "clim_viewer": False,
+        "mova_viewer": False,
+        "movc_viewer": False,
+        "diagnostics_base_path": "diags/post",
+        "infer_path_parameters": True,
+    }
+    check_parameters_for_pcmdi(c)
+    assert c["cmip_enso_dir"] == "diags/post/pcmdi_data/metrics_data/enso_metric"
+    assert c["cmip_clim_dir"] == "placeholder_dir"
+    assert c["cmip_movs_dir"] == "placeholder_dir"
+
     # Test when parameters are already defined
     c = {
         "current_set": "synthetic_plots",
@@ -638,6 +657,25 @@ def test_add_pcmdi_dependencies(mock_exists):
     add_pcmdi_dependencies(c, dependencies, script_dir)
     expected_dependencies = [
         "/scripts/pcmdi_diags_mean_climate_model_vs_model_2000-2010_vs_1850-1900.status",
+    ]
+    assert dependencies == expected_dependencies
+
+    # Test enso_viewer=True (should add the enso status file dependency)
+    dependencies = []
+    c = {
+        "run_type": "model_vs_obs",
+        "year1": 2000,
+        "year2": 2010,
+        "figure_sets": ["enso_metric"],
+        "clim_viewer": False,
+        "mova_viewer": False,
+        "movc_viewer": False,
+        "enso_viewer": True,
+    }
+
+    add_pcmdi_dependencies(c, dependencies, script_dir)
+    expected_dependencies = [
+        "/scripts/pcmdi_diags_enso_model_vs_obs_2000-2010.status",
     ]
     assert dependencies == expected_dependencies
 
