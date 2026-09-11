@@ -565,6 +565,19 @@ wait_for_slurm_job() {
     return 1
 }
 
+get_preferred_git_remote() {
+    local repo_dir="$1"
+    if git -C "$repo_dir" remote get-url upstream >/dev/null 2>&1; then
+        echo "upstream"
+        return 0
+    fi
+    if git -C "$repo_dir" remote get-url origin >/dev/null 2>&1; then
+        echo "origin"
+        return 0
+    fi
+    return 1
+}
+
 run_image_checker() {
     local job_name="zppy_image_checker_${TAG}"
     local image_checker_ok=true
@@ -1206,12 +1219,14 @@ with open(summary_file) as f:
     lines = f.readlines()
 
 header = None
+header_cols = []
 rows = []
 in_table = False
 for line in lines:
     stripped = line.strip()
     if stripped.startswith("| Test name"):
         header = line.rstrip("\n")
+        header_cols = [c.strip() for c in stripped.strip("|").split("|")]
         in_table = True
         continue
     if in_table and stripped.startswith("| ---"):
@@ -1233,11 +1248,18 @@ def has_failures(value):
     return digits not in ("", "0")
 
 
+if header is None or "Missing images" not in header_cols or "Needs review" not in header_cols:
+    print("Unable to identify failing image-check columns.")
+    raise SystemExit(0)
+
+missing_idx = header_cols.index("Missing images")
+needs_review_idx = header_cols.index("Needs review")
+
 failing = []
 for line, cols in rows:
-    if len(cols) < 8:
+    if len(cols) <= max(missing_idx, needs_review_idx):
         continue
-    if has_failures(cols[5]) or has_failures(cols[6]):
+    if has_failures(cols[missing_idx]) or has_failures(cols[needs_review_idx]):
         failing.append((line, cols[0]))
 
 if not failing or header is None:
@@ -1280,14 +1302,20 @@ _report_repo_changes() {
         return
     fi
 
-    if ! git -C "$repo_dir" fetch upstream "$branch" >/dev/null 2>&1; then
-        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to fetch upstream/${branch}_ |"
+    local remote
+    if ! remote=$(get_preferred_git_remote "$repo_dir"); then
+        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to identify a git remote for ${repo_dir}_ |"
+        return
+    fi
+
+    if ! git -C "$repo_dir" fetch "$remote" "$branch" >/dev/null 2>&1; then
+        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to fetch ${remote}/${branch}_ |"
         return
     fi
 
     local commits
-    if ! commits=$(git -C "$repo_dir" log "upstream/${branch}" --since="${EXPECTED_RESULTS_UPDATED_DATE}" --oneline 2>/dev/null); then
-        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to inspect upstream/${branch}_ |"
+    if ! commits=$(git -C "$repo_dir" log "${remote}/${branch}" --since="${EXPECTED_RESULTS_UPDATED_DATE}" --oneline 2>/dev/null); then
+        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to inspect ${remote}/${branch}_ |"
         return
     fi
 
