@@ -491,7 +491,7 @@ distribute_env_descriptions() {
             if [[ ! -f "$desc_file" ]]; then
                 continue
             fi
-            target_dir="${OUTPUT_WORKSPACE}/zppy_${cfg}_www/${UNIQUE_ID}/${case}/${task}"
+            target_dir="${OUTPUT_WORKSPACE}/zppy_${cfg#test_}_www/${UNIQUE_ID}/${case}/${task}"
             mkdir -p "$target_dir" 2>/dev/null || {
                 log_warning "Could not create ${target_dir}; skipping env description for ${cfg}/${task}"
                 continue
@@ -1275,17 +1275,11 @@ _report_repo_changes() {
     fi
 
     local log_ref=""
-    local stale_note=""
     if ! env GIT_TERMINAL_PROMPT=0 \
         GIT_SSH_COMMAND="ssh -oBatchMode=yes" \
         git -C "$repo_dir" fetch "$remote" "$branch" >/dev/null 2>&1; then
-        if git -C "$repo_dir" show-ref --verify --quiet "refs/remotes/${remote}/${branch}"; then
-            log_ref="${remote}/${branch}"
-            stale_note=" _(using existing local ${remote}/${branch})_"
-        else
-            report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to fetch ${remote}/${branch}_ |"
-            return
-        fi
+        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to fetch ${remote}/${branch}_ |"
+        return
     elif ! log_ref=$(git -C "$repo_dir" rev-parse FETCH_HEAD 2>/dev/null); then
         report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to resolve fetched ${remote}/${branch}_ |"
         return
@@ -1298,7 +1292,7 @@ _report_repo_changes() {
     fi
 
     if [[ -z "$commits" ]]; then
-        report_append "| [${label}](${repo_url}/commits/${branch}) | None${stale_note} |"
+        report_append "| [${label}](${repo_url}/commits/${branch}) | None |"
         return
     fi
 
@@ -1317,7 +1311,7 @@ _report_repo_changes() {
     done <<< "$commits"
     links="${links%, }"
 
-    report_append "| [${label}](${repo_url}/commits/${branch}) | ${links}${stale_note} |"
+    report_append "| [${label}](${repo_url}/commits/${branch}) | ${links} |"
 }
 
 # ============================================================================
