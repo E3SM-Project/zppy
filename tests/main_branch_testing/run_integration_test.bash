@@ -835,6 +835,9 @@ phase_1_setup() {
 
         log "Running zppy unit tests..."
         pytest tests/test_*.py
+        pytest tests/images/test_image_checker.py
+        pytest tests/images/test_image_severity.py
+        pytest tests/test_image_summary_report.py
         log_success "zppy unit tests passed"
     )
 
@@ -1064,16 +1067,6 @@ phase_3_validation() {
         || log_warning "test_bundles.py had failures"
 
     # ------------------------------------------------------------------
-    # "Tests of the tests" -- unit tests for the image-checking machinery
-    # itself, independent of any SLURM job output.
-    # ------------------------------------------------------------------
-    log "Running tests of the image checker itself..."
-    pytest tests/images/test_image_checker.py \
-        || log_warning "tests/images/test_image_checker.py had failures"
-    pytest tests/images/test_image_severity.py \
-        || log_warning "tests/images/test_image_severity.py had failures"
-
-    # ------------------------------------------------------------------
     # test_images.py -- now auto-launched via SLURM, no manual step needed.
     # ------------------------------------------------------------------
     log "Auto-launching the image checker (test_images.py) on a compute node..."
@@ -1173,7 +1166,7 @@ generate_markdown_report() {
     report_append ""
     report_append "* zppy-interfaces unit tests: see script log for \`Running zppy-interfaces unit tests...\` / \`zppy-interfaces unit tests passed\`"
     report_append "* zppy unit tests: see script log for \`Running zppy unit tests...\` / \`zppy unit tests passed\`"
-    report_append "* Image-checker unit tests (tests of the tests): \`tests/images/test_image_checker.py\`, \`tests/images/test_image_severity.py\`"
+    report_append "* Image-checker/report unit tests (tests of the tests): \`tests/images/test_image_checker.py\`, \`tests/images/test_image_severity.py\`, \`tests/test_image_summary_report.py\`"
     report_append "* Output directory status files: checked automatically; see \`Checking all status files...\` in the script log"
     report_append "* Integration tests run: \`test_last_year.py\`, \`test_bash_generation.py\`, \`test_campaign.py\`, \`test_defaults.py\`, \`test_bundles.py\`"
     report_append ""
