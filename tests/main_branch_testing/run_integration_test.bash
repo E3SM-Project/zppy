@@ -1175,7 +1175,7 @@ generate_markdown_report() {
     # --- Step 8: image checker (auto-launched) ---
     report_append "## Step 8: Run Python tests"
     report_append ""
-    report_append "The image checker (\`pytest tests/integration/test_images.py\`) was launched automatically as SLURM job and no longer requires a manual compute-node step."
+    report_append "The image checker (\`pytest tests/integration/test_images.py\`) was launched automatically as a SLURM job and no longer requires a manual compute-node step."
     report_append ""
     report_append "* SLURM job ID: \`${IMAGE_CHECKER_JOB_ID:-unknown}\`"
     report_append "* Terminal state: \`${IMAGE_CHECKER_JOB_STATE:-unknown}\`"
@@ -1241,23 +1241,29 @@ _report_repo_changes() {
         return
     fi
 
+    local log_ref="${remote}/${branch}"
+    local stale_note=""
     if ! env GIT_TERMINAL_PROMPT=0 \
         GIT_SSH_COMMAND="ssh -oBatchMode=yes -oStrictHostKeyChecking=yes" \
         git -C "$repo_dir" fetch "$remote" \
         "+refs/heads/${branch}:refs/remotes/${remote}/${branch}" \
         >/dev/null 2>&1; then
-        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to fetch ${remote}/${branch}_ |"
-        return
+        if git -C "$repo_dir" show-ref --verify --quiet "refs/remotes/${remote}/${branch}"; then
+            stale_note=" _(using existing local ${remote}/${branch})_"
+        else
+            report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to fetch ${remote}/${branch}_ |"
+            return
+        fi
     fi
 
     local commits
-    if ! commits=$(git -C "$repo_dir" log "${remote}/${branch}" --since="${EXPECTED_RESULTS_UPDATED_DATE}" --oneline 2>/dev/null); then
-        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to inspect ${remote}/${branch}_ |"
+    if ! commits=$(git -C "$repo_dir" log "$log_ref" --since="${EXPECTED_RESULTS_UPDATED_DATE}" --oneline 2>/dev/null); then
+        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to inspect ${log_ref}_ |"
         return
     fi
 
     if [[ -z "$commits" ]]; then
-        report_append "| [${label}](${repo_url}/commits/${branch}) | None |"
+        report_append "| [${label}](${repo_url}/commits/${branch}) | None${stale_note} |"
         return
     fi
 
@@ -1276,7 +1282,7 @@ _report_repo_changes() {
     done <<< "$commits"
     links="${links%, }"
 
-    report_append "| [${label}](${repo_url}/commits/${branch}) | ${links} |"
+    report_append "| [${label}](${repo_url}/commits/${branch}) | ${links}${stale_note} |"
 }
 
 # ============================================================================
