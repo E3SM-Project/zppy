@@ -615,7 +615,11 @@ EOF
     fi
 
     if [[ -f "$IMAGE_CHECKER_STDOUT" ]]; then
-        log_success "Image checker job complete. Output: ${IMAGE_CHECKER_STDOUT}"
+        if [ "$image_checker_ok" = true ]; then
+            log_success "Image checker job passed. Output: ${IMAGE_CHECKER_STDOUT}"
+        else
+            log_error "Image checker job did not pass. Output: ${IMAGE_CHECKER_STDOUT}"
+        fi
     else
         log_warning "Image checker output log not found: ${IMAGE_CHECKER_STDOUT}"
     fi
