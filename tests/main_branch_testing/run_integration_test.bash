@@ -125,7 +125,7 @@ case "$MACHINE" in
         OUTPUT_WORKSPACE="/global/cfs/cdirs/e3sm/${USER}"
         CONDA_ACTIVATION_CMD="nersc_conda"
         UNIFIED_ENV_CMD="source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_pm-cpu.sh"
-        SALLOC_CMD="salloc --nodes=1 --qos=interactive --time=01:00:00 --constraint=cpu --account=e3sm"
+        SALLOC_CMD="salloc --nodes=1 --qos=debug --time=01:00:00 --constraint=cpu --account=e3sm"
         SBATCH_DIRECTIVES=$'#SBATCH --qos=debug\n#SBATCH --time=01:00:00\n#SBATCH --constraint=cpu\n#SBATCH --account=e3sm'
         ;;
 esac
@@ -1187,7 +1187,11 @@ generate_markdown_report() {
     report_append ""
     report_append '```'
     if [[ -n "${IMAGE_CHECKER_STDOUT:-}" && -f "${IMAGE_CHECKER_STDOUT:-}" ]]; then
-        awk '/Captured stdout call/{found=1} found{print}' "$IMAGE_CHECKER_STDOUT" >> "$REPORT_FILE" 2>/dev/null || true
+        if grep -q "Captured stdout call" "$IMAGE_CHECKER_STDOUT" 2>/dev/null; then
+            awk '/Captured stdout call/{found=1} found{print}' "$IMAGE_CHECKER_STDOUT" >> "$REPORT_FILE" 2>/dev/null || true
+        else
+            cat "$IMAGE_CHECKER_STDOUT" >> "$REPORT_FILE" 2>/dev/null || true
+        fi
     else
         echo "(image checker stdout log not found)" >> "$REPORT_FILE"
     fi
