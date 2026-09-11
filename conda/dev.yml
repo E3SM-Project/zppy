@@ -23,6 +23,11 @@ dependencies:
   # =======================
   - pytest
   - pytest-cov
+  # Used by the integration test image checker to rank image differences by
+  # severity. Both already arrive indirectly via mpas_tools; listed here
+  # because the test code imports them directly.
+  - numpy
+  - scipy
   # Documentation
   # If versions are updated, also update in `.github/workflows/build_workflow.yml`
   # =================
