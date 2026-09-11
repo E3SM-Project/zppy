@@ -1242,7 +1242,7 @@ _report_repo_changes() {
     fi
 
     if ! env GIT_TERMINAL_PROMPT=0 \
-        GIT_SSH_COMMAND="ssh -oBatchMode=yes -oStrictHostKeyChecking=accept-new" \
+        GIT_SSH_COMMAND="ssh -oBatchMode=yes -oStrictHostKeyChecking=yes" \
         git -C "$repo_dir" fetch "$remote" "$branch" >/dev/null 2>&1; then
         report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to fetch ${remote}/${branch}_ |"
         return
