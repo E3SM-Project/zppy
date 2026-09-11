@@ -1274,22 +1274,18 @@ _report_repo_changes() {
         return
     fi
 
-    local log_ref="${remote}/${branch}"
+    local log_ref="FETCH_HEAD"
     local stale_note=""
     if ! env GIT_TERMINAL_PROMPT=0 \
         GIT_SSH_COMMAND="ssh -oBatchMode=yes" \
-        git -C "$repo_dir" fetch "$remote" >/dev/null 2>&1; then
+        git -C "$repo_dir" fetch "$remote" "$branch" >/dev/null 2>&1; then
         if git -C "$repo_dir" show-ref --verify --quiet "refs/remotes/${remote}/${branch}"; then
+            log_ref="${remote}/${branch}"
             stale_note=" _(using existing local ${remote}/${branch})_"
         else
             report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to fetch ${remote}/${branch}_ |"
             return
         fi
-    fi
-
-    if ! git -C "$repo_dir" show-ref --verify --quiet "refs/remotes/${remote}/${branch}"; then
-        report_append "| [${label}](${repo_url}/commits/${branch}) | _${remote}/${branch} is not available locally after fetch_ |"
-        return
     fi
 
     local commits
