@@ -75,8 +75,9 @@ The report's table looks like:
     ...
 
 Because this is generated from each repo's local git history, make sure each
-``*_DIR`` repo has fetched ``upstream`` recently (the script does this
-itself for the branch it tests, via ``git fetch upstream``).
+``*_DIR`` repo has a working default remote (the script refreshes the tested
+branch non-interactively from ``upstream`` when available, otherwise
+``origin``).
 
 The automated test script
 =========================
