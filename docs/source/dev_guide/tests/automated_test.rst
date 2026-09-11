@@ -332,9 +332,13 @@ makes it straightforward to run on a weekly cron schedule.
        #!/bin/bash
        set -e
        WEEK_DIR="$HOME/ez/zppy_main_branch_tests/test_$(date +%Y%m%d)_run1"
+       ZPPY_SCRIPT_SOURCE="$HOME/ez/zppy_cron_source"
+       git -C "$ZPPY_SCRIPT_SOURCE" fetch upstream main
+       git -C "$ZPPY_SCRIPT_SOURCE" checkout main
+       git -C "$ZPPY_SCRIPT_SOURCE" reset --hard upstream/main
        mkdir -p "$WEEK_DIR"
        cd "$WEEK_DIR"
-       cp "$HOME/ez/zppy/tests/main_branch_testing/run_integration_test.bash" .
+       cp "$ZPPY_SCRIPT_SOURCE/tests/main_branch_testing/run_integration_test.bash" .
        cp "$HOME/ez/zppy_weekly_test.cfg" ./zppy_test.cfg
        ulimit -s unlimited
        ./run_integration_test.bash --config zppy_test.cfg \
@@ -342,7 +346,11 @@ makes it straightforward to run on a weekly cron schedule.
 
    Keep your reusable, edited cfg at a stable path (e.g.
    ``~/ez/zppy_weekly_test.cfg``) outside of any per-run directory, since the
-   driver script copies it in fresh each week.
+   driver script copies it in fresh each week. Keep the copied
+   ``run_integration_test.bash`` source in a separate checkout (here
+   ``~/ez/zppy_cron_source``) that the driver updates to ``main`` before each
+   run, rather than reusing the per-run test checkout that Phase 1 switches to
+   ``test_zppy_<TAG>``.
 
 3. Add a weekly ``cron`` entry (edit with ``crontab -e``). For example, to
    run every Monday at 06:00 local time:
