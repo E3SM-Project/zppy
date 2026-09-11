@@ -1274,7 +1274,7 @@ _report_repo_changes() {
         return
     fi
 
-    local log_ref="FETCH_HEAD"
+    local log_ref=""
     local stale_note=""
     if ! env GIT_TERMINAL_PROMPT=0 \
         GIT_SSH_COMMAND="ssh -oBatchMode=yes" \
@@ -1286,6 +1286,9 @@ _report_repo_changes() {
             report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to fetch ${remote}/${branch}_ |"
             return
         fi
+    elif ! log_ref=$(git -C "$repo_dir" rev-parse FETCH_HEAD 2>/dev/null); then
+        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to resolve fetched ${remote}/${branch}_ |"
+        return
     fi
 
     local commits
