@@ -20,7 +20,9 @@ Two independent things are measured:
 2. ``content_fraction`` -- how much of the picture actually looks different,
    ignoring small movements. See ``tolerant_difference`` below.
 
-See IMAGE_DIFF_DESIGN.md for the analysis these thresholds come from.
+The thresholds were tuned against hand-labelled weekly-test output; the
+analysis is recorded on the pull request that introduced this module,
+https://github.com/E3SM-Project/zppy/pull/865.
 """
 
 import os
@@ -34,8 +36,10 @@ from scipy import ndimage
 #
 # How far (in pixels) a feature may move before we stop calling it a change.
 # Larger values ignore more of the harmless reflow caused by a matplotlib
-# upgrade, but also blind us to genuine movement of that size. 4 was chosen by
-# sweeping r=2..5 against hand-labeled images; see IMAGE_DIFF_DESIGN.md 5.2.
+# upgrade, but also blind us to genuine movement of that size. Sweeping 2 to 5
+# pixels against hand-labelled images gave separations between genuinely
+# different and merely shifted images of 1.9x, 3.4x, 5.5x and 6.9x. 5 forgives
+# more real movement for a small further gain, so 4 is the compromise.
 SHIFT_TOLERANCE_PIXELS = 4
 
 # How different two pixels must be (0-255) before the difference counts at all.
