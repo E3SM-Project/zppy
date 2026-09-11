@@ -1209,75 +1209,8 @@ generate_markdown_report() {
     report_append "### Summary table -- only failing image-check tests, sorted by task"
     report_append ""
     if [[ -f "$summary_file" ]]; then
-        python3 - "$summary_file" "${TASKS_ARRAY[@]}" >> "$REPORT_FILE" <<'PYEOF'
-import sys
-
-summary_file = sys.argv[1]
-tasks = sys.argv[2:]
-
-with open(summary_file) as f:
-    lines = f.readlines()
-
-header = None
-header_cols = []
-rows = []
-in_table = False
-for line in lines:
-    stripped = line.strip()
-    if stripped.startswith("| Test name"):
-        header = line.rstrip("\n")
-        header_cols = [c.strip() for c in stripped.strip("|").split("|")]
-        in_table = True
-        continue
-    if in_table and stripped.startswith("| ---"):
-        continue
-    if in_table and stripped.startswith("|"):
-        cols = [c.strip() for c in stripped.strip("|").split("|")]
-        rows.append((line.rstrip("\n"), cols))
-    elif in_table and not stripped.startswith("|"):
-        in_table = False
-
-
-def has_failures(value):
-    digits = ""
-    for ch in value:
-        if ch.isdigit():
-            digits += ch
-        else:
-            break
-    return digits not in ("", "0")
-
-
-if header is None or "Missing images" not in header_cols or "Needs review" not in header_cols:
-    print("Unable to identify failing image-check columns.")
-    raise SystemExit(0)
-
-missing_idx = header_cols.index("Missing images")
-needs_review_idx = header_cols.index("Needs review")
-
-failing = []
-for line, cols in rows:
-    if len(cols) <= max(missing_idx, needs_review_idx):
-        continue
-    if has_failures(cols[missing_idx]) or has_failures(cols[needs_review_idx]):
-        failing.append((line, cols[0]))
-
-if not failing or header is None:
-    print("No failing image-check tests.")
-else:
-    by_task = {}
-    for line, name in failing:
-        matched = next((t for t in tasks if t in name), "other")
-        by_task.setdefault(matched, []).append(line)
-    for task, flines in sorted(by_task.items()):
-        print(f"`{task}`")
-        print()
-        print(header)
-        print("| --- | --- | --- | --- | --- | --- | --- | --- |")
-        for l in flines:
-            print(l)
-        print()
-PYEOF
+        python3 -m tests.integration.image_summary_report \
+            "$summary_file" "${TASKS_ARRAY[@]}" >> "$REPORT_FILE"
     else
         echo "_test_images_summary.md not found; skipping._" >> "$REPORT_FILE"
     fi
@@ -1308,7 +1241,9 @@ _report_repo_changes() {
         return
     fi
 
-    if ! git -C "$repo_dir" fetch "$remote" "$branch" >/dev/null 2>&1; then
+    if ! env GIT_TERMINAL_PROMPT=0 \
+        GIT_SSH_COMMAND="ssh -oBatchMode=yes -oStrictHostKeyChecking=accept-new" \
+        git -C "$repo_dir" fetch "$remote" "$branch" >/dev/null 2>&1; then
         report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to fetch ${remote}/${branch}_ |"
         return
     fi
