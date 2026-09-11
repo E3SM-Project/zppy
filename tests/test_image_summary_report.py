@@ -1,7 +1,12 @@
 from pathlib import Path
 from typing import List
 
-from tests.integration.image_summary_report import render_failing_image_summary
+import pytest
+
+from tests.integration.image_summary_report import (
+    main,
+    render_failing_image_summary,
+)
 
 
 def test_render_failing_image_summary_uses_header_and_exact_task_tokens(
@@ -56,3 +61,32 @@ def test_render_failing_image_summary_reports_missing_columns(
     )
 
     assert report == "Unable to identify failing image-check columns.\n"
+
+
+def test_main_writes_report_to_stdout(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    summary: Path = tmp_path / "test_images_summary.md"
+    summary.write_text(
+        "\n".join(
+            [
+                "# Summary of test results",
+                "",
+                "| Test name | Total images | Correct images | Identical | Cosmetic only | Missing images | Needs review | Severity |",
+                "| --- | --- | --- | --- | --- | --- | --- | --- |",
+                "| /plots/global_time_series/case_a | 10 | 9 | 9 | 0 | 1 | 0 | medium |",
+            ]
+        )
+        + "\n"
+    )
+
+    exit_code: int = main([str(summary), "global_time_series"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert captured.out == (
+        "`global_time_series`\n\n"
+        "| Test name | Total images | Correct images | Identical |"
+        " Cosmetic only | Missing images | Needs review | Severity |\n"
+        "| --- | --- | --- | --- | --- | --- | --- | --- |\n"
+        "| /plots/global_time_series/case_a | 10 | 9 | 9 | 0 | 1 | 0 |"
+        " medium |\n"
+    )

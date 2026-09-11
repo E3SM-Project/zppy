@@ -1151,13 +1151,14 @@ generate_markdown_report() {
     report_append ""
     report_append "| Task | env_description.txt |"
     report_append "| --- | --- |"
-    local task
-    for task in "${TASKS_ARRAY[@]}"; do
-        task="${task// /}"
-        if [[ -f "${ENV_DESC_DIR}/${task}.txt" ]]; then
-            report_append "| ${task} | \`${ENV_DESC_DIR}/${task}.txt\` (also copied to each cfg's \`_www\` output dir) |"
-        fi
-    done
+    local desc_file task
+    if compgen -G "${ENV_DESC_DIR}/*.txt" > /dev/null; then
+        while IFS= read -r desc_file; do
+            task="${desc_file##*/}"
+            task="${task%.txt}"
+            report_append "| ${task} | \`${desc_file}\` (also copied to each cfg's \`_www\` output dir) |"
+        done < <(find "$ENV_DESC_DIR" -maxdepth 1 -type f -name '*.txt' | sort)
+    fi
     report_append ""
 
     # --- Unit tests / status files / integration tests summary ---
@@ -1188,7 +1189,28 @@ generate_markdown_report() {
     report_append '```'
     if [[ -n "${IMAGE_CHECKER_STDOUT:-}" && -f "${IMAGE_CHECKER_STDOUT:-}" ]]; then
         if grep -q "Captured stdout call" "$IMAGE_CHECKER_STDOUT" 2>/dev/null; then
-            awk '/Captured stdout call/{found=1} found{print}' "$IMAGE_CHECKER_STDOUT" >> "$REPORT_FILE" 2>/dev/null || true
+            awk '
+                /Captured stdout call/ {
+                    if (capturing) {
+                        print ""
+                    }
+                    capturing=1
+                    print
+                    next
+                }
+                capturing && (
+                    /^_{5,}/ ||
+                    /^={5,}/ ||
+                    (/^-{5,}/ && $0 !~ /Captured stdout call/)
+                ) {
+                    capturing=0
+                    print ""
+                    next
+                }
+                capturing {
+                    print
+                }
+            ' "$IMAGE_CHECKER_STDOUT" >> "$REPORT_FILE" 2>/dev/null || true
         else
             cat "$IMAGE_CHECKER_STDOUT" >> "$REPORT_FILE" 2>/dev/null || true
         fi
