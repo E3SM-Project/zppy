@@ -1,4 +1,6 @@
 from pathlib import Path
+import runpy
+import sys
 from typing import List
 
 import pytest
@@ -82,6 +84,50 @@ def test_main_writes_report_to_stdout(tmp_path: Path, capsys: pytest.CaptureFixt
     captured = capsys.readouterr()
 
     assert exit_code == 0
+    assert captured.out == (
+        "`global_time_series`\n\n"
+        "| Test name | Total images | Correct images | Identical |"
+        " Cosmetic only | Missing images | Needs review | Severity |\n"
+        "| --- | --- | --- | --- | --- | --- | --- | --- |\n"
+        "| /plots/global_time_series/case_a | 10 | 9 | 9 | 0 | 1 | 0 |"
+        " medium |\n"
+    )
+
+
+def test_module_entry_point_writes_report_to_stdout(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    summary: Path = tmp_path / "test_images_summary.md"
+    summary.write_text(
+        "\n".join(
+            [
+                "# Summary of test results",
+                "",
+                "| Test name | Total images | Correct images | Identical | Cosmetic only | Missing images | Needs review | Severity |",
+                "| --- | --- | --- | --- | --- | --- | --- | --- |",
+                "| /plots/global_time_series/case_a | 10 | 9 | 9 | 0 | 1 | 0 | medium |",
+            ]
+        )
+        + "\n"
+    )
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "python",
+            str(summary),
+            "global_time_series",
+        ],
+    )
+
+    with pytest.raises(SystemExit) as excinfo:
+        runpy.run_module("tests.integration.image_summary_report", run_name="__main__")
+
+    captured = capsys.readouterr()
+    assert excinfo.value.code == 0
     assert captured.out == (
         "`global_time_series`\n\n"
         "| Test name | Total images | Correct images | Identical |"
