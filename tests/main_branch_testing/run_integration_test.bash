@@ -192,6 +192,11 @@ ENV_DESC_DIR="${SCRIPT_RUN_DIR}/env_descriptions_${TAG}"
 REPORT_FILE="${SCRIPT_RUN_DIR}/test_report_${TAG}.md"
 IMAGE_CHECKER_SBATCH="${SCRIPT_RUN_DIR}/image_checker_${TAG}.sbatch"
 IMAGE_CHECKER_STDOUT_PREFIX="${SCRIPT_RUN_DIR}/image_checker_${TAG}"
+IMAGE_CHECKER_JOB_ID=""
+IMAGE_CHECKER_JOB_STATE="not_run"
+IMAGE_CHECKER_EXIT_CODE="N/A"
+IMAGE_CHECKER_STDOUT=""
+IMAGE_CHECKER_STDERR=""
 
 # Colors for output
 RED='\033[0;31m'
@@ -438,7 +443,7 @@ capture_env_description() {
         echo "Task: ${task_name}"
         echo "Generated: $(date +'%Y-%m-%d %H:%M:%S')"
         echo ""
-        if [[ -n "$pkg_dir" && -d "$pkg_dir" ]]; then
+        if [[ "$env_type" == "dev" && -n "$pkg_dir" && -d "$pkg_dir" ]]; then
             echo "Repository: ${pkg_dir}"
             echo "Commit: $(git -C "$pkg_dir" rev-parse HEAD 2>/dev/null || echo unknown)"
             echo "Commit (short): $(git -C "$pkg_dir" rev-parse --short HEAD 2>/dev/null || echo unknown)"
@@ -484,7 +489,7 @@ distribute_env_descriptions() {
             if [[ ! -f "$desc_file" ]]; then
                 continue
             fi
-            target_dir="${OUTPUT_WORKSPACE}/zppy_weekly_${cfg}_www/${UNIQUE_ID}/${case}/${task}"
+            target_dir="${OUTPUT_WORKSPACE}/zppy_${cfg}_www/${UNIQUE_ID}/${case}/${task}"
             mkdir -p "$target_dir" 2>/dev/null || {
                 log_warning "Could not create ${target_dir}; skipping env description for ${cfg}/${task}"
                 continue
@@ -503,10 +508,69 @@ distribute_env_descriptions() {
 # same partition/qos/time/account as the documented manual salloc command),
 # waits for it to finish, and records the job's stdout log + generated
 # test_images_summary.md for the Markdown report.
+get_slurm_job_status() {
+    local job_id="$1"
+    sacct -X --parsable2 --noheader -j "$job_id" \
+        --format=JobIDRaw,State,ExitCode 2>/dev/null \
+        | awk -F'|' -v id="$job_id" '$1 == id {print $2 "|" $3; exit}'
+}
+
+is_terminal_slurm_state() {
+    local state="$1"
+    case "$state" in
+        COMPLETED*|FAILED*|CANCELLED*|TIMEOUT*|OUT_OF_MEMORY*|NODE_FAIL*|PREEMPTED*|BOOT_FAIL*|DEADLINE*|SPECIAL_EXIT*)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+wait_for_slurm_job() {
+    local job_id="$1"
+    local check_interval=${2:-120}
+    local max_wait=${3:-7200}
+    local elapsed=0
+
+    log "Waiting for SLURM job ${job_id} (checking every ${check_interval}s, max ${max_wait}s)..."
+    while [ "$elapsed" -lt "$max_wait" ]; do
+        local queue_state
+        queue_state=$(squeue -h -j "$job_id" -o "%T" 2>/dev/null | head -n 1 || true)
+        if [[ -n "$queue_state" ]]; then
+            log "Image checker job ${job_id} state: ${queue_state} (elapsed: ${elapsed}s / max: ${max_wait}s)"
+        else
+            local status
+            status=$(get_slurm_job_status "$job_id")
+            if [[ -n "$status" ]]; then
+                IMAGE_CHECKER_JOB_STATE="${status%%|*}"
+                IMAGE_CHECKER_EXIT_CODE="${status#*|}"
+                if is_terminal_slurm_state "$IMAGE_CHECKER_JOB_STATE"; then
+                    log "Image checker job ${job_id} finished with state ${IMAGE_CHECKER_JOB_STATE} (ExitCode ${IMAGE_CHECKER_EXIT_CODE})"
+                    [[ "$IMAGE_CHECKER_JOB_STATE" == COMPLETED* && "${IMAGE_CHECKER_EXIT_CODE%%:*}" == "0" ]]
+                    return
+                fi
+            else
+                log "Image checker job ${job_id} left squeue; waiting for accounting data..."
+            fi
+        fi
+
+        sleep "$check_interval"
+        elapsed=$((elapsed + check_interval))
+    done
+
+    IMAGE_CHECKER_JOB_STATE="TIMEOUT"
+    IMAGE_CHECKER_EXIT_CODE="N/A"
+    log_error "Timed out waiting for image checker job ${job_id}"
+    return 1
+}
+
 run_image_checker() {
     local job_name="zppy_image_checker_${TAG}"
+    local image_checker_ok=true
 
     log "Preparing image checker SLURM batch job..."
+    rm -f "${ZPPY_DIR}/test_images_summary.md"
     cat > "$IMAGE_CHECKER_SBATCH" <<EOF
 #!/bin/bash
 #SBATCH --job-name=${job_name}
@@ -524,21 +588,21 @@ pytest tests/integration/test_images.py
 EOF
 
     log "Submitting image checker job (test_images.py)..."
-    local job_id
-    job_id=$(sbatch --parsable "$IMAGE_CHECKER_SBATCH")
-    log "Image checker job submitted: ${job_id}"
+    IMAGE_CHECKER_JOB_ID=$(sbatch --parsable "$IMAGE_CHECKER_SBATCH")
+    log "Image checker job submitted: ${IMAGE_CHECKER_JOB_ID}"
 
-    # Reuse the same polling loop used for the main zppy jobs. Typical
-    # runtime is 10-20 min on Chrysalis/Perlmutter, up to ~50 min on Compy.
-    wait_for_slurm_jobs 120 7200
+    IMAGE_CHECKER_STDOUT="${IMAGE_CHECKER_STDOUT_PREFIX}.o${IMAGE_CHECKER_JOB_ID}"
+    IMAGE_CHECKER_STDERR="${IMAGE_CHECKER_STDOUT_PREFIX}.e${IMAGE_CHECKER_JOB_ID}"
 
-    IMAGE_CHECKER_STDOUT="${IMAGE_CHECKER_STDOUT_PREFIX}.o${job_id}"
-    IMAGE_CHECKER_STDERR="${IMAGE_CHECKER_STDOUT_PREFIX}.e${job_id}"
+    if ! wait_for_slurm_job "$IMAGE_CHECKER_JOB_ID" 120 7200; then
+        image_checker_ok=false
+        log_error "Image checker job failed with state ${IMAGE_CHECKER_JOB_STATE} (ExitCode ${IMAGE_CHECKER_EXIT_CODE})"
+    fi
 
     if [[ -f "$IMAGE_CHECKER_STDOUT" ]]; then
         log_success "Image checker job complete. Output: ${IMAGE_CHECKER_STDOUT}"
     else
-        log_error "Image checker output log not found: ${IMAGE_CHECKER_STDOUT}"
+        log_warning "Image checker output log not found: ${IMAGE_CHECKER_STDOUT}"
     fi
 
     if [[ -f "${ZPPY_DIR}/test_images_summary.md" ]]; then
@@ -547,6 +611,8 @@ EOF
     else
         log_warning "test_images_summary.md not found in ${ZPPY_DIR}"
     fi
+
+    [ "$image_checker_ok" = true ]
 }
 
 # ============================================================================
@@ -993,15 +1059,24 @@ phase_3_validation() {
     # test_images.py -- now auto-launched via SLURM, no manual step needed.
     # ------------------------------------------------------------------
     log "Auto-launching the image checker (test_images.py) on a compute node..."
-    run_image_checker
+    local image_checker_ok=true
+    if ! run_image_checker; then
+        image_checker_ok=false
+    fi
 
-    log_success "Phase 3 automated tests complete!"
+    if [ "$image_checker_ok" = true ]; then
+        log_success "Phase 3 automated tests complete!"
+    else
+        log_error "Phase 3 automated tests completed with image-checker failures."
+    fi
 
     # ------------------------------------------------------------------
     # Markdown report
     # ------------------------------------------------------------------
     generate_markdown_report
     log_success "Markdown report written: ${REPORT_FILE}"
+
+    [ "$image_checker_ok" = true ]
 }
 
 # ============================================================================
@@ -1089,6 +1164,10 @@ generate_markdown_report() {
     report_append ""
     report_append "The image checker (\`pytest tests/integration/test_images.py\`) was launched automatically as SLURM job and no longer requires a manual compute-node step."
     report_append ""
+    report_append "* SLURM job ID: \`${IMAGE_CHECKER_JOB_ID:-unknown}\`"
+    report_append "* Terminal state: \`${IMAGE_CHECKER_JOB_STATE:-unknown}\`"
+    report_append "* Exit code: \`${IMAGE_CHECKER_EXIT_CODE:-unknown}\`"
+    report_append ""
     report_append "<details>"
     report_append ""
     report_append "<summary> Output </summary>"
@@ -1156,9 +1235,9 @@ def has_failures(value):
 
 failing = []
 for line, cols in rows:
-    if len(cols) < 4:
+    if len(cols) < 8:
         continue
-    if has_failures(cols[2]) or has_failures(cols[3]):
+    if has_failures(cols[5]) or has_failures(cols[6]):
         failing.append((line, cols[0]))
 
 if not failing or header is None:
@@ -1168,11 +1247,11 @@ else:
     for line, name in failing:
         matched = next((t for t in tasks if t in name), "other")
         by_task.setdefault(matched, []).append(line)
-    for task, flines in by_task.items():
+    for task, flines in sorted(by_task.items()):
         print(f"`{task}`")
         print()
         print(header)
-        print("| --- | --- | --- | --- |")
+        print("| --- | --- | --- | --- | --- | --- | --- | --- |")
         for l in flines:
             print(l)
         print()
@@ -1201,8 +1280,16 @@ _report_repo_changes() {
         return
     fi
 
+    if ! git -C "$repo_dir" fetch upstream "$branch" >/dev/null 2>&1; then
+        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to fetch upstream/${branch}_ |"
+        return
+    fi
+
     local commits
-    commits=$(git -C "$repo_dir" log "upstream/${branch}" --since="${EXPECTED_RESULTS_UPDATED_DATE}" --oneline 2>/dev/null || true)
+    if ! commits=$(git -C "$repo_dir" log "upstream/${branch}" --since="${EXPECTED_RESULTS_UPDATED_DATE}" --oneline 2>/dev/null); then
+        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to inspect upstream/${branch}_ |"
+        return
+    fi
 
     if [[ -z "$commits" ]]; then
         report_append "| [${label}](${repo_url}/commits/${branch}) | None |"
