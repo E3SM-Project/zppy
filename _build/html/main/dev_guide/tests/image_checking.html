@@ -1,0 +1,289 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reviewing image checks &mdash; zppy  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Updating expected results for the tests" href="update_expected_results.html" />
+    <link rel="prev" title="Automated testing of zppy" href="automated_test.html" />
+    <link href="../../_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            zppy
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html">User Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../project-standards.html">Project Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contributing.html">Contributing to This Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parameters.html">Parameter checking &amp; inferring – for developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../provenance.html">Provenance (Developer Reference)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tasks/index.html">Tasks (Developer Reference)</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tests</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="manual_test.html">Manually testing zppy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="automated_test.html">Automated testing of zppy</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Reviewing image checks</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#why-images-differ">Why images differ</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#severity">Severity</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#what-gets-written">What gets written</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#reviewing-efficiently">Reviewing efficiently</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#a-note-on-small-changes">A note on small changes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="update_expected_results.html">Updating expected results for the tests</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../releases/index.html">How to Prepare a Release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../new_task.html">Adding a new task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../new_diags_set.html">Examples: Adding a new set to the E3SM Diagnostics task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../archive/index.html">Archive</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">zppy</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Developer Guide</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Tests</a></li>
+      <li class="breadcrumb-item active">Reviewing image checks</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/dev_guide/tests/image_checking.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="reviewing-image-checks">
+<span id="image-checking"></span><h1>Reviewing image checks<a class="headerlink" href="#reviewing-image-checks" title="Link to this heading"></a></h1>
+<p>The integration tests compare every image a run produces against a saved
+expected image. This page explains how to review what comes back.</p>
+<section id="why-images-differ">
+<h2>Why images differ<a class="headerlink" href="#why-images-differ" title="Link to this heading"></a></h2>
+<p>Two images can differ for very different reasons:</p>
+<ul class="simple">
+<li><p><strong>Cosmetic.</strong> Upgrading matplotlib changes text metrics slightly. Figures are
+saved with <code class="docutils literal notranslate"><span class="pre">bbox_inches=&quot;tight&quot;</span></code>, so a plot can come out a pixel wider and
+every anti-aliased edge lands a fraction of a pixel away. Nothing about the
+science changed.</p></li>
+<li><p><strong>Real.</strong> A panel is missing, a title was dropped, a contour moved, or a
+printed statistic changed. These need a person to look at them.</p></li>
+</ul>
+<p>A plain pixel-by-pixel comparison cannot tell these apart. Visually identical
+plots routinely differ in 2-20% of their pixels after a matplotlib upgrade, so
+comparing raw pixels reports essentially every image as a failure. In the
+2026-08-04 weekly test that meant 1274 of 1280 MPAS-Analysis images were listed
+as failures with nothing to distinguish them.</p>
+</section>
+<section id="severity">
+<h2>Severity<a class="headerlink" href="#severity" title="Link to this heading"></a></h2>
+<p>Each image pair is therefore given a severity, and failures are sorted worst
+first. Work down the list and stop when the differences stop mattering.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 15.0%" />
+<col style="width: 60.0%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Severity</p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>What to do</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">STRUCTURAL</span></code></p></td>
+<td><p>The figure changed size enough that a panel came or went.</p></td>
+<td><p>Always investigate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MAJOR</span></code></p></td>
+<td><p>A large part of the plot looks different.</p></td>
+<td><p>Always investigate.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MODERATE</span></code></p></td>
+<td><p>A visible part of the plot looks different.</p></td>
+<td><p>Investigate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MINOR</span></code></p></td>
+<td><p>Slightly different, or a small isolated change such as a printed number.</p></td>
+<td><p>Skim.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NEGLIGIBLE</span></code></p></td>
+<td><p>The images differ, but only in ways that look like rendering noise.</p></td>
+<td><p>Nothing, though a sample is rendered so you can confirm that.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IDENTICAL</span></code></p></td>
+<td><p>The images do not differ at all.</p></td>
+<td><p>Nothing.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MISSING</span></code></p></td>
+<td><p>The image was never created.</p></td>
+<td><p>Always investigate.</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">IDENTICAL</span></code> and <code class="docutils literal notranslate"><span class="pre">NEGLIGIBLE</span></code> images do not fail the test. They are counted
+separately in the summary, because “did not change” and “changed in a way that
+looks cosmetic” are different claims, and only the second is a judgement.</p>
+</section>
+<section id="what-gets-written">
+<h2>What gets written<a class="headerlink" href="#what-gets-written" title="Link to this heading"></a></h2>
+<p>Alongside the existing outputs, each task’s diff directory gets:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">severity_report.txt</span></code></dt><dd><p>The ranked list. Start here. It opens with counts, then a grouping by
+likely cause, then every image needing review, worst first.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">image_scores.json</span></code></dt><dd><p>The same information as raw numbers, one entry per image. Useful for
+re-examining thresholds without re-running the comparison.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">cosmetic_sample/&lt;task&gt;/image_diff_grid.pdf</span></code></dt><dd><p>The most-different images that were called cosmetic, so that verdict can
+be checked rather than trusted. Only the first twenty are rendered;
+<code class="docutils literal notranslate"><span class="pre">severity_report.txt</span></code> lists all of them. They are the ones closest to
+the line, so if the worst are genuinely cosmetic the rest are too.</p>
+</dd>
+</dl>
+</section>
+<section id="reviewing-efficiently">
+<h2>Reviewing efficiently<a class="headerlink" href="#reviewing-efficiently" title="Link to this heading"></a></h2>
+<p>Most failures share a handful of root causes – a single upstream change can
+alter hundreds of images identically. <code class="docutils literal notranslate"><span class="pre">severity_report.txt</span></code> therefore groups
+failures by cause before listing them:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Grouped by cause (check one example from each):
+     381  STRUCTURAL   figure size changed a lot
+     302  MAJOR        figure height changed
+      53  MAJOR        figure size changed slightly
+      28  MODERATE     same size, content differs
+       9  MINOR        small isolated difference
+</pre></div>
+</div>
+<p>Check one example from each group rather than every image. If the example is a
+genuine regression, the whole group almost certainly is too.</p>
+<p>These labels describe what was measured, not a diagnosis – the check knows how
+the images differ, not why. They are useful because a single upstream change
+tends to alter many images the same way, so images sharing a label usually
+share a cause. In past runs “figure size changed a lot” has turned out to be a
+missing panel in one task and added axis labels in another.</p>
+</section>
+<section id="a-note-on-small-changes">
+<h2>A note on small changes<a class="headerlink" href="#a-note-on-small-changes" title="Link to this heading"></a></h2>
+<p>Severity is based on how much of the picture looks different, and that is not
+the same as how much it matters. A single wrong digit in a <code class="docutils literal notranslate"><span class="pre">Mean</span> <span class="pre">-0.18</span></code> label
+is about 13 pixels, far too small to affect an area-based score, but it means
+the data changed.</p>
+<p>Those are found by a separate check that looks for small, sharply-defined
+differences, and reported as <code class="docutils literal notranslate"><span class="pre">MINOR</span></code> with the cause “small isolated
+difference”. Do not skip that group just because it ranks low – it is the one
+place where a low rank does not mean a small problem.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="automated_test.html" class="btn btn-neutral float-left" title="Automated testing of zppy" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="update_expected_results.html" class="btn btn-neutral float-right" title="Updating expected results for the tests" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, E3SM.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../v1.0.0/index.html">v1.0.0</a></dd>
+      <dd><a href="../../../v1.1.0/index.html">v1.1.0</a></dd>
+      <dd><a href="../../../v2.0.0/index.html">v2.0.0</a></dd>
+      <dd><a href="../../../v2.1.0/index.html">v2.1.0</a></dd>
+      <dd><a href="../../../v2.2.0/index.html">v2.2.0</a></dd>
+      <dd><a href="../../../v2.3.0/index.html">v2.3.0</a></dd>
+      <dd><a href="../../../v2.3.1/index.html">v2.3.1</a></dd>
+      <dd><a href="../../../v2.4.0/index.html">v2.4.0</a></dd>
+      <dd><a href="../../../v2.5.0/index.html">v2.5.0</a></dd>
+      <dd><a href="../../../v3.0.0/index.html">v3.0.0</a></dd>
+      <dd><a href="../../../v3.1.0/index.html">v3.1.0</a></dd>
+      <dd><a href="../../../v3.2.0/index.html">v3.2.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="image_checking.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

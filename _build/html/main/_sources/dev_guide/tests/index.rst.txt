@@ -11,4 +11,5 @@ This page collects documentation on testing ``zppy``.
 
    manual_test
    automated_test
+   image_checking
    update_expected_results
