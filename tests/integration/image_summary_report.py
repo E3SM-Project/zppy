@@ -11,7 +11,9 @@ from typing import DefaultDict, List, Sequence, Tuple
 TableRow = Tuple[str, List[str]]
 
 
-def _parse_summary_table(lines: Sequence[str]) -> Tuple[str | None, List[str], List[TableRow]]:
+def _parse_summary_table(
+    lines: Sequence[str],
+) -> Tuple[str | None, List[str], List[TableRow]]:
     header: str | None = None
     header_cols: List[str] = []
     rows: List[TableRow] = []
@@ -46,9 +48,7 @@ def _has_failures(value: str) -> bool:
 
 
 def _match_task(name: str, tasks: Sequence[str]) -> str:
-    tokens = {
-        token for token in re.split(r"[^A-Za-z0-9_]+", name) if token
-    }
+    tokens = {token for token in re.split(r"[^A-Za-z0-9_]+", name) if token}
     for task in tasks:
         if task in tokens:
             return task
@@ -96,7 +96,9 @@ def render_failing_image_summary(summary_file: str, tasks: Sequence[str]) -> str
 def main(argv: Sequence[str] | None = None) -> int:
     args: Sequence[str] = sys.argv[1:] if argv is None else argv
     if not args:
-        raise SystemExit("Usage: python -m tests.integration.image_summary_report <summary_file> [task...]")
+        raise SystemExit(
+            "Usage: python -m tests.integration.image_summary_report <summary_file> [task...]"
+        )
 
     summary_file: str = args[0]
     tasks: Sequence[str] = args[1:]
