@@ -1,15 +1,12 @@
-from pathlib import Path
 import runpy
 import subprocess
 import sys
+from pathlib import Path
 from typing import List
 
 import pytest
 
-from tests.integration.image_summary_report import (
-    main,
-    render_failing_image_summary,
-)
+from tests.integration.image_summary_report import main, render_failing_image_summary
 
 
 def test_render_failing_image_summary_uses_header_and_exact_task_tokens(
@@ -59,14 +56,14 @@ def test_render_failing_image_summary_reports_missing_columns(
         + "\n"
     )
 
-    report: str = render_failing_image_summary(
-        str(summary), ["global_time_series"]
-    )
+    report: str = render_failing_image_summary(str(summary), ["global_time_series"])
 
     assert report == "Unable to identify failing image-check columns.\n"
 
 
-def test_main_writes_report_to_stdout(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_main_writes_report_to_stdout(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     summary: Path = tmp_path / "test_images_summary.md"
     summary.write_text(
         "\n".join(
