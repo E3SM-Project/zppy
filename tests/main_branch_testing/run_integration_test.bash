@@ -126,7 +126,7 @@ case "$MACHINE" in
         CONDA_ACTIVATION_CMD="nersc_conda"
         UNIFIED_ENV_CMD="source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_pm-cpu.sh"
         SALLOC_CMD="salloc --nodes=1 --qos=interactive --time=01:00:00 --constraint=cpu --account=e3sm"
-        SBATCH_DIRECTIVES=$'#SBATCH --qos=interactive\n#SBATCH --time=01:00:00\n#SBATCH --constraint=cpu\n#SBATCH --account=e3sm'
+        SBATCH_DIRECTIVES=$'#SBATCH --qos=debug\n#SBATCH --time=01:00:00\n#SBATCH --constraint=cpu\n#SBATCH --account=e3sm'
         ;;
 esac
 
@@ -1243,7 +1243,9 @@ _report_repo_changes() {
 
     if ! env GIT_TERMINAL_PROMPT=0 \
         GIT_SSH_COMMAND="ssh -oBatchMode=yes -oStrictHostKeyChecking=yes" \
-        git -C "$repo_dir" fetch "$remote" "$branch" >/dev/null 2>&1; then
+        git -C "$repo_dir" fetch "$remote" \
+        "+refs/heads/${branch}:refs/remotes/${remote}/${branch}" \
+        >/dev/null 2>&1; then
         report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to fetch ${remote}/${branch}_ |"
         return
     fi
