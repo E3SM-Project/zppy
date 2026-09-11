@@ -197,6 +197,7 @@ IMAGE_CHECKER_JOB_STATE="not_run"
 IMAGE_CHECKER_EXIT_CODE="N/A"
 IMAGE_CHECKER_STDOUT=""
 IMAGE_CHECKER_STDERR=""
+declare -A CAPTURED_ENV_TASKS=()
 
 # Colors for output
 RED='\033[0;31m'
@@ -466,6 +467,7 @@ capture_env_description() {
             ( activate_unified_env && conda list ) 2>/dev/null || echo "(unable to list packages for the unified environment)"
         fi
     } > "$out_file"
+    CAPTURED_ENV_TASKS["$task_name"]=1
 
     log "Wrote environment description for task '${task_name}' -> ${out_file}"
 }
@@ -793,12 +795,15 @@ phase_1_setup() {
     capture_env_description "pcmdi_diags" "$ZPPY_INTERFACES_DIR" "$ZI_ENV_TYPE" "$ZI_ENV"
 
     # ------------------------------------------------------------------
-    # Tasks that just use the associated package's latest release
-    # (no dedicated dev repo/env -- they ride on the unified environment).
+    # Any configured task that has not already been associated with a
+    # dedicated dev repo/env uses the unified/release environment.
     # ------------------------------------------------------------------
     local release_task
-    for release_task in climo ts tc_analysis ilamb livvkit; do
-        capture_env_description "$release_task" "" "unified" ""
+    for release_task in "${TASKS_ARRAY[@]}"; do
+        release_task="${release_task// /}"
+        if [[ -z "${CAPTURED_ENV_TASKS[$release_task]:-}" ]]; then
+            capture_env_description "$release_task" "" "unified" ""
+        fi
     done
 
     # ------------------------------------------------------------------
@@ -1158,6 +1163,8 @@ generate_markdown_report() {
             task="${task%.txt}"
             report_append "| ${task} | \`${desc_file}\` (also copied to each cfg's \`_www\` output dir) |"
         done < <(find "$ENV_DESC_DIR" -maxdepth 1 -type f -name '*.txt' | sort)
+    else
+        report_append "| _none_ | _env_description.txt files were not captured in ${ENV_DESC_DIR}_ |"
     fi
     report_append ""
 
@@ -1235,7 +1242,7 @@ generate_markdown_report() {
     report_append "### Summary table -- only failing image-check tests, sorted by task"
     report_append ""
     if [[ -f "$summary_file" ]]; then
-        python3 -m tests.integration.image_summary_report \
+        python -m tests.integration.image_summary_report \
             "$summary_file" "${TASKS_ARRAY[@]}" >> "$REPORT_FILE"
     else
         echo "_test_images_summary.md not found; skipping._" >> "$REPORT_FILE"
@@ -1270,7 +1277,7 @@ _report_repo_changes() {
     local log_ref="${remote}/${branch}"
     local stale_note=""
     if ! env GIT_TERMINAL_PROMPT=0 \
-        GIT_SSH_COMMAND="ssh -oBatchMode=yes -oStrictHostKeyChecking=yes" \
+        GIT_SSH_COMMAND="ssh -oBatchMode=yes" \
         git -C "$repo_dir" fetch "$remote" \
         "+refs/heads/${branch}:refs/remotes/${remote}/${branch}" \
         >/dev/null 2>&1; then
