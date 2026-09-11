@@ -363,12 +363,13 @@ makes it straightforward to run on a weekly cron schedule.
    commands, ``PATH`` for ``sbatch``/``squeue``, SSH agent for ``git fetch``)
    is loaded, since cron jobs otherwise run with a minimal environment.
 
-4. Because ``wait_for_slurm_jobs`` polls rather than blocking indefinitely,
-   make sure the cron job's machine allows a long-running background
-   process (several hours) -- e.g. run it from a persistent login node
-   rather than a machine that may reboot, or launch it inside ``screen``/
-   ``tmux`` from the cron entry if your site's policy discourages long-lived
-   cron processes directly.
+4. Because ``wait_for_slurm_jobs`` and ``wait_for_slurm_job`` poll rather than
+   blocking indefinitely,
+   make sure the cron job's machine allows a long-running background process
+   (several hours) -- e.g. run it from a persistent login node rather than a
+   machine that may reboot, or launch it inside ``screen``/``tmux`` from the
+   cron entry if your site's policy discourages long-lived cron processes
+   directly.
 
 5. After each run, check ``$WEEK_DIR/test_report_<TAG>.md`` for the
    "Results analysis" TODO and the failing-tests summary table; consider
