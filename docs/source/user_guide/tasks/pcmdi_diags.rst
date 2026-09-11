@@ -16,7 +16,7 @@ The ``current_set`` parameter selects which PMP diagnostic to run:
 - ``mean_climate`` — climatological mean metrics
 - ``variability_modes_cpl`` — coupled variability modes (PDO, NPGO, AMO)
 - ``variability_modes_atm`` — atmospheric variability modes (NAM, NAO, PNA, etc.)
-- ``enso`` — ENSO metrics (not currently enabled by default)
+- ``enso`` — ENSO metrics
 - ``synthetic_plots`` — composite viewer page combining outputs from other sets
 
 Parameters
