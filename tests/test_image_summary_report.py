@@ -1,5 +1,6 @@
 from pathlib import Path
 import runpy
+import subprocess
 import sys
 from typing import List
 
@@ -129,6 +130,46 @@ def test_module_entry_point_writes_report_to_stdout(
     captured = capsys.readouterr()
     assert excinfo.value.code == 0
     assert captured.out == (
+        "`global_time_series`\n\n"
+        "| Test name | Total images | Correct images | Identical |"
+        " Cosmetic only | Missing images | Needs review | Severity |\n"
+        "| --- | --- | --- | --- | --- | --- | --- | --- |\n"
+        "| /plots/global_time_series/case_a | 10 | 9 | 9 | 0 | 1 | 0 |"
+        " medium |\n"
+    )
+
+
+def test_shell_invocation_appends_failing_summary_to_report(tmp_path: Path) -> None:
+    summary: Path = tmp_path / "test_images_summary.md"
+    report_file: Path = tmp_path / "report.md"
+    repo_root: Path = Path(__file__).resolve().parent.parent
+    summary.write_text(
+        "\n".join(
+            [
+                "# Summary of test results",
+                "",
+                "| Test name | Total images | Correct images | Identical | Cosmetic only | Missing images | Needs review | Severity |",
+                "| --- | --- | --- | --- | --- | --- | --- | --- |",
+                "| /plots/global_time_series/case_a | 10 | 9 | 9 | 0 | 1 | 0 | medium |",
+            ]
+        )
+        + "\n"
+    )
+
+    subprocess.run(
+        [
+            "bash",
+            "-lc",
+            (
+                f'"{sys.executable}" -m tests.integration.image_summary_report '
+                f'"{summary}" global_time_series >> "{report_file}"'
+            ),
+        ],
+        check=True,
+        cwd=repo_root,
+    )
+
+    assert report_file.read_text() == (
         "`global_time_series`\n\n"
         "| Test name | Total images | Correct images | Identical |"
         " Cosmetic only | Missing images | Needs review | Severity |\n"
