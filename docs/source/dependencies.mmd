@@ -1,0 +1,98 @@
+flowchart LR
+    %% NODES
+
+    climo_diurnal_atm["climo: diurnal, atm"]
+    climo_month_atm["climo: monthly, atm"]
+    climo_month_lnd["climo: monthly, lnd"]
+
+    ts_daily_atm["ts: daily, atm"]
+    ts_month_atm["ts: monthly, atm"]
+    ts_month_atm_glb["ts: monthly, atm, glb"]
+    ts_month_lnd["ts: monthly, lnd"]
+    ts_month_lnd_glb["ts: monthly, lnd, glb"]
+    ts_month_rof["ts: monthly, rof"]
+
+    e3sm_to_cmip_month_atm["e3sm_to_cmip: monthly, atm"]
+    e3sm_to_cmip_month_lnd["e3sm_to_cmip: monthly, lnd"]
+
+    tc_analysis["tc_analysis"]
+
+    e3sm_diags_diurnal["e3sm_diags: diurnal_cycle"]
+    e3sm_diags_climo_month_atm["e3sm_diags: lat_lon, zonal_mean_xy,<br/>zonal_mean_2d, polar, cosp_histogram,<br/>meridional_mean_2d, annual_cycle_zonal_mean, zonal_mean_2d_stratosphere,<br/>aerosol_aeronet, aerosol_budget"]
+    e3sm_diags_climo_month_lnd["e3sm_diags: lat_lon_land"]
+    e3sm_diags_streamflow["e3sm_diags: streamflow"]
+    e3sm_diags_tc["e3sm_diags: tc_analysis"]
+    e3sm_diags_ts_daily_atm["e3sm_diags: tropical_subseasonal, precip_pdf"]
+    e3sm_diags_ts_month_atm["e3sm_diags: enso_diags, qbo,<br/>area_mean_time_series, mp_partition"]
+
+    mpas_analysis["mpas_analysis"]
+
+    global_time_series_classic_atm["global_time_series:<br/>The 5 atm classic plots"]
+    global_time_series_classic_ocn["global_time_series:<br/>The 3 ocn classic plots"]
+    global_time_series_plots_atm["global_time_series:<br/>atm plots"]
+    global_time_series_plots_ice["global_time_series:<br/>ice plots (currently unused)"]
+    global_time_series_plots_lnd["global_time_series:<br/>lnd plots"]
+    global_time_series_plots_ocn["global_time_series:<br/>ocn plots"]
+
+    ilamb_lnd_atm["ilamb: lnd & atm"]
+    ilamb_lnd_only["ilamb: lnd only"]
+
+    livvkit["livvkit"]
+
+    pcmdi_diags_mean_climate["pcmdi_diags: mean_climate"]
+    pcmdi_diags_variability_modes_atm["pcmdi_diags: variability_modes_atm"]
+    pcmdi_diags_variability_modes_cpl["pcmdi_diags: variability_modes_cpl"]
+    pcmdi_diags_enso["pcmdi_diags: enso"]
+    pcmdi_diags_synthetic_plots["pcmdi_diags: synthetic_plots"]
+
+    %% EDGES
+
+    %% e3sm_to_cmip.py
+    ts_month_atm --> e3sm_to_cmip_month_atm
+    ts_month_lnd --> e3sm_to_cmip_month_lnd
+
+    %% e3sm_diags.py
+    climo_month_atm --> e3sm_diags_climo_month_atm
+    climo_month_lnd --> e3sm_diags_climo_month_lnd
+    climo_diurnal_atm --> e3sm_diags_diurnal
+    tc_analysis --> e3sm_diags_tc
+    ts_month_atm --> e3sm_diags_ts_month_atm
+    ts_month_rof --> e3sm_diags_streamflow
+    ts_daily_atm --> e3sm_diags_ts_daily_atm
+
+    %% mpas_analysis.py
+    mpas_analysis -.->|"Later year sets depend on earlier runs"| mpas_analysis
+
+    %% global_time_series.py
+    ts_month_atm_glb --> global_time_series_classic_atm
+    ts_month_atm_glb --> global_time_series_plots_atm
+    ts_month_lnd_glb --> global_time_series_plots_lnd
+    mpas_analysis --> global_time_series_classic_ocn
+    mpas_analysis --> global_time_series_plots_ocn
+
+    %% ilamb.py
+    ts_month_atm --> ilamb_lnd_atm
+    ts_month_lnd --> ilamb_lnd_atm
+    ts_month_lnd --> ilamb_lnd_only
+    e3sm_to_cmip_month_atm --> ilamb_lnd_atm
+    e3sm_to_cmip_month_lnd --> ilamb_lnd_atm
+    e3sm_to_cmip_month_lnd --> ilamb_lnd_only
+
+    %% livvkit.py
+    climo_month_lnd -->|"Specify mapping files"| livvkit
+    ts_month_lnd -->|"Specify mapping files"| livvkit
+
+    %% pcmdi_diags.py
+    ts_month_atm --> pcmdi_diags_mean_climate
+    ts_month_atm --> pcmdi_diags_variability_modes_atm
+    ts_month_atm --> pcmdi_diags_variability_modes_cpl
+    ts_month_atm --> pcmdi_diags_enso
+    e3sm_to_cmip_month_atm --> pcmdi_diags_mean_climate
+    e3sm_to_cmip_month_atm --> pcmdi_diags_variability_modes_atm
+    e3sm_to_cmip_month_atm --> pcmdi_diags_variability_modes_cpl
+    e3sm_to_cmip_month_atm --> pcmdi_diags_enso
+
+    pcmdi_diags_mean_climate --> pcmdi_diags_synthetic_plots
+    pcmdi_diags_variability_modes_atm --> pcmdi_diags_synthetic_plots
+    pcmdi_diags_variability_modes_cpl --> pcmdi_diags_synthetic_plots
+    pcmdi_diags_enso --> pcmdi_diags_synthetic_plots
