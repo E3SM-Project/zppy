@@ -36,6 +36,12 @@ VALID_PCMDI_SETS: Set[str] = set(
 BASE_PCMDI_SETS: Set[str] = set(
     ["mean_climate", "variability_modes_atm", "variability_modes_cpl", "enso"]
 )
+OBS_SETS_PARAMETER_BY_SET: Dict[str, str] = {
+    "mean_climate": "clim_obs_sets",
+    "variability_modes_atm": "mova_obs_sets",
+    "variability_modes_cpl": "movc_obs_sets",
+    "enso": "enso_obs_sets",
+}
 
 
 # -----------------------------------------------------------------------------
@@ -52,6 +58,7 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
     for c in tasks:
         dependencies: List[str] = []
         define_current_set(c)
+        resolve_obs_sets(c)
         if c["current_set"] == "enso":
             logger.warning("The 'enso' set is currently experimental in PCMDI Diags.")
         c["sub"] = get_value_from_parameter(
@@ -201,6 +208,15 @@ def define_current_set(c: Dict[str, Any]):
             "current_set was not provided, and inferring is turned off. Turn on inferring by setting infer_path_parameters to True."
         )
     c["current_set"] = current_set
+
+
+def resolve_obs_sets(c: Dict[str, Any]) -> None:
+    if c["current_set"] == "synthetic_plots" or c.get("obs_sets"):
+        return
+
+    obs_sets_parameter = OBS_SETS_PARAMETER_BY_SET[c["current_set"]]
+    check_parameter_defined(c, obs_sets_parameter)
+    c["obs_sets"] = c[obs_sets_parameter]
 
 
 def check_parameters_for_bash(c: Dict[str, Any]) -> None:
