@@ -2,6 +2,7 @@
 
 import configparser
 import os
+import stat
 from typing import Dict, Optional
 from unittest.mock import MagicMock
 
@@ -228,6 +229,16 @@ def test_write_provenance_settings_skips_falsy_values(tmp_path):
     assert "case_name = good" in content
     assert "machine =" not in content
     assert "hpc_username" not in content
+
+
+def test_write_provenance_settings_is_web_readable(tmp_path):
+    settings = tmp_path / "provenance.settings"
+    original = os.umask(0o077)
+    try:
+        write_provenance_settings(str(settings), {"case_name": "case"})
+    finally:
+        os.umask(original)
+    assert stat.S_IMODE(settings.stat().st_mode) == 0o644
 
 
 # ---------------------------------------------------------------------------
