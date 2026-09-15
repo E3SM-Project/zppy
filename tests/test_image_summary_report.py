@@ -39,6 +39,34 @@ def test_render_failing_image_summary_uses_header_and_exact_task_tokens(
     assert report.index("`global_time_series`") < report.index("`other`")
 
 
+def test_render_failing_image_summary_matches_cfg_task_suffixes(
+    tmp_path: Path,
+) -> None:
+    summary: Path = tmp_path / "test_images_summary.md"
+    summary.write_text(
+        "\n".join(
+            [
+                "# Summary of test results",
+                "",
+                "| Test name | Total images | Correct images | Identical | Cosmetic only | Missing images | Needs review | Severity |",
+                "| --- | --- | --- | --- | --- | --- | --- | --- |",
+                "| comprehensive_v2_e3sm_diags | 10 | 9 | 9 | 0 | 1 | 0 | medium |",
+                "| comprehensive_v2_global_time_series | 10 | 9 | 9 | 0 | 0 | 1 | low |",
+            ]
+        )
+        + "\n"
+    )
+
+    report: str = render_failing_image_summary(
+        str(summary), ["e3sm_diags", "global_time_series"]
+    )
+
+    assert "`e3sm_diags`" in report
+    assert "`global_time_series`" in report
+    assert "comprehensive_v2_e3sm_diags" in report
+    assert "comprehensive_v2_global_time_series" in report
+
+
 def test_render_failing_image_summary_reports_missing_columns(
     tmp_path: Path,
 ) -> None:

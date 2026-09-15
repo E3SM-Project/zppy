@@ -50,7 +50,7 @@ def _has_failures(value: str) -> bool:
 def _match_task(name: str, tasks: Sequence[str]) -> str:
     tokens = {token for token in re.split(r"[^A-Za-z0-9_]+", name) if token}
     for task in tasks:
-        if task in tokens:
+        if name == task or name.endswith(f"_{task}") or task in tokens:
             return task
     return "other"
 
