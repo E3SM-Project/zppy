@@ -135,7 +135,7 @@ There are 14 task-level (all sets except synthetic_plots) parameters:
 Per-subtask shared parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are 5 per-subtask shared parameters:
+There are 9 per-subtask shared parameters:
 
 .. list-table::
    :header-rows: 1
@@ -151,8 +151,25 @@ There are 5 per-subtask shared parameters:
      - Diagnostic set to run.
    * - ``obs_sets``
      - No
+     - ``""``
+     - Optional observational dataset alias overriding the diagnostic-specific
+       selection.
+   * - ``clim_obs_sets``
+     - No
      - ``"default"``
-     - Observational dataset aliases to use.
+     - Observational dataset alias for mean-climate diagnostics.
+   * - ``enso_obs_sets``
+     - No
+     - ``"default"``
+     - Observational dataset alias for ENSO diagnostics.
+   * - ``mova_obs_sets``
+     - No
+     - ``"default"``
+     - Observational dataset alias for atmospheric variability modes.
+   * - ``movc_obs_sets``
+     - No
+     - ``"default"``
+     - Observational dataset alias for coupled variability modes.
    * - ``ref_final_yr``
      - No
      - ``""``
@@ -165,6 +182,11 @@ There are 5 per-subtask shared parameters:
      - No
      - ``[""]``
      - Year ranges for reference data.
+
+For non-synthetic subtasks, zppy selects the diagnostic-specific observation
+alias based on ``current_set`` and passes it downstream as ``obs_sets``. A
+non-empty ``obs_sets`` value takes precedence, preserving existing per-subtask
+configuration overrides.
 
 Mean_climate parameters
 ~~~~~~~~~~~~~~~~~~~~~~~

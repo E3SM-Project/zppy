@@ -15,6 +15,7 @@ from zppy.pcmdi_diags import (
     define_relevant_years_for_synthetic_plots,
     define_year_sets,
     pcmdi_diags,
+    resolve_obs_sets,
 )
 from zppy.utils import ParameterNotProvidedError
 
@@ -22,7 +23,9 @@ from zppy.utils import ParameterNotProvidedError
 def test_pcmdi_diags_processes_enso_tasks() -> None:
     task = {
         "current_set": "enso",
+        "enso_obs_sets": "default",
         "infer_path_parameters": False,
+        "obs_sets": "",
         "subsection": "enso",
     }
 
@@ -38,6 +41,56 @@ def test_pcmdi_diags_processes_enso_tasks() -> None:
 
     check_bash.assert_called_once_with(task)
     assert existing_bundles == set()
+
+
+@pytest.mark.parametrize(
+    ("current_set", "parameter"),
+    [
+        ("mean_climate", "clim_obs_sets"),
+        ("variability_modes_atm", "mova_obs_sets"),
+        ("variability_modes_cpl", "movc_obs_sets"),
+        ("enso", "enso_obs_sets"),
+    ],
+)
+def test_resolve_obs_sets_uses_diagnostic_default(
+    current_set: str, parameter: str
+) -> None:
+    task = {
+        "current_set": current_set,
+        "obs_sets": "",
+        parameter: "diagnostic-default",
+    }
+
+    resolve_obs_sets(task)
+
+    assert task["obs_sets"] == "diagnostic-default"
+
+
+def test_resolve_obs_sets_preserves_legacy_override() -> None:
+    task = {
+        "current_set": "enso",
+        "enso_obs_sets": "diagnostic-default",
+        "obs_sets": "legacy-override",
+    }
+
+    resolve_obs_sets(task)
+
+    assert task["obs_sets"] == "legacy-override"
+
+
+def test_resolve_obs_sets_ignores_synthetic_plots() -> None:
+    task = {"current_set": "synthetic_plots", "obs_sets": ""}
+
+    resolve_obs_sets(task)
+
+    assert task["obs_sets"] == ""
+
+
+def test_resolve_obs_sets_requires_diagnostic_default() -> None:
+    task = {"current_set": "enso", "obs_sets": "", "enso_obs_sets": ""}
+
+    with pytest.raises(ParameterNotProvidedError, match="enso_obs_sets"):
+        resolve_obs_sets(task)
 
 
 def test_define_current_set():
