@@ -14,8 +14,80 @@ from zppy.pcmdi_diags import (
     define_relevant_years,
     define_relevant_years_for_synthetic_plots,
     define_year_sets,
+    pcmdi_diags,
+    resolve_obs_sets,
 )
 from zppy.utils import ParameterNotProvidedError
+
+
+def test_pcmdi_diags_processes_enso_tasks() -> None:
+    task = {
+        "current_set": "enso",
+        "enso_obs_sets": "default",
+        "infer_path_parameters": False,
+        "subsection": "enso",
+    }
+
+    with (
+        patch("zppy.pcmdi_diags.initialize_template", return_value=(None, None)),
+        patch("zppy.pcmdi_diags.get_tasks", return_value=[task]),
+        patch("zppy.pcmdi_diags.get_value_from_parameter", return_value="enso"),
+        patch("zppy.pcmdi_diags.check_parameters_for_bash") as check_bash,
+        patch("zppy.pcmdi_diags.check_parameters_for_pcmdi"),
+        patch("zppy.pcmdi_diags.define_year_sets", return_value=[]),
+    ):
+        existing_bundles = pcmdi_diags(None, "/scripts", set(), None)
+
+    check_bash.assert_called_once_with(task)
+    assert existing_bundles == set()
+
+
+@pytest.mark.parametrize(
+    ("current_set", "parameter"),
+    [
+        ("mean_climate", "clim_obs_sets"),
+        ("variability_modes_atm", "mova_obs_sets"),
+        ("variability_modes_cpl", "movc_obs_sets"),
+        ("enso", "enso_obs_sets"),
+    ],
+)
+def test_resolve_obs_sets_uses_diagnostic_default(
+    current_set: str, parameter: str
+) -> None:
+    task = {
+        "current_set": current_set,
+        parameter: "diagnostic-default",
+    }
+
+    resolve_obs_sets(task)
+
+    assert task["obs_sets"] == "diagnostic-default"
+
+
+def test_resolve_obs_sets_rejects_removed_parameter() -> None:
+    task = {
+        "current_set": "enso",
+        "enso_obs_sets": "diagnostic-default",
+        "obs_sets": "legacy-override",
+    }
+
+    with pytest.raises(ValueError, match="use enso_obs_sets instead"):
+        resolve_obs_sets(task)
+
+
+def test_resolve_obs_sets_ignores_synthetic_plots() -> None:
+    task = {"current_set": "synthetic_plots"}
+
+    resolve_obs_sets(task)
+
+    assert "obs_sets" not in task
+
+
+def test_resolve_obs_sets_requires_diagnostic_default() -> None:
+    task = {"current_set": "enso", "enso_obs_sets": ""}
+
+    with pytest.raises(ParameterNotProvidedError, match="enso_obs_sets"):
+        resolve_obs_sets(task)
 
 
 def test_define_current_set():
@@ -243,6 +315,25 @@ def test_check_parameters_for_pcmdi():
     }
     check_parameters_for_pcmdi(c)
     assert c["cmip_enso_dir"] == "placeholder_dir"
+
+    # Test enso_viewer=True (should infer cmip_enso_dir)
+    c = {
+        "current_set": "synthetic_plots",
+        "figure_sets": ["enso_metric"],
+        "cmip_enso_dir": "",
+        "cmip_clim_dir": "",
+        "cmip_movs_dir": "",
+        "enso_viewer": True,
+        "clim_viewer": False,
+        "mova_viewer": False,
+        "movc_viewer": False,
+        "diagnostics_base_path": "diags/post",
+        "infer_path_parameters": True,
+    }
+    check_parameters_for_pcmdi(c)
+    assert c["cmip_enso_dir"] == "diags/post/pcmdi_data/metrics_data/enso_metric"
+    assert c["cmip_clim_dir"] == "placeholder_dir"
+    assert c["cmip_movs_dir"] == "placeholder_dir"
 
     # Test when parameters are already defined
     c = {
@@ -616,6 +707,25 @@ def test_add_pcmdi_dependencies(mock_exists):
     add_pcmdi_dependencies(c, dependencies, script_dir)
     expected_dependencies = [
         "/scripts/pcmdi_diags_mean_climate_model_vs_model_2000-2010_vs_1850-1900.status",
+    ]
+    assert dependencies == expected_dependencies
+
+    # Test enso_viewer=True (should add the enso status file dependency)
+    dependencies = []
+    c = {
+        "run_type": "model_vs_obs",
+        "year1": 2000,
+        "year2": 2010,
+        "figure_sets": ["enso_metric"],
+        "clim_viewer": False,
+        "mova_viewer": False,
+        "movc_viewer": False,
+        "enso_viewer": True,
+    }
+
+    add_pcmdi_dependencies(c, dependencies, script_dir)
+    expected_dependencies = [
+        "/scripts/pcmdi_diags_enso_model_vs_obs_2000-2010.status",
     ]
     assert dependencies == expected_dependencies
 
