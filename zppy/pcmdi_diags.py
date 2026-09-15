@@ -211,10 +211,15 @@ def define_current_set(c: Dict[str, Any]):
 
 
 def resolve_obs_sets(c: Dict[str, Any]) -> None:
-    if c["current_set"] == "synthetic_plots" or c.get("obs_sets"):
+    if c["current_set"] == "synthetic_plots":
         return
 
     obs_sets_parameter = OBS_SETS_PARAMETER_BY_SET[c["current_set"]]
+    if "obs_sets" in c:
+        raise ValueError(
+            f"obs_sets is no longer supported for {c['current_set']}; "
+            f"use {obs_sets_parameter} instead."
+        )
     check_parameter_defined(c, obs_sets_parameter)
     c["obs_sets"] = c[obs_sets_parameter]
 
