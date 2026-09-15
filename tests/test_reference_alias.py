@@ -1,7 +1,7 @@
 import json
 import re
 from pathlib import Path
-from typing import Dict, Set
+from typing import Dict, List, Set
 
 
 REFERENCE_ALIAS_PATH = (
@@ -23,6 +23,13 @@ def test_reference_aliases_uniquely_identify_observational_sources() -> None:
     with REFERENCE_ALIAS_PATH.open() as alias_file:
         reference_aliases: Dict[str, Dict[str, str]] = json.load(alias_file)
 
+    empty_aliases: Dict[str, List[str]] = {
+        variable: [
+            alias for alias, source in variable_aliases.items() if source == ""
+        ]
+        for variable, variable_aliases in reference_aliases.items()
+        if "" in variable_aliases.values()
+    }
     sources_by_alias: Dict[str, Set[str]] = {}
     aliases_by_source: Dict[str, Set[str]] = {}
     for variable_aliases in reference_aliases.values():
@@ -45,5 +52,6 @@ def test_reference_aliases_uniquely_identify_observational_sources() -> None:
         if len(aliases) > 1
     }
 
+    assert empty_aliases == {}
     assert reused_aliases == {}
     assert duplicated_sources == {}
