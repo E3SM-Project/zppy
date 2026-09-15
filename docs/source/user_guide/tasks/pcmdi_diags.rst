@@ -155,16 +155,16 @@ There are 8 per-subtask shared parameters:
      - Observational dataset alias for mean-climate diagnostics.
    * - ``enso_obs_sets``
      - No
-     - ``"default"``
-     - Observational dataset alias for ENSO diagnostics.
+     - ``"alternate3,default,alternatd4,..."``
+     - Per-variable observational dataset aliases for ENSO diagnostics.
    * - ``mova_obs_sets``
      - No
-     - ``"default"``
-     - Observational dataset alias for atmospheric variability modes.
+     - ``"alternate4"``
+     - NOAA-20C alias for atmospheric variability modes.
    * - ``movc_obs_sets``
      - No
-     - ``"default"``
-     - Observational dataset alias for coupled variability modes.
+     - ``"alternatd4"``
+     - HadISST2 alias for coupled variability modes.
    * - ``ref_final_yr``
      - No
      - ``""``
@@ -180,6 +180,8 @@ There are 8 per-subtask shared parameters:
 
 For non-synthetic subtasks, zppy selects the diagnostic-specific observation
 alias based on ``current_set`` and passes it downstream as ``obs_sets``.
+When a selector contains a comma-separated list, its entries correspond
+positionally to the associated ``*_vars`` parameter.
 
 Mean_climate parameters
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -400,7 +402,7 @@ There are 22 synthetic_plots parameters:
      - Year range used for coupled variability synthetic panels.
    * - ``enso_viewer``
      - No
-     - ``False``
+     - ``True``
      - Include ENSO panels in the synthetic viewer.
    * - ``enso_years``
      - No
