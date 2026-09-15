@@ -151,9 +151,9 @@ There are 9 per-subtask shared parameters:
      - Diagnostic set to run.
    * - ``obs_sets``
      - No
-     - ``""``
-     - Optional observational dataset alias overriding the diagnostic-specific
-       selection.
+     - Not set
+     - Optional per-subtask override for the diagnostic-specific observational
+       dataset alias.
    * - ``clim_obs_sets``
      - No
      - ``"default"``
