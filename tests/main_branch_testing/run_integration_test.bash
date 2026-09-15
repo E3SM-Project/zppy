@@ -255,7 +255,6 @@ init_conda_base() {
     # shellcheck disable=SC1090
     source ~/.bashrc
     $CONDA_ACTIVATION_CMD  # Machine-specific conda init (lcrc_conda / compy_conda / nersc_conda)
-    set -u
 }
 
 # Activate conda and (optionally) a named environment.
@@ -267,6 +266,7 @@ activate_env() {
         log "Installing/updating package in '$env_name'..."
         python -m pip install .
     fi
+    set -u
 }
 
 # Activate the machine-specific unified environment.
@@ -277,6 +277,7 @@ activate_unified_env() {
     init_conda_base
     # shellcheck disable=SC1090
     source "${UNIFIED_ENV_CMD#source }"
+    set -u
 }
 
 # Create (if needed) and activate a conda environment.
@@ -624,8 +625,8 @@ set -e
 set +u
 source ~/.bashrc
 ${CONDA_ACTIVATION_CMD}
-set -u
 conda activate ${ZPPY_ENV}
+set -u
 cd ${ZPPY_DIR}
 pytest tests/integration/test_images.py
 EOF
