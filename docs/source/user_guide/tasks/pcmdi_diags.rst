@@ -363,6 +363,13 @@ There is 1 ENSO & synthetic_plots parameter:
      - ``"psl,pr,ts,tas,tauu,tauv,hfls,hfss,rlds,rsds,rlus,rlut,rsdt"``
      - Variables used by ENSO diagnostics.
 
+Sea-surface height is opt-in because an ``ssh`` model time series is not
+generally available in the atmospheric CMIP time-series directory. To include
+it, append ``ssh`` to ``enso_vars`` and its observational alias (``default``
+for AVISO) to ``enso_obs_sets`` in the same position. The model data must first
+be provided as an ``ssh`` time series; ``zppy`` does not translate ``zos`` to
+``ssh``.
+
 Synthetic_plots parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
