@@ -3,7 +3,6 @@ import re
 from pathlib import Path
 from typing import Dict, List, Set
 
-
 REFERENCE_ALIAS_PATH = (
     Path(__file__).parents[1]
     / "zppy"
@@ -24,9 +23,7 @@ def test_reference_aliases_uniquely_identify_observational_sources() -> None:
         reference_aliases: Dict[str, Dict[str, str]] = json.load(alias_file)
 
     empty_aliases: Dict[str, List[str]] = {
-        variable: [
-            alias for alias, source in variable_aliases.items() if source == ""
-        ]
+        variable: [alias for alias, source in variable_aliases.items() if source == ""]
         for variable, variable_aliases in reference_aliases.items()
         if "" in variable_aliases.values()
     }
