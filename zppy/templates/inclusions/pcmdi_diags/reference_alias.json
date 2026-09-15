@@ -11,8 +11,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "rldscs" : {
            "defaultpi"  : "NOAA-20C",
@@ -26,8 +25,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "rlus" : {
            "defaultpi"  : "NOAA-20C",
@@ -41,8 +39,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "rsds" : {
            "defaultpi"  : "NOAA-20C",
@@ -51,13 +48,12 @@
            "alternatc2" : "ceres_ebaf_v2.8",
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
-	   "alternate1" : "ERA5",
+           "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "rsdscs" : {
            "defaultpi"  : "NOAA-20C",
@@ -71,8 +67,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
 
   "rsus" : {
@@ -82,13 +77,12 @@
            "alternatc2" : "ceres_ebaf_v2.8",
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
-	   "alternate1" : "ERA5",
+           "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "rsuscs": {
            "defaultpi"  : "NOAA-20C",
@@ -102,8 +96,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "rstcre" : {
            "defaultpi"  : "NOAA-20C",
@@ -112,13 +105,12 @@
            "alternatc2" : "ceres_ebaf_v2.8",
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
-	   "alternate1" : "ERA5",
+           "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "rltcre" : {
            "defaultpi"  : "NOAA-20C",
@@ -127,13 +119,12 @@
            "alternatc2" : "ceres_ebaf_v2.8",
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
-	   "alternate1" : "ERA5",
+           "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "rlut" : {
            "defaultpi"  : "NOAA-20C",
@@ -147,8 +138,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "rlutcs" : {
            "defaultpi"  : "NOAA-20C",
@@ -157,13 +147,12 @@
            "alternatc2" : "ceres_ebaf_v2.8",
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
-	   "alternate1" : "ERA5",
+           "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "rsdt" : {
            "defaultpi"  : "NOAA-20C",
@@ -177,8 +166,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "rsut" : {
            "defaultpi"  : "NOAA-20C",
@@ -187,13 +175,12 @@
            "alternatc2" : "ceres_ebaf_v2.8",
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
-	   "alternate1" : "ERA5",
+           "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "rsutcs" : {
            "defaultpi"  : "NOAA-20C",
@@ -202,13 +189,12 @@
            "alternatc2" : "ceres_ebaf_v2.8",
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
-	   "alternate1" : "ERA5",
+           "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "rtmt" : {
            "defaultpi"  : "NOAA-20C",
@@ -217,13 +203,12 @@
            "alternatc2" : "ceres_ebaf_v2.8",
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
-	   "alternate1" : "ERA5",
+           "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "pr" : {
            "defaultpi"  : "NOAA-20C",
@@ -240,8 +225,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "prc" : {
            "defaultpi"  : "NOAA-20C",
@@ -251,8 +235,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "prsn" : {
            "defaultpi"  : "NOAA-20C",
@@ -262,8 +245,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "prw" : {
            "defaultpi"  : "NOAA-20C",
@@ -273,8 +255,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "psl" : {
            "defaultpi"  : "NOAA-20C",
@@ -284,8 +265,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "ps" : {
            "defaultpi"  : "NOAA-20C",
@@ -295,8 +275,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "huss" : {
            "defaultpi"  : "NOAA-20C",
@@ -306,8 +285,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "ta" : {
            "defaultpi"  : "NOAA-20C",
@@ -317,8 +295,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "ua" : {
            "defaultpi"  : "NOAA-20C",
@@ -328,8 +305,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "va" : {
            "defaultpi"  : "NOAA-20C",
@@ -339,8 +315,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "hur" : {
            "defaultpi"  : "NOAA-20C",
@@ -350,8 +325,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "wap" : {
            "defaultpi"  : "NOAA-20C",
@@ -361,8 +335,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "zg" : {
            "defaultpi"  : "NOAA-20C",
@@ -372,8 +345,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "o3" : {
            "defaultpi"  : "NOAA-20C",
@@ -383,8 +355,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "hus" : {
            "defaultpi"  : "NOAA-20C",
@@ -394,8 +365,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "uas" : {
            "defaultpi"  : "NOAA-20C",
@@ -405,8 +375,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "vas" : {
            "defaultpi"  : "NOAA-20C",
@@ -416,8 +385,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "tauu" : {
            "defaultpi"  : "NOAA-20C",
@@ -429,8 +397,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "taux" : {
            "defaultpi"  : "NOAA-20C",
@@ -443,8 +410,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "tauv" : {
            "defaultpi"  : "NOAA-20C",
@@ -457,8 +423,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "tauy" : {
            "defaultpi"  : "NOAA-20C",
@@ -471,8 +436,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "tas" : {
            "defaultpi"  : "NOAA-20C",
@@ -484,8 +448,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "ts" : {
            "defaultpi"  : "NOAA-20C",
@@ -499,8 +462,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "sst" : {
            "defaultpi"  : "HadISST",
@@ -514,20 +476,17 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "sfcWind" : {
            "defaultpi"  : "NOAA-20C",
            "default"    : "NOAA-20C",
-           "alternatd3" : "",
            "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "hfls" : {
            "defaultpi"  : "NOAA-20C",
@@ -540,8 +499,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "hfss" : {
            "defaultpi"  : "NOAA-20C",
@@ -553,8 +511,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "thf" : {
            "defaultpi"  : "NOAA-20C",
@@ -567,8 +524,7 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "evspsbl" : {
            "defaultpi"  : "NOAA-20C",
@@ -581,85 +537,62 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "clt" : {
            "defaultpi"  : "NOAA-20C",
            "default"    : "ERA5",
-           "alternatd1" : "",
-           "alternatd2" : "",
-           "alternatd3" : "",
            "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "clwvi" : {
            "defaultpi"  : "NOAA-20C",
            "default"    : "ERA5",
-           "alternatd1" : "",
-           "alternatd2" : "",
-           "alternatd3" : "",
            "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "clivi" : {
            "defaultpi"  : "NOAA-20C",
            "default"    : "ERA5",
-           "alternatc1" : "",
-           "alternatc2" : "",
-           "alternatc3" : "",
            "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "tasmin" : {
            "defaultpi"  : "NOAA-20C",
            "default"    : "MERRA2",
-           "alternatc1" : "",
-           "alternatc2" : "",
-           "alternatc3" : "",
            "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "tasmax" : {
            "defaultpi"  : "NOAA-20C",
            "default"    : "MERRA2",
-           "alternatc1" : "",
-           "alternatc2" : "",
-           "alternatc3" : "",
            "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "sic" : {
            "defaultpi"  : "HadISST2",
            "default"    : "HadISST2",
            "alternatc8" : "HadISST",
-           "alternatc2" : "",
-           "alternatc3" : "",
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
            "alternate1" : "ERA5",
@@ -667,15 +600,12 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "tos" : {
            "defaultpi"  : "HadISST2",
            "default"    : "HadISST2",
            "alternatc8" : "HadISST",
-           "alternatc2" : "",
-           "alternatc3" : "",
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
            "alternate1" : "ERA5",
@@ -683,15 +613,11 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "ssh" : {
            "defaultpi"  : "AVISO",
            "default"    : "AVISO",
-           "alternatc1" : "",
-           "alternatc2" : "",
-           "alternatc3" : "",
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
            "alternate1" : "ERA5",
@@ -699,15 +625,11 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "zos" : {
            "defaultpi"  : "AVISO",
            "default"    : "AVISO",
-           "alternatc1" : "",
-           "alternatc2" : "",
-           "alternatc3" : "",
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
            "alternate1" : "ERA5",
@@ -715,15 +637,11 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            },
   "sos" : {
            "defaultpi"  : "Aquarius",
            "default"    : "Aquarius",
-           "alternatc1" : "",
-           "alternatc2" : "",
-           "alternatc3" : "",
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
            "alternate1" : "ERA5",
@@ -731,7 +649,6 @@
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
            "alternate5" : "FAKE-FUTURE1",
-           "alternate6" : "FAKE-FUTURE2",
-           "alternate7" : ""
+           "alternate6" : "FAKE-FUTURE2"
            }
 }
