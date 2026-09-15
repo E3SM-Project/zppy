@@ -26,6 +26,7 @@ def _fake_machine_info() -> MagicMock:
     }
     machine_info = MagicMock()
     machine_info.machine = "pm-cpu"
+    machine_info.username = "test_user"
     machine_info.config = config
     machine_info.get_account_defaults.return_value = ("e3sm", "regular", "cpu", None)
     return machine_info
@@ -58,7 +59,7 @@ def _base_config() -> Dict[str, Dict[str, Any]]:
         ),
         (
             "development",
-            "/global/cfs/cdirs/e3sm/www/diagnostics_archive/development/",
+            "/global/cfs/cdirs/e3sm/www/diagnostics_archive/development/test_user/",
         ),
     ],
 )
