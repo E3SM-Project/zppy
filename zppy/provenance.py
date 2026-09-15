@@ -112,6 +112,7 @@ def write_provenance_settings(
     with open(settings_path, "w") as f:
         for key, value in usable.items():
             f.write(f"{key} = {value}\n")
+    os.chmod(settings_path, 0o644)
 
 
 def resolve_case_group(config_default: Dict[str, str], xml_case_group: str) -> str:
