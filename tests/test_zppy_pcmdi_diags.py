@@ -64,16 +64,15 @@ def test_resolve_obs_sets_uses_diagnostic_default(
     assert task["obs_sets"] == "diagnostic-default"
 
 
-def test_resolve_obs_sets_preserves_legacy_override() -> None:
+def test_resolve_obs_sets_rejects_removed_parameter() -> None:
     task = {
         "current_set": "enso",
         "enso_obs_sets": "diagnostic-default",
         "obs_sets": "legacy-override",
     }
 
-    resolve_obs_sets(task)
-
-    assert task["obs_sets"] == "legacy-override"
+    with pytest.raises(ValueError, match="use enso_obs_sets instead"):
+        resolve_obs_sets(task)
 
 
 def test_resolve_obs_sets_ignores_synthetic_plots() -> None:
