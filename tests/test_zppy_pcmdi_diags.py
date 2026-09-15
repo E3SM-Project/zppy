@@ -25,7 +25,6 @@ def test_pcmdi_diags_processes_enso_tasks() -> None:
         "current_set": "enso",
         "enso_obs_sets": "default",
         "infer_path_parameters": False,
-        "obs_sets": "",
         "subsection": "enso",
     }
 
@@ -57,7 +56,6 @@ def test_resolve_obs_sets_uses_diagnostic_default(
 ) -> None:
     task = {
         "current_set": current_set,
-        "obs_sets": "",
         parameter: "diagnostic-default",
     }
 
@@ -79,15 +77,15 @@ def test_resolve_obs_sets_preserves_legacy_override() -> None:
 
 
 def test_resolve_obs_sets_ignores_synthetic_plots() -> None:
-    task = {"current_set": "synthetic_plots", "obs_sets": ""}
+    task = {"current_set": "synthetic_plots"}
 
     resolve_obs_sets(task)
 
-    assert task["obs_sets"] == ""
+    assert "obs_sets" not in task
 
 
 def test_resolve_obs_sets_requires_diagnostic_default() -> None:
-    task = {"current_set": "enso", "obs_sets": "", "enso_obs_sets": ""}
+    task = {"current_set": "enso", "enso_obs_sets": ""}
 
     with pytest.raises(ParameterNotProvidedError, match="enso_obs_sets"):
         resolve_obs_sets(task)
