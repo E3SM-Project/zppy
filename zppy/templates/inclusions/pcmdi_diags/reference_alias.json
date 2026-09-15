@@ -507,6 +507,7 @@
            "alternatd1" : "Tropflux",
            "alternatd2" : "COREv2-Flux",
            "alternatd3" : "OAFlux",
+           "alternate1" : "ERA5",
            "alternate2" : "MERRA2",
            "alternate3" : "ERA-Interim",
            "alternate4" : "NOAA-20C",
