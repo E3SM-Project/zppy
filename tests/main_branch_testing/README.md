@@ -103,7 +103,8 @@ Machine-specific settings (`OUTPUT_WORKSPACE`, conda activation command, unified
   - `test_campaign.py`
   - `test_defaults.py`
   - `test_bundles.py`
-- Prints instructions for running `test_images.py` manually on a compute node
+- Auto-launches `test_images.py` on a compute node and folds its summary into
+  the generated Markdown report
 
 ## Output and Logs
 

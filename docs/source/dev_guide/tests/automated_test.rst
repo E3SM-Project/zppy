@@ -4,7 +4,9 @@
 Automated testing of zppy
 *************************
 
-Follow the steps below to test ``zppy``. As you do so, please produce a Markdown report summarizing your results.
+Follow the steps below to test ``zppy``. A Markdown report summarizing your
+results is generated automatically at the end of the run (see
+``test_report_<TAG>.md`` in the directory you ran the script from).
 
 Step 1: Determine what the current expected results are
 =======================================================
@@ -42,14 +44,18 @@ Process
 
     ls -lt ${expected_results_dir}
 
-In your Markdown report, note the date the expected results were last updated.
+Set ``EXPECTED_RESULTS_DIR`` in your test cfg to this path, and the
+automated report will include this ``ls -lt`` output (and the date the
+expected results were last updated) for you automatically.
 
 Step 2: Review changes since expected results were updated
 ==========================================================
 
 Now that we know the date the expected results are from, we can review what changes we'll be testing.
 
-Review each of the following commit logs and note commits made since the date the expected results were updated:
+Set ``EXPECTED_RESULTS_UPDATED_DATE`` in your test cfg to that date (e.g.
+``"2026-08-12"``), and the automated report will list, for each dependency
+below, the commits/PRs merged on its default branch since that date:
 
 * For the ``e3sm_to_cmip`` task: `e3sm_to_cmip <https://github.com/E3SM-Project/e3sm_to_cmip/commits/master>`_
 * For the ``e3sm_diags`` task: `e3sm_diags <https://github.com/E3SM-Project/e3sm_diags/commits/main>`_
@@ -59,7 +65,7 @@ Review each of the following commit logs and note commits made since the date th
 
 For the remaining tasks (``climo``, ``ts``, ``tc_analysis``, ``ilamb``, ``livvkit``), we typically just use the associated package's latest release rather than making dev environments. As such, their latest development will have no impact on our tests unless we have started using one of their newer releases.
 
-In your Markdown report, make a table like:
+The report's table looks like:
 
 .. code-block::
 
@@ -67,6 +73,11 @@ In your Markdown report, make a table like:
     | --- | --- |
     | [package name](link to package's commit log) | Links to all PRs merged since the expected results were updated |
     ...
+
+Because this is generated from each repo's local git history, make sure each
+``*_DIR`` repo has a working default remote (the script refreshes the tested
+branch non-interactively from ``upstream`` when available, otherwise
+``origin``).
 
 The automated test script
 =========================
@@ -78,7 +89,13 @@ The automated test script handles the following steps from the manual testing pr
 * Step 5: Launch zppy jobs
 * Step 6: Launch zppy jobs – bundles part 2
 * Step 7: Review finished returns
-* Step 8: Run Python tests (excluding the final ``pytest tests/integration/test_images.py`` call from a compute node)
+* Step 8: Run all Python tests, including the image checker (``pytest tests/integration/test_images.py``), which is now launched automatically on a compute node -- no manual step required.
+
+It additionally:
+
+* Runs the "tests of the tests" (``tests/images/test_image_checker.py`` and ``tests/images/test_image_severity.py``), which validate the image-checking logic itself, independent of any particular run's output.
+* Writes an ``env_description.txt`` for each task (e.g. ``global_time_series/env_description.txt``), recording the commit hash of the relevant dev repo (or noting that a released package was used) plus the full ``conda list`` package versions for that task's environment.
+* Writes a Markdown report (``test_report_<TAG>.md``) summarizing all of the above, including the complete and failing-only image-check summary tables.
 
 A. Set up the test script
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -178,6 +195,15 @@ Update these two parameters to configure which jobs run.
     # Comma-separated list of tasks to enable in utils.py.
     TASKS_TO_RUN="e3sm_diags,mpas_analysis,global_time_series,ilamb,livvkit,pcmdi_diags"
 
+Optionally, set these two parameters to auto-populate Steps 1 and 2 of the Markdown report.
+
+.. code-block::
+
+    # Machine-specific expected-results directory (see Step 1 above).
+    EXPECTED_RESULTS_DIR=""
+
+    # Date the expected results were last updated (see Step 2 above).
+    EXPECTED_RESULTS_UPDATED_DATE=""
 
 These parameters are unlikely to change between runs. They just let the test script know where to find files in your particular workspace. It is recommended to clone a new copy of the repos and use that for each ``_DIR`` parameter listed below. The script will change branches, so using a distinct copy means you won't get your work overwritten.
 
@@ -217,8 +243,12 @@ Follow the ``tail`` output until you get to:
 .. code-block::
 
     ✓ Phase 3 automated tests complete!
-    ✓ Remember to run test_images.py manually from a compute node.
+    ✓ Markdown report: .../test_report_yyyymmdd_runN.md
     ✓ Integration test automation complete!
+
+The image checker now runs automatically as part of Phase 3 (submitted as
+its own SLURM batch job and waited on, the same way the earlier zppy jobs
+are), so there is no separate manual compute-node step to run it.
 
 D. Review the output
 ~~~~~~~~~~~~~~~~~~~~
@@ -230,20 +260,25 @@ D. Review the output
     exit # Exit screen
     cd ${test_script_dir}/test_yyyymmdd_runN
     cat integration_test_runN.log
+    cat test_report_yyyymmdd_runN.md # The auto-generated Markdown report
 
 Let's review the test script's output log.
 
-First, the unit tests. There are two blocks, starting with:
+First, the unit tests. There are three blocks, starting with:
 
 .. code-block::
 
     Running zppy-interfaces unit tests...
 
+.. code-block::
+
+    Running zppy unit tests...
+
 and
 
 .. code-block::
 
-    Running zppy unit tests...
+    Running tests of the image checker itself...
 
 Second, the output directories status. It should look like the following:
 
@@ -275,72 +310,70 @@ Third, the integration tests.
 
 Errors here may actually be expected if the expected results haven't been updated yet to reflect a recently merged pull request. Another reason for errors on ``test_bundles.py`` in particular is if you didn't run all the jobs necessary (i.e., if you're running a partial test).
 
-If all 3 pieces look good, you can proceed with the final integration test, the image checker.
+Finally, the script auto-launches the image checker (``tests/integration/test_images.py``) as a SLURM job, waits for it, and folds its results straight into ``test_report_yyyymmdd_runN.md``: a "Complete summary table" section (the full contents of ``test_images_summary.md``) and, if any tests failed, a "Summary table -- only failing image-check tests, sorted by task" section. Review these tables (and the raw ``Captured stdout call`` output also embedded in the report) to decide whether the diffs are expected.
 
-Step 8: Run Python tests
-========================
+In the Markdown report, fill in the ``Results analysis`` section at the bottom with your conclusions (e.g. whether any diffs are expected, whether expected results should be updated).
 
-Machine-specific setup
-~~~~~~~~~~~~~~~~~~~~~~
+Scheduling this as a weekly cron job
+=====================================
 
-Chrysalis:
+Because the image checker now launches itself and the report is generated
+automatically, ``run_integration_test.bash`` no longer requires any
+interactive/manual steps as long as ``AUTO_MODE=true`` in your cfg. This
+makes it straightforward to run on a weekly cron schedule.
 
-.. code-block:: bash
+1. Set up your test cfg once, with ``AUTO_MODE=true`` and ``EXPLICIT_TAG=""``
+   (so a new ``TAG`` is generated every run based on the current date).
 
-    launch_compute_node()
-    {
-        salloc --nodes=1 --partition=debug --time=02:00:00 --account=e3sm
-    }
+2. Wrap the invocation in a small driver script so each week's run gets its
+   own directory and log file, e.g. ``~/ez/run_zppy_weekly_test.sh``:
 
-Compy:
+   .. code-block:: bash
 
-.. code-block:: bash
+       #!/bin/bash
+       set -e
+       WEEK_DIR="$HOME/ez/zppy_main_branch_tests/test_$(date +%Y%m%d)_run1"
+       ZPPY_SCRIPT_SOURCE="$HOME/ez/zppy_cron_source"
+       git -C "$ZPPY_SCRIPT_SOURCE" fetch upstream main
+       git -C "$ZPPY_SCRIPT_SOURCE" checkout main
+       git -C "$ZPPY_SCRIPT_SOURCE" reset --hard upstream/main
+       mkdir -p "$WEEK_DIR"
+       cd "$WEEK_DIR"
+       cp "$ZPPY_SCRIPT_SOURCE/tests/main_branch_testing/run_integration_test.bash" .
+       cp "$HOME/ez/zppy_weekly_test.cfg" ./zppy_test.cfg
+       ulimit -s unlimited
+       ./run_integration_test.bash --config zppy_test.cfg \
+           > "integration_test_run1.log" 2>&1
 
-    launch_compute_node()
-    {
-        salloc --nodes=1 --partition=short --time=01:00:00 --account=e3sm
-    }
+   Keep your reusable, edited cfg at a stable path (e.g.
+   ``~/ez/zppy_weekly_test.cfg``) outside of any per-run directory, since the
+   driver script copies it in fresh each week. Keep the copied
+   ``run_integration_test.bash`` source in a separate checkout (here
+   ``~/ez/zppy_cron_source``) that the driver updates to ``main`` before each
+   run, rather than reusing the per-run test checkout that Phase 1 switches to
+   ``test_zppy_<TAG>``.
 
-Perlmutter:
+3. Add a weekly ``cron`` entry (edit with ``crontab -e``). For example, to
+   run every Monday at 06:00 local time:
 
-.. code-block:: bash
+   .. code-block:: cron
 
-    launch_compute_node()
-    {
-        salloc --nodes=1 --qos=interactive --time=01:00:00 --constraint=cpu --account=e3sm
-    }
+       0 6 * * 1 /bin/bash -lc '$HOME/ez/run_zppy_weekly_test.sh' >> $HOME/ez/zppy_weekly_test_cron.log 2>&1
 
-Process
-~~~~~~~
+   Using ``bash -lc`` ensures your login shell environment (e.g. module
+   commands, ``PATH`` for ``sbatch``/``squeue``, SSH agent for ``git fetch``)
+   is loaded, since cron jobs otherwise run with a minimal environment.
 
-.. code-block:: bash
+4. Because ``wait_for_slurm_jobs`` and ``wait_for_slurm_job`` poll rather than
+   blocking indefinitely,
+   make sure the cron job's machine allows a long-running background process
+   (several hours) -- e.g. run it from a persistent login node rather than a
+   machine that may reboot, or launch it inside ``screen``/``tmux`` from the
+   cron entry if your site's policy discourages long-lived cron processes
+   directly.
 
-    cd ${repo_parent_dir}/zppy
-    git status
-    # You might have changed branches while you were waiting for jobs to finish.
-    # Make sure you're now back on the correct branch: test-zppy-yyyymmdd
-    # Also confirm you're back in the correct env: zppy-yyyymmdd or the Unified env
-
-    # The image checker test, which we'll run from a compute node:
-    launch_compute_node
-
-    start_bash_subshell
-    # EITHER:
-    # Activate EITHER a dev environment or the Unified env:
-    conda activate zppy-yyyymmdd
-    # OR: the command from `activate_unified_env`
-
-    pytest tests/integration/test_images.py
-    # Typically takes between 10 and 20 minutes on Chrysalis and Perlmutter.
-    # Typically takes closer to 50 minutes on Compy.
-    cat test_images_summary.md
-    exit # Exit bash shell
-    exit # Exit compute note
-
-In your Markdown report:
-
-* From the ``pytest tests/integration/test_images.py `` command-line output, copy everything after ``Captured stdout call`` to a code block labeled "Output"
-* Copy the results of ``cat test_images_summary.md`` to a section labeled "Complete summary table"
-* Make a new section named "Summary table -- only failing image-check tests, sorted by task". For each task that has missing and/or mismatched images, copy the relevant rows from the summary table. Skip this section if there were no failing image-check tests.
-* Note any test failures from the other Python tests.
-* If there were no failures at all, print "All tests pass"
+5. After each run, check ``$WEEK_DIR/test_report_<TAG>.md`` for the
+   "Results analysis" TODO and the failing-tests summary table; consider
+   having the cron wrapper ``mail`` or post that file's contents somewhere
+   visible (e.g. a Slack webhook or a PR comment) so failures don't go
+   unnoticed.
