@@ -109,10 +109,14 @@ EXPECTED_RESULTS_DIR="${EXPECTED_RESULTS_DIR:-}"
 # Apply defaults for optional *_EXPECTED_RESULTS_DATE variables (leave
 # empty here; auto-detection happens further down once CFGS_ARRAY exists).
 DIAGS_EXPECTED_RESULTS_DATE="${DIAGS_EXPECTED_RESULTS_DATE:-}"
-E3SM_TO_CMIP_EXPECTED_RESULTS_DATE="${E3SM_TO_CMIP_EXPECTED_RESULTS_DATE:-}"
 MPAS_EXPECTED_RESULTS_DATE="${MPAS_EXPECTED_RESULTS_DATE:-}"
-ZI_EXPECTED_RESULTS_DATE="${ZI_EXPECTED_RESULTS_DATE:-}"
-ZPPY_EXPECTED_RESULTS_DATE="${ZPPY_EXPECTED_RESULTS_DATE:-}"
+ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE="${ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE:-}"
+ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE="${ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE:-}"
+# e3sm_to_cmip and zppy produce no task subdirs of their own, so there's no
+# "expected results" to track for them -- just whether anything has changed
+# since the last time we tested this dependency at all.
+E3SM_TO_CMIP_LAST_TESTED_DATE="${E3SM_TO_CMIP_LAST_TESTED_DATE:-}"
+ZPPY_LAST_TESTED_DATE="${ZPPY_LAST_TESTED_DATE:-}"
 
 # Validate MACHINE value.
 case "$MACHINE" in
@@ -196,6 +200,21 @@ IFS=',' read -ra TASKS_ARRAY <<< "$TASKS_TO_RUN"
 # rewritten on every single run regardless of which task's data actually
 # changed. So detection here is per (cfg, task), scanned across every cfg
 # actually being tested.
+#
+# zppy-interfaces bundles two unrelated tasks (global_time_series and
+# pcmdi_diags) that get refreshed independently -- one can be updated on
+# one date and the other much later -- so their expected-results dates are
+# tracked and reported separately (ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE
+# / ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE) rather than folded into one ZI date.
+#
+# e3sm_to_cmip and zppy, on the other hand, produce no task subdir of their
+# own at all, so there's no per-task "expected results" file to read a
+# production date from -- the only meaningful question for them is whether
+# anything has changed since the last time we tested that dependency, full
+# stop. That's a different concept from "when were the expected results
+# produced", so those two use *_LAST_TESTED_DATE variables instead of
+# *_EXPECTED_RESULTS_DATE, even though the detection mechanics below are
+# shared with the other dependencies.
 
 # Extract the "YYYY-MM-DD" date portion of the "Generated:" line from one
 # env_description.txt, or nothing if the file/line isn't present.
@@ -245,34 +264,45 @@ _detect_expected_results_date() {
     echo "$earliest"
 }
 
-# Apply per-dependency EXPECTED_RESULTS_DATE: an explicit config value
-# always wins (e.g. when a human has determined, as in the e3sm_diags case
-# above, that the auto-detected/promoted date doesn't reflect the truth);
-# otherwise auto-detect from env_description.txt as described above.
-# e3sm_to_cmip and zppy have no dedicated task directory of their own, so
-# they fall back to the earliest production date found across ALL tasks.
+# Apply per-dependency EXPECTED_RESULTS_DATE / LAST_TESTED_DATE: an explicit
+# config value always wins (e.g. when a human has determined, as in the
+# e3sm_diags case above, that the auto-detected/promoted date doesn't
+# reflect the truth); otherwise auto-detect from env_description.txt as
+# described above. e3sm_to_cmip and zppy have no dedicated task directory of
+# their own, so they fall back to the earliest production date found across
+# ALL tasks.
 if [[ -z "$DIAGS_EXPECTED_RESULTS_DATE" ]]; then
     DIAGS_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date "e3sm_diags")"
 fi
 if [[ -z "$MPAS_EXPECTED_RESULTS_DATE" ]]; then
     MPAS_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date "mpas_analysis")"
 fi
-if [[ -z "$ZI_EXPECTED_RESULTS_DATE" ]]; then
-    ZI_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date "global_time_series" "pcmdi_diags")"
+if [[ -z "$ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE" ]]; then
+    ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date "global_time_series")"
 fi
-if [[ -z "$E3SM_TO_CMIP_EXPECTED_RESULTS_DATE" ]]; then
-    E3SM_TO_CMIP_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date)"
+if [[ -z "$ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE" ]]; then
+    ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date "pcmdi_diags")"
 fi
-if [[ -z "$ZPPY_EXPECTED_RESULTS_DATE" ]]; then
-    ZPPY_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date)"
+if [[ -z "$E3SM_TO_CMIP_LAST_TESTED_DATE" ]]; then
+    E3SM_TO_CMIP_LAST_TESTED_DATE="$(_detect_expected_results_date)"
 fi
-for _dep_label in "e3sm_diags:$DIAGS_EXPECTED_RESULTS_DATE" "mpas_analysis:$MPAS_EXPECTED_RESULTS_DATE" \
-    "zppy-interfaces:$ZI_EXPECTED_RESULTS_DATE" "e3sm_to_cmip:$E3SM_TO_CMIP_EXPECTED_RESULTS_DATE" \
-    "zppy:$ZPPY_EXPECTED_RESULTS_DATE"; do
-    if [[ -z "${_dep_label#*:}" && -n "$EXPECTED_RESULTS_DIR" ]]; then
-        echo "Warning: Could not auto-detect an expected-results production date for ${_dep_label%%:*} from ${EXPECTED_RESULTS_DIR} (no env_description.txt with a Generated: line found). Set its *_EXPECTED_RESULTS_DATE in the config to fix Step 2 of the report." >&2
+if [[ -z "$ZPPY_LAST_TESTED_DATE" ]]; then
+    ZPPY_LAST_TESTED_DATE="$(_detect_expected_results_date)"
+fi
+for _dep_entry in \
+    "e3sm_diags:$DIAGS_EXPECTED_RESULTS_DATE:DIAGS_EXPECTED_RESULTS_DATE" \
+    "mpas_analysis:$MPAS_EXPECTED_RESULTS_DATE:MPAS_EXPECTED_RESULTS_DATE" \
+    "zppy-interfaces (global_time_series):$ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE:ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE" \
+    "zppy-interfaces (pcmdi_diags):$ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE:ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE" \
+    "e3sm_to_cmip:$E3SM_TO_CMIP_LAST_TESTED_DATE:E3SM_TO_CMIP_LAST_TESTED_DATE" \
+    "zppy:$ZPPY_LAST_TESTED_DATE:ZPPY_LAST_TESTED_DATE"
+do
+    IFS=':' read -r _dep_name _dep_date _dep_var <<< "$_dep_entry"
+    if [[ -z "$_dep_date" && -n "$EXPECTED_RESULTS_DIR" ]]; then
+        echo "Warning: Could not auto-detect a date for ${_dep_name} from ${EXPECTED_RESULTS_DIR} (no env_description.txt with a Generated: line found). Set ${_dep_var} in the config to fix Step 2 of the report." >&2
     fi
 done
+unset _dep_entry _dep_name _dep_date _dep_var
 unset _dep_label
 
 # ============================================================================
@@ -1372,15 +1402,16 @@ generate_markdown_report() {
     # --- Step 2: changes since expected results were updated ---
     report_append "## Step 2: Review changes since expected results were updated"
     report_append ""
-    report_append "Commits merged on each repo's *expected-results baseline branch* (see the \"Branch tested\" column when it differs from the branch this run actually tested) since that dependency's expected results were actually **produced**. The \"Since\" date is read from the \`Generated:\` line of the promoted \`env_description.txt\` (the earliest one found across every cfg being tested) -- deliberately not the promotion date from Step 1 above, since results normally sit under review before being promoted, so the promotion date routinely lags well behind the run that actually produced them (set the matching \`*_EXPECTED_RESULTS_DATE\` in the config to override any date below when you know better, e.g. from a discussion thread)."
+    report_append "Commits merged on each repo's *expected-results baseline branch* (see the \"Branch tested\" column when it differs from the branch this run actually tested) since that dependency's expected results were actually **produced** (for \`e3sm_to_cmip\`/\`zppy\`, which have no per-task expected results of their own, since they were last **tested** instead -- see the \`*_LAST_TESTED_DATE\` config variables). The \"Since\" date is read from the \`Generated:\` line of the promoted \`env_description.txt\` (the earliest one found across every cfg being tested) -- deliberately not the promotion date from Step 1 above, since results normally sit under review before being promoted, so the promotion date routinely lags well behind the run that actually produced them (set the matching \`*_EXPECTED_RESULTS_DATE\`/\`*_LAST_TESTED_DATE\` in the config to override any date below when you know better, e.g. from a discussion thread). \`zppy-interfaces\` bundles two independently-refreshed tasks, so its row is split into \`global_time_series\` and \`pcmdi_diags\`, each with its own date."
     report_append ""
     report_append "| Package | Branch tested | Since | Changes since expected results were produced |"
     report_append "| --- | --- | --- | --- |"
-    _report_repo_changes "e3sm_to_cmip" "$E3SM_TO_CMIP_DIR" "$E3SM_TO_CMIP_BASE_BRANCH" "$E3SM_TO_CMIP_EXPECTED_RESULTS_BRANCH" "$E3SM_TO_CMIP_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/e3sm_to_cmip"
-    _report_repo_changes "e3sm_diags" "$E3SM_DIAGS_DIR" "$DIAGS_BASE_BRANCH" "$DIAGS_EXPECTED_RESULTS_BRANCH" "$DIAGS_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/e3sm_diags"
-    _report_repo_changes "mpas_analysis" "$MPAS_ANALYSIS_DIR" "$MPAS_BASE_BRANCH" "$MPAS_EXPECTED_RESULTS_BRANCH" "$MPAS_EXPECTED_RESULTS_DATE" "https://github.com/MPAS-Dev/MPAS-Analysis"
-    _report_repo_changes "zppy-interfaces" "$ZPPY_INTERFACES_DIR" "$ZI_BASE_BRANCH" "$ZI_EXPECTED_RESULTS_BRANCH" "$ZI_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/zppy-interfaces"
-    _report_repo_changes "zppy" "$ZPPY_DIR" "$ZPPY_BASE_BRANCH" "$ZPPY_EXPECTED_RESULTS_BRANCH" "$ZPPY_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/zppy"
+    _report_repo_changes "e3sm_to_cmip" "$E3SM_TO_CMIP_DIR" "$E3SM_TO_CMIP_BASE_BRANCH" "$E3SM_TO_CMIP_EXPECTED_RESULTS_BRANCH" "$E3SM_TO_CMIP_LAST_TESTED_DATE" "https://github.com/E3SM-Project/e3sm_to_cmip" "E3SM_TO_CMIP_LAST_TESTED_DATE"
+    _report_repo_changes "e3sm_diags" "$E3SM_DIAGS_DIR" "$DIAGS_BASE_BRANCH" "$DIAGS_EXPECTED_RESULTS_BRANCH" "$DIAGS_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/e3sm_diags" "DIAGS_EXPECTED_RESULTS_DATE"
+    _report_repo_changes "mpas_analysis" "$MPAS_ANALYSIS_DIR" "$MPAS_BASE_BRANCH" "$MPAS_EXPECTED_RESULTS_BRANCH" "$MPAS_EXPECTED_RESULTS_DATE" "https://github.com/MPAS-Dev/MPAS-Analysis" "MPAS_EXPECTED_RESULTS_DATE"
+    _report_repo_changes "zppy-interfaces (global_time_series)" "$ZPPY_INTERFACES_DIR" "$ZI_BASE_BRANCH" "$ZI_EXPECTED_RESULTS_BRANCH" "$ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/zppy-interfaces" "ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE"
+    _report_repo_changes "zppy-interfaces (pcmdi_diags)" "$ZPPY_INTERFACES_DIR" "$ZI_BASE_BRANCH" "$ZI_EXPECTED_RESULTS_BRANCH" "$ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/zppy-interfaces" "ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE"
+    _report_repo_changes "zppy" "$ZPPY_DIR" "$ZPPY_BASE_BRANCH" "$ZPPY_EXPECTED_RESULTS_BRANCH" "$ZPPY_LAST_TESTED_DATE" "https://github.com/E3SM-Project/zppy" "ZPPY_LAST_TESTED_DATE"
     report_append ""
 
     # --- Environment descriptions ---
@@ -1507,6 +1538,7 @@ _report_repo_changes() {
     local results_branch="$4"
     local since_date="$5"
     local repo_url="$6"
+    local date_var_name="$7"
 
     local tested_branch_col="\`${tested_branch}\`"
     if [[ "$tested_branch" == "$results_branch" ]]; then
@@ -1514,7 +1546,7 @@ _report_repo_changes() {
     fi
 
     if [[ -z "$since_date" ]]; then
-        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _unknown_ | _could not determine when expected results were produced; set the matching \`*_EXPECTED_RESULTS_DATE\` in the config_ |"
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _unknown_ | _could not determine when this dependency was last tested; set \`${date_var_name}\` in the config_ |"
         return
     fi
 
