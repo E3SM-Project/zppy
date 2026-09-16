@@ -106,21 +106,13 @@ ZPPY_EXPECTED_RESULTS_BRANCH="${ZPPY_EXPECTED_RESULTS_BRANCH:-$ZPPY_BASE_BRANCH}
 # Leave EXPECTED_RESULTS_DIR empty to skip those sections entirely.
 EXPECTED_RESULTS_DIR="${EXPECTED_RESULTS_DIR:-}"
 
-# EXPECTED_RESULTS_UPDATED_DATE is normally left empty and auto-detected
-# below from the most recently modified entry in EXPECTED_RESULTS_DIR, so
-# it doesn't need to be kept in sync by hand. Set it explicitly in the
-# config only to override that auto-detection.
-EXPECTED_RESULTS_UPDATED_DATE="${EXPECTED_RESULTS_UPDATED_DATE:-}"
-if [[ -z "$EXPECTED_RESULTS_UPDATED_DATE" && -n "$EXPECTED_RESULTS_DIR" && -d "$EXPECTED_RESULTS_DIR" ]]; then
-    _newest_entry="$(ls -t "$EXPECTED_RESULTS_DIR" 2>/dev/null | head -n 1)"
-    if [[ -n "$_newest_entry" ]]; then
-        EXPECTED_RESULTS_UPDATED_DATE="$(date -r "${EXPECTED_RESULTS_DIR}/${_newest_entry}" +%Y-%m-%d 2>/dev/null || true)"
-    fi
-    if [[ -z "$EXPECTED_RESULTS_UPDATED_DATE" ]]; then
-        echo "Warning: Could not auto-detect EXPECTED_RESULTS_UPDATED_DATE from ${EXPECTED_RESULTS_DIR}." >&2
-    fi
-    unset _newest_entry
-fi
+# Apply defaults for optional *_EXPECTED_RESULTS_DATE variables (leave
+# empty here; auto-detection happens further down once CFGS_ARRAY exists).
+DIAGS_EXPECTED_RESULTS_DATE="${DIAGS_EXPECTED_RESULTS_DATE:-}"
+E3SM_TO_CMIP_EXPECTED_RESULTS_DATE="${E3SM_TO_CMIP_EXPECTED_RESULTS_DATE:-}"
+MPAS_EXPECTED_RESULTS_DATE="${MPAS_EXPECTED_RESULTS_DATE:-}"
+ZI_EXPECTED_RESULTS_DATE="${ZI_EXPECTED_RESULTS_DATE:-}"
+ZPPY_EXPECTED_RESULTS_DATE="${ZPPY_EXPECTED_RESULTS_DATE:-}"
 
 # Validate MACHINE value.
 case "$MACHINE" in
@@ -168,6 +160,121 @@ esac
 # IFS = Internal Field Separator
 IFS=',' read -ra CFGS_ARRAY  <<< "$CFGS_TO_RUN"
 IFS=',' read -ra TASKS_ARRAY <<< "$TASKS_TO_RUN"
+
+# ============================================================================
+# Expected-results production dates (per dependency)
+# ============================================================================
+#
+# EXPECTED_RESULTS_DIR holds one "expected_<cfg>/" subdirectory per cfg
+# (e.g. "expected_comprehensive_v3/"), each containing one subdirectory per
+# task (e.g. "e3sm_diags/"). Once promoted, each task directory carries the
+# env_description.txt written by capture_env_description() during the run
+# that produced it, whose "Generated: YYYY-MM-DD HH:MM:SS" line records
+# when those results were actually PRODUCED.
+#
+# That is a different question from when they were last PROMOTED (copied
+# into place), and a directory's mtime correctly answers the latter, not
+# the former. The two routinely differ, by design: a run's results
+# normally sit under review while a task developer confirms whether the
+# diffs look acceptable, and only get promoted as the new expected results
+# later -- often right before the *next* test run needs a fresh baseline,
+# not right after the run that produced them. E.g. e3sm_diags's expected
+# results were correctly copied into place on 9/4, but that promotion
+# carried forward the 8/28 run's output (confirmed acceptable only after
+# the fact) rather than a fresh 9/4 run. mtime isn't wrong about 9/4; it's
+# just answering "when was this promoted", not "when was this produced",
+# and those two questions can have very different answers as a routine
+# part of the workflow. So we read the production date out of
+# env_description.txt's own content instead, which records that
+# regardless of when/how much later the directory gets copied.
+#
+# A single top-level or single per-cfg date is also the wrong shape: a cfg
+# directory's mtime reflects whichever task inside it was touched most
+# recently (e.g. "expected_comprehensive_v3/" looking freshly updated
+# because only pcmdi_diags was refreshed), and the top-level directory's
+# mtime is dominated by files like image_list_expected_*.txt that get
+# rewritten on every single run regardless of which task's data actually
+# changed. So detection here is per (cfg, task), scanned across every cfg
+# actually being tested.
+
+# Extract the "YYYY-MM-DD" date portion of the "Generated:" line from one
+# env_description.txt, or nothing if the file/line isn't present.
+_read_env_description_date() {
+    local desc_file="$1"
+    [[ -f "$desc_file" ]] || return 0
+    awk -F': ' '/^Generated:/ { print $2; exit }' "$desc_file" 2>/dev/null | awk '{print $1}'
+}
+
+# Scans every cfg in CFGS_ARRAY for the given task name(s)'
+# env_description.txt (or, with no task names given, every task
+# subdirectory present) and prints the EARLIEST "Generated:" date found.
+# Earliest is a deliberately conservative choice: it surfaces at least as
+# many candidate upstream commits as could plausibly explain a diff,
+# rather than risking missing the real cause (as happened when only the
+# 9/4 promotion date was considered for e3sm_diags).
+_detect_expected_results_date() {
+    local -a tasks=("$@")
+    local earliest="" cfg cfg_dirname task_dir task found_date
+
+    [[ -n "$EXPECTED_RESULTS_DIR" && -d "$EXPECTED_RESULTS_DIR" ]] || return 0
+
+    for cfg in "${CFGS_ARRAY[@]}"; do
+        cfg="${cfg// /}"
+        cfg_dirname="expected_${cfg#weekly_}"
+        [[ -d "${EXPECTED_RESULTS_DIR}/${cfg_dirname}" ]] || continue
+
+        if [[ ${#tasks[@]} -eq 0 ]]; then
+            # No specific task: consider every task subdirectory present.
+            for task_dir in "${EXPECTED_RESULTS_DIR}/${cfg_dirname}"/*/; do
+                [[ -d "$task_dir" ]] || continue
+                found_date="$(_read_env_description_date "${task_dir}env_description.txt")"
+                if [[ -n "$found_date" && ( -z "$earliest" || "$found_date" < "$earliest" ) ]]; then
+                    earliest="$found_date"
+                fi
+            done
+        else
+            for task in "${tasks[@]}"; do
+                found_date="$(_read_env_description_date "${EXPECTED_RESULTS_DIR}/${cfg_dirname}/${task}/env_description.txt")"
+                if [[ -n "$found_date" && ( -z "$earliest" || "$found_date" < "$earliest" ) ]]; then
+                    earliest="$found_date"
+                fi
+            done
+        fi
+    done
+
+    echo "$earliest"
+}
+
+# Apply per-dependency EXPECTED_RESULTS_DATE: an explicit config value
+# always wins (e.g. when a human has determined, as in the e3sm_diags case
+# above, that the auto-detected/promoted date doesn't reflect the truth);
+# otherwise auto-detect from env_description.txt as described above.
+# e3sm_to_cmip and zppy have no dedicated task directory of their own, so
+# they fall back to the earliest production date found across ALL tasks.
+if [[ -z "$DIAGS_EXPECTED_RESULTS_DATE" ]]; then
+    DIAGS_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date "e3sm_diags")"
+fi
+if [[ -z "$MPAS_EXPECTED_RESULTS_DATE" ]]; then
+    MPAS_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date "mpas_analysis")"
+fi
+if [[ -z "$ZI_EXPECTED_RESULTS_DATE" ]]; then
+    ZI_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date "global_time_series" "pcmdi_diags")"
+fi
+if [[ -z "$E3SM_TO_CMIP_EXPECTED_RESULTS_DATE" ]]; then
+    E3SM_TO_CMIP_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date)"
+fi
+if [[ -z "$ZPPY_EXPECTED_RESULTS_DATE" ]]; then
+    ZPPY_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date)"
+fi
+for _dep_label in "e3sm_diags:$DIAGS_EXPECTED_RESULTS_DATE" "mpas_analysis:$MPAS_EXPECTED_RESULTS_DATE" \
+    "zppy-interfaces:$ZI_EXPECTED_RESULTS_DATE" "e3sm_to_cmip:$E3SM_TO_CMIP_EXPECTED_RESULTS_DATE" \
+    "zppy:$ZPPY_EXPECTED_RESULTS_DATE"; do
+    if [[ -z "${_dep_label#*:}" && -n "$EXPECTED_RESULTS_DIR" ]]; then
+        echo "Warning: Could not auto-detect an expected-results production date for ${_dep_label%%:*} from ${EXPECTED_RESULTS_DIR} (no env_description.txt with a Generated: line found). Set its *_EXPECTED_RESULTS_DATE in the config to fix Step 2 of the report." >&2
+    fi
+done
+unset _dep_label
+
 # ============================================================================
 #
 # Priority:
@@ -1223,32 +1330,50 @@ generate_markdown_report() {
     report_append "## Step 1: Determine what the current expected results are"
     report_append ""
     if [[ -n "$EXPECTED_RESULTS_DIR" && -d "$EXPECTED_RESULTS_DIR" ]]; then
-        if [[ -n "$EXPECTED_RESULTS_UPDATED_DATE" ]]; then
-            report_append "The most recently updated entry in \`${EXPECTED_RESULTS_DIR}\` is from \`${EXPECTED_RESULTS_UPDATED_DATE}\`."
-        else
-            report_append "_Could not auto-detect an update date from \`${EXPECTED_RESULTS_DIR}\`; set EXPECTED_RESULTS_UPDATED_DATE in the config to override._"
+        report_append "Promotion date for each cfg/task under \`${EXPECTED_RESULTS_DIR}\` -- i.e. when its expected-results files were last copied into place. This is **not** necessarily when those results were actually produced (see Step 2, which uses a different, content-based date for exactly that reason)."
+        report_append ""
+        local cfg cfg_dirname task task_dir mtime_date
+        local _found_any_cfg_dir=false
+        for cfg in "${CFGS_ARRAY[@]}"; do
+            cfg="${cfg// /}"
+            cfg_dirname="expected_${cfg#weekly_}"
+            [[ -d "${EXPECTED_RESULTS_DIR}/${cfg_dirname}" ]] || continue
+            _found_any_cfg_dir=true
+            report_append "\`${cfg_dirname}\`:"
+            report_append ""
+            report_append "| Task | Last promoted |"
+            report_append "| --- | --- |"
+            for task in "${TASKS_ARRAY[@]}"; do
+                task="${task// /}"
+                task_dir="${EXPECTED_RESULTS_DIR}/${cfg_dirname}/${task}"
+                [[ -d "$task_dir" ]] || continue
+                mtime_date="$(date -r "$task_dir" +%Y-%m-%d 2>/dev/null || echo unknown)"
+                report_append "| ${task} | \`${mtime_date}\` |"
+            done
+            report_append ""
+        done
+        if [[ "$_found_any_cfg_dir" == false ]]; then
+            report_append "_No \`expected_<cfg>\` subdirectories found under ${EXPECTED_RESULTS_DIR} for the cfgs in CFGS_TO_RUN._"
+            report_append ""
         fi
+        unset _found_any_cfg_dir
     else
         report_append "_TODO: set EXPECTED_RESULTS_DIR in the config to auto-populate this section._"
+        report_append ""
     fi
-    report_append ""
 
-    # --- Step 2: changes since expected results were updated (optional) ---
+    # --- Step 2: changes since expected results were updated ---
     report_append "## Step 2: Review changes since expected results were updated"
     report_append ""
-    if [[ -n "$EXPECTED_RESULTS_UPDATED_DATE" ]]; then
-        report_append "Commits merged on each repo's *expected-results baseline branch* since \`${EXPECTED_RESULTS_UPDATED_DATE}\`. This is the branch the expected results were actually generated from, which is not always the same branch this run tested (see the \"Branch tested\" column when they differ):"
-        report_append ""
-        report_append "| Package | Branch tested | Changes since expected results were updated |"
-        report_append "| --- | --- | --- |"
-        _report_repo_changes "e3sm_to_cmip" "$E3SM_TO_CMIP_DIR" "$E3SM_TO_CMIP_BASE_BRANCH" "$E3SM_TO_CMIP_EXPECTED_RESULTS_BRANCH" "https://github.com/E3SM-Project/e3sm_to_cmip"
-        _report_repo_changes "e3sm_diags" "$E3SM_DIAGS_DIR" "$DIAGS_BASE_BRANCH" "$DIAGS_EXPECTED_RESULTS_BRANCH" "https://github.com/E3SM-Project/e3sm_diags"
-        _report_repo_changes "mpas_analysis" "$MPAS_ANALYSIS_DIR" "$MPAS_BASE_BRANCH" "$MPAS_EXPECTED_RESULTS_BRANCH" "https://github.com/MPAS-Dev/MPAS-Analysis"
-        _report_repo_changes "zppy-interfaces" "$ZPPY_INTERFACES_DIR" "$ZI_BASE_BRANCH" "$ZI_EXPECTED_RESULTS_BRANCH" "https://github.com/E3SM-Project/zppy-interfaces"
-        _report_repo_changes "zppy" "$ZPPY_DIR" "$ZPPY_BASE_BRANCH" "$ZPPY_EXPECTED_RESULTS_BRANCH" "https://github.com/E3SM-Project/zppy"
-    else
-        report_append "_TODO: set EXPECTED_RESULTS_UPDATED_DATE in the config to auto-populate this table._"
-    fi
+    report_append "Commits merged on each repo's *expected-results baseline branch* (see the \"Branch tested\" column when it differs from the branch this run actually tested) since that dependency's expected results were actually **produced**. The \"Since\" date is read from the \`Generated:\` line of the promoted \`env_description.txt\` (the earliest one found across every cfg being tested) -- deliberately not the promotion date from Step 1 above, since results normally sit under review before being promoted, so the promotion date routinely lags well behind the run that actually produced them (set the matching \`*_EXPECTED_RESULTS_DATE\` in the config to override any date below when you know better, e.g. from a discussion thread)."
+    report_append ""
+    report_append "| Package | Branch tested | Since | Changes since expected results were produced |"
+    report_append "| --- | --- | --- | --- |"
+    _report_repo_changes "e3sm_to_cmip" "$E3SM_TO_CMIP_DIR" "$E3SM_TO_CMIP_BASE_BRANCH" "$E3SM_TO_CMIP_EXPECTED_RESULTS_BRANCH" "$E3SM_TO_CMIP_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/e3sm_to_cmip"
+    _report_repo_changes "e3sm_diags" "$E3SM_DIAGS_DIR" "$DIAGS_BASE_BRANCH" "$DIAGS_EXPECTED_RESULTS_BRANCH" "$DIAGS_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/e3sm_diags"
+    _report_repo_changes "mpas_analysis" "$MPAS_ANALYSIS_DIR" "$MPAS_BASE_BRANCH" "$MPAS_EXPECTED_RESULTS_BRANCH" "$MPAS_EXPECTED_RESULTS_DATE" "https://github.com/MPAS-Dev/MPAS-Analysis"
+    _report_repo_changes "zppy-interfaces" "$ZPPY_INTERFACES_DIR" "$ZI_BASE_BRANCH" "$ZI_EXPECTED_RESULTS_BRANCH" "$ZI_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/zppy-interfaces"
+    _report_repo_changes "zppy" "$ZPPY_DIR" "$ZPPY_BASE_BRANCH" "$ZPPY_EXPECTED_RESULTS_BRANCH" "$ZPPY_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/zppy"
     report_append ""
 
     # --- Environment descriptions ---
@@ -1351,7 +1476,7 @@ generate_markdown_report() {
 }
 
 # Helper for generate_markdown_report: append one repo's commit log since
-# EXPECTED_RESULTS_UPDATED_DATE as a Markdown table row.
+# its own expected-results production date as a Markdown table row.
 #
 # Two branches matter here and they are frequently NOT the same branch:
 #   - tested_branch: what this run actually checked out (e.g. a feature
@@ -1364,26 +1489,38 @@ generate_markdown_report() {
 #     baseline branch" with "commits unique to the branch under test",
 #     and always hardcoding the default branch would be wrong for setups
 #     that intentionally maintain expected results off a different branch.
+#
+# since_date is likewise per-dependency (see _detect_expected_results_date
+# above): different dependencies' expected results can have been produced
+# on different dates, so there is no single script-wide date to use here.
 _report_repo_changes() {
     local label="$1"
     local repo_dir="$2"
     local tested_branch="$3"
     local results_branch="$4"
-    local repo_url="$5"
+    local since_date="$5"
+    local repo_url="$6"
 
     local tested_branch_col="\`${tested_branch}\`"
     if [[ "$tested_branch" == "$results_branch" ]]; then
         tested_branch_col="\`${tested_branch}\` (same as baseline)"
     fi
 
+    if [[ -z "$since_date" ]]; then
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _unknown_ | _could not determine when expected results were produced; set the matching \`*_EXPECTED_RESULTS_DATE\` in the config_ |"
+        return
+    fi
+
+    local since_col="\`${since_date}\`"
+
     if [[ ! -d "$repo_dir" ]]; then
-        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _repo not found at ${repo_dir}_ |"
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | _repo not found at ${repo_dir}_ |"
         return
     fi
 
     local remote
     if ! remote=$(get_preferred_git_remote "$repo_dir"); then
-        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _unable to identify a git remote for ${repo_dir}_ |"
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | _unable to identify a git remote for ${repo_dir}_ |"
         return
     fi
 
@@ -1391,21 +1528,21 @@ _report_repo_changes() {
     if ! env GIT_TERMINAL_PROMPT=0 \
         GIT_SSH_COMMAND="ssh -oBatchMode=yes" \
         git -C "$repo_dir" fetch "$remote" "$results_branch" >/dev/null 2>&1; then
-        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _unable to fetch ${remote}/${results_branch}_ |"
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | _unable to fetch ${remote}/${results_branch}_ |"
         return
     elif ! log_ref=$(git -C "$repo_dir" rev-parse FETCH_HEAD 2>/dev/null); then
-        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _unable to resolve fetched ${remote}/${results_branch}_ |"
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | _unable to resolve fetched ${remote}/${results_branch}_ |"
         return
     fi
 
     local commits
-    if ! commits=$(git -C "$repo_dir" log "$log_ref" --since="${EXPECTED_RESULTS_UPDATED_DATE}" --oneline 2>/dev/null); then
-        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _unable to inspect ${log_ref}_ |"
+    if ! commits=$(git -C "$repo_dir" log "$log_ref" --since="${since_date}" --oneline 2>/dev/null); then
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | _unable to inspect ${log_ref}_ |"
         return
     fi
 
     if [[ -z "$commits" ]]; then
-        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | None |"
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | None |"
         return
     fi
 
@@ -1424,7 +1561,7 @@ _report_repo_changes() {
     done <<< "$commits"
     links="${links%, }"
 
-    report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${links} |"
+    report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | ${links} |"
 }
 
 # ============================================================================

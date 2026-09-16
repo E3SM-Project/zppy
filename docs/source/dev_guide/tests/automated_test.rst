@@ -45,20 +45,39 @@ Process
     ls -lt ${expected_results_dir}
 
 Set ``EXPECTED_RESULTS_DIR`` in your test cfg to this path. The automated
-report no longer dumps the full ``ls -lt`` listing here -- it just
-auto-detects and reports the date of the most recently modified entry in
-that directory. That date becomes ``EXPECTED_RESULTS_UPDATED_DATE`` for
-Step 2 below automatically, so you no longer need to determine or type in
-that date by hand (you can still set ``EXPECTED_RESULTS_UPDATED_DATE``
-explicitly in the cfg if you ever need to override the auto-detected
-value).
+report no longer dumps the full ``ls -lt`` listing here -- it instead shows,
+for each cfg/task under this directory, the date its expected-results files
+were last **promoted** (copied into place).
+
+Note that "promoted" is not the same thing as "produced," and in practice
+the two are usually *further apart than you'd expect*, not closer: a run's
+results normally sit under review while a task developer confirms the
+diffs look acceptable, and only get promoted later -- often right before
+the *next* test run needs a fresh baseline, not right after the run that
+produced them. (E.g. expected results promoted on 9/4 that were actually
+produced by an 8/28 run, confirmed acceptable only after the fact.) So
+this promotion date is informational only -- it tells you when the files
+were last touched, not what commits they reflect. Step 2 below uses a
+different, more reliable date for that.
 
 Step 2: Review changes since expected results were updated
 ==========================================================
 
-Now that we know the date the expected results are from (auto-detected as
-``EXPECTED_RESULTS_UPDATED_DATE`` in Step 1 above), we can review what
-changes we'll be testing.
+Now that Step 1 above has confirmed the expected-results directory is
+correctly configured, we can review what changes we'll be testing.
+
+Each dependency's expected results can have been produced on a different
+date (and a promotion's date, per Step 1, isn't reliable for this anyway),
+so the report determines a *production* date separately per dependency: it
+reads the ``Generated:`` line written by the test script into the
+promoted ``env_description.txt`` for the corresponding task(s), taking the
+earliest one found across every cfg in ``CFGS_TO_RUN`` (deliberately
+conservative -- better to surface a few extra candidate commits than miss
+the actual cause of a diff). If you've determined through other means
+(e.g. a discussion thread) that this auto-detected date is wrong -- for
+instance, the promoted results were confirmed to actually come from an
+earlier run -- set the matching ``*_EXPECTED_RESULTS_DATE`` in your cfg to
+override it.
 
 The automated report will list, for each dependency below, the commits/PRs
 merged on its *expected-results baseline branch* since that date -- i.e.
@@ -70,6 +89,10 @@ always the same branch this run checked out to test:
 * For the ``mpas_analysis`` task: `MPAS-Analysis <https://github.com/MPAS-Dev/MPAS-Analysis/commits/develop/>`_
 * For the ``global_time_series`` and ``pcmdi_diags`` tasks: `zppy-interfaces <https://github.com/E3SM-Project/zppy-interfaces/commits/main>`_
 * For ``zppy`` itself: `zppy <https://github.com/E3SM-Project/zppy/commits/main>`_
+
+``e3sm_to_cmip`` and ``zppy`` have no dedicated task subdirectory of their
+own to read a date from, so their auto-detected date instead falls back to
+the earliest production date found across *all* tasks for those two.
 
 Each of these links is your dependency's ``*_EXPECTED_RESULTS_BRANCH``,
 which defaults to the matching ``*_BASE_BRANCH`` in your cfg -- so if
@@ -89,9 +112,9 @@ The report's table looks like:
 
 .. code-block::
 
-    | Package | Branch tested | Changes since expected results were updated |
-    | --- | --- | --- |
-    | [package name](link to expected-results baseline branch's commit log) | Branch this run tested, if different | Links to all PRs merged since the expected results were updated |
+    | Package | Branch tested | Since | Changes since expected results were produced |
+    | --- | --- | --- | --- |
+    | [package name](link to expected-results baseline branch's commit log) | Branch this run tested, if different | Production date used for this dependency | Links to all PRs merged since that date |
     ...
 
 Because this is generated from each repo's local git history, make sure each
@@ -230,18 +253,25 @@ Update these two parameters to configure which jobs run.
     TASKS_TO_RUN="e3sm_diags,mpas_analysis,global_time_series,ilamb,livvkit,pcmdi_diags"
 
 Optionally, set ``EXPECTED_RESULTS_DIR`` to auto-populate Steps 1 and 2 of
-the Markdown report. ``EXPECTED_RESULTS_UPDATED_DATE`` is normally left
-empty -- it's auto-detected from the newest entry in that directory -- and
-only needs to be set to override the auto-detected date.
+the Markdown report. The per-dependency ``*_EXPECTED_RESULTS_DATE``
+parameters are normally left empty -- each is auto-detected from
+``env_description.txt`` under that directory (see Step 2 above) -- and only
+need to be set to override a specific dependency's auto-detected date.
 
 .. code-block::
 
     # Machine-specific expected-results directory (see Step 1 above).
     EXPECTED_RESULTS_DIR=""
 
-    # Date the expected results were last updated (see Step 2 above).
-    # Normally left empty; auto-detected from EXPECTED_RESULTS_DIR.
-    EXPECTED_RESULTS_UPDATED_DATE=""
+    # Date each dependency's expected results were actually produced (see
+    # Step 2 above). Normally left empty and auto-detected per dependency
+    # from EXPECTED_RESULTS_DIR; set one explicitly only to override its
+    # auto-detected date.
+    DIAGS_EXPECTED_RESULTS_DATE=""
+    E3SM_TO_CMIP_EXPECTED_RESULTS_DATE=""
+    MPAS_EXPECTED_RESULTS_DATE=""
+    ZI_EXPECTED_RESULTS_DATE=""
+    ZPPY_EXPECTED_RESULTS_DATE=""
 
 These parameters are unlikely to change between runs. They just let the test script know where to find files in your particular workspace. It is recommended to clone a new copy of the repos and use that for each ``_DIR`` parameter listed below. The script will change branches, so using a distinct copy means you won't get your work overwritten.
 
