@@ -239,21 +239,29 @@ create_links_acyc_climo_obs() {
       continue
     fi
 
-    # Match two date patterns (YYYYMM or YYYYMMDD) separated by _ or -
-    if [[ ${fname} =~ ([0-9]{6,8})[_-]([0-9]{6,8}) ]]; then
-      YYYYS="${BASH_REMATCH[1]}"
-      YYYYE="${BASH_REMATCH[2]}"
+    # Match two time patterns (YYYYMM or YYYYMMDD) separated by _ or -
+    if [[ $fname =~ ^(.+)\.([0-9]{4})([0-9]{2}){1,2}[-_]([0-9]{4})([0-9]{2}){1,2}\.nc$ ]]; then
+      SUBSTR="${BASH_REMATCH[1]}"   # everything before the .YYYY...
+      YYYYS="${BASH_REMATCH[2]}"    # start year (4 digits)
+      YYYYE="${BASH_REMATCH[4]}"    # end year (4 digits)
     else
       echo "Warning: Could not extract dates from ${fname}, basename of ${file}"
       continue
     fi
 
-    # Clip to specified year range
-    if [[ ${YYYYS} -lt ${begin_year} ]]; then YYYYS=${begin_year}; fi
-    if [[ ${YYYYE} -gt ${end_year} ]]; then YYYYE=${end_year}; fi
+    # Check if observation record overlaps the requested period
+    if [[ ${YYYYS} -gt ${end_year} || ${YYYYE} -lt ${begin_year} ]]; then
+      echo "create_links_acyc_climo_obs: ${fname} (years ${YYYYS}-${YYYYE}) does not overlap requested range ${begin_year}-${end_year}, skipping."
+      continue
+    fi
 
-    # Extract prefix before the date range (removes from .${YYYYS} or -${YYYYS})
-    SUBSTR="${fname%%[._-]${YYYYS}*}"
+    # Clip to specified year range
+    if [[ ${YYYYS} -lt ${begin_year} ]]; then
+      YYYYS="${begin_year}"
+    fi
+    if [[ ${YYYYE} -gt ${end_year} ]]; then
+      YYYYE="${end_year}"
+    fi
 
     ttag="$(printf "%04d" "${YYYYS}")01-$(printf "%04d" "${YYYYE}")12"
     tmp_file="tmp_combine_${ttag}.nc"
@@ -425,6 +433,12 @@ create_links_ts_obs() {
     else
 
       echo "Warning: Could not extract dates from ${fname}, basename of ${file}"
+      continue
+    fi
+
+    # Check if observation record overlaps the requested period
+    if [[ ${YYYYS} -gt ${end_year} || ${YYYYE} -lt ${begin_year} ]]; then
+      echo "create_links_ts_obs: ${fname} (years ${YYYYS}-${YYYYE}) does not overlap requested range ${begin_year}-${end_year}, skipping."
       continue
     fi
 
