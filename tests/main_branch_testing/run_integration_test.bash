@@ -1223,7 +1223,10 @@ phase_3_validation() {
     check_status_files "$LEGACY_310_BUNDLES_OUTPUT" "Legacy 3.1.0 Bundles" || all_good=false
     check_status_files "$LEGACY_300_BUNDLES_OUTPUT" "Legacy 3.0.0 Bundles" || all_good=false
 
+    local overall_ok=true
+
     if [ "$all_good" = false ]; then
+        overall_ok=false
         STATUS_FILE_CHECK_STATUS="failed"
         log_error "Some status checks failed!"
         checkpoint "Errors found in status files. Continue to pytest anyway?"
@@ -1247,6 +1250,7 @@ phase_3_validation() {
     if pytest tests/integration/test_last_year.py; then
         INTEGRATION_TEST_RESULTS+=("test_last_year.py: passed")
     else
+        overall_ok=false
         INTEGRATION_TEST_RESULTS+=("test_last_year.py: failed")
         log_warning "test_last_year.py had failures"
     fi
@@ -1255,6 +1259,7 @@ phase_3_validation() {
     if pytest tests/integration/test_bash_generation.py; then
         INTEGRATION_TEST_RESULTS+=("test_bash_generation.py: passed")
     else
+        overall_ok=false
         INTEGRATION_TEST_RESULTS+=("test_bash_generation.py: failed")
         log_warning "test_bash_generation.py had failures"
     fi
@@ -1263,6 +1268,7 @@ phase_3_validation() {
     if pytest tests/integration/test_campaign.py; then
         INTEGRATION_TEST_RESULTS+=("test_campaign.py: passed")
     else
+        overall_ok=false
         INTEGRATION_TEST_RESULTS+=("test_campaign.py: failed")
         log_warning "test_campaign.py had failures"
     fi
@@ -1271,6 +1277,7 @@ phase_3_validation() {
     if pytest tests/integration/test_defaults.py; then
         INTEGRATION_TEST_RESULTS+=("test_defaults.py: passed")
     else
+        overall_ok=false
         INTEGRATION_TEST_RESULTS+=("test_defaults.py: failed")
         log_warning "test_defaults.py had failures"
     fi
@@ -1279,6 +1286,7 @@ phase_3_validation() {
     if pytest tests/integration/test_bundles.py; then
         INTEGRATION_TEST_RESULTS+=("test_bundles.py: passed")
     else
+        overall_ok=false
         INTEGRATION_TEST_RESULTS+=("test_bundles.py: failed")
         log_warning "test_bundles.py had failures"
     fi
@@ -1289,13 +1297,14 @@ phase_3_validation() {
     log "Auto-launching the image checker (test_images.py) on a compute node..."
     local image_checker_ok=true
     if ! run_image_checker; then
+        overall_ok=false
         image_checker_ok=false
     fi
 
-    if [ "$image_checker_ok" = true ]; then
+    if [ "$overall_ok" = true ]; then
         log_success "Phase 3 automated tests complete!"
     else
-        log_error "Phase 3 automated tests completed with image-checker failures."
+        log_error "Phase 3 automated tests completed with failures."
     fi
 
     # ------------------------------------------------------------------
@@ -1304,7 +1313,7 @@ phase_3_validation() {
     generate_markdown_report
     log_success "Markdown report written: ${REPORT_FILE}"
 
-    [ "$image_checker_ok" = true ]
+    [ "$overall_ok" = true ]
 }
 
 # ============================================================================
@@ -1420,7 +1429,7 @@ generate_markdown_report() {
         [[ "$integration_result" == *": failed" ]] && _any_failure=true
     done
     if [[ "$_any_failure" == true ]]; then
-        report_append "_TODO: one or more steps above did not pass -- review the full \`integration_test_${TAG}.log\` (if you piped script output to it) and note any unexpected failures here._"
+        report_append "_TODO: one or more steps above did not pass -- review the full log captured from this script's stdout (for example, \`integration_test_runN.log\` if you used \`tee integration_test_runN.log\`) and note any unexpected failures here._"
         report_append ""
     fi
     unset _any_failure

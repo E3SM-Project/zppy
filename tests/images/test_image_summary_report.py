@@ -167,7 +167,7 @@ def test_module_entry_point_writes_report_to_stdout(
 def test_shell_invocation_appends_failing_summary_to_report(tmp_path: Path) -> None:
     summary: Path = tmp_path / "test_images_summary.md"
     report_file: Path = tmp_path / "report.md"
-    repo_root: Path = Path(__file__).resolve().parent.parent
+    repo_root: Path = Path(__file__).resolve().parents[2]
     summary.write_text(
         "\n".join(
             [
