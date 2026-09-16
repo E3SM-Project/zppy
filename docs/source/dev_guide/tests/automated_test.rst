@@ -332,7 +332,7 @@ D. Review the output
 
 Let's review the test script's output log.
 
-First, the unit tests. There are three blocks, starting with:
+First, the unit tests. Early in setup, you should see:
 
 .. code-block::
 
@@ -342,7 +342,7 @@ First, the unit tests. There are three blocks, starting with:
 
     Running zppy unit tests...
 
-and
+Later in setup, before the image-helper test files run, you should also see:
 
 .. code-block::
 
