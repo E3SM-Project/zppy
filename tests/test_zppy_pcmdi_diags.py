@@ -1,4 +1,6 @@
-from typing import List, Tuple
+import os
+import re
+from typing import Dict, List, Tuple
 from unittest.mock import patch
 
 import pytest
@@ -776,3 +778,72 @@ def test_add_pcmdi_dependencies(mock_exists):
         dependencies[0]
         == "/scripts/pcmdi_diags_mean_climate_model_vs_obs_2000-2010.status"
     )
+
+
+def test_create_links_acyc_climo_obs_date_parsing() -> None:
+    pattern = re.compile(
+        r"^(.+)\.([0-9]{4})([0-9]{2}){1,2}[-_]([0-9]{4})([0-9]{2}){1,2}\.nc$"
+    )
+
+    filenames = [
+        "obs.historical.GPCP_v2_3.00.Amon.pr.197901-201712.nc",
+        "obs.historical.ERA5.00.Amon.psl.197901-201912.nc",
+        "obs.historical.NOAA-20C.00.Amon.sfcWind.183601-201512.nc",
+        "obs.historical.ceres_ebaf_v4_1.00.Amon.rlus.200101-201812.nc",
+    ]
+
+    begin_year = 1985
+    end_year = 1994
+
+    results: Dict[str, str] = {}
+    for fname in filenames:
+        match = pattern.match(fname)
+        assert match is not None
+        substr = match.group(1)
+        yyyys = int(match.group(2))
+        yyyye = int(match.group(4))
+
+        if yyyys > end_year or yyyye < begin_year:
+            results[fname] = "skipped"
+            continue
+
+        if yyyys < begin_year:
+            yyyys = begin_year
+        if yyyye > end_year:
+            yyyye = end_year
+
+        ttag = f"{yyyys:04d}01-{yyyye:04d}12"
+        results[fname] = f"{substr}.{ttag}.AC.vTEST.nc"
+
+    assert results["obs.historical.GPCP_v2_3.00.Amon.pr.197901-201712.nc"] == (
+        "obs.historical.GPCP_v2_3.00.Amon.pr.198501-199412.AC.vTEST.nc"
+    )
+    assert results["obs.historical.ERA5.00.Amon.psl.197901-201912.nc"] == (
+        "obs.historical.ERA5.00.Amon.psl.198501-199412.AC.vTEST.nc"
+    )
+    assert results["obs.historical.NOAA-20C.00.Amon.sfcWind.183601-201512.nc"] == (
+        "obs.historical.NOAA-20C.00.Amon.sfcWind.198501-199412.AC.vTEST.nc"
+    )
+    # CERES 2001-2018 does not overlap 1985-1994, so it should be cleanly skipped
+    assert (
+        results["obs.historical.ceres_ebaf_v4_1.00.Amon.rlus.200101-201812.nc"]
+        == "skipped"
+    )
+
+
+def test_pcmdi_diags_bash_template_contains_overlap_check() -> None:
+    template_path = os.path.join(
+        os.path.dirname(__file__), "..", "zppy", "templates", "pcmdi_diags.bash"
+    )
+    with open(template_path, "r") as f:
+        content = f.read()
+
+    assert (
+        "create_links_acyc_climo_obs: ${fname} (years ${YYYYS}-${YYYYE}) does not overlap"
+        in content
+    )
+    assert (
+        "create_links_ts_obs: ${fname} (years ${YYYYS}-${YYYYE}) does not overlap"
+        in content
+    )
+    assert 'YYYYS="${BASH_REMATCH[2]}"    # start year (4 digits)' in content
