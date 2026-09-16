@@ -76,8 +76,24 @@ conservative -- better to surface a few extra candidate commits than miss
 the actual cause of a diff). If you've determined through other means
 (e.g. a discussion thread) that this auto-detected date is wrong -- for
 instance, the promoted results were confirmed to actually come from an
-earlier run -- set the matching ``*_EXPECTED_RESULTS_DATE`` in your cfg to
-override it.
+earlier run -- set the matching ``*_EXPECTED_RESULTS_DATE`` (or
+``*_LAST_TESTED_DATE``, see below) in your cfg to override it.
+
+``zppy-interfaces`` bundles two tasks, ``global_time_series`` and
+``pcmdi_diags``, that get refreshed independently of each other -- one can
+be updated well before the other. So rather than one ``ZI_*`` date, it gets
+two: ``ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE`` and
+``ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE``, each auto-detected (or
+overridable) independently, and each shown as its own row in the report.
+
+``e3sm_to_cmip`` and ``zppy`` have no dedicated task subdirectory of their
+own at all, so there's no per-task "expected results" file to read a
+production date from -- the only meaningful question for them is whether
+anything has changed since the last time this dependency was tested, full
+stop. So instead of ``*_EXPECTED_RESULTS_DATE`` they use
+``E3SM_TO_CMIP_LAST_TESTED_DATE`` and ``ZPPY_LAST_TESTED_DATE``, which are
+detected the same way but fall back to the earliest production date found
+across *all* tasks, since there's no task of their own to read.
 
 The automated report will list, for each dependency below, the commits/PRs
 merged on its *expected-results baseline branch* since that date -- i.e.
@@ -87,12 +103,8 @@ always the same branch this run checked out to test:
 * For the ``e3sm_to_cmip`` task: `e3sm_to_cmip <https://github.com/E3SM-Project/e3sm_to_cmip/commits/master>`_
 * For the ``e3sm_diags`` task: `e3sm_diags <https://github.com/E3SM-Project/e3sm_diags/commits/main>`_
 * For the ``mpas_analysis`` task: `MPAS-Analysis <https://github.com/MPAS-Dev/MPAS-Analysis/commits/develop/>`_
-* For the ``global_time_series`` and ``pcmdi_diags`` tasks: `zppy-interfaces <https://github.com/E3SM-Project/zppy-interfaces/commits/main>`_
+* For the ``global_time_series`` task and the ``pcmdi_diags`` task (reported as separate rows, though both point at the same repo): `zppy-interfaces <https://github.com/E3SM-Project/zppy-interfaces/commits/main>`_
 * For ``zppy`` itself: `zppy <https://github.com/E3SM-Project/zppy/commits/main>`_
-
-``e3sm_to_cmip`` and ``zppy`` have no dedicated task subdirectory of their
-own to read a date from, so their auto-detected date instead falls back to
-the earliest production date found across *all* tasks for those two.
 
 Each of these links is your dependency's ``*_EXPECTED_RESULTS_BRANCH``,
 which defaults to the matching ``*_BASE_BRANCH`` in your cfg -- so if
@@ -253,10 +265,11 @@ Update these two parameters to configure which jobs run.
     TASKS_TO_RUN="e3sm_diags,mpas_analysis,global_time_series,ilamb,livvkit,pcmdi_diags"
 
 Optionally, set ``EXPECTED_RESULTS_DIR`` to auto-populate Steps 1 and 2 of
-the Markdown report. The per-dependency ``*_EXPECTED_RESULTS_DATE``
-parameters are normally left empty -- each is auto-detected from
-``env_description.txt`` under that directory (see Step 2 above) -- and only
-need to be set to override a specific dependency's auto-detected date.
+the Markdown report. The per-dependency ``*_EXPECTED_RESULTS_DATE`` /
+``*_LAST_TESTED_DATE`` parameters are normally left empty -- each is
+auto-detected from ``env_description.txt`` under that directory (see Step 2
+above) -- and only need to be set to override a specific dependency's
+auto-detected date.
 
 .. code-block::
 
@@ -268,10 +281,18 @@ need to be set to override a specific dependency's auto-detected date.
     # from EXPECTED_RESULTS_DIR; set one explicitly only to override its
     # auto-detected date.
     DIAGS_EXPECTED_RESULTS_DATE=""
-    E3SM_TO_CMIP_EXPECTED_RESULTS_DATE=""
     MPAS_EXPECTED_RESULTS_DATE=""
-    ZI_EXPECTED_RESULTS_DATE=""
-    ZPPY_EXPECTED_RESULTS_DATE=""
+
+    # zppy-interfaces bundles two independently-refreshed tasks, so it gets
+    # two dates instead of one.
+    ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE=""
+    ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE=""
+
+    # e3sm_to_cmip and zppy have no task subdir of their own, so there's no
+    # "expected results" date to read -- these track when the dependency
+    # was last tested at all, auto-detected the same way.
+    E3SM_TO_CMIP_LAST_TESTED_DATE=""
+    ZPPY_LAST_TESTED_DATE=""
 
 These parameters are unlikely to change between runs. They just let the test script know where to find files in your particular workspace. It is recommended to clone a new copy of the repos and use that for each ``_DIR`` parameter listed below. The script will change branches, so using a distinct copy means you won't get your work overwritten.
 
