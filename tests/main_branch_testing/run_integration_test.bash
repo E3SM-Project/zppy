@@ -1295,10 +1295,8 @@ phase_3_validation() {
     # test_images.py -- now auto-launched via SLURM, no manual step needed.
     # ------------------------------------------------------------------
     log "Auto-launching the image checker (test_images.py) on a compute node..."
-    local image_checker_ok=true
     if ! run_image_checker; then
         overall_ok=false
-        image_checker_ok=false
     fi
 
     if [ "$overall_ok" = true ]; then
