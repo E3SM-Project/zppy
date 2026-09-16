@@ -44,18 +44,26 @@ Process
 
     ls -lt ${expected_results_dir}
 
-Set ``EXPECTED_RESULTS_DIR`` in your test cfg to this path, and the
-automated report will include this ``ls -lt`` output (and the date the
-expected results were last updated) for you automatically.
+Set ``EXPECTED_RESULTS_DIR`` in your test cfg to this path. The automated
+report no longer dumps the full ``ls -lt`` listing here -- it just
+auto-detects and reports the date of the most recently modified entry in
+that directory. That date becomes ``EXPECTED_RESULTS_UPDATED_DATE`` for
+Step 2 below automatically, so you no longer need to determine or type in
+that date by hand (you can still set ``EXPECTED_RESULTS_UPDATED_DATE``
+explicitly in the cfg if you ever need to override the auto-detected
+value).
 
 Step 2: Review changes since expected results were updated
 ==========================================================
 
-Now that we know the date the expected results are from, we can review what changes we'll be testing.
+Now that we know the date the expected results are from (auto-detected as
+``EXPECTED_RESULTS_UPDATED_DATE`` in Step 1 above), we can review what
+changes we'll be testing.
 
-Set ``EXPECTED_RESULTS_UPDATED_DATE`` in your test cfg to that date (e.g.
-``"2026-08-12"``), and the automated report will list, for each dependency
-below, the commits/PRs merged on its default branch since that date:
+The automated report will list, for each dependency below, the commits/PRs
+merged on its *expected-results baseline branch* since that date -- i.e.
+the branch the expected results were actually generated from, which is not
+always the same branch this run checked out to test:
 
 * For the ``e3sm_to_cmip`` task: `e3sm_to_cmip <https://github.com/E3SM-Project/e3sm_to_cmip/commits/master>`_
 * For the ``e3sm_diags`` task: `e3sm_diags <https://github.com/E3SM-Project/e3sm_diags/commits/main>`_
@@ -63,21 +71,33 @@ below, the commits/PRs merged on its default branch since that date:
 * For the ``global_time_series`` and ``pcmdi_diags`` tasks: `zppy-interfaces <https://github.com/E3SM-Project/zppy-interfaces/commits/main>`_
 * For ``zppy`` itself: `zppy <https://github.com/E3SM-Project/zppy/commits/main>`_
 
+Each of these links is your dependency's ``*_EXPECTED_RESULTS_BRANCH``,
+which defaults to the matching ``*_BASE_BRANCH`` in your cfg -- so if
+you're testing straight off a project's default branch, there's nothing
+extra to configure here. If instead ``*_BASE_BRANCH`` points at a
+variant/feature branch (e.g. rebased onto ``main``) whose expected results
+were still generated from a different branch, set that dependency's
+``*_EXPECTED_RESULTS_BRANCH`` explicitly to the branch the expected results
+actually came from. Otherwise the report would conflate genuine upstream
+drift on the expected-results baseline with commits that only exist on the
+branch under test. When the two differ, the report's table adds a "Branch
+tested" column so that's visible at a glance.
+
 For the remaining tasks (``climo``, ``ts``, ``tc_analysis``, ``ilamb``, ``livvkit``), we typically just use the associated package's latest release rather than making dev environments. As such, their latest development will have no impact on our tests unless we have started using one of their newer releases.
 
 The report's table looks like:
 
 .. code-block::
 
-    | Package | Changes since expected results were updated |
-    | --- | --- |
-    | [package name](link to package's commit log) | Links to all PRs merged since the expected results were updated |
+    | Package | Branch tested | Changes since expected results were updated |
+    | --- | --- | --- |
+    | [package name](link to expected-results baseline branch's commit log) | Branch this run tested, if different | Links to all PRs merged since the expected results were updated |
     ...
 
 Because this is generated from each repo's local git history, make sure each
-``*_DIR`` repo has a working default remote (the script refreshes the tested
-branch non-interactively from ``upstream`` when available, otherwise
-``origin``).
+``*_DIR`` repo has a working default remote (the script fetches the
+configured ``*_EXPECTED_RESULTS_BRANCH`` non-interactively from ``upstream``
+when available, otherwise ``origin``).
 
 The automated test script
 =========================
@@ -93,7 +113,7 @@ The automated test script handles the following steps from the manual testing pr
 
 It additionally:
 
-* Runs the "tests of the tests" (``tests/images/test_image_checker.py`` and ``tests/images/test_image_severity.py``), which validate the image-checking logic itself, independent of any particular run's output.
+* Runs the "tests of the tests" (``tests/images/test_image_checker.py``, ``tests/images/test_image_severity.py``, and ``tests/images/test_image_summary_report.py``), which validate the image-checking logic itself, independent of any particular run's output.
 * Writes an ``env_description.txt`` for each task (e.g. ``global_time_series/env_description.txt``), recording the commit hash of the relevant dev repo (or noting that a released package was used) plus the full ``conda list`` package versions for that task's environment.
 * Writes a Markdown report (``test_report_<TAG>.md``) summarizing all of the above, including the complete and failing-only image-check summary tables.
 
@@ -158,6 +178,20 @@ Update the ``_BASE_BRANCH`` parameters if you plan to test new features or bug f
     ZI_BASE_BRANCH="main"
     ZPPY_BASE_BRANCH="main"
 
+Leave the ``_EXPECTED_RESULTS_BRANCH`` parameters empty in the common case
+where you're testing straight off the branch above -- each defaults to its
+matching ``_BASE_BRANCH``. Only set one explicitly when its ``_BASE_BRANCH``
+is a variant/feature branch but the expected results you're comparing
+against were generated from a different branch (see Step 2 above).
+
+.. code-block::
+
+    DIAGS_EXPECTED_RESULTS_BRANCH=""
+    E3SM_TO_CMIP_EXPECTED_RESULTS_BRANCH=""
+    MPAS_EXPECTED_RESULTS_BRANCH=""
+    ZI_EXPECTED_RESULTS_BRANCH=""
+    ZPPY_EXPECTED_RESULTS_BRANCH=""
+
 Update the ``_ENV_TYPE`` parameters if you want to use E3SM-Unified rather than a dev environment. If you plan to only run a subset of tasks, you can set the ones you aren't running to use E3SM-Unified, so that the script doesn't spend time building a dev environment that won't be used.
 
 .. code-block::
@@ -195,7 +229,10 @@ Update these two parameters to configure which jobs run.
     # Comma-separated list of tasks to enable in utils.py.
     TASKS_TO_RUN="e3sm_diags,mpas_analysis,global_time_series,ilamb,livvkit,pcmdi_diags"
 
-Optionally, set these two parameters to auto-populate Steps 1 and 2 of the Markdown report.
+Optionally, set ``EXPECTED_RESULTS_DIR`` to auto-populate Steps 1 and 2 of
+the Markdown report. ``EXPECTED_RESULTS_UPDATED_DATE`` is normally left
+empty -- it's auto-detected from the newest entry in that directory -- and
+only needs to be set to override the auto-detected date.
 
 .. code-block::
 
@@ -203,6 +240,7 @@ Optionally, set these two parameters to auto-populate Steps 1 and 2 of the Markd
     EXPECTED_RESULTS_DIR=""
 
     # Date the expected results were last updated (see Step 2 above).
+    # Normally left empty; auto-detected from EXPECTED_RESULTS_DIR.
     EXPECTED_RESULTS_UPDATED_DATE=""
 
 These parameters are unlikely to change between runs. They just let the test script know where to find files in your particular workspace. It is recommended to clone a new copy of the repos and use that for each ``_DIR`` parameter listed below. The script will change branches, so using a distinct copy means you won't get your work overwritten.
@@ -310,7 +348,7 @@ Third, the integration tests.
 
 Errors here may actually be expected if the expected results haven't been updated yet to reflect a recently merged pull request. Another reason for errors on ``test_bundles.py`` in particular is if you didn't run all the jobs necessary (i.e., if you're running a partial test).
 
-Finally, the script auto-launches the image checker (``tests/integration/test_images.py``) as a SLURM job, waits for it, and folds its results straight into ``test_report_yyyymmdd_runN.md``: a "Complete summary table" section (the full contents of ``test_images_summary.md``) and, if any tests failed, a "Summary table -- only failing image-check tests, sorted by task" section. Review these tables (and the raw ``Captured stdout call`` output also embedded in the report) to decide whether the diffs are expected.
+Finally, the script auto-launches the image checker (``tests/integration/test_images.py``) as a SLURM job, waits for it, and folds its results straight into ``test_report_yyyymmdd_runN.md``: a "Complete summary table" section (the full contents of ``test_images_summary.md``) and, if any tests failed, a "Summary table -- only failing image-check tests, sorted by task" section. The report links directly to the SLURM job's ``.o``/``.e`` output files rather than embedding their contents (which duplicated the log and could render as an empty code block); open those files if you need the raw pytest output. Review the summary tables (and, if needed, the linked output files) to decide whether the diffs are expected.
 
 In the Markdown report, fill in the ``Results analysis`` section at the bottom with your conclusions (e.g. whether any diffs are expected, whether expected results should be updated).
 
