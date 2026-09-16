@@ -90,10 +90,37 @@ MPAS_EXISTING_ENV="${MPAS_EXISTING_ENV:-}"
 ZI_EXISTING_ENV="${ZI_EXISTING_ENV:-}"
 ZPPY_EXISTING_ENV="${ZPPY_EXISTING_ENV:-}"
 
+# Apply defaults for optional *_EXPECTED_RESULTS_BRANCH variables. Each
+# defaults to that component's own *_BASE_BRANCH (i.e. "assume expected
+# results were generated from whatever branch we're testing"). Override
+# in the config only when testing a variant/feature branch whose expected
+# results are still based on a different branch (typically the project's
+# default branch, e.g. "main") -- see Step 2 of the Markdown report.
+DIAGS_EXPECTED_RESULTS_BRANCH="${DIAGS_EXPECTED_RESULTS_BRANCH:-$DIAGS_BASE_BRANCH}"
+E3SM_TO_CMIP_EXPECTED_RESULTS_BRANCH="${E3SM_TO_CMIP_EXPECTED_RESULTS_BRANCH:-$E3SM_TO_CMIP_BASE_BRANCH}"
+MPAS_EXPECTED_RESULTS_BRANCH="${MPAS_EXPECTED_RESULTS_BRANCH:-$MPAS_BASE_BRANCH}"
+ZI_EXPECTED_RESULTS_BRANCH="${ZI_EXPECTED_RESULTS_BRANCH:-$ZI_BASE_BRANCH}"
+ZPPY_EXPECTED_RESULTS_BRANCH="${ZPPY_EXPECTED_RESULTS_BRANCH:-$ZPPY_BASE_BRANCH}"
+
 # Optional: used to auto-populate Step 1 / Step 2 of the Markdown report.
-# Leave empty to skip those sections.
+# Leave EXPECTED_RESULTS_DIR empty to skip those sections entirely.
 EXPECTED_RESULTS_DIR="${EXPECTED_RESULTS_DIR:-}"
+
+# EXPECTED_RESULTS_UPDATED_DATE is normally left empty and auto-detected
+# below from the most recently modified entry in EXPECTED_RESULTS_DIR, so
+# it doesn't need to be kept in sync by hand. Set it explicitly in the
+# config only to override that auto-detection.
 EXPECTED_RESULTS_UPDATED_DATE="${EXPECTED_RESULTS_UPDATED_DATE:-}"
+if [[ -z "$EXPECTED_RESULTS_UPDATED_DATE" && -n "$EXPECTED_RESULTS_DIR" && -d "$EXPECTED_RESULTS_DIR" ]]; then
+    _newest_entry="$(ls -t "$EXPECTED_RESULTS_DIR" 2>/dev/null | head -n 1)"
+    if [[ -n "$_newest_entry" ]]; then
+        EXPECTED_RESULTS_UPDATED_DATE="$(date -r "${EXPECTED_RESULTS_DIR}/${_newest_entry}" +%Y-%m-%d 2>/dev/null || true)"
+    fi
+    if [[ -z "$EXPECTED_RESULTS_UPDATED_DATE" ]]; then
+        echo "Warning: Could not auto-detect EXPECTED_RESULTS_UPDATED_DATE from ${EXPECTED_RESULTS_DIR}." >&2
+    fi
+    unset _newest_entry
+fi
 
 # Validate MACHINE value.
 case "$MACHINE" in
@@ -518,7 +545,13 @@ distribute_env_descriptions() {
             if [[ ! -f "$desc_file" ]]; then
                 continue
             fi
-            target_dir="${www_root%/}/zppy_${cfg#test_}_www/${UNIQUE_ID}/${case}/${task}"
+            # NOTE: the "www" value read from the generated cfg is already
+            # the fully-resolved per-cfg/per-run root (it already bakes in
+            # "zppy_<cfg>_www/<unique_id>"), so we only need to append
+            # <case>/<task> here. Appending "zppy_<cfg>_www/<unique_id>"
+            # again created a spurious duplicate subtree that the
+            # expected-results updater script never picks up.
+            target_dir="${www_root%/}/${case}/${task}"
             mkdir -p "$target_dir" 2>/dev/null || {
                 log_warning "Could not create ${target_dir}; skipping env description for ${cfg}/${task}"
                 continue
@@ -891,6 +924,7 @@ phase_1_setup() {
         log "Running tests of the image checker itself..."
         pytest tests/images/test_image_checker.py
         pytest tests/images/test_image_severity.py
+        pytest tests/images/test_image_summary_report.py
     )
     IMAGE_HELPER_UNIT_TEST_STATUS="passed"
     log_success "Image-checker/report unit tests passed"
@@ -1189,12 +1223,11 @@ generate_markdown_report() {
     report_append "## Step 1: Determine what the current expected results are"
     report_append ""
     if [[ -n "$EXPECTED_RESULTS_DIR" && -d "$EXPECTED_RESULTS_DIR" ]]; then
-        report_append '```bash'
-        report_append "ls -lt ${EXPECTED_RESULTS_DIR}"
-        report_append '```'
-        report_append '```'
-        ls -lt "$EXPECTED_RESULTS_DIR" >> "$REPORT_FILE" 2>/dev/null || true
-        report_append '```'
+        if [[ -n "$EXPECTED_RESULTS_UPDATED_DATE" ]]; then
+            report_append "The most recently updated entry in \`${EXPECTED_RESULTS_DIR}\` is from \`${EXPECTED_RESULTS_UPDATED_DATE}\`."
+        else
+            report_append "_Could not auto-detect an update date from \`${EXPECTED_RESULTS_DIR}\`; set EXPECTED_RESULTS_UPDATED_DATE in the config to override._"
+        fi
     else
         report_append "_TODO: set EXPECTED_RESULTS_DIR in the config to auto-populate this section._"
     fi
@@ -1204,15 +1237,15 @@ generate_markdown_report() {
     report_append "## Step 2: Review changes since expected results were updated"
     report_append ""
     if [[ -n "$EXPECTED_RESULTS_UPDATED_DATE" ]]; then
-        report_append "Commits merged on each repo's default branch since \`${EXPECTED_RESULTS_UPDATED_DATE}\`:"
+        report_append "Commits merged on each repo's *expected-results baseline branch* since \`${EXPECTED_RESULTS_UPDATED_DATE}\`. This is the branch the expected results were actually generated from, which is not always the same branch this run tested (see the \"Branch tested\" column when they differ):"
         report_append ""
-        report_append "| Package | Changes since expected results were updated |"
-        report_append "| --- | --- |"
-        _report_repo_changes "e3sm_to_cmip" "$E3SM_TO_CMIP_DIR" "$E3SM_TO_CMIP_BASE_BRANCH" "https://github.com/E3SM-Project/e3sm_to_cmip"
-        _report_repo_changes "e3sm_diags" "$E3SM_DIAGS_DIR" "$DIAGS_BASE_BRANCH" "https://github.com/E3SM-Project/e3sm_diags"
-        _report_repo_changes "mpas_analysis" "$MPAS_ANALYSIS_DIR" "$MPAS_BASE_BRANCH" "https://github.com/MPAS-Dev/MPAS-Analysis"
-        _report_repo_changes "zppy-interfaces" "$ZPPY_INTERFACES_DIR" "$ZI_BASE_BRANCH" "https://github.com/E3SM-Project/zppy-interfaces"
-        _report_repo_changes "zppy" "$ZPPY_DIR" "$ZPPY_BASE_BRANCH" "https://github.com/E3SM-Project/zppy"
+        report_append "| Package | Branch tested | Changes since expected results were updated |"
+        report_append "| --- | --- | --- |"
+        _report_repo_changes "e3sm_to_cmip" "$E3SM_TO_CMIP_DIR" "$E3SM_TO_CMIP_BASE_BRANCH" "$E3SM_TO_CMIP_EXPECTED_RESULTS_BRANCH" "https://github.com/E3SM-Project/e3sm_to_cmip"
+        _report_repo_changes "e3sm_diags" "$E3SM_DIAGS_DIR" "$DIAGS_BASE_BRANCH" "$DIAGS_EXPECTED_RESULTS_BRANCH" "https://github.com/E3SM-Project/e3sm_diags"
+        _report_repo_changes "mpas_analysis" "$MPAS_ANALYSIS_DIR" "$MPAS_BASE_BRANCH" "$MPAS_EXPECTED_RESULTS_BRANCH" "https://github.com/MPAS-Dev/MPAS-Analysis"
+        _report_repo_changes "zppy-interfaces" "$ZPPY_INTERFACES_DIR" "$ZI_BASE_BRANCH" "$ZI_EXPECTED_RESULTS_BRANCH" "https://github.com/E3SM-Project/zppy-interfaces"
+        _report_repo_changes "zppy" "$ZPPY_DIR" "$ZPPY_BASE_BRANCH" "$ZPPY_EXPECTED_RESULTS_BRANCH" "https://github.com/E3SM-Project/zppy"
     else
         report_append "_TODO: set EXPECTED_RESULTS_UPDATED_DATE in the config to auto-populate this table._"
     fi
@@ -1242,7 +1275,7 @@ generate_markdown_report() {
     report_append ""
     report_append "* zppy-interfaces unit tests: \`${ZI_UNIT_TEST_STATUS}\`"
     report_append "* zppy unit tests: \`${ZPPY_UNIT_TEST_STATUS}\`"
-    report_append "* Image-checker/report unit tests: \`${IMAGE_HELPER_UNIT_TEST_STATUS}\` (\`tests/images/test_image_checker.py\`, \`tests/images/test_image_severity.py\`; \`tests/test_image_summary_report.py\` is covered by \`tests/test_*.py\`)"
+    report_append "* Image-checker/report unit tests: \`${IMAGE_HELPER_UNIT_TEST_STATUS}\` (\`tests/images/test_image_checker.py\`, \`tests/images/test_image_severity.py\`, \`tests/images/test_image_summary_report.py\`)"
     report_append "* Output directory status files: \`${STATUS_FILE_CHECK_STATUS}\`"
     report_append "* Integration tests:"
     local integration_result
@@ -1250,8 +1283,22 @@ generate_markdown_report() {
         report_append "  * \`${integration_result}\`"
     done
     report_append ""
-    report_append "_TODO: review the full \`integration_test_${TAG}.log\` (if you piped script output to it) and note any unexpected failures here._"
-    report_append ""
+    # The point of this script is full automation: if every line above says
+    # "passed", there is nothing left to dig for in the raw log, so only
+    # point at it when something didn't pass.
+    local _any_failure=false
+    [[ "$ZI_UNIT_TEST_STATUS" != "passed" ]] && _any_failure=true
+    [[ "$ZPPY_UNIT_TEST_STATUS" != "passed" ]] && _any_failure=true
+    [[ "$IMAGE_HELPER_UNIT_TEST_STATUS" != "passed" ]] && _any_failure=true
+    [[ "$STATUS_FILE_CHECK_STATUS" != "passed" ]] && _any_failure=true
+    for integration_result in "${INTEGRATION_TEST_RESULTS[@]}"; do
+        [[ "$integration_result" == *": failed" ]] && _any_failure=true
+    done
+    if [[ "$_any_failure" == true ]]; then
+        report_append "_TODO: one or more steps above did not pass -- review the full \`integration_test_${TAG}.log\` (if you piped script output to it) and note any unexpected failures here._"
+        report_append ""
+    fi
+    unset _any_failure
 
     # --- Step 8: image checker (auto-launched) ---
     report_append "## Step 8: Run Python tests"
@@ -1263,44 +1310,18 @@ generate_markdown_report() {
     report_append "* Exit code: \`${IMAGE_CHECKER_EXIT_CODE:-unknown}\`"
     report_append "* Summary source: \`${IMAGE_CHECKER_SUMMARY_SOURCE:-unknown}\`"
     report_append ""
-    report_append "<details>"
-    report_append ""
-    report_append "<summary> Output </summary>"
-    report_append ""
-    report_append '```'
+    # The SLURM stdout/stderr files ARE the full output already; embedding
+    # an excerpt here just duplicates them (and produces an empty code
+    # block when the job failed before pytest wrote a "Captured stdout
+    # call" section), so just point at them directly.
     if [[ -n "${IMAGE_CHECKER_STDOUT:-}" && -f "${IMAGE_CHECKER_STDOUT:-}" ]]; then
-        if grep -q "Captured stdout call" "$IMAGE_CHECKER_STDOUT" 2>/dev/null; then
-            awk '
-                /Captured stdout call/ {
-                    if (capturing) {
-                        print ""
-                    }
-                    capturing=1
-                    print
-                    next
-                }
-                capturing && (
-                    /^_{5,}/ ||
-                    /^={5,}/ ||
-                    (/^-{5,}/ && $0 !~ /Captured stdout call/)
-                ) {
-                    capturing=0
-                    print ""
-                    next
-                }
-                capturing {
-                    print
-                }
-            ' "$IMAGE_CHECKER_STDOUT" >> "$REPORT_FILE" 2>/dev/null || true
-        else
-            cat "$IMAGE_CHECKER_STDOUT" >> "$REPORT_FILE" 2>/dev/null || true
-        fi
+        report_append "* Full output: \`${IMAGE_CHECKER_STDOUT}\`"
     else
-        echo "(image checker stdout log not found)" >> "$REPORT_FILE"
+        report_append "* Full output: _not found (expected at \`${IMAGE_CHECKER_STDOUT:-unknown}\`)_"
     fi
-    report_append '```'
-    report_append ""
-    report_append "</details>"
+    if [[ -n "${IMAGE_CHECKER_STDERR:-}" && -f "${IMAGE_CHECKER_STDERR:-}" && -s "${IMAGE_CHECKER_STDERR:-}" ]]; then
+        report_append "* Errors: \`${IMAGE_CHECKER_STDERR}\`"
+    fi
     report_append ""
 
     local summary_file="${SCRIPT_RUN_DIR}/test_images_summary_${TAG}.md"
@@ -1331,42 +1352,60 @@ generate_markdown_report() {
 
 # Helper for generate_markdown_report: append one repo's commit log since
 # EXPECTED_RESULTS_UPDATED_DATE as a Markdown table row.
+#
+# Two branches matter here and they are frequently NOT the same branch:
+#   - tested_branch: what this run actually checked out (e.g. a feature
+#     branch rebased onto main).
+#   - results_branch: the branch the *expected* (baseline) results were
+#     actually generated from (usually a project's long-lived default
+#     branch, e.g. "main"). This is what "changes since expected results
+#     were updated" needs to be measured against -- looking at
+#     tested_branch's own history would conflate "upstream drift on the
+#     baseline branch" with "commits unique to the branch under test",
+#     and always hardcoding the default branch would be wrong for setups
+#     that intentionally maintain expected results off a different branch.
 _report_repo_changes() {
     local label="$1"
     local repo_dir="$2"
-    local branch="$3"
-    local repo_url="$4"
+    local tested_branch="$3"
+    local results_branch="$4"
+    local repo_url="$5"
+
+    local tested_branch_col="\`${tested_branch}\`"
+    if [[ "$tested_branch" == "$results_branch" ]]; then
+        tested_branch_col="\`${tested_branch}\` (same as baseline)"
+    fi
 
     if [[ ! -d "$repo_dir" ]]; then
-        report_append "| [${label}](${repo_url}/commits/${branch}) | _repo not found at ${repo_dir}_ |"
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _repo not found at ${repo_dir}_ |"
         return
     fi
 
     local remote
     if ! remote=$(get_preferred_git_remote "$repo_dir"); then
-        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to identify a git remote for ${repo_dir}_ |"
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _unable to identify a git remote for ${repo_dir}_ |"
         return
     fi
 
     local log_ref=""
     if ! env GIT_TERMINAL_PROMPT=0 \
         GIT_SSH_COMMAND="ssh -oBatchMode=yes" \
-        git -C "$repo_dir" fetch "$remote" "$branch" >/dev/null 2>&1; then
-        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to fetch ${remote}/${branch}_ |"
+        git -C "$repo_dir" fetch "$remote" "$results_branch" >/dev/null 2>&1; then
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _unable to fetch ${remote}/${results_branch}_ |"
         return
     elif ! log_ref=$(git -C "$repo_dir" rev-parse FETCH_HEAD 2>/dev/null); then
-        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to resolve fetched ${remote}/${branch}_ |"
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _unable to resolve fetched ${remote}/${results_branch}_ |"
         return
     fi
 
     local commits
     if ! commits=$(git -C "$repo_dir" log "$log_ref" --since="${EXPECTED_RESULTS_UPDATED_DATE}" --oneline 2>/dev/null); then
-        report_append "| [${label}](${repo_url}/commits/${branch}) | _unable to inspect ${log_ref}_ |"
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _unable to inspect ${log_ref}_ |"
         return
     fi
 
     if [[ -z "$commits" ]]; then
-        report_append "| [${label}](${repo_url}/commits/${branch}) | None |"
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | None |"
         return
     fi
 
@@ -1385,7 +1424,7 @@ _report_repo_changes() {
     done <<< "$commits"
     links="${links%, }"
 
-    report_append "| [${label}](${repo_url}/commits/${branch}) | ${links} |"
+    report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${links} |"
 }
 
 # ============================================================================
