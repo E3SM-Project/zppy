@@ -371,6 +371,16 @@ IMAGE_HELPER_UNIT_TEST_STATUS="not run in this invocation"
 STATUS_FILE_CHECK_STATUS="not run in this invocation"
 declare -a INTEGRATION_TEST_RESULTS=()
 declare -A CAPTURED_ENV_TASKS=()
+# Populated by distribute_env_descriptions: cfg -> the per-cfg "_www" root
+# each task's env_description.txt gets copied under (before appending
+# <case>/<task>). Used by generate_markdown_report so the report can list
+# these prefixes once instead of repeating one full path per task.
+declare -A WWW_ROOT_BY_CFG=()
+# Populated by check_status_files: accumulated Markdown-formatted detail
+# on any non-OK status-file lines found. Reset at the start of the status
+# checks in phase_3_validation so it reflects only that final validation
+# pass, not any earlier phase_2 pre-checks. Used by generate_markdown_report.
+STATUS_FILE_ERRORS=""
 
 # Colors for output
 RED='\033[0;31m'
@@ -589,6 +599,7 @@ check_status_files() {
     else
         log_error "$name: Non-OK statuses found in ${dir}:"
         echo "$errors"
+        STATUS_FILE_ERRORS+="**${name}** (\`${dir}\`):"$'\n\n'"\`\`\`"$'\n'"${errors}"$'\n'"\`\`\`"$'\n\n'
         return 1
     fi
 }
@@ -676,6 +687,7 @@ distribute_env_descriptions() {
             log_warning "Could not determine www root from ${cfg_file}; skipping env-description copies for ${cfg}"
             continue
         fi
+        WWW_ROOT_BY_CFG["$cfg"]="$www_root"
         for task in "${TASKS_ARRAY[@]}"; do
             task="${task// /}"
             desc_file="${ENV_DESC_DIR}/${task}.txt"
@@ -1242,6 +1254,9 @@ phase_3_validation() {
     # ------------------------------------------------------------------
     log "Checking all status files..."
     local all_good=true
+    # Reset so the report only reflects this final validation pass, not
+    # phase_2_bundles_part2's earlier pre-check of the bundle outputs.
+    STATUS_FILE_ERRORS=""
 
     check_status_files "$V2_OUTPUT"                 "v2"                   || all_good=false
     check_status_files "$LEGACY_310_V2_OUTPUT"      "Legacy 3.1.0 v2"      || all_good=false
@@ -1359,12 +1374,18 @@ generate_markdown_report() {
     {
         echo "# ${DATE_STAMP} zppy test"
         echo ""
-        echo "Below, I follow the steps of the [automated testing docs page](https://docs.e3sm.org/zppy/_build/html/main/dev_guide/tests/automated_test.html)."
+        echo "See [automated testing docs page](https://docs.e3sm.org/zppy/_build/html/main/dev_guide/tests/automated_test.html) for info on setup."
         echo ""
     } > "$REPORT_FILE"
 
-    # --- Step 1: expected results directory (optional, auto-populated) ---
-    report_append "## Step 1: Determine what the current expected results are"
+    # --- Expected results directory (optional, auto-populated) ---
+    # NOTE: this used to be "Step 1" in the header text, matching the
+    # numbered steps on the docs page. That numbering only made sense when
+    # a human was following the docs page by hand; now that everything
+    # below is generated automatically, the numbers just drift out of sync
+    # with the docs page's own steps, so headers in this report no longer
+    # include them.
+    report_append "## Determine what the current expected results are"
     report_append ""
     if [[ -n "$EXPECTED_RESULTS_DIR" && -d "$EXPECTED_RESULTS_DIR" ]]; then
         report_append "Promotion date for each cfg/task under \`${EXPECTED_RESULTS_DIR}\` -- i.e. when its expected-results files were last copied into place. This is **not** necessarily when those results were actually produced (see Step 2, which uses a different, content-based date for exactly that reason)."
@@ -1399,8 +1420,8 @@ generate_markdown_report() {
         report_append ""
     fi
 
-    # --- Step 2: changes since expected results were updated ---
-    report_append "## Step 2: Review changes since expected results were updated"
+    # --- Changes since expected results were updated ---
+    report_append "## Review changes since expected results were updated"
     report_append ""
     report_append "Commits merged on each repo's *expected-results baseline branch* (see the \"Branch tested\" column when it differs from the branch this run actually tested) since that dependency's expected results were actually **produced** (for \`e3sm_to_cmip\`/\`zppy\`, which have no per-task expected results of their own, since they were last **tested** instead -- see the \`*_LAST_TESTED_DATE\` config variables). The \"Since\" date is read from the \`Generated:\` line of the promoted \`env_description.txt\` (the earliest one found across every cfg being tested) -- deliberately not the promotion date from Step 1 above, since results normally sit under review before being promoted, so the promotion date routinely lags well behind the run that actually produced them (set the matching \`*_EXPECTED_RESULTS_DATE\`/\`*_LAST_TESTED_DATE\` in the config to override any date below when you know better, e.g. from a discussion thread). \`zppy-interfaces\` bundles two independently-refreshed tasks, so its row is split into \`global_time_series\` and \`pcmdi_diags\`, each with its own date."
     report_append ""
@@ -1426,12 +1447,30 @@ generate_markdown_report() {
         while IFS= read -r desc_file; do
             task="${desc_file##*/}"
             task="${task%.txt}"
-            report_append "| ${task} | \`${desc_file}\` (also copied to each cfg's \`_www\` output dir) |"
+            report_append "| ${task} | \`${desc_file}\` |"
         done < <(find "$ENV_DESC_DIR" -maxdepth 1 -type f -name '*.txt' | sort)
     else
         report_append "| _none_ | _env_description.txt files were not captured in ${ENV_DESC_DIR}_ |"
     fi
     report_append ""
+
+    # Each cfg also gets its own copy of every task's env_description.txt
+    # under its own "_www" output tree (at <prefix>/<case>/<task>/, see
+    # distribute_env_descriptions), so list the per-cfg prefixes once here
+    # instead of repeating all 9 cfgs' full paths on every row above.
+    if [[ ${#WWW_ROOT_BY_CFG[@]} -gt 0 ]]; then
+        report_append "Each task's \`env_description.txt\` above is also copied to \`<prefix>/<case>/<task>/env_description.txt\` under that cfg's \`_www\` output dir, for each of the following per-cfg prefixes:"
+        report_append ""
+        report_append "| Cfg | \`_www\` prefix |"
+        report_append "| --- | --- |"
+        local cfg
+        for cfg in "${CFGS_ARRAY[@]}"; do
+            cfg="${cfg// /}"
+            [[ -n "${WWW_ROOT_BY_CFG[$cfg]:-}" ]] || continue
+            report_append "| ${cfg} | \`${WWW_ROOT_BY_CFG[$cfg]}\` |"
+        done
+        report_append ""
+    fi
 
     # --- Unit tests / status files / integration tests summary ---
     report_append "## Automated test script results"
@@ -1440,6 +1479,12 @@ generate_markdown_report() {
     report_append "* zppy unit tests: \`${ZPPY_UNIT_TEST_STATUS}\`"
     report_append "* Image-checker/report unit tests: \`${IMAGE_HELPER_UNIT_TEST_STATUS}\` (\`tests/images/test_image_checker.py\`, \`tests/images/test_image_severity.py\`, \`tests/images/test_image_summary_report.py\`)"
     report_append "* Output directory status files: \`${STATUS_FILE_CHECK_STATUS}\`"
+    if [[ "$STATUS_FILE_CHECK_STATUS" == "failed" && -n "$STATUS_FILE_ERRORS" ]]; then
+        # Show exactly what `grep -v "OK" "${dir}"/*status` turned up for
+        # each output directory that had non-OK entries, rather than
+        # making the reader re-run it themselves.
+        report_append "$STATUS_FILE_ERRORS"
+    fi
     report_append "* Integration tests:"
     local integration_result
     for integration_result in "${INTEGRATION_TEST_RESULTS[@]}"; do
@@ -1463,8 +1508,8 @@ generate_markdown_report() {
     fi
     unset _any_failure
 
-    # --- Step 8: image checker (auto-launched) ---
-    report_append "## Step 8: Run Python tests"
+    # --- Image checker (auto-launched) ---
+    report_append "## Run Python tests"
     report_append ""
     report_append "The image checker (\`pytest tests/integration/test_images.py\`) was launched automatically as a SLURM job and no longer requires a manual compute-node step."
     report_append ""
@@ -1491,7 +1536,12 @@ generate_markdown_report() {
     report_append "### Complete summary table"
     report_append ""
     if [[ -f "$summary_file" ]]; then
-        cat "$summary_file" >> "$REPORT_FILE"
+        # test_images_summary.md carries its own "# Summary of test
+        # results" H1 title. Dropping it here (rather than `cat`-ing the
+        # whole file) avoids introducing a second, same-level H1 in the
+        # middle of the report, which broke the heading hierarchy below
+        # our own "### Complete summary table" heading.
+        awk 'NR==1 && /^# / { next } { print }' "$summary_file" >> "$REPORT_FILE"
     else
         echo "_test_images_summary.md not found._" >> "$REPORT_FILE"
     fi
@@ -1574,8 +1624,14 @@ _report_repo_changes() {
         return
     fi
 
+    # Use the start of since_date's day, explicitly, rather than the bare
+    # date. We can't tell whether a commit made on since_date itself landed
+    # before or after the expected results were produced that same day, so
+    # we err on the side of caution and always include the whole day
+    # (some git versions/date-parsers can otherwise be inconsistent about
+    # whether a bare "YYYY-MM-DD" --since value includes that day at all).
     local commits
-    if ! commits=$(git -C "$repo_dir" log "$log_ref" --since="${since_date}" --oneline 2>/dev/null); then
+    if ! commits=$(git -C "$repo_dir" log "$log_ref" --since="${since_date} 00:00:00" --oneline 2>/dev/null); then
         report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | _unable to inspect ${log_ref}_ |"
         return
     fi
