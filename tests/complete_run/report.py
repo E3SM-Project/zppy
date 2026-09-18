@@ -17,6 +17,7 @@ from collections import OrderedDict
 from typing import Any, Dict, List, Sequence
 
 from tests.complete_run.layout import RunLayout, read_json_object, write_json
+from tests.complete_run.provenance import REPO_CONDA_PACKAGES
 from tests.complete_run.slurm import job_passed
 from tests.complete_run.validate import reviewable_count
 from tests.integration.image_severity import REVIEWABLE_SEVERITIES
@@ -57,6 +58,7 @@ def render_report(status: Dict[str, Any], layout: RunLayout) -> Dict[str, Any]:
         "cfgs": list(status.get("cfgs") or []),
         "tasks": list(status.get("tasks") or []),
         "repos": _mapping(status.get("repos")),
+        "unified": _mapping(status.get("unified")),
         "status_sweep": {
             "ran": bool(sweep),
             "passed": bool(sweep.get("passed", False)),
@@ -121,6 +123,7 @@ def render_markdown(report: Dict[str, Any]) -> str:
         f"* Terminal stage: `{report.get('stage') or 'unknown'}`",
         f"* Machine: `{report.get('machine') or 'unknown'}`",
         _baseline_line(_mapping(report.get("baseline"))),
+        *filter(None, [_unified_line(_mapping(report.get("unified")))]),
         "",
     ]
 
@@ -157,6 +160,15 @@ def _baseline_line(baseline: Dict[str, Any]) -> str:
     return f"* Baseline: `{baseline['tag']}` (produced {produced})"
 
 
+def _unified_line(unified: Dict[str, Any]) -> str:
+    """Name the E3SM-Unified release the run's released packages came from."""
+    if not unified.get("version"):
+        return ""
+    script: str = str(unified.get("resolved_load_script") or "")
+    suffix: str = f" (`{os.path.basename(script)}`)" if script else ""
+    return f"* E3SM-Unified: {unified['version']}{suffix}"
+
+
 def _repos_section(report: Dict[str, Any]) -> List[str]:
     """Render what each repository was tested at."""
     repos: Dict[str, Any] = _mapping(report.get("repos"))
@@ -170,8 +182,18 @@ def _repos_section(report: Dict[str, Any]) -> List[str]:
             "| --- | --- | --- | --- |",
         ]
     )
+    unified: Dict[str, Any] = _mapping(report.get("unified"))
+    packages: Dict[str, Any] = _mapping(unified.get("packages"))
     for name in sorted(repos):
         entry: Dict[str, Any] = _mapping(repos[name])
+        if entry.get("environment_type") == "unified":
+            package: str = str(REPO_CONDA_PACKAGES.get(name, name))
+            version: str = str(packages.get(package, "")) or "unknown"
+            lines.append(
+                f"| `{name}` | — | — | E3SM-Unified {unified.get('version') or '?'}"
+                f" (`{package}` {version}) |"
+            )
+            continue
         sha: str = str(entry.get("sha", "")) or "n/a"
         lines.append(
             f"| `{name}` | `{entry.get('branch', 'n/a')}` | `{sha[:12]}` | "
