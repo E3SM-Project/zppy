@@ -258,7 +258,9 @@ Update these two parameters to configure which jobs run.
 
     # Comma-separated list of zppy cfg names to generate and submit.
     # These correspond to generated filenames: test_weekly_<name>_<machine>.cfg
-    # Any name containing "bundle" is treated as a bundle cfg and re-submitted in Phase 2.
+    # Any name containing "bundle" is treated as a bundle cfg: it's re-submitted
+    # in Phase 2, and its presence here is also what determines whether Phase 3
+    # runs test_bundles.py at all (skipped if no bundle cfg is included).
     CFGS_TO_RUN="weekly_bundles,weekly_comprehensive_v2,weekly_comprehensive_v3,weekly_legacy_3.1.0_bundles,weekly_legacy_3.1.0_comprehensive_v2,weekly_legacy_3.1.0_comprehensive_v3,weekly_legacy_3.0.0_bundles,weekly_legacy_3.0.0_comprehensive_v2,weekly_legacy_3.0.0_comprehensive_v3"
 
     # Comma-separated list of tasks to enable in utils.py.
@@ -377,7 +379,7 @@ Second, the output directories status. It should look like the following:
     ...
     ✓ All status files clean!
 
-If some status files were unsuccessful, you'll want to run the following to review the errors:
+If some status files were unsuccessful, the Markdown report's "Automated test script results" section already includes why, for every output directory that failed the check -- either the non-``OK`` lines that ``grep -v "OK" "${dir}"/*status`` found, or a note that the directory was missing or had no ``*status`` files at all (which also counts as a failed check, since there was nothing to confirm as clean). You don't need to re-run the grep yourself, but if you want to dig further into a specific failure:
 
 .. code-block:: bash
 
@@ -397,7 +399,9 @@ Third, the integration tests.
     test_defaults.py
     test_bundles.py
 
-Errors here may actually be expected if the expected results haven't been updated yet to reflect a recently merged pull request. Another reason for errors on ``test_bundles.py`` in particular is if you didn't run all the jobs necessary (i.e., if you're running a partial test).
+Errors here may actually be expected if the expected results haven't been updated yet to reflect a recently merged pull request.
+
+``test_bundles.py`` is only run if ``CFGS_TO_RUN`` actually includes a ``*bundle*`` cfg (e.g. ``weekly_bundles``) -- it can't pass against jobs that were never submitted. If you're running a partial test whose ``CFGS_TO_RUN`` leaves bundle cfgs out entirely, the report shows ``test_bundles.py: skipped (no _bundles cfg in CFGS_TO_RUN)`` instead of a failure, and no action is needed. Errors on ``test_bundles.py`` when a bundle cfg *is* included are still possible if that cfg's jobs didn't finish successfully (e.g. Phase 2 wasn't reached, or a partial subset of tasks was run).
 
 Finally, the script auto-launches the image checker (``tests/integration/test_images.py``) as a SLURM job, waits for it, and folds its results straight into ``test_report_yyyymmdd_runN.md``: a "Complete summary table" section (the full contents of ``test_images_summary.md``) and, if any tests failed, a "Summary table -- only failing image-check tests, sorted by task" section. The report links directly to the SLURM job's ``.o``/``.e`` output files rather than embedding their contents (which duplicated the log and could render as an empty code block); open those files if you need the raw pytest output. Review the summary tables (and, if needed, the linked output files) to decide whether the diffs are expected.
 
