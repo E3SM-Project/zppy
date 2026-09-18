@@ -209,16 +209,18 @@ def build_batch_script(
     job_name: str,
     output_prefix: str,
     directives: Sequence[str],
-    conda_activation_cmd: str,
+    conda_profile: str,
     env_name: str,
     workdir: str,
     body: str,
 ) -> str:
     """Build a batch script that activates an environment and runs ``body``.
 
-    A batch shell is not a login shell, so the machine's conda activation
-    command has to run before ``conda activate``. ``set +u`` brackets it because
-    conda's own initialization references unset variables.
+    A batch shell is not a login shell, so conda has to be initialized from its
+    profile script before ``conda activate`` works. Nothing is taken from the
+    submitter's own shell setup (``~/.bashrc``, aliases), which differs from
+    person to person. ``set +u`` brackets it because conda's own initialization
+    references unset variables.
     """
     directive_block: str = "\n".join(directives)
     return f"""#!/bin/bash
@@ -230,8 +232,7 @@ def build_batch_script(
 
 set -e
 set +u
-source ~/.bashrc
-{conda_activation_cmd}
+source {conda_profile}
 conda activate {env_name}
 set -u
 cd {workdir}
