@@ -607,7 +607,7 @@ def _stage_validate(run: _Run) -> None:
     # A run is only promotable if it describes itself: the images it produced,
     # and the small settings baselines the cheaper tests compare against.
     status["image_counts"] = validate.write_image_lists(layout, run.cfgs)
-    validate.capture_settings_baselines(worktree, layout, run.cfgs)
+    validate.capture_settings_baselines(worktree, layout, run.cfgs, zppy_env)
 
     # An image difference is only interpretable alongside what changed in the
     # environment, so the comparison goes on every viewer page and in the
