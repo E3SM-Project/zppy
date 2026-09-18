@@ -35,10 +35,12 @@ from tests.complete_run.environments import (
     ENV_TYPE_DEV,
     ENV_TYPE_UNIFIED,
     ENV_TYPES,
+    SOLVERS,
     Environment,
     create_environment,
     environment_from_status,
     environments_by_task,
+    resolve_solver,
     unified_environment,
 )
 from tests.complete_run.layout import (
@@ -345,6 +347,7 @@ def _stage_prepare(run: _Run) -> None:
             "environment": environment.name,
             "environment_type": environment.env_type,
             "environment_source": environment_file or spec.env_file(),
+            "solver": resolve_solver(run.args.solver),
         }
     run.status["repos"] = repos
 
@@ -367,6 +370,8 @@ def _build_environments(
     concurrent solves on a shared login node are not always welcome.
     """
 
+    solver: str = resolve_solver(run.args.solver)
+
     def build(item: Tuple[RepoSpec, Checkout, str]) -> Environment:
         spec, checkout, environment_file = item
         return create_environment(
@@ -377,6 +382,7 @@ def _build_environments(
             existing_env=run.args.existing_envs.get(spec.name, ""),
             allow_existing=run.args.allow_existing_envs,
             environment_file=environment_file,
+            solver=solver,
         )
 
     workers: int = max(1, run.args.parallel_envs)
@@ -840,6 +846,15 @@ def _build_parser() -> argparse.ArgumentParser:
         "--allow-existing-envs",
         action="store_true",
         help="Reuse an environment whose name this run would have created.",
+    )
+    parser.add_argument(
+        "--solver",
+        choices=SOLVERS,
+        default="mamba",
+        help=(
+            "Tool that solves and creates the environments; falls back to conda "
+            "if mamba is not installed. Everything else uses conda."
+        ),
     )
     parser.add_argument(
         "--parallel-envs",
