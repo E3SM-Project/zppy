@@ -240,3 +240,70 @@ def test_unified_package_list_loads_unified_first(monkeypatch) -> None:
     assert seen[0][:2] == ["bash", "-c"]
     assert seen[0][2].startswith("source load_unified.sh")
     assert seen[0][2].endswith("conda list")
+
+
+UNIFIED_LIST = """# packages in environment at /lcrc/soft/climate/e3sm-unified/e3smu_1_13_0/chrysalis/pixi_login/.pixi/envs/default:
+#
+# Name                    Version                   Build  Channel
+e3sm_diags                3.2.0              pyhc364b38_0    conda-forge
+mpas-analysis             1.15.0             pyhcf101f3_0    conda-forge
+numpy                     2.3.1              py313h0_0       conda-forge
+unrelated-package         9.9                0               conda-forge
+zppy-interfaces           0.2.1              pyhc364b38_0    conda-forge
+"""
+
+
+def test_describe_unified_reads_the_version_the_run_actually_used(tmp_path) -> None:
+    # A cfg only says "load_latest", so the version has to come from what ran.
+    real = tmp_path / "load_e3sm_unified_1.13.0_chrysalis.sh"
+    real.write_text("")
+    latest = tmp_path / "load_latest_e3sm_unified_chrysalis.sh"
+    latest.symlink_to(real)
+
+    unified = provenance.describe_unified(UNIFIED_LIST, str(latest))
+
+    assert unified["version"] == "1.13.0"
+    assert unified["resolved_load_script"] == str(real)
+    assert unified["packages"] == {
+        "e3sm_diags": "3.2.0",
+        "mpas-analysis": "1.15.0",
+        "numpy": "2.3.1",
+        "zppy-interfaces": "0.2.1",
+    }
+
+
+def test_describe_unified_falls_back_to_the_load_script_name(tmp_path) -> None:
+    script = tmp_path / "load_e3sm_unified_1.12.1_chrysalis.sh"
+    script.write_text("")
+    assert provenance.describe_unified("", str(script))["version"] == "1.12.1"
+
+
+def test_manifest_lists_repositories_run_from_unified(checkout: Checkout) -> None:
+    from tests.complete_run.environments import unified_environment
+    from tests.complete_run.params import MACHINE_PROFILES
+
+    unified = provenance.describe_unified(UNIFIED_LIST)
+    manifest = provenance.build_manifest(
+        tag="t",
+        machine="chrysalis",
+        checkouts=[],
+        environments={
+            "e3sm_diags": unified_environment(
+                "e3sm_diags", MACHINE_PROFILES["chrysalis"]
+            )
+        },
+        cfgs=[],
+        tasks=[],
+        zppy_version="v3.2.0",
+        unified=unified,
+    )
+    repos = manifest["repos"]
+    recorded = manifest["unified"]
+    assert isinstance(repos, dict) and isinstance(recorded, dict)
+    assert repos["e3sm_diags"] == {
+        "environment_type": "unified",
+        "unified_version": "1.13.0",
+        "package": "e3sm_diags",
+        "package_version": "3.2.0",
+    }
+    assert recorded["version"] == "1.13.0"

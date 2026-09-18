@@ -275,3 +275,21 @@ def test_failed_jobs_point_at_their_logs_on_scratch(paths) -> None:
     markdown = report_module.render_markdown(report_module.render_report(status, paths))
     assert "/lcrc/globalscratch/me/zppy_complete_run/tag/output" in markdown
     assert "scratch" in markdown
+
+
+def test_report_names_the_unified_release(paths) -> None:
+    status = _passing_status()
+    status["repos"]["e3sm_diags"] = {"environment_type": "unified"}
+    status["unified"] = {
+        "version": "1.13.0",
+        "resolved_load_script": "/lcrc/soft/load_e3sm_unified_1.13.0_chrysalis.sh",
+        "packages": {"e3sm_diags": "3.2.0"},
+    }
+    markdown = report_module.render_markdown(report_module.render_report(status, paths))
+    assert (
+        "* E3SM-Unified: 1.13.0 (`load_e3sm_unified_1.13.0_chrysalis.sh`)" in markdown
+    )
+    assert (
+        "| `e3sm_diags` | — | — | E3SM-Unified 1.13.0 (`e3sm_diags` 3.2.0) |"
+        in markdown
+    )

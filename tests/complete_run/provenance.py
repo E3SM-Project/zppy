@@ -39,6 +39,32 @@ MANIFEST_FILENAME: str = "manifest.json"
 GENERATED_FORMAT: str = "%Y-%m-%d %H:%M:%S"
 _GENERATED_PATTERN = re.compile(r"^Generated:\s*(\S+)")
 
+# The header `conda list` prints, naming the environment it listed. For
+# E3SM-Unified the path carries the version: .../e3smu_1_13_0/...
+_PACKAGE_LIST_HEADER = re.compile(r"^# packages in environment at (\S+?):?\s*$", re.M)
+_UNIFIED_DIR_VERSION = re.compile(r"e3smu_(\d+)_(\d+)_(\d+)")
+_UNIFIED_SCRIPT_VERSION = re.compile(r"load_e3sm_unified_(\d+(?:\.\d+)+)_")
+
+# The conda package behind each repository the run can take from E3SM-Unified,
+# plus the other packages whose versions most often explain a difference.
+REPO_CONDA_PACKAGES: Dict[str, str] = {
+    "e3sm_diags": "e3sm_diags",
+    "e3sm_to_cmip": "e3sm_to_cmip",
+    "mpas_analysis": "mpas-analysis",
+    "zppy_interfaces": "zppy-interfaces",
+}
+UNIFIED_KEY_PACKAGES: tuple = (
+    *REPO_CONDA_PACKAGES.values(),
+    "zppy",
+    "livvkit",
+    "ilamb",
+    "nco",
+    "python",
+    "numpy",
+    "xarray",
+    "xcdat",
+)
+
 _UNIFIED_REPOSITORY_LINE: str = (
     "Repository: N/A (uses a released package via the unified environment)"
 )
@@ -118,6 +144,42 @@ def conda_package_list(environment: Environment) -> str:
     if not output:
         return f"(unable to list packages for {label})"
     return output
+
+
+def describe_unified(package_list: str, load_script: str = "") -> Dict[str, object]:
+    """Describe the E3SM-Unified environment a run used.
+
+    The version is read from the environment ``conda list`` actually listed,
+    whose path names it (``.../e3smu_1_13_0/...``), falling back to the load
+    script the ``load_latest`` link resolved to. A cfg only says "latest", so
+    without this record nothing would say which release a baseline was built
+    with.
+    """
+    header = _PACKAGE_LIST_HEADER.search(package_list)
+    prefix: str = header.group(1) if header else ""
+    resolved: str = os.path.realpath(load_script) if load_script else ""
+
+    version: str = ""
+    from_dir = _UNIFIED_DIR_VERSION.search(prefix)
+    from_script = _UNIFIED_SCRIPT_VERSION.search(os.path.basename(resolved))
+    if from_dir:
+        version = ".".join(from_dir.groups())
+    elif from_script:
+        version = from_script.group(1)
+
+    packages: Dict[str, str] = {}
+    for line in package_list.splitlines():
+        fields: List[str] = line.split()
+        if len(fields) >= 2 and fields[0] in UNIFIED_KEY_PACKAGES:
+            packages[fields[0]] = fields[1]
+
+    return {
+        "version": version,
+        "prefix": prefix,
+        "load_script": load_script,
+        "resolved_load_script": resolved,
+        "packages": packages,
+    }
 
 
 def export_environment_file(environment: Environment, destination: str) -> str:
@@ -276,9 +338,27 @@ def build_manifest(
     cfgs: Sequence[str],
     tasks: Sequence[str],
     zppy_version: str,
+    unified: Dict[str, object] | None = None,
 ) -> Dict[str, object]:
-    """Build the machine-readable record of what this run tested."""
+    """Build the machine-readable record of what this run tested.
+
+    Every repository appears in ``repos``, including those run from
+    E3SM-Unified, which record the Unified version and their package version
+    instead of a commit.
+    """
     repos: Dict[str, Dict[str, str]] = {}
+    unified_packages = (unified or {}).get("packages")
+    unified_packages = unified_packages if isinstance(unified_packages, dict) else {}
+    for name, released in environments.items():
+        if released.env_type == ENV_TYPE_DEV:
+            continue
+        package: str = REPO_CONDA_PACKAGES.get(name, name)
+        repos[name] = {
+            "environment_type": released.env_type,
+            "unified_version": str((unified or {}).get("version", "")),
+            "package": package,
+            "package_version": str(unified_packages.get(package, "")),
+        }
     for checkout in checkouts:
         environment = environments.get(checkout.name)
         repos[checkout.name] = {
@@ -293,7 +373,7 @@ def build_manifest(
         }
 
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "tag": tag,
         "machine": machine,
         "generated": datetime.now(timezone.utc).isoformat(),
@@ -301,6 +381,7 @@ def build_manifest(
         "cfgs": list(cfgs),
         "tasks": list(tasks),
         "repos": repos,
+        "unified": unified or {},
     }
 
 
