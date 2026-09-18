@@ -11,9 +11,7 @@ from tests.integration.image_checker import (
     set_up_and_run_image_checker,
 )
 from tests.integration.utils import get_expansions
-
-V3_CASE_NAME = "v3.LR.historical_0051"
-V2_CASE_NAME = "v2.LR.historical_0201"
+from tests.integration.weekly_cfgs import WEEKLY_CFGS
 
 
 def intersect_tasks(
@@ -25,143 +23,18 @@ def intersect_tasks(
 def prepare_test_configs(
     expansions: Dict, diff_dir_suffix: str, requested_tasks: List[str]
 ) -> List[tuple]:
-    """Prepare test configurations based on expansions."""
-    test_configs = []
-
-    # Weekly tests
-    print("Preparing weekly cfg tests")
-    if "weekly_comprehensive_v2" in expansions["cfgs_to_run"]:
-        available_tasks = ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "comprehensive_v2",
-                V2_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
+    """Prepare one image check per selected weekly cfg."""
+    return [
+        (
+            cfg.test_name,
+            cfg.case,
+            expansions,
+            diff_dir_suffix,
+            intersect_tasks(list(cfg.image_tasks), requested_tasks),
         )
-
-    if "weekly_comprehensive_v3" in expansions["cfgs_to_run"]:
-        # Adds pcmdi_diags
-        available_tasks = [
-            "e3sm_diags",
-            "mpas_analysis",
-            "global_time_series",
-            "ilamb",
-            "pcmdi_diags",
-        ]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "comprehensive_v3",
-                V3_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
-
-    if "weekly_bundles" in expansions["cfgs_to_run"]:
-        # No mpas_analysis
-        available_tasks = ["e3sm_diags", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "bundles",
-                V3_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
-
-    # Legacy 3.1.0 comprehensive tests
-    print("Preparing legacy 3.1.0 cfg tests")
-    if "weekly_legacy_3.1.0_comprehensive_v2" in expansions["cfgs_to_run"]:
-        available_tasks = ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "legacy_3.1.0_comprehensive_v2",
-                V2_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
-
-    if "weekly_legacy_3.1.0_comprehensive_v3" in expansions["cfgs_to_run"]:
-        available_tasks = ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "legacy_3.1.0_comprehensive_v3",
-                V3_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
-
-    if "weekly_legacy_3.1.0_bundles" in expansions["cfgs_to_run"]:
-        # No mpas_analysis
-        available_tasks = ["e3sm_diags", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "legacy_3.1.0_bundles",
-                V3_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
-
-    # Legacy 3.0.0 comprehensive tests
-    print("Preparing legacy 3.0.0 cfg tests")
-    if "weekly_legacy_3.0.0_comprehensive_v2" in expansions["cfgs_to_run"]:
-        available_tasks = ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "legacy_3.0.0_comprehensive_v2",
-                V2_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
-
-    if "weekly_legacy_3.0.0_comprehensive_v3" in expansions["cfgs_to_run"]:
-        available_tasks = ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "legacy_3.0.0_comprehensive_v3",
-                V3_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
-
-    if "weekly_legacy_3.0.0_bundles" in expansions["cfgs_to_run"]:
-        # No mpas_analysis
-        available_tasks = ["e3sm_diags", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "legacy_3.0.0_bundles",
-                V3_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
-
-    return test_configs
+        for cfg in WEEKLY_CFGS
+        if cfg.name in expansions["cfgs_to_run"]
+    ]
 
 
 def map_cfg_to_test_name(cfg: str) -> str:
@@ -248,20 +121,20 @@ def run_test(
 
 
 def test_images():
-    # To test a different branch, set this to True, and manually set the expansions.
-    TEST_DIFFERENT_EXPANSIONS = False
-    if TEST_DIFFERENT_EXPANSIONS:
-        expansions = dict()
-        # Example settings:
-        expansions["expected_dir"] = "/lcrc/group/e3sm/public_html/zppy_test_resources/"
-        expansions["user_www"] = (
-            "/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/"
-        )
-        expansions["unique_id"] = "test_zppy_20250401"
-        diff_dir_suffix = "_test_pr699_try6"
-    else:
-        expansions = get_expansions()
-        diff_dir_suffix = ""
+    """Compare a run's plots against the promoted baseline.
+
+    The run and the baseline are both read from the shared complete-run root:
+    `ZPPY_COMPLETE_RUN_DIR` names the run under test, defaulting to whatever
+    `get_expansions` resolves, and the baseline is whichever run `latest-main`
+    points at. Set `ZPPY_COMPLETE_RUN_BASELINE` to compare against a different
+    promoted run, and `ZPPY_IMAGE_DIFF_SUFFIX` to keep a previous attempt's
+    diffs.
+    """
+    expansions = get_expansions(
+        run_dir=os.environ.get("ZPPY_COMPLETE_RUN_DIR") or None,
+        baseline_dir=os.environ.get("ZPPY_COMPLETE_RUN_BASELINE") or None,
+    )
+    diff_dir_suffix = os.environ.get("ZPPY_IMAGE_DIFF_SUFFIX", "")
 
     test_results_dict: Dict[str, Results] = dict()
     requested_tasks: List[str] = list(expansions["tasks_to_run"])

@@ -13,3 +13,4 @@ tests/integration/image_check_failures*
 
 # Sphinx documentation
 docs/_build/
+tests/integration/generated/complete_run_settings.json

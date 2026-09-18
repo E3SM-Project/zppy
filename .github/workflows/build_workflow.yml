@@ -107,10 +107,12 @@ jobs:
       - name: Install `zppy` Package
         run: python -m pip install .
 
-      # Does not run the integration tests, which require server access
+      # Does not run the integration tests, which require server access.
+      # tests/images holds the unit tests for the image checker itself, which
+      # the complete run test relies on to produce a trustworthy verdict.
       - name: Run Unit Tests
         run: |
-          pytest tests/test_*.py
+          pytest tests/test_*.py tests/images
 
   # If the branch updates documentation, then the docs will need to be updated.
   publish-docs:
