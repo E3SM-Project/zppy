@@ -11,6 +11,7 @@ from mache import MachineInfo
 from matplotlib import pyplot as plt
 from PIL import Image, ImageChops, ImageDraw
 
+from tests.complete_run.layout import RUN_SEGMENT as BASELINE_RUN_SEGMENT
 from tests.integration import image_severity
 from tests.integration.image_severity import Comparison
 
@@ -118,11 +119,30 @@ def set_up_and_run_image_checker(
     base_diff_dir = (
         f"{actual_images_dir}image_check_failures_{cfg_specifier}{diff_dir_suffix}"
     )
+    # The baseline is the www output of the promoted run, not a copy of it, so
+    # the expected images live under the same layout as the actual ones.
+    if expansions.get("baseline_www"):
+        # The complete run names cfgs by their full template name, which begins
+        # with "weekly_"; this module names the same cfgs without it.
+        cfg_name = f"weekly_{cfg_specifier}"
+        expected_images_dir = (
+            f"{expansions['baseline_www']}zppy_{cfg_name}_www/"
+            f"{BASELINE_RUN_SEGMENT}/{case_name}"
+        )
+        expected_images_list = (
+            f"{expansions['baseline_image_lists']}image_list_{cfg_name}.txt"
+        )
+    else:
+        # A machine with no promoted baseline yet.
+        expected_images_dir = f"{expansions['expected_dir']}expected_{cfg_specifier}"
+        expected_images_list = (
+            f"{expansions['expected_dir']}image_list_expected_{cfg_specifier}.txt"
+        )
     d: Dict[str, str] = {
         "actual_images_dir": actual_images_dir,
-        "expected_images_dir": f"{expansions['expected_dir']}expected_{cfg_specifier}",
+        "expected_images_dir": expected_images_dir,
         "diff_dir": _get_unused_diff_dir(base_diff_dir),
-        "expected_images_list": f"{expansions['expected_dir']}image_list_expected_{cfg_specifier}.txt",
+        "expected_images_list": expected_images_list,
     }
     if d["diff_dir"] != base_diff_dir:
         print(

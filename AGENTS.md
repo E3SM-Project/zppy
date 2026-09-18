@@ -131,219 +131,117 @@ Multiple files cover DevOps for `zppy`. The most important is `conda/dev.yml` wh
 
 ### Testing
 
-You should _not_ run tests. However, it is important for you to understand how humans will run the tests. The following code is an example of the integration testing we do weekly on the `main` branch. When testing pull requests, we typically reduce the number of tests run to the minimum relevant set. Again, this code block is just for context and you yourself should _not_ run it.
+You should _not_ run tests. However, it is important for you to understand how
+humans will run them.
 
-Step 1: Set up environments for tasks and run `zppy-interfaces` unit tests
+There are two tiers:
 
-```bash
-lcrc_conda # Bash function to activate conda.
+1. **Unit tests** — `pytest tests/test_*.py`. No HPC access needed; this is what
+   CI runs on every pull request.
+2. **The complete run test** — the weekly integration test on the `main` branch.
+   It builds development environments for `zppy` and the four packages whose
+   tasks it launches (`e3sm_diags`, `e3sm_to_cmip`, `MPAS-Analysis`,
+   `zppy-interfaces`), submits the weekly cfgs to SLURM, and checks the
+   resulting plots against expected results.
 
-# Set up e3sm_to_cmip env
-cd ~/ez/e3sm_to_cmip
-git status # Check that branch is `master`, and for "nothing to commit, working tree clean"
-git fetch upstream master
-git checkout master
-git reset --hard upstream/master
-git log --oneline # Check that last commit matches https://github.com/E3SM-Project/e3sm_to_cmip/commits/master/
-rm -rf build
-conda clean --all --y
-conda env create -f conda-env/dev.yml -n test-e3sm-to-cmip-master-yyyymmdd # Use today's date
-conda activate test-e3sm-to-cmip-master-yyyymmdd
-python -m pip install .
-
-# Set up e3sm_diags env
-cd ~/ez/e3sm_diags
-git status # Check that branch is `main`, and for "nothing to commit, working tree clean"
-git fetch upstream main
-git checkout main
-git reset --hard upstream/main
-git log --oneline # Check that last commit matches https://github.com/E3SM-Project/e3sm_diags/commits/main
-rm -rf build
-conda clean --all --y
-conda env create -f conda-env/dev.yml -n test-e3sm-diags-main-yyyymmdd # Use today's date
-conda activate test-diags-main-yyyymmdd
-python -m pip install .
-
-# Set up MPAS-Analysis env
-cd ~/ez/MPAS-Analysis
-git status # Check that branch is `develop`, and for "nothing to commit, working tree clean"
-git fetch upstream develop
-git checkout develop
-git reset --hard upstream/develop
-git log --oneline # Check that last commit matches https://github.com/MPAS-Dev/MPAS-Analysis/commits/develop/
-rm -rf build
-conda clean --all --y
-conda env create -f conda-env/dev.yml -n test-mpas-analysis-develop-yyyymmdd # Use today's date
-conda activate test-mpas-analysis-develop-yyyymmdd
-python -m pip install .
-
-# Set up zppy-interfaces env
-cd ~/ez/zppy-interfaces
-git status # Check that branch is `main`, and for "nothing to commit, working tree clean"
-git fetch upstream main
-git checkout main
-git reset --hard upstream/main
-git log --oneline # Check that last commit matches https://github.com/E3SM-Project/zppy-interfaces/commits/main
-rm -rf build
-conda clean --all --y
-conda env create -f conda/dev.yml -n test-zi-main-yyyymmdd # Use today's date
-conda activate test-zi-main-yyyymmdd
-python -m pip install .
-
-# Run zppy-interfaces tests
-pytest tests/unit/global_time_series/test_*.py
-pytest tests/unit/pcmdi_diags/test_*.py
-```
-
-Step 2: Set up `zppy` environment and run `zppy` unit tests
+The complete run test is driven by `tests/complete_run/`, orchestrated from
+`tests/complete_run/automation.py`. A human runs it with a single command:
 
 ```bash
-# zppy itself #################################################################
-cd ~/ez/zppy
-git status # Check that branch is `main`, and for "nothing to commit, working tree clean"
-git fetch upstream main
-git checkout -b test-zppy-main-yyyymmdd upstream/main # Use today's date
-git log --oneline # Check that last commit matches https://github.com/E3SM-Project/zppy/commits/main
-rm -rf build
-conda clean --all --y
-conda env create -f conda/dev.yml -n test-zppy-main-yyyymmdd # Use today's date
-conda activate test-zppy-main-yyyymmdd
-python -m pip install .
-pytest tests/test_*.py
+python -m tests.complete_run.automation --machine chrysalis --account e3sm
 ```
 
-Step 3: Edit `tests/integration/utils.py` to properly set up integration tests
+Key properties to keep in mind when changing this code:
 
-```python
-TEST_SPECIFICS: Dict[str, Any] = {
-    # This is the NCO path.
-    # Keep as "" to use the production-version NCO commands.
-    # Set to a specific path to use development-version NCO commands.
-    "nco_path": "",
-    # These are custom environment_commands for specific tasks.
-    # Never set these to "", because they will print the line
-    # `environment_commands = ""` for the corresponding task,
-    # thus overriding the value set higher up in the cfg.
-    # That is, there will be no environment set.
-    # (`environment_commands = ""` only redirects to Unified
-    # if specified under the [default] task)
-    "e3sm_to_cmip_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-e3sm-to-cmip-master-yyyymmdd",
-    "diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-e3sm-diags-main-yyyymmdd",
-    "mpas_analysis_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-mpas-analysis-develop-yyyymmdd",
-    "global_time_series_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-zi-main-yyyymmdd",
-    "livvkit_environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
-    "pcmdi_diags_environment_commands": "source /gpfs/fs1/home/ac.forsyth2/miniforge3/etc/profile.d/conda.sh; conda activate test-zi-main-yyyymmdd",
-    # This is the environment setup for other tasks.
-    # Leave as "" to use the latest Unified environment. (Or specify Unified path directly, as below).
-    "environment_commands": "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh",
-    # For a complete test, run the set of latest cfgs and at least one set of legacy cfgs
-    "cfgs_to_run": [
-        "weekly_bundles",
-        "weekly_comprehensive_v2",
-        "weekly_comprehensive_v3",
-        "weekly_legacy_3.1.0_bundles",
-        "weekly_legacy_3.1.0_comprehensive_v2",
-        "weekly_legacy_3.1.0_comprehensive_v3",
-        "weekly_legacy_3.0.0_bundles",
-        "weekly_legacy_3.0.0_comprehensive_v2",
-        "weekly_legacy_3.0.0_comprehensive_v3",
-    ],
-    "tasks_to_run": [
-        "e3sm_diags",
-        "mpas_analysis",
-        "global_time_series",
-        "ilamb",
-        "livvkit",
-        "pcmdi_diags",
-    ],
-    "unique_id": "test_zppy_main_branch_yyyymmdd",
-}
+- **Repositories are used through detached `git worktree` checkouts of one
+  resolved commit.** A run must never commit, switch branches, or otherwise
+  modify a developer's clone. Code that checks out a branch in a developer's
+  repository is a regression.
+- **Configuration is passed as arguments, never written into source.** The run
+  drives cfg generation through `python -m tests.integration.utils` flags; it
+  does not edit `TEST_SPECIFICS` in `tests/integration/utils.py`.
+- **`env_description.txt` has a fixed format** (see
+  `tests/complete_run/provenance.py`). Every task's plots carry one, including
+  in promoted baselines and older expected-results directories, and
+  maintainers and tools read the `Generated:` line to date them per task.
+  Changing the format silently breaks that. (The report dates the baseline as
+  a whole from its `manifest.json`.)
+- **Every stage writes `status.json`**, so an interrupted run can resume and a
+  crashed one still produces a report. A resumed run rebuilds its environments
+  and selections from that file; stages must not rely on in-memory state that
+  only `prepare` produces.
+- **Anything that exercises zppy runs in the environment under test**, via
+  `Environment.run_args` (`conda run -n <env>`). A bare `zppy` or
+  `python -m pytest` would use the controller's environment, not the commit
+  being tested.
+- **Tests go through the real CLI** (`automation.main([...])` or
+  `_build_parser().parse_args`), not hand-built `argparse.Namespace` objects,
+  which is how a flag the parser never defined once went unnoticed.
+- **Three environment modes**, selected per repository with `--env-type`:
+  `dev` (solve the repo's dev.yml afresh), `unified` (E3SM-Unified), and
+  `baseline` (rebuild what the baseline was produced with). Every run exports
+  `environments/<repo>.yml` via `conda env export` so `baseline` is possible --
+  `conda list` output, which `env_description.txt` carries, is readable but
+  cannot rebuild an environment. Note this is *not* frozen-environment testing,
+  which the team decided against; it exists so a branch can be evaluated against
+  known-good dependencies.
+- **Every image viewer and report states how the environment differed from the
+  baseline's** (`tests/complete_run/envdiff.py`). This is not decoration: in a
+  fresh-solve run the dependency list *is* the finding, and in a
+  `--env-type <repo>=baseline` run a non-empty diff means the reproduction
+  failed and the image differences are not attributable to code. The comparison
+  ignores `name:` and `prefix:`, which differ on every run by design.
+- **Runs are written to a shared, group-writable root**, not a personal
+  directory, so any maintainer can inspect and promote any run. The cfg
+  templates no longer encode whose account is running.
+- **A run is its own baseline material.** Expected results are not a copy of a
+  run; `baselines/latest-main` is a symlink pointing at one. Promotion
+  (`python -m tests.complete_run.promote`) flips that link, so it is atomic,
+  instant, and does not destroy the previous baseline. Code that copies a run
+  over a baseline directory is a regression.
+- **A complete run never promotes on its own.** Promotion is always a separate,
+  explicit command, and it refuses a run that did not pass or came from a
+  feature branch unless overridden.
+
+Layout (see `tests/complete_run/layout.py`, the single source of truth):
+
+```
+<shared root>/runs/<tag>/     one immutable run: www/, image_lists/, settings/,
+                              image_check/, manifest.json, reports
+<shared root>/baselines/latest-main -> ../runs/<tag>
+<scratch>/zppy_complete_run/<tag>/   intermediate data: output/ (zppy post
+                              output, job logs) and worktrees/
 ```
 
-A few things are worth pointing out here:
-- The environment `zppy` runs in can, and often is, distinct from the environment that the tasks run in. Each task's `.bash` file begins with `{{ environment_commands }}`, which specifies the environment to use. That is why we had to create a fresh environment for some packages earlier. In the next step, we will run `tests/integration/utils.py`, which will set the proper `environment_commands` value for each task.
-- There are 3 main test configuration files: `bundles`, `comprehensive_v2`, `comprehensive_v3`. There are also 3 versions of these tests: the most recent ones, the files as they existed when `v3.1.0` was released, and as they existed when `v3.0.0` were released. The latter two categories are "legacy" tests in the sense that they allow us to test backwards compatibility.
-- Specific tasks to run can be toggled on/off so that only relevant jobs will be launched during testing.
+Intermediate data goes to per-user scratch (`/lcrc/globalscratch/$USER` on
+Chrysalis) because it is large and worthless after validation. Anything a
+baseline needs from it must be copied into the run directory during
+`validate`; never make a baseline or a later run read from scratch, which is
+purged. The integration tests find a run's locations through
+`tests/integration/generated/complete_run_settings.json`, which cfg generation
+writes into the run's worktree.
 
-Step 4: Launch jobs
+Note two naming conventions for the same cfgs: the complete run uses the full
+template name (`weekly_comprehensive_v3`), while `tests/integration/image_checker.py`
+uses it without the `weekly_` prefix (`comprehensive_v3`). Doubling the prefix
+is an easy mistake; `RunLayout.www_case_dir` takes the full name.
 
-```bash
-git diff # Check the diff of tests/integration/utils.py
-python tests/integration/utils.py # Generate the actual cfgs we'll use for testing
+Test selection is configurable. The weekly cfgs, the case each runs against,
+and the tasks whose plots are image-checked are defined once, in
+`tests/integration/weekly_cfgs.py`; `DEFAULT_CFGS_TO_RUN` and
+`test_images.py` both read that table, and `tests/test_weekly_cfgs.py` fails
+if it disagrees with the templates. Adding a plotting task to a weekly cfg
+means adding it to `image_tasks` there. Legacy cfgs exist only to exercise
+older cfg syntax; one that has become a copy of a current cfg apart from its
+paths should be removed, not kept. `DEFAULT_TASKS_TO_RUN` is in
+`tests/complete_run/params.py`.
+When testing a pull request, a human typically reduces these to the minimum
+relevant set with `--cfg` and `--task`.
 
-zppy -c tests/integration/generated/test_weekly_bundles_chrysalis.cfg
-zppy -c tests/integration/generated/test_weekly_comprehensive_v2_chrysalis.cfg
-zppy -c tests/integration/generated/test_weekly_comprehensive_v3_chrysalis.cfg
+Each task's `.bash` file begins with `{{ environment_commands }}`, which
+specifies the environment that task runs in. That environment is usually
+distinct from the one `zppy` itself runs in, which is why the complete run test
+builds several.
 
-zppy -c tests/integration/generated/test_weekly_legacy_3.1.0_bundles_chrysalis.cfg
-zppy -c tests/integration/generated/test_weekly_legacy_3.1.0_comprehensive_v2_chrysalis.cfg
-zppy -c tests/integration/generated/test_weekly_legacy_3.1.0_comprehensive_v3_chrysalis.cfg
-
-zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_bundles_chrysalis.cfg
-zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v2_chrysalis.cfg
-zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v3_chrysalis.cfg
-```
-
-Step 5: Once bundles jobs finish, rerun them to launch any remaining jobs
-
-```bash
-# Check bundles status
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_bundles_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
-grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.1.0_bundles_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
-grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.0.0_bundles_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
-grep -v "OK" *status # Check for any errors. No results is good.
-
-# Now, run bundles part 2 (bundles tests require a second run):
-cd ~/ez/zppy
-git status # Confirm branch and environment are unchanged (they might be different if we've done other work while jobs were running)
-zppy -c tests/integration/generated/test_weekly_bundles_chrysalis.cfg
-zppy -c tests/integration/generated/test_weekly_legacy_3.1.0_bundles_chrysalis.cfg
-zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_bundles_chrysalis.cfg
-```
-
-Step 6: Review finished runs
-
-```bash
-### v2  ###
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_comprehensive_v2_output/test_zppy_main_branch_yyyymmdd/v2.LR.historical_0201/post/scripts
-grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.1.0_comprehensive_v2_output/test_zppy_main_branch_yyyymmdd/v2.LR.historical_0201/post/scripts
-grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.0.0_comprehensive_v2_output/test_zppy_main_branch_yyyymmdd/v2.LR.historical_0201/post/scripts
-grep -v "OK" *status # Check for any errors. No results is good.
-
-### v3 ###
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_comprehensive_v3_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
-grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.1.0_comprehensive_v3_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
-grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.0.0_comprehensive_v3_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
-grep -v "OK" *status # Check for any errors. No results is good.
-
-### bundles ###
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_bundles_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
-grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.1.0_bundles_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
-grep -v "OK" *status # Check for any errors. No results is good.
-cd /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_legacy_3.0.0_bundles_output/test_zppy_main_branch_yyyymmdd/v3.LR.historical_0051/post/scripts
-grep -v "OK" *status # Check for any errors. No results is good.
-```
-
-Step 7: Run Python tests
-
-```bash
-cd ~/ez/zppy
-git status # Confirm branch and environment are unchanged (they might be different if we've done other work while jobs were running)
-pytest tests/integration/test_bash_generation.py
-pytest tests/integration/test_campaign.py
-pytest tests/integration/test_defaults.py
-pytest tests/integration/test_last_year.py
-pytest tests/integration/test_bundles.py
-salloc --nodes=1 --partition=debug --time=02:00:00 --account=e3sm
-# We need to reactivate conda now that we're on a compute node
-lcrc_conda # Bash function to activate conda
-conda activate test-zppy-main-yyyymmdd
-pytest tests/integration/test_images.py
-```
+For the full procedure, including the manual fallback, see
+`docs/source/dev_guide/tests/`.
