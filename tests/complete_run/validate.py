@@ -14,7 +14,7 @@ import os
 import shutil
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from tests.complete_run.commands import run_command_status
 from tests.complete_run.envdiff import EnvironmentDiff
@@ -341,16 +341,40 @@ def collect_artifacts(workdir: str, results_dir: str) -> List[str]:
 # not part of the baseline it offers.
 _DIFF_DIR_MARKER: str = "image_check_failures"
 
-# Where each small baseline comes from in the zppy working tree.
-_SETTINGS_SOURCES: Dict[str, str] = {
-    "expected_bash_files": "test_bash_generation_output/post/scripts",
-    "test_defaults_expected_files": "test_defaults_output/post/scripts",
-    "test_campaign_cryosphere_expected_files": "test_campaign_cryosphere_output/post/scripts",
-    "test_campaign_cryosphere_override_expected_files": "test_campaign_cryosphere_override_output/post/scripts",
-    "test_campaign_high_res_v1_expected_files": "test_campaign_high_res_v1_output/post/scripts",
-    "test_campaign_none_expected_files": "test_campaign_none_output/post/scripts",
-    "test_campaign_water_cycle_expected_files": "test_campaign_water_cycle_output/post/scripts",
-    "test_campaign_water_cycle_override_expected_files": "test_campaign_water_cycle_override_output/post/scripts",
+
+@dataclass(frozen=True)
+class _SettingsSource:
+    """How one small baseline is produced, mirroring the test that checks it."""
+
+    # tests/integration/<cfg>.cfg, a dry run: it writes scripts and settings
+    # into ``<cfg>_output/post/scripts`` relative to the repo, and submits
+    # nothing.
+    cfg: str
+    # Removed before comparing, exactly as the matching test removes them.
+    prune: Tuple[str, ...] = ()
+
+
+# Each test regenerates its output, prunes it, diffs it against the baseline,
+# and then deletes it when it passes. So the baselines are regenerated here
+# rather than collected from whatever the tests left behind.
+_SETTINGS_SOURCES: Dict[str, _SettingsSource] = {
+    "expected_bash_files": _SettingsSource("test_bash_generation"),
+    "test_defaults_expected_files": _SettingsSource(
+        "test_defaults", prune=("*.bash", "global_time_series_0001-0020_dir")
+    ),
+    **{
+        f"test_campaign_{campaign}_expected_files": _SettingsSource(
+            f"test_campaign_{campaign}", prune=("*.bash",)
+        )
+        for campaign in (
+            "cryosphere",
+            "cryosphere_override",
+            "high_res_v1",
+            "none",
+            "water_cycle",
+            "water_cycle_override",
+        )
+    },
 }
 
 
@@ -394,33 +418,59 @@ def write_image_lists(layout: RunLayout, cfgs: Sequence[str]) -> Dict[str, int]:
 
 
 def capture_settings_baselines(
-    workdir: str, layout: RunLayout, cfgs: Sequence[str]
+    workdir: str,
+    layout: RunLayout,
+    cfgs: Sequence[str],
+    environment: Environment,
 ) -> List[str]:
-    """Copy the small settings and bash baselines out of the working tree.
+    """Regenerate the small settings and bash baselines into the run.
 
-    These are produced by the cheaper integration tests, which write into the
-    repository. The run works from a throwaway worktree, so they have to be
-    captured before it is removed.
+    Each comes from a dry-run cfg that writes scripts and settings files in
+    seconds, without submitting anything. It is produced with the zppy under
+    test and pruned exactly as its test prunes it, so a later run compares
+    like with like.
     """
     os.makedirs(layout.settings, exist_ok=True)
     captured: List[str] = []
 
-    for name, relative_source in _SETTINGS_SOURCES.items():
-        source: str = os.path.join(workdir, relative_source)
-        if not os.path.isdir(source):
-            logger.warning("No settings baseline material at %s", source)
+    for name, source_spec in _SETTINGS_SOURCES.items():
+        output_dir: str = os.path.join(workdir, f"{source_spec.cfg}_output")
+        scripts_dir: str = os.path.join(output_dir, "post", "scripts")
+        shutil.rmtree(output_dir, ignore_errors=True)
+        returncode, output = run_command_status(
+            environment.run_args(
+                ["zppy", "-c", f"tests/integration/{source_spec.cfg}.cfg"]
+            ),
+            cwd=workdir,
+        )
+        if returncode != 0 or not os.path.isdir(scripts_dir):
+            logger.warning(
+                "Could not generate the %s baseline from %s.cfg:\n%s",
+                name,
+                source_spec.cfg,
+                output[-1000:],
+            )
+            shutil.rmtree(output_dir, ignore_errors=True)
             continue
+
+        # Provenance files carry a timestamp, so they would differ on every run.
+        for pattern in ("provenance*", *source_spec.prune):
+            for stale in glob.glob(os.path.join(scripts_dir, pattern)):
+                if os.path.isdir(stale):
+                    shutil.rmtree(stale)
+                else:
+                    os.remove(stale)
+
         destination: str = layout.settings_baseline(name)
         shutil.rmtree(destination, ignore_errors=True)
         try:
-            shutil.copytree(source, destination)
+            shutil.copytree(scripts_dir, destination)
         except OSError as error:
             logger.warning("Could not capture %s: %s", name, error)
-            continue
-        # Provenance files carry a timestamp, so they would differ on every run.
-        for stale in glob.glob(os.path.join(destination, "provenance*")):
-            os.remove(stale)
-        captured.append(destination)
+        else:
+            captured.append(destination)
+        finally:
+            shutil.rmtree(output_dir, ignore_errors=True)
 
     bundle_source: str = layout.status_dir("weekly_bundles")
     if "weekly_bundles" in cfgs and os.path.isdir(bundle_source):
