@@ -48,7 +48,6 @@ class MachineProfile:
     # zppy's post-processing output. "{initial}" is the username's first letter,
     # for Perlmutter's /pscratch/sd/<initial>/<user> layout.
     scratch_template: str
-    conda_activation_cmd: str
     unified_env_cmd: str
     # Directives appended to the image-checker batch script. These mirror the
     # `salloc` command documented for running the image checker by hand. The
@@ -67,7 +66,6 @@ MACHINE_PROFILES: Dict[str, MachineProfile] = {
     "chrysalis": MachineProfile(
         name="chrysalis",
         scratch_template="/lcrc/globalscratch/{username}",
-        conda_activation_cmd="lcrc_conda",
         unified_env_cmd=(
             "source /lcrc/soft/climate/e3sm-unified/"
             "load_latest_e3sm_unified_chrysalis.sh"
@@ -82,7 +80,6 @@ MACHINE_PROFILES: Dict[str, MachineProfile] = {
         name="compy",
         # Compy has no separate global scratch filesystem.
         scratch_template="/compyfs/{username}",
-        conda_activation_cmd="compy_conda",
         unified_env_cmd=(
             "source /share/apps/E3SM/conda_envs/load_latest_e3sm_unified_compy.sh"
         ),
@@ -95,7 +92,6 @@ MACHINE_PROFILES: Dict[str, MachineProfile] = {
     "perlmutter": MachineProfile(
         name="perlmutter",
         scratch_template="/pscratch/sd/{initial}/{username}",
-        conda_activation_cmd="nersc_conda",
         unified_env_cmd=(
             "source /global/common/software/e3sm/anaconda_envs/"
             "load_latest_e3sm_unified_pm-cpu.sh"

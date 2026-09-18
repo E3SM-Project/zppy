@@ -168,6 +168,7 @@ def test_image_checker_removes_stale_summaries_before_submitting(
         "20260804_run1",
         MACHINE_PROFILES["chrysalis"],
         "test-zppy-main-20260804_run1",
+        "/conda.sh",
     )
 
     # A stale summary would otherwise be reported as this run's result.
@@ -199,6 +200,7 @@ def test_image_checker_charges_the_requested_account(
         "tag",
         MACHINE_PROFILES["chrysalis"],
         "env",
+        "/conda.sh",
         account="myproject",
     )
     assert "#SBATCH --account=myproject" in scripts[0]
@@ -240,6 +242,7 @@ def test_image_checker_records_a_submission_failure(
         "tag",
         MACHINE_PROFILES["chrysalis"],
         "env",
+        "/conda.sh",
     )
     assert result.state == "SUBMISSION_FAILED"
     assert not result.passed
@@ -269,6 +272,7 @@ def test_image_checker_prefers_a_final_summary_over_an_early_one(
         "tag",
         MACHINE_PROFILES["chrysalis"],
         "env",
+        "/conda.sh",
     )
     assert result.summary_source == "final"
 
@@ -291,6 +295,7 @@ def test_image_checker_falls_back_to_an_early_summary(
         "tag",
         MACHINE_PROFILES["chrysalis"],
         "env",
+        "/conda.sh",
     )
     assert result.summary_source == "early"
     assert not result.passed

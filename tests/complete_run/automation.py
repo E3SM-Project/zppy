@@ -598,6 +598,7 @@ def _stage_validate(run: _Run) -> None:
         run.tag,
         run.machine,
         zppy_env.name,
+        run.args.conda_profile,
         account=run.args.account,
         max_wait=run.args.max_wait_images,
     )
