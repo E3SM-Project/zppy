@@ -457,6 +457,10 @@ def _write_env_descriptions(run: _Run) -> None:
         key: str = environment.name or environment.activation_command
         if key not in package_lists:
             package_lists[key] = provenance.conda_package_list(environment)
+            if environment.env_type == ENV_TYPE_UNIFIED:
+                run.status["unified"] = provenance.describe_unified(
+                    package_lists[key], _unified_load_script(run.machine)
+                )
         provenance.write_env_description(
             run.layout.env_descriptions,
             task,
@@ -478,8 +482,15 @@ def _write_manifest(run: _Run) -> None:
         cfgs=run.cfgs,
         tasks=run.tasks,
         zppy_version=__version__,
+        unified=_mapping(run.status.get("unified")) or None,
     )
     provenance.write_manifest(run.layout.root, manifest)
+
+
+def _unified_load_script(machine: MachineProfile) -> str:
+    """Return the script the machine's Unified activation command sources."""
+    command: str = machine.unified_env_cmd.strip()
+    return command.split(None, 1)[1] if command.startswith("source ") else ""
 
 
 def _stage_generate(run: _Run) -> None:

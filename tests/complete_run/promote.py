@@ -114,6 +114,7 @@ def show(root: str, channel: str = DEFAULT_CHANNEL) -> Dict[str, Any]:
         "machine": manifest.get("machine"),
         "generated": manifest.get("generated"),
         "repos": manifest.get("repos", {}),
+        "unified": manifest.get("unified", {}),
     }
 
 
