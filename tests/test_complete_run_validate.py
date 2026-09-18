@@ -365,22 +365,61 @@ def test_image_list_records_zero_rather_than_skipping(tmp_path) -> None:
     assert open(layout.image_list("weekly_bundles")).read() == ""
 
 
-def test_settings_baselines_are_captured_from_the_worktree(tmp_path) -> None:
+def test_settings_baselines_are_regenerated_and_pruned_like_their_tests(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The tests delete their own output when they pass, so the baselines are
+    # regenerated rather than collected afterwards.
+    from tests.complete_run.environments import Environment
     from tests.complete_run.layout import run_layout
 
     layout = run_layout(str(tmp_path), "tag")
     workdir = tmp_path / "worktree"
-    scripts = workdir / "test_bash_generation_output" / "post" / "scripts"
-    scripts.mkdir(parents=True)
-    (scripts / "climo.bash").write_text("#!/bin/bash\n")
-    (scripts / "provenance.20260918.settings").write_text("case_name = x\n")
+    workdir.mkdir()
+    commands = []
 
-    validate.capture_settings_baselines(str(workdir), layout, [])
+    def fake_zppy(args, cwd=None, **kwargs):
+        commands.append(args)
+        cfg = os.path.basename(args[-1])[: -len(".cfg")]
+        scripts = os.path.join(cwd, f"{cfg}_output", "post", "scripts")
+        os.makedirs(os.path.join(scripts, "global_time_series_0001-0020_dir"))
+        for name in ("climo.bash", "climo.settings", "provenance.20260918.cfg"):
+            with open(os.path.join(scripts, name), "w") as stream:
+                stream.write("x\n")
+        return 0, ""
 
-    captured = layout.settings_baseline("expected_bash_files")
-    assert os.path.isfile(os.path.join(captured, "climo.bash"))
-    # Provenance carries a timestamp, so it would differ on every run.
-    assert not glob.glob(os.path.join(captured, "provenance*"))
+    monkeypatch.setattr(validate, "run_command_status", fake_zppy)
+    environment = Environment("zppy", "dev", "test-zppy", "activate")
+
+    captured = validate.capture_settings_baselines(
+        str(workdir), layout, [], environment
+    )
+
+    assert len(captured) == 8
+    # Run with the zppy under test, from the worktree.
+    assert commands[0][:5] == ["conda", "run", "--no-capture-output", "-n", "test-zppy"]
+    assert commands[0][5:] == [
+        "zppy",
+        "-c",
+        "tests/integration/test_bash_generation.cfg",
+    ]
+
+    bash = layout.settings_baseline("expected_bash_files")
+    # test_bash_generation compares the bash files themselves.
+    assert os.path.isfile(os.path.join(bash, "climo.bash"))
+    assert not glob.glob(os.path.join(bash, "provenance*"))
+
+    defaults = layout.settings_baseline("test_defaults_expected_files")
+    # test_defaults removes bash files and the global_time_series dir first.
+    assert os.listdir(defaults) == ["climo.settings"]
+
+    campaign = layout.settings_baseline("test_campaign_none_expected_files")
+    assert sorted(os.listdir(campaign)) == [
+        "climo.settings",
+        "global_time_series_0001-0020_dir",
+    ]
+    # Nothing is left behind in the worktree.
+    assert os.listdir(workdir) == []
 
 
 def _scored_task(case_dir, diff_dir_name, task, severities):
