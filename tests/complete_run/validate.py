@@ -226,6 +226,7 @@ def run_image_checker(
     tag: str,
     machine: MachineProfile,
     env_name: str,
+    conda_profile: str,
     *,
     account: str = "",
     check_interval: int = IMAGE_CHECK_POLL_SECONDS,
@@ -252,7 +253,7 @@ def run_image_checker(
         output_prefix=output_prefix,
         directives=machine.sbatch_directives
         + ((f"#SBATCH --account={account}",) if account else ()),
-        conda_activation_cmd=machine.conda_activation_cmd,
+        conda_profile=conda_profile,
         env_name=env_name,
         workdir=workdir,
         body="python -m pytest tests/integration/test_images.py",

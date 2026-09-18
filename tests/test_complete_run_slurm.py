@@ -171,14 +171,20 @@ def test_batch_script_initializes_conda_before_activating() -> None:
         job_name="zppy_image_checker_x",
         output_prefix="/results/image_checker_x",
         directives=("#SBATCH --partition=debug", "#SBATCH --account=e3sm"),
-        conda_activation_cmd="lcrc_conda",
+        conda_profile="/home/me/conda/etc/profile.d/conda.sh",
         env_name="test-zppy-main-x",
         workdir="/worktree/zppy",
         body="python -m pytest tests/integration/test_images.py",
     )
 
     # A batch shell is not a login shell, so activation must come first.
-    assert script.index("lcrc_conda") < script.index("conda activate test-zppy-main-x")
+    assert script.index("source /home/me/conda/etc/profile.d/conda.sh") < script.index(
+        "conda activate test-zppy-main-x"
+    )
+    # Nothing from the submitter's personal shell setup: an alias such as
+    # `lcrc_conda` exists only in some people's ~/.bashrc.
+    assert "bashrc" not in script
+    assert "lcrc_conda" not in script
     # Running from elsewhere would silently test the installed zppy instead.
     assert "cd /worktree/zppy" in script
     assert "#SBATCH --partition=debug" in script
