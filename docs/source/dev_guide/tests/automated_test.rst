@@ -4,7 +4,9 @@
 Automated testing of zppy
 *************************
 
-Follow the steps below to test ``zppy``. As you do so, please produce a Markdown report summarizing your results.
+Follow the steps below to test ``zppy``. A Markdown report summarizing your
+results is generated automatically at the end of the run (see
+``test_report_<TAG>.md`` in the directory you ran the script from).
 
 Step 1: Determine what the current expected results are
 =======================================================
@@ -42,31 +44,95 @@ Process
 
     ls -lt ${expected_results_dir}
 
-In your Markdown report, note the date the expected results were last updated.
+Set ``EXPECTED_RESULTS_DIR`` in your test cfg to this path. The automated
+report no longer dumps the full ``ls -lt`` listing here -- it instead shows,
+for each cfg/task under this directory, the date its expected-results files
+were last **promoted** (copied into place).
+
+Note that "promoted" is not the same thing as "produced," and in practice
+the two are usually *further apart than you'd expect*, not closer: a run's
+results normally sit under review while a task developer confirms the
+diffs look acceptable, and only get promoted later -- often right before
+the *next* test run needs a fresh baseline, not right after the run that
+produced them. (E.g. expected results promoted on 9/4 that were actually
+produced by an 8/28 run, confirmed acceptable only after the fact.) So
+this promotion date is informational only -- it tells you when the files
+were last touched, not what commits they reflect. Step 2 below uses a
+different, more reliable date for that.
 
 Step 2: Review changes since expected results were updated
 ==========================================================
 
-Now that we know the date the expected results are from, we can review what changes we'll be testing.
+Now that Step 1 above has confirmed the expected-results directory is
+correctly configured, we can review what changes we'll be testing.
 
-Review each of the following commit logs and note commits made since the date the expected results were updated:
+Each dependency's expected results can have been produced on a different
+date (and a promotion's date, per Step 1, isn't reliable for this anyway),
+so the report determines a *production* date separately per dependency: it
+reads the ``Generated:`` line written by the test script into the
+promoted ``env_description.txt`` for the corresponding task(s), taking the
+earliest one found across every cfg in ``CFGS_TO_RUN`` (deliberately
+conservative -- better to surface a few extra candidate commits than miss
+the actual cause of a diff). If you've determined through other means
+(e.g. a discussion thread) that this auto-detected date is wrong -- for
+instance, the promoted results were confirmed to actually come from an
+earlier run -- set the matching ``*_EXPECTED_RESULTS_DATE`` (or
+``*_LAST_TESTED_DATE``, see below) in your cfg to override it.
+
+``zppy-interfaces`` bundles two tasks, ``global_time_series`` and
+``pcmdi_diags``, that get refreshed independently of each other -- one can
+be updated well before the other. So rather than one ``ZI_*`` date, it gets
+two: ``ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE`` and
+``ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE``, each auto-detected (or
+overridable) independently, and each shown as its own row in the report.
+
+``e3sm_to_cmip`` and ``zppy`` have no dedicated task subdirectory of their
+own at all, so there's no per-task "expected results" file to read a
+production date from -- the only meaningful question for them is whether
+anything has changed since the last time this dependency was tested, full
+stop. So instead of ``*_EXPECTED_RESULTS_DATE`` they use
+``E3SM_TO_CMIP_LAST_TESTED_DATE`` and ``ZPPY_LAST_TESTED_DATE``, which are
+detected the same way but fall back to the earliest production date found
+across *all* tasks, since there's no task of their own to read.
+
+The automated report will list, for each dependency below, the commits/PRs
+merged on its *expected-results baseline branch* since that date -- i.e.
+the branch the expected results were actually generated from, which is not
+always the same branch this run checked out to test:
 
 * For the ``e3sm_to_cmip`` task: `e3sm_to_cmip <https://github.com/E3SM-Project/e3sm_to_cmip/commits/master>`_
 * For the ``e3sm_diags`` task: `e3sm_diags <https://github.com/E3SM-Project/e3sm_diags/commits/main>`_
 * For the ``mpas_analysis`` task: `MPAS-Analysis <https://github.com/MPAS-Dev/MPAS-Analysis/commits/develop/>`_
-* For the ``global_time_series`` and ``pcmdi_diags`` tasks: `zppy-interfaces <https://github.com/E3SM-Project/zppy-interfaces/commits/main>`_
+* For the ``global_time_series`` task and the ``pcmdi_diags`` task (reported as separate rows, though both point at the same repo): `zppy-interfaces <https://github.com/E3SM-Project/zppy-interfaces/commits/main>`_
 * For ``zppy`` itself: `zppy <https://github.com/E3SM-Project/zppy/commits/main>`_
+
+Each of these links is your dependency's ``*_EXPECTED_RESULTS_BRANCH``,
+which defaults to the matching ``*_BASE_BRANCH`` in your cfg -- so if
+you're testing straight off a project's default branch, there's nothing
+extra to configure here. If instead ``*_BASE_BRANCH`` points at a
+variant/feature branch (e.g. rebased onto ``main``) whose expected results
+were still generated from a different branch, set that dependency's
+``*_EXPECTED_RESULTS_BRANCH`` explicitly to the branch the expected results
+actually came from. Otherwise the report would conflate genuine upstream
+drift on the expected-results baseline with commits that only exist on the
+branch under test. When the two differ, the report's table adds a "Branch
+tested" column so that's visible at a glance.
 
 For the remaining tasks (``climo``, ``ts``, ``tc_analysis``, ``ilamb``, ``livvkit``), we typically just use the associated package's latest release rather than making dev environments. As such, their latest development will have no impact on our tests unless we have started using one of their newer releases.
 
-In your Markdown report, make a table like:
+The report's table looks like:
 
 .. code-block::
 
-    | Package | Changes since expected results were updated |
-    | --- | --- |
-    | [package name](link to package's commit log) | Links to all PRs merged since the expected results were updated |
+    | Package | Branch tested | Since | Changes since expected results were produced |
+    | --- | --- | --- | --- |
+    | [package name](link to expected-results baseline branch's commit log) | Branch this run tested, if different | Production date used for this dependency | Links to all PRs merged since that date |
     ...
+
+Because this is generated from each repo's local git history, make sure each
+``*_DIR`` repo has a working default remote (the script fetches the
+configured ``*_EXPECTED_RESULTS_BRANCH`` non-interactively from ``upstream``
+when available, otherwise ``origin``).
 
 The automated test script
 =========================
@@ -78,7 +144,13 @@ The automated test script handles the following steps from the manual testing pr
 * Step 5: Launch zppy jobs
 * Step 6: Launch zppy jobs – bundles part 2
 * Step 7: Review finished returns
-* Step 8: Run Python tests (excluding the final ``pytest tests/integration/test_images.py`` call from a compute node)
+* Step 8: Run all Python tests, including the image checker (``pytest tests/integration/test_images.py``), which is now launched automatically on a compute node -- no manual step required.
+
+It additionally:
+
+* Runs the "tests of the tests" (``tests/images/test_image_checker.py``, ``tests/images/test_image_severity.py``, and ``tests/images/test_image_summary_report.py``), which validate the image-checking logic itself, independent of any particular run's output.
+* Writes an ``env_description.txt`` for each task (e.g. ``global_time_series/env_description.txt``), recording the commit hash of the relevant dev repo (or noting that a released package was used) plus the full ``conda list`` package versions for that task's environment.
+* Writes a Markdown report (``test_report_<TAG>.md``) summarizing all of the above, including the complete and failing-only image-check summary tables.
 
 A. Set up the test script
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -141,6 +213,20 @@ Update the ``_BASE_BRANCH`` parameters if you plan to test new features or bug f
     ZI_BASE_BRANCH="main"
     ZPPY_BASE_BRANCH="main"
 
+Leave the ``_EXPECTED_RESULTS_BRANCH`` parameters empty in the common case
+where you're testing straight off the branch above -- each defaults to its
+matching ``_BASE_BRANCH``. Only set one explicitly when its ``_BASE_BRANCH``
+is a variant/feature branch but the expected results you're comparing
+against were generated from a different branch (see Step 2 above).
+
+.. code-block::
+
+    DIAGS_EXPECTED_RESULTS_BRANCH=""
+    E3SM_TO_CMIP_EXPECTED_RESULTS_BRANCH=""
+    MPAS_EXPECTED_RESULTS_BRANCH=""
+    ZI_EXPECTED_RESULTS_BRANCH=""
+    ZPPY_EXPECTED_RESULTS_BRANCH=""
+
 Update the ``_ENV_TYPE`` parameters if you want to use E3SM-Unified rather than a dev environment. If you plan to only run a subset of tasks, you can set the ones you aren't running to use E3SM-Unified, so that the script doesn't spend time building a dev environment that won't be used.
 
 .. code-block::
@@ -172,12 +258,43 @@ Update these two parameters to configure which jobs run.
 
     # Comma-separated list of zppy cfg names to generate and submit.
     # These correspond to generated filenames: test_weekly_<name>_<machine>.cfg
-    # Any name containing "bundle" is treated as a bundle cfg and re-submitted in Phase 2.
+    # Any name containing "bundle" is treated as a bundle cfg: it's re-submitted
+    # in Phase 2, and its presence here is also what determines whether Phase 3
+    # runs test_bundles.py at all (skipped if no bundle cfg is included).
     CFGS_TO_RUN="weekly_bundles,weekly_comprehensive_v2,weekly_comprehensive_v3,weekly_legacy_3.1.0_bundles,weekly_legacy_3.1.0_comprehensive_v2,weekly_legacy_3.1.0_comprehensive_v3,weekly_legacy_3.0.0_bundles,weekly_legacy_3.0.0_comprehensive_v2,weekly_legacy_3.0.0_comprehensive_v3"
 
     # Comma-separated list of tasks to enable in utils.py.
     TASKS_TO_RUN="e3sm_diags,mpas_analysis,global_time_series,ilamb,livvkit,pcmdi_diags"
 
+Optionally, set ``EXPECTED_RESULTS_DIR`` to auto-populate Steps 1 and 2 of
+the Markdown report. The per-dependency ``*_EXPECTED_RESULTS_DATE`` /
+``*_LAST_TESTED_DATE`` parameters are normally left empty -- each is
+auto-detected from ``env_description.txt`` under that directory (see Step 2
+above) -- and only need to be set to override a specific dependency's
+auto-detected date.
+
+.. code-block::
+
+    # Machine-specific expected-results directory (see Step 1 above).
+    EXPECTED_RESULTS_DIR=""
+
+    # Date each dependency's expected results were actually produced (see
+    # Step 2 above). Normally left empty and auto-detected per dependency
+    # from EXPECTED_RESULTS_DIR; set one explicitly only to override its
+    # auto-detected date.
+    DIAGS_EXPECTED_RESULTS_DATE=""
+    MPAS_EXPECTED_RESULTS_DATE=""
+
+    # zppy-interfaces bundles two independently-refreshed tasks, so it gets
+    # two dates instead of one.
+    ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE=""
+    ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE=""
+
+    # e3sm_to_cmip and zppy have no task subdir of their own, so there's no
+    # "expected results" date to read -- these track when the dependency
+    # was last tested at all, auto-detected the same way.
+    E3SM_TO_CMIP_LAST_TESTED_DATE=""
+    ZPPY_LAST_TESTED_DATE=""
 
 These parameters are unlikely to change between runs. They just let the test script know where to find files in your particular workspace. It is recommended to clone a new copy of the repos and use that for each ``_DIR`` parameter listed below. The script will change branches, so using a distinct copy means you won't get your work overwritten.
 
@@ -217,8 +334,12 @@ Follow the ``tail`` output until you get to:
 .. code-block::
 
     ✓ Phase 3 automated tests complete!
-    ✓ Remember to run test_images.py manually from a compute node.
+    ✓ Markdown report: .../test_report_yyyymmdd_runN.md
     ✓ Integration test automation complete!
+
+The image checker now runs automatically as part of Phase 3 (submitted as
+its own SLURM batch job and waited on, the same way the earlier zppy jobs
+are), so there is no separate manual compute-node step to run it.
 
 D. Review the output
 ~~~~~~~~~~~~~~~~~~~~
@@ -230,20 +351,25 @@ D. Review the output
     exit # Exit screen
     cd ${test_script_dir}/test_yyyymmdd_runN
     cat integration_test_runN.log
+    cat test_report_yyyymmdd_runN.md # The auto-generated Markdown report
 
 Let's review the test script's output log.
 
-First, the unit tests. There are two blocks, starting with:
+First, the unit tests. Early in setup, you should see:
 
 .. code-block::
 
     Running zppy-interfaces unit tests...
 
-and
-
 .. code-block::
 
     Running zppy unit tests...
+
+Later in setup, before the image-helper test files run, you should also see:
+
+.. code-block::
+
+    Running tests of the image checker itself...
 
 Second, the output directories status. It should look like the following:
 
@@ -253,7 +379,7 @@ Second, the output directories status. It should look like the following:
     ...
     ✓ All status files clean!
 
-If some status files were unsuccessful, you'll want to run the following to review the errors:
+If some status files were unsuccessful, the Markdown report's "Automated test script results" section already includes why, for every output directory that failed the check -- either the non-``OK`` lines that ``grep -v "OK" "${dir}"/*status`` found, or a note that the directory was missing or had no ``*status`` files at all (which also counts as a failed check, since there was nothing to confirm as clean). You don't need to re-run the grep yourself, but if you want to dig further into a specific failure:
 
 .. code-block:: bash
 
@@ -273,74 +399,74 @@ Third, the integration tests.
     test_defaults.py
     test_bundles.py
 
-Errors here may actually be expected if the expected results haven't been updated yet to reflect a recently merged pull request. Another reason for errors on ``test_bundles.py`` in particular is if you didn't run all the jobs necessary (i.e., if you're running a partial test).
+Errors here may actually be expected if the expected results haven't been updated yet to reflect a recently merged pull request.
 
-If all 3 pieces look good, you can proceed with the final integration test, the image checker.
+``test_bundles.py`` is only run if ``CFGS_TO_RUN`` actually includes a ``*bundle*`` cfg (e.g. ``weekly_bundles``) -- it can't pass against jobs that were never submitted. If you're running a partial test whose ``CFGS_TO_RUN`` leaves bundle cfgs out entirely, the report shows ``test_bundles.py: skipped (no _bundles cfg in CFGS_TO_RUN)`` instead of a failure, and no action is needed. Errors on ``test_bundles.py`` when a bundle cfg *is* included are still possible if that cfg's jobs didn't finish successfully (e.g. Phase 2 wasn't reached, or a partial subset of tasks was run).
 
-Step 8: Run Python tests
-========================
+Finally, the script auto-launches the image checker (``tests/integration/test_images.py``) as a SLURM job, waits for it, and folds its results straight into ``test_report_yyyymmdd_runN.md``: a "Complete summary table" section (the full contents of ``test_images_summary.md``) and, if any tests failed, a "Summary table -- only failing image-check tests, sorted by task" section. The report links directly to the SLURM job's ``.o``/``.e`` output files rather than embedding their contents (which duplicated the log and could render as an empty code block); open those files if you need the raw pytest output. Review the summary tables (and, if needed, the linked output files) to decide whether the diffs are expected.
 
-Machine-specific setup
-~~~~~~~~~~~~~~~~~~~~~~
+In the Markdown report, fill in the ``Results analysis`` section at the bottom with your conclusions (e.g. whether any diffs are expected, whether expected results should be updated).
 
-Chrysalis:
+Scheduling this as a weekly cron job
+=====================================
 
-.. code-block:: bash
+Because the image checker now launches itself and the report is generated
+automatically, ``run_integration_test.bash`` no longer requires any
+interactive/manual steps as long as ``AUTO_MODE=true`` in your cfg. This
+makes it straightforward to run on a weekly cron schedule.
 
-    launch_compute_node()
-    {
-        salloc --nodes=1 --partition=debug --time=02:00:00 --account=e3sm
-    }
+1. Set up your test cfg once, with ``AUTO_MODE=true`` and ``EXPLICIT_TAG=""``
+   (so a new ``TAG`` is generated every run based on the current date).
 
-Compy:
+2. Wrap the invocation in a small driver script so each week's run gets its
+   own directory and log file, e.g. ``~/ez/run_zppy_weekly_test.sh``:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-    launch_compute_node()
-    {
-        salloc --nodes=1 --partition=short --time=01:00:00 --account=e3sm
-    }
+       #!/bin/bash
+       set -e
+       WEEK_DIR="$HOME/ez/zppy_main_branch_tests/test_$(date +%Y%m%d)_run1"
+       ZPPY_SCRIPT_SOURCE="$HOME/ez/zppy_cron_source"
+       git -C "$ZPPY_SCRIPT_SOURCE" fetch upstream main
+       git -C "$ZPPY_SCRIPT_SOURCE" checkout main
+       git -C "$ZPPY_SCRIPT_SOURCE" reset --hard upstream/main
+       mkdir -p "$WEEK_DIR"
+       cd "$WEEK_DIR"
+       cp "$ZPPY_SCRIPT_SOURCE/tests/main_branch_testing/run_integration_test.bash" .
+       cp "$HOME/ez/zppy_weekly_test.cfg" ./zppy_test.cfg
+       ulimit -s unlimited
+       ./run_integration_test.bash --config zppy_test.cfg \
+           > "integration_test_run1.log" 2>&1
 
-Perlmutter:
+   Keep your reusable, edited cfg at a stable path (e.g.
+   ``~/ez/zppy_weekly_test.cfg``) outside of any per-run directory, since the
+   driver script copies it in fresh each week. Keep the copied
+   ``run_integration_test.bash`` source in a separate checkout (here
+   ``~/ez/zppy_cron_source``) that the driver updates to ``main`` before each
+   run, rather than reusing the per-run test checkout that Phase 1 switches to
+   ``test_zppy_<TAG>``.
 
-.. code-block:: bash
+3. Add a weekly ``cron`` entry (edit with ``crontab -e``). For example, to
+   run every Monday at 06:00 local time:
 
-    launch_compute_node()
-    {
-        salloc --nodes=1 --qos=interactive --time=01:00:00 --constraint=cpu --account=e3sm
-    }
+   .. code-block:: cron
 
-Process
-~~~~~~~
+       0 6 * * 1 /bin/bash -lc '$HOME/ez/run_zppy_weekly_test.sh' >> $HOME/ez/zppy_weekly_test_cron.log 2>&1
 
-.. code-block:: bash
+   Using ``bash -lc`` ensures your login shell environment (e.g. module
+   commands, ``PATH`` for ``sbatch``/``squeue``, SSH agent for ``git fetch``)
+   is loaded, since cron jobs otherwise run with a minimal environment.
 
-    cd ${repo_parent_dir}/zppy
-    git status
-    # You might have changed branches while you were waiting for jobs to finish.
-    # Make sure you're now back on the correct branch: test-zppy-yyyymmdd
-    # Also confirm you're back in the correct env: zppy-yyyymmdd or the Unified env
+4. Because ``wait_for_slurm_jobs`` and ``wait_for_slurm_job`` poll rather than
+   blocking indefinitely,
+   make sure the cron job's machine allows a long-running background process
+   (several hours) -- e.g. run it from a persistent login node rather than a
+   machine that may reboot, or launch it inside ``screen``/``tmux`` from the
+   cron entry if your site's policy discourages long-lived cron processes
+   directly.
 
-    # The image checker test, which we'll run from a compute node:
-    launch_compute_node
-
-    start_bash_subshell
-    # EITHER:
-    # Activate EITHER a dev environment or the Unified env:
-    conda activate zppy-yyyymmdd
-    # OR: the command from `activate_unified_env`
-
-    pytest tests/integration/test_images.py
-    # Typically takes between 10 and 20 minutes on Chrysalis and Perlmutter.
-    # Typically takes closer to 50 minutes on Compy.
-    cat test_images_summary.md
-    exit # Exit bash shell
-    exit # Exit compute note
-
-In your Markdown report:
-
-* From the ``pytest tests/integration/test_images.py `` command-line output, copy everything after ``Captured stdout call`` to a code block labeled "Output"
-* Copy the results of ``cat test_images_summary.md`` to a section labeled "Complete summary table"
-* Make a new section named "Summary table -- only failing image-check tests, sorted by task". For each task that has missing and/or mismatched images, copy the relevant rows from the summary table. Skip this section if there were no failing image-check tests.
-* Note any test failures from the other Python tests.
-* If there were no failures at all, print "All tests pass"
+5. After each run, check ``$WEEK_DIR/test_report_<TAG>.md`` for the
+   "Results analysis" TODO and the failing-tests summary table; consider
+   having the cron wrapper ``mail`` or post that file's contents somewhere
+   visible (e.g. a Slack webhook or a PR comment) so failures don't go
+   unnoticed.

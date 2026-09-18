@@ -10,13 +10,21 @@
 # Phases (set START_PHASE in your config):
 #   1 - Full setup: build envs, run unit tests, generate configs, submit SLURM jobs
 #   2 - Bundles Part 2 (run after Phase 1 jobs finish)
-#   3 - Validation: status checks + pytest integration tests
+#   3 - Validation: status checks + pytest integration tests + image checker
 #
 # Notes:
-#   - test_images.py must be run manually from a compute node (see Phase 3 output).
+#   - test_images.py (the image checker) is now launched automatically by
+#     Phase 3 via a SLURM batch job -- no manual compute-node step needed.
+#   - A Markdown report is written to ${SCRIPT_RUN_DIR}/test_report_<TAG>.md
+#     at the end of Phase 3, summarizing every automated step.
+#   - An env_description.txt is written for each task, recording the commit
+#     hash of the relevant package (or "release" for unified-env tasks) and
+#     the conda environment's package versions.
 #   - To resume from Phase 2 or 3 on a later day, set EXPLICIT_TAG in your config
 #     to the TAG printed at the start of Phase 1 (or stored in ~/.zppy_test_tag),
 #     and set START_PHASE accordingly.
+#   - To run this script unattended on a schedule (e.g. a weekly cron job),
+#     see docs/source/dev_guide/tests/automated_test.rst.
 
 set -e  # Exit on error
 set -u  # Exit on undefined variable
@@ -82,6 +90,34 @@ MPAS_EXISTING_ENV="${MPAS_EXISTING_ENV:-}"
 ZI_EXISTING_ENV="${ZI_EXISTING_ENV:-}"
 ZPPY_EXISTING_ENV="${ZPPY_EXISTING_ENV:-}"
 
+# Apply defaults for optional *_EXPECTED_RESULTS_BRANCH variables. Each
+# defaults to that component's own *_BASE_BRANCH (i.e. "assume expected
+# results were generated from whatever branch we're testing"). Override
+# in the config only when testing a variant/feature branch whose expected
+# results are still based on a different branch (typically the project's
+# default branch, e.g. "main") -- see Step 2 of the Markdown report.
+DIAGS_EXPECTED_RESULTS_BRANCH="${DIAGS_EXPECTED_RESULTS_BRANCH:-$DIAGS_BASE_BRANCH}"
+E3SM_TO_CMIP_EXPECTED_RESULTS_BRANCH="${E3SM_TO_CMIP_EXPECTED_RESULTS_BRANCH:-$E3SM_TO_CMIP_BASE_BRANCH}"
+MPAS_EXPECTED_RESULTS_BRANCH="${MPAS_EXPECTED_RESULTS_BRANCH:-$MPAS_BASE_BRANCH}"
+ZI_EXPECTED_RESULTS_BRANCH="${ZI_EXPECTED_RESULTS_BRANCH:-$ZI_BASE_BRANCH}"
+ZPPY_EXPECTED_RESULTS_BRANCH="${ZPPY_EXPECTED_RESULTS_BRANCH:-$ZPPY_BASE_BRANCH}"
+
+# Optional: used to auto-populate Step 1 / Step 2 of the Markdown report.
+# Leave EXPECTED_RESULTS_DIR empty to skip those sections entirely.
+EXPECTED_RESULTS_DIR="${EXPECTED_RESULTS_DIR:-}"
+
+# Apply defaults for optional *_EXPECTED_RESULTS_DATE variables (leave
+# empty here; auto-detection happens further down once CFGS_ARRAY exists).
+DIAGS_EXPECTED_RESULTS_DATE="${DIAGS_EXPECTED_RESULTS_DATE:-}"
+MPAS_EXPECTED_RESULTS_DATE="${MPAS_EXPECTED_RESULTS_DATE:-}"
+ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE="${ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE:-}"
+ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE="${ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE:-}"
+# e3sm_to_cmip and zppy produce no task subdirs of their own, so there's no
+# "expected results" to track for them -- just whether anything has changed
+# since the last time we tested this dependency at all.
+E3SM_TO_CMIP_LAST_TESTED_DATE="${E3SM_TO_CMIP_LAST_TESTED_DATE:-}"
+ZPPY_LAST_TESTED_DATE="${ZPPY_LAST_TESTED_DATE:-}"
+
 # Validate MACHINE value.
 case "$MACHINE" in
     chrysalis|compy|perlmutter) ;;
@@ -98,18 +134,22 @@ case "$MACHINE" in
         CONDA_ACTIVATION_CMD="lcrc_conda"
         UNIFIED_ENV_CMD="source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh"
         SALLOC_CMD="salloc --nodes=1 --partition=debug --time=02:00:00 --account=e3sm"
+        # SBATCH directives (one per line) for the auto-launched image checker job.
+        SBATCH_DIRECTIVES=$'#SBATCH --partition=debug\n#SBATCH --time=02:00:00\n#SBATCH --account=e3sm'
         ;;
     compy)
         OUTPUT_WORKSPACE="/compyfs/${USER}"
         CONDA_ACTIVATION_CMD="compy_conda"
         UNIFIED_ENV_CMD="source /share/apps/E3SM/conda_envs/load_latest_e3sm_unified_compy.sh"
         SALLOC_CMD="salloc --nodes=1 --partition=short --time=01:00:00 --account=e3sm"
+        SBATCH_DIRECTIVES=$'#SBATCH --partition=short\n#SBATCH --time=01:00:00\n#SBATCH --account=e3sm'
         ;;
     perlmutter)
         OUTPUT_WORKSPACE="/global/cfs/cdirs/e3sm/${USER}"
         CONDA_ACTIVATION_CMD="nersc_conda"
         UNIFIED_ENV_CMD="source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_pm-cpu.sh"
-        SALLOC_CMD="salloc --nodes=1 --qos=interactive --time=01:00:00 --constraint=cpu --account=e3sm"
+        SALLOC_CMD="salloc --nodes=1 --qos=debug --time=01:00:00 --constraint=cpu --account=e3sm"
+        SBATCH_DIRECTIVES=$'#SBATCH --qos=debug\n#SBATCH --time=01:00:00\n#SBATCH --constraint=cpu\n#SBATCH --account=e3sm'
         ;;
 esac
 
@@ -124,6 +164,147 @@ esac
 # IFS = Internal Field Separator
 IFS=',' read -ra CFGS_ARRAY  <<< "$CFGS_TO_RUN"
 IFS=',' read -ra TASKS_ARRAY <<< "$TASKS_TO_RUN"
+
+# ============================================================================
+# Expected-results production dates (per dependency)
+# ============================================================================
+#
+# EXPECTED_RESULTS_DIR holds one "expected_<cfg>/" subdirectory per cfg
+# (e.g. "expected_comprehensive_v3/"), each containing one subdirectory per
+# task (e.g. "e3sm_diags/"). Once promoted, each task directory carries the
+# env_description.txt written by capture_env_description() during the run
+# that produced it, whose "Generated: YYYY-MM-DD HH:MM:SS" line records
+# when those results were actually PRODUCED.
+#
+# That is a different question from when they were last PROMOTED (copied
+# into place), and a directory's mtime correctly answers the latter, not
+# the former. The two routinely differ, by design: a run's results
+# normally sit under review while a task developer confirms whether the
+# diffs look acceptable, and only get promoted as the new expected results
+# later -- often right before the *next* test run needs a fresh baseline,
+# not right after the run that produced them. E.g. e3sm_diags's expected
+# results were correctly copied into place on 9/4, but that promotion
+# carried forward the 8/28 run's output (confirmed acceptable only after
+# the fact) rather than a fresh 9/4 run. mtime isn't wrong about 9/4; it's
+# just answering "when was this promoted", not "when was this produced",
+# and those two questions can have very different answers as a routine
+# part of the workflow. So we read the production date out of
+# env_description.txt's own content instead, which records that
+# regardless of when/how much later the directory gets copied.
+#
+# A single top-level or single per-cfg date is also the wrong shape: a cfg
+# directory's mtime reflects whichever task inside it was touched most
+# recently (e.g. "expected_comprehensive_v3/" looking freshly updated
+# because only pcmdi_diags was refreshed), and the top-level directory's
+# mtime is dominated by files like image_list_expected_*.txt that get
+# rewritten on every single run regardless of which task's data actually
+# changed. So detection here is per (cfg, task), scanned across every cfg
+# actually being tested.
+#
+# zppy-interfaces bundles two unrelated tasks (global_time_series and
+# pcmdi_diags) that get refreshed independently -- one can be updated on
+# one date and the other much later -- so their expected-results dates are
+# tracked and reported separately (ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE
+# / ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE) rather than folded into one ZI date.
+#
+# e3sm_to_cmip and zppy, on the other hand, produce no task subdir of their
+# own at all, so there's no per-task "expected results" file to read a
+# production date from -- the only meaningful question for them is whether
+# anything has changed since the last time we tested that dependency, full
+# stop. That's a different concept from "when were the expected results
+# produced", so those two use *_LAST_TESTED_DATE variables instead of
+# *_EXPECTED_RESULTS_DATE, even though the detection mechanics below are
+# shared with the other dependencies.
+
+# Extract the "YYYY-MM-DD" date portion of the "Generated:" line from one
+# env_description.txt, or nothing if the file/line isn't present.
+_read_env_description_date() {
+    local desc_file="$1"
+    [[ -f "$desc_file" ]] || return 0
+    awk -F': ' '/^Generated:/ { print $2; exit }' "$desc_file" 2>/dev/null | awk '{print $1}'
+}
+
+# Scans every cfg in CFGS_ARRAY for the given task name(s)'
+# env_description.txt (or, with no task names given, every task
+# subdirectory present) and prints the EARLIEST "Generated:" date found.
+# Earliest is a deliberately conservative choice: it surfaces at least as
+# many candidate upstream commits as could plausibly explain a diff,
+# rather than risking missing the real cause (as happened when only the
+# 9/4 promotion date was considered for e3sm_diags).
+_detect_expected_results_date() {
+    local -a tasks=("$@")
+    local earliest="" cfg cfg_dirname task_dir task found_date
+
+    [[ -n "$EXPECTED_RESULTS_DIR" && -d "$EXPECTED_RESULTS_DIR" ]] || return 0
+
+    for cfg in "${CFGS_ARRAY[@]}"; do
+        cfg="${cfg// /}"
+        cfg_dirname="expected_${cfg#weekly_}"
+        [[ -d "${EXPECTED_RESULTS_DIR}/${cfg_dirname}" ]] || continue
+
+        if [[ ${#tasks[@]} -eq 0 ]]; then
+            # No specific task: consider every task subdirectory present.
+            for task_dir in "${EXPECTED_RESULTS_DIR}/${cfg_dirname}"/*/; do
+                [[ -d "$task_dir" ]] || continue
+                found_date="$(_read_env_description_date "${task_dir}env_description.txt")"
+                if [[ -n "$found_date" && ( -z "$earliest" || "$found_date" < "$earliest" ) ]]; then
+                    earliest="$found_date"
+                fi
+            done
+        else
+            for task in "${tasks[@]}"; do
+                found_date="$(_read_env_description_date "${EXPECTED_RESULTS_DIR}/${cfg_dirname}/${task}/env_description.txt")"
+                if [[ -n "$found_date" && ( -z "$earliest" || "$found_date" < "$earliest" ) ]]; then
+                    earliest="$found_date"
+                fi
+            done
+        fi
+    done
+
+    echo "$earliest"
+}
+
+# Apply per-dependency EXPECTED_RESULTS_DATE / LAST_TESTED_DATE: an explicit
+# config value always wins (e.g. when a human has determined, as in the
+# e3sm_diags case above, that the auto-detected/promoted date doesn't
+# reflect the truth); otherwise auto-detect from env_description.txt as
+# described above. e3sm_to_cmip and zppy have no dedicated task directory of
+# their own, so they fall back to the earliest production date found across
+# ALL tasks.
+if [[ -z "$DIAGS_EXPECTED_RESULTS_DATE" ]]; then
+    DIAGS_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date "e3sm_diags")"
+fi
+if [[ -z "$MPAS_EXPECTED_RESULTS_DATE" ]]; then
+    MPAS_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date "mpas_analysis")"
+fi
+if [[ -z "$ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE" ]]; then
+    ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date "global_time_series")"
+fi
+if [[ -z "$ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE" ]]; then
+    ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE="$(_detect_expected_results_date "pcmdi_diags")"
+fi
+if [[ -z "$E3SM_TO_CMIP_LAST_TESTED_DATE" ]]; then
+    E3SM_TO_CMIP_LAST_TESTED_DATE="$(_detect_expected_results_date)"
+fi
+if [[ -z "$ZPPY_LAST_TESTED_DATE" ]]; then
+    ZPPY_LAST_TESTED_DATE="$(_detect_expected_results_date)"
+fi
+for _dep_entry in \
+    "e3sm_diags:$DIAGS_EXPECTED_RESULTS_DATE:DIAGS_EXPECTED_RESULTS_DATE" \
+    "mpas_analysis:$MPAS_EXPECTED_RESULTS_DATE:MPAS_EXPECTED_RESULTS_DATE" \
+    "zppy-interfaces (global_time_series):$ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE:ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE" \
+    "zppy-interfaces (pcmdi_diags):$ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE:ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE" \
+    "e3sm_to_cmip:$E3SM_TO_CMIP_LAST_TESTED_DATE:E3SM_TO_CMIP_LAST_TESTED_DATE" \
+    "zppy:$ZPPY_LAST_TESTED_DATE:ZPPY_LAST_TESTED_DATE"
+do
+    IFS=':' read -r _dep_name _dep_date _dep_var <<< "$_dep_entry"
+    if [[ -z "$_dep_date" && -n "$EXPECTED_RESULTS_DIR" ]]; then
+        echo "Warning: Could not auto-detect a date for ${_dep_name} from ${EXPECTED_RESULTS_DIR} (no env_description.txt with a Generated: line found). Set ${_dep_var} in the config to fix Step 2 of the report." >&2
+    fi
+done
+unset _dep_entry _dep_name _dep_date _dep_var
+unset _dep_label
+
 # ============================================================================
 #
 # Priority:
@@ -154,6 +335,9 @@ fi
 UNIQUE_ID="zppy_main_branch_test_${TAG}"
 
 ZPPY_ENV="test-zppy-${ZPPY_BASE_BRANCH}-${TAG}"
+if [[ -n "$ZPPY_EXISTING_ENV" ]]; then
+    ZPPY_ENV="$ZPPY_EXISTING_ENV"
+fi
 
 # Output directories (status file locations)
 BUNDLES_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_bundles_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
@@ -165,6 +349,38 @@ LEGACY_300_V2_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_legacy_3.0.0_comprehensive
 V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_comprehensive_v3_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
 LEGACY_310_V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_legacy_3.1.0_comprehensive_v3_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
 LEGACY_300_V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_legacy_3.0.0_comprehensive_v3_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
+
+# Where cached env_description.txt snippets (one per task) are staged before
+# being copied out to each cfg's "_www" output tree. See capture_env_description
+# and distribute_env_descriptions below.
+ENV_DESC_DIR="${SCRIPT_RUN_DIR}/env_descriptions_${TAG}"
+
+# Where the auto-generated Markdown report and image-checker artifacts land.
+REPORT_FILE="${SCRIPT_RUN_DIR}/test_report_${TAG}.md"
+IMAGE_CHECKER_SBATCH="${SCRIPT_RUN_DIR}/image_checker_${TAG}.sbatch"
+IMAGE_CHECKER_STDOUT_PREFIX="${SCRIPT_RUN_DIR}/image_checker_${TAG}"
+IMAGE_CHECKER_JOB_ID=""
+IMAGE_CHECKER_JOB_STATE="not_run"
+IMAGE_CHECKER_EXIT_CODE="N/A"
+IMAGE_CHECKER_STDOUT=""
+IMAGE_CHECKER_STDERR=""
+IMAGE_CHECKER_SUMMARY_SOURCE="none"
+ZI_UNIT_TEST_STATUS="not run in this invocation"
+ZPPY_UNIT_TEST_STATUS="not run in this invocation"
+IMAGE_HELPER_UNIT_TEST_STATUS="not run in this invocation"
+STATUS_FILE_CHECK_STATUS="not run in this invocation"
+declare -a INTEGRATION_TEST_RESULTS=()
+declare -A CAPTURED_ENV_TASKS=()
+# Populated by distribute_env_descriptions: cfg -> the per-cfg "_www" root
+# each task's env_description.txt gets copied under (before appending
+# <case>/<task>). Used by generate_markdown_report so the report can list
+# these prefixes once instead of repeating one full path per task.
+declare -A WWW_ROOT_BY_CFG=()
+# Populated by check_status_files: accumulated Markdown-formatted detail
+# on any non-OK status-file lines found. Reset at the start of the status
+# checks in phase_3_validation so it reflects only that final validation
+# pass, not any earlier phase_2 pre-checks. Used by generate_markdown_report.
+STATUS_FILE_ERRORS=""
 
 # Colors for output
 RED='\033[0;31m'
@@ -203,14 +419,22 @@ checkpoint() {
     fi
 }
 
-# Activate conda and (optionally) a named environment.
-activate_env() {
-    local env_name="${1:-}"
+# Append a line (or block) of text to the Markdown report.
+report_append() {
+    printf '%s\n' "$*" >> "$REPORT_FILE"
+}
+
+init_conda_base() {
     set +u
     # shellcheck disable=SC1090
     source ~/.bashrc
     $CONDA_ACTIVATION_CMD  # Machine-specific conda init (lcrc_conda / compy_conda / nersc_conda)
+}
 
+# Activate conda and (optionally) a named environment.
+activate_env() {
+    local env_name="${1:-}"
+    init_conda_base
     if [ -n "$env_name" ]; then
         conda activate "$env_name"
         log "Installing/updating package in '$env_name'..."
@@ -224,10 +448,7 @@ activate_env() {
 # machine-specific case block above), so we strip the leading "source "
 # and source the path directly -- no eval required.
 activate_unified_env() {
-    set +u
-    # shellcheck disable=SC1090
-    source ~/.bashrc
-    $CONDA_ACTIVATION_CMD
+    init_conda_base
     # shellcheck disable=SC1090
     source "${UNIFIED_ENV_CMD#source }"
     set -u
@@ -354,18 +575,24 @@ wait_for_slurm_jobs() {
 }
 
 # Grep status files in a directory for any non-OK lines.
-# Returns 0 if all OK, 1 if any failures found.
+# Returns 0 if all OK, 1 otherwise (missing directory, no status files
+# present, or actual non-OK entries found). Whichever of those three
+# reasons caused the 1, it is always appended to STATUS_FILE_ERRORS so the
+# Markdown report can explain a "failed" result without the reader having
+# to re-run `grep -v "OK" "${dir}"/*status` themselves afterward.
 check_status_files() {
     local dir="$1"
     local name="$2"
 
     if [ ! -d "$dir" ]; then
         log_warning "$name: Directory not found: $dir"
+        STATUS_FILE_ERRORS+="**${name}** (\`${dir}\`): directory not found."$'\n\n'
         return 1
     fi
 
     if ! compgen -G "${dir}/*status" > /dev/null; then
         log_warning "$name: No status files found in ${dir}"
+        STATUS_FILE_ERRORS+="**${name}** (\`${dir}\`): no \`*status\` files found (\`grep -v \"OK\" ${dir}/*status\` has nothing to check)."$'\n\n'
         return 1
     fi
 
@@ -378,8 +605,281 @@ check_status_files() {
     else
         log_error "$name: Non-OK statuses found in ${dir}:"
         echo "$errors"
+        STATUS_FILE_ERRORS+="**${name}** (\`${dir}\`):"$'\n\n'"\`\`\`"$'\n'"${errors}"$'\n'"\`\`\`"$'\n\n'
         return 1
     fi
+}
+
+# Returns 0 if any entry in CFGS_ARRAY names a bundle cfg (i.e. contains
+# "bundle" -- see CFGS_TO_RUN's docstring in the cfg file), 1 otherwise.
+# Used to gate steps that only make sense when a *_bundles cfg was actually
+# launched: the Phase 2 bundle-status pre-check and, in Phase 3,
+# test_bundles.py itself.
+any_bundle_cfg_configured() {
+    local cfg
+    for cfg in "${CFGS_ARRAY[@]}"; do
+        cfg="${cfg// /}"
+        [[ "$cfg" == *bundle* ]] && return 0
+    done
+    return 1
+}
+
+# ----------------------------------------------------------------------------
+# Environment description capture (Requirement: env_description.txt per task)
+# ----------------------------------------------------------------------------
+#
+# Writes a description of the environment used for a given task to
+# ${ENV_DESC_DIR}/<task>.txt. For dev environments, this includes the git
+# commit hash of the relevant package repo plus `conda list` output. For
+# unified/release environments there's no dedicated dev repo, so only the
+# conda package list is captured.
+#
+#   capture_env_description <task_name> <pkg_dir_or_empty> <env_type> <env_name>
+capture_env_description() {
+    local task_name="$1"
+    local pkg_dir="$2"
+    local env_type="$3"
+    local env_name="$4"
+    local out_file="${ENV_DESC_DIR}/${task_name}.txt"
+
+    mkdir -p "$ENV_DESC_DIR"
+
+    {
+        echo "Task: ${task_name}"
+        echo "Generated: $(date +'%Y-%m-%d %H:%M:%S')"
+        echo ""
+        if [[ "$env_type" == "dev" && -n "$pkg_dir" && -d "$pkg_dir" ]]; then
+            echo "Repository: ${pkg_dir}"
+            echo "Commit: $(git -C "$pkg_dir" rev-parse HEAD 2>/dev/null || echo unknown)"
+            echo "Commit (short): $(git -C "$pkg_dir" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+            echo "Branch: $(git -C "$pkg_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+        else
+            echo "Repository: N/A (uses a released package via the unified environment)"
+        fi
+        echo ""
+        if [[ "$env_type" == "dev" ]]; then
+            echo "Conda environment (dev): ${env_name}"
+            echo ""
+            echo "Package versions:"
+            echo "-----------------"
+            ( init_conda_base && conda list -n "${env_name}" ) 2>/dev/null || echo "(unable to list packages for ${env_name})"
+        else
+            echo "Conda environment: E3SM-Unified"
+            echo ""
+            echo "Package versions:"
+            echo "-----------------"
+            ( activate_unified_env && conda list ) 2>/dev/null || echo "(unable to list packages for the unified environment)"
+        fi
+    } > "$out_file"
+    CAPTURED_ENV_TASKS["$task_name"]=1
+
+    log "Wrote environment description for task '${task_name}' -> ${out_file}"
+}
+
+# Copy each task's cached env_description.txt out to the "_www" output tree
+# for every cfg that was run, so it sits alongside that task's diagnostics
+# (e.g. .../zppy_weekly_comprehensive_v3_www/<unique_id>/<case>/global_time_series/env_description.txt).
+distribute_env_descriptions() {
+    log "Distributing environment descriptions to task output directories..."
+    local cfg case task desc_file target_dir www_root cfg_file
+    for cfg in "${CFGS_ARRAY[@]}"; do
+        cfg="${cfg// /}"
+        if [[ "$cfg" == *v2* ]]; then
+            case="v2.LR.historical_0201"
+        else
+            case="v3.LR.historical_0051"
+        fi
+        cfg_file="${ZPPY_DIR}/tests/integration/generated/test_${cfg}_${MACHINE_CFG_SUFFIX}.cfg"
+        if [[ ! -f "$cfg_file" ]]; then
+            log_warning "Config file not found while distributing env descriptions: ${cfg_file}"
+            continue
+        fi
+        www_root=$(awk -F'=' '
+            /^[[:space:]]*www[[:space:]]*=/ {
+                value=$2
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+                gsub(/^"|"$/, "", value)
+                print value
+                exit
+            }
+        ' "$cfg_file")
+        if [[ -z "$www_root" ]]; then
+            log_warning "Could not determine www root from ${cfg_file}; skipping env-description copies for ${cfg}"
+            continue
+        fi
+        WWW_ROOT_BY_CFG["$cfg"]="$www_root"
+        for task in "${TASKS_ARRAY[@]}"; do
+            task="${task// /}"
+            desc_file="${ENV_DESC_DIR}/${task}.txt"
+            if [[ ! -f "$desc_file" ]]; then
+                continue
+            fi
+            # NOTE: the "www" value read from the generated cfg is already
+            # the fully-resolved per-cfg/per-run root (it already bakes in
+            # "zppy_<cfg>_www/<unique_id>"), so we only need to append
+            # <case>/<task> here. Appending "zppy_<cfg>_www/<unique_id>"
+            # again created a spurious duplicate subtree that the
+            # expected-results updater script never picks up.
+            target_dir="${www_root%/}/${case}/${task}"
+            mkdir -p "$target_dir" 2>/dev/null || {
+                log_warning "Could not create ${target_dir}; skipping env description for ${cfg}/${task}"
+                continue
+            }
+            cp "$desc_file" "${target_dir}/env_description.txt"
+        done
+    done
+    log_success "Environment descriptions distributed."
+}
+
+# ----------------------------------------------------------------------------
+# Auto-launch the image checker (Requirement: no manual compute-node step)
+# ----------------------------------------------------------------------------
+#
+# Submits tests/integration/test_images.py as a SLURM batch job (using the
+# same partition/qos/time/account as the documented manual salloc command),
+# waits for it to finish, and records the job's stdout log + generated
+# test_images_summary.md for the Markdown report.
+get_slurm_job_status() {
+    local job_id="$1"
+    sacct -X --parsable2 --noheader -j "$job_id" \
+        --format=JobIDRaw,State,ExitCode 2>/dev/null \
+        | awk -F'|' -v id="$job_id" '$1 == id {print $2 "|" $3; exit}'
+}
+
+is_terminal_slurm_state() {
+    local state="$1"
+    case "$state" in
+        COMPLETED*|FAILED*|CANCELLED*|TIMEOUT*|OUT_OF_MEMORY*|NODE_FAIL*|PREEMPTED*|BOOT_FAIL*|DEADLINE*|SPECIAL_EXIT*)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+wait_for_slurm_job() {
+    local job_id="$1"
+    local check_interval=${2:-120}
+    local max_wait=${3:-7200}
+    local elapsed=0
+
+    log "Waiting for SLURM job ${job_id} (checking every ${check_interval}s, max ${max_wait}s)..."
+    while [ "$elapsed" -lt "$max_wait" ]; do
+        local queue_state
+        queue_state=$(squeue -h -j "$job_id" -o "%T" 2>/dev/null | head -n 1 || true)
+        if [[ -n "$queue_state" ]]; then
+            log "Image checker job ${job_id} state: ${queue_state} (elapsed: ${elapsed}s / max: ${max_wait}s)"
+        else
+            local status
+            status=$(get_slurm_job_status "$job_id")
+            if [[ -n "$status" ]]; then
+                IMAGE_CHECKER_JOB_STATE="${status%%|*}"
+                IMAGE_CHECKER_EXIT_CODE="${status#*|}"
+                if is_terminal_slurm_state "$IMAGE_CHECKER_JOB_STATE"; then
+                    log "Image checker job ${job_id} finished with state ${IMAGE_CHECKER_JOB_STATE} (ExitCode ${IMAGE_CHECKER_EXIT_CODE})"
+                    [[ "$IMAGE_CHECKER_JOB_STATE" == COMPLETED* && "${IMAGE_CHECKER_EXIT_CODE%%:*}" == "0" ]]
+                    return
+                fi
+            else
+                log "Image checker job ${job_id} left squeue; waiting for accounting data..."
+            fi
+        fi
+
+        sleep "$check_interval"
+        elapsed=$((elapsed + check_interval))
+    done
+
+    IMAGE_CHECKER_JOB_STATE="TIMEOUT"
+    IMAGE_CHECKER_EXIT_CODE="N/A"
+    log_error "Timed out waiting for image checker job ${job_id}"
+    return 1
+}
+
+get_preferred_git_remote() {
+    local repo_dir="$1"
+    if git -C "$repo_dir" remote get-url upstream >/dev/null 2>&1; then
+        echo "upstream"
+        return 0
+    fi
+    if git -C "$repo_dir" remote get-url origin >/dev/null 2>&1; then
+        echo "origin"
+        return 0
+    fi
+    return 1
+}
+
+run_image_checker() {
+    local job_name="zppy_image_checker_${TAG}"
+    local image_checker_ok=true
+
+    log "Preparing image checker SLURM batch job..."
+    rm -f "${ZPPY_DIR}/test_images_summary.md" "${ZPPY_DIR}/early_test_images_summary.md"
+    cat > "$IMAGE_CHECKER_SBATCH" <<EOF
+#!/bin/bash
+#SBATCH --job-name=${job_name}
+#SBATCH --nodes=1
+#SBATCH --output=${IMAGE_CHECKER_STDOUT_PREFIX}.o%j
+#SBATCH --error=${IMAGE_CHECKER_STDOUT_PREFIX}.e%j
+${SBATCH_DIRECTIVES}
+
+set -e
+set +u
+source ~/.bashrc
+${CONDA_ACTIVATION_CMD}
+conda activate ${ZPPY_ENV}
+set -u
+cd ${ZPPY_DIR}
+pytest tests/integration/test_images.py
+EOF
+
+    log "Submitting image checker job (test_images.py)..."
+    if ! IMAGE_CHECKER_JOB_ID=$(sbatch --parsable "$IMAGE_CHECKER_SBATCH"); then
+        IMAGE_CHECKER_JOB_STATE="SUBMISSION_FAILED"
+        IMAGE_CHECKER_EXIT_CODE="N/A"
+        log_error "Failed to submit image checker job"
+        return 1
+    fi
+    if [[ -z "$IMAGE_CHECKER_JOB_ID" ]]; then
+        IMAGE_CHECKER_JOB_STATE="SUBMISSION_FAILED"
+        IMAGE_CHECKER_EXIT_CODE="N/A"
+        log_error "Image checker job submission returned an empty job ID"
+        return 1
+    fi
+    log "Image checker job submitted: ${IMAGE_CHECKER_JOB_ID}"
+
+    IMAGE_CHECKER_STDOUT="${IMAGE_CHECKER_STDOUT_PREFIX}.o${IMAGE_CHECKER_JOB_ID}"
+    IMAGE_CHECKER_STDERR="${IMAGE_CHECKER_STDOUT_PREFIX}.e${IMAGE_CHECKER_JOB_ID}"
+
+    if ! wait_for_slurm_job "$IMAGE_CHECKER_JOB_ID" 120 7200; then
+        image_checker_ok=false
+        log_error "Image checker job failed with state ${IMAGE_CHECKER_JOB_STATE} (ExitCode ${IMAGE_CHECKER_EXIT_CODE})"
+    fi
+
+    if [[ -f "$IMAGE_CHECKER_STDOUT" ]]; then
+        if [ "$image_checker_ok" = true ]; then
+            log_success "Image checker job passed. Output: ${IMAGE_CHECKER_STDOUT}"
+        else
+            log_error "Image checker job did not pass. Output: ${IMAGE_CHECKER_STDOUT}"
+        fi
+    else
+        log_warning "Image checker output log not found: ${IMAGE_CHECKER_STDOUT}"
+    fi
+
+    if [[ -f "${ZPPY_DIR}/test_images_summary.md" ]]; then
+        cp "${ZPPY_DIR}/test_images_summary.md" "${SCRIPT_RUN_DIR}/test_images_summary_${TAG}.md"
+        IMAGE_CHECKER_SUMMARY_SOURCE="final"
+        log_success "Copied test_images_summary.md -> ${SCRIPT_RUN_DIR}/test_images_summary_${TAG}.md"
+    elif [[ -f "${ZPPY_DIR}/early_test_images_summary.md" ]]; then
+        cp "${ZPPY_DIR}/early_test_images_summary.md" "${SCRIPT_RUN_DIR}/test_images_summary_${TAG}.md"
+        IMAGE_CHECKER_SUMMARY_SOURCE="early"
+        log_warning "Copied early_test_images_summary.md -> ${SCRIPT_RUN_DIR}/test_images_summary_${TAG}.md"
+    else
+        IMAGE_CHECKER_SUMMARY_SOURCE="missing"
+        log_warning "test_images_summary.md not found in ${ZPPY_DIR}"
+    fi
+
+    [ "$image_checker_ok" = true ]
 }
 
 # ============================================================================
@@ -434,6 +934,7 @@ phase_1_setup() {
             log "Using unified env for e3sm_to_cmip (skipping conda env creation)"
         fi
     )
+    capture_env_description "e3sm_to_cmip" "$E3SM_TO_CMIP_DIR" "$E3SM_TO_CMIP_ENV_TYPE" "$E3SM_TO_CMIP_ENV"
 
     # ------------------------------------------------------------------
     # e3sm_diags
@@ -467,6 +968,7 @@ phase_1_setup() {
             log "Using unified env for e3sm_diags (skipping conda env creation)"
         fi
     )
+    capture_env_description "e3sm_diags" "$E3SM_DIAGS_DIR" "$DIAGS_ENV_TYPE" "$DIAGS_ENV"
 
     # ------------------------------------------------------------------
     # MPAS-Analysis
@@ -500,6 +1002,7 @@ phase_1_setup() {
             log "Using unified env for MPAS-Analysis (skipping conda env creation)"
         fi
     )
+    capture_env_description "mpas_analysis" "$MPAS_ANALYSIS_DIR" "$MPAS_ENV_TYPE" "$MPAS_ENV"
 
     # ------------------------------------------------------------------
     # zppy-interfaces (includes unit tests)
@@ -537,21 +1040,29 @@ phase_1_setup() {
         log "Running zppy-interfaces unit tests..."
         pytest tests/unit/global_time_series/test_*.py
         pytest tests/unit/pcmdi_diags/test_*.py
-        log_success "zppy-interfaces unit tests passed"
     )
+    ZI_UNIT_TEST_STATUS="passed"
+    log_success "zppy-interfaces unit tests passed"
+    # global_time_series and pcmdi_diags are both powered by zppy-interfaces.
+    capture_env_description "global_time_series" "$ZPPY_INTERFACES_DIR" "$ZI_ENV_TYPE" "$ZI_ENV"
+    capture_env_description "pcmdi_diags" "$ZPPY_INTERFACES_DIR" "$ZI_ENV_TYPE" "$ZI_ENV"
+
+    # ------------------------------------------------------------------
+    # Any configured task that has not already been associated with a
+    # dedicated dev repo/env uses the unified/release environment.
+    # ------------------------------------------------------------------
+    local release_task
+    for release_task in "${TASKS_ARRAY[@]}"; do
+        release_task="${release_task// /}"
+        if [[ -z "${CAPTURED_ENV_TASKS[$release_task]:-}" ]]; then
+            capture_env_description "$release_task" "" "unified" ""
+        fi
+    done
 
     # ------------------------------------------------------------------
     # zppy (includes unit tests + config generation)
     # ------------------------------------------------------------------
     log "Setting up zppy..."
-
-    # Resolve ZPPY_ENV name before the subshell so it's available for
-    # config generation and later phases.
-    if [[ -n "$ZPPY_EXISTING_ENV" ]]; then
-        ZPPY_ENV="$ZPPY_EXISTING_ENV"
-    fi
-    # (If ZPPY_EXISTING_ENV is empty, ZPPY_ENV retains the auto-generated
-    # name set at the top of the script.)
 
     (
         cd "$ZPPY_DIR"
@@ -569,8 +1080,23 @@ phase_1_setup() {
 
         log "Running zppy unit tests..."
         pytest tests/test_*.py
-        log_success "zppy unit tests passed"
     )
+    ZPPY_UNIT_TEST_STATUS="passed"
+    log_success "zppy unit tests passed"
+
+    (
+        cd "$ZPPY_DIR"
+        ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH"
+        init_conda_base
+        conda activate "$ZPPY_ENV"
+
+        log "Running tests of the image checker itself..."
+        pytest tests/images/test_image_checker.py
+        pytest tests/images/test_image_severity.py
+        pytest tests/images/test_image_summary_report.py
+    )
+    IMAGE_HELPER_UNIT_TEST_STATUS="passed"
+    log_success "Image-checker/report unit tests passed"
 
     # ------------------------------------------------------------------
     # Generate config files (update utils.py TEST_SPECIFICS, then run it)
@@ -730,7 +1256,7 @@ phase_2_bundles_part2() {
 }
 
 # ============================================================================
-# Phase 3: Validation (status checks + pytest integration tests)
+# Phase 3: Validation (status checks + pytest integration tests + image checker)
 # ============================================================================
 
 phase_3_validation() {
@@ -748,6 +1274,9 @@ phase_3_validation() {
     # ------------------------------------------------------------------
     log "Checking all status files..."
     local all_good=true
+    # Reset so the report only reflects this final validation pass, not
+    # phase_2_bundles_part2's earlier pre-check of the bundle outputs.
+    STATUS_FILE_ERRORS=""
 
     check_status_files "$V2_OUTPUT"                 "v2"                   || all_good=false
     check_status_files "$LEGACY_310_V2_OUTPUT"      "Legacy 3.1.0 v2"      || all_good=false
@@ -759,12 +1288,23 @@ phase_3_validation() {
     check_status_files "$LEGACY_310_BUNDLES_OUTPUT" "Legacy 3.1.0 Bundles" || all_good=false
     check_status_files "$LEGACY_300_BUNDLES_OUTPUT" "Legacy 3.0.0 Bundles" || all_good=false
 
+    local overall_ok=true
+
     if [ "$all_good" = false ]; then
+        overall_ok=false
+        STATUS_FILE_CHECK_STATUS="failed"
         log_error "Some status checks failed!"
         checkpoint "Errors found in status files. Continue to pytest anyway?"
     else
+        STATUS_FILE_CHECK_STATUS="passed"
         log_success "All status files clean!"
     fi
+
+    # ------------------------------------------------------------------
+    # Distribute per-task environment descriptions now that output
+    # directories exist.
+    # ------------------------------------------------------------------
+    distribute_env_descriptions
 
     # ------------------------------------------------------------------
     # pytest integration tests
@@ -772,39 +1312,378 @@ phase_3_validation() {
     log "Running integration tests..."
 
     log "Running test_last_year.py (no expected results dir)..."
-    pytest tests/integration/test_last_year.py \
-        || log_warning "test_last_year.py had failures"
+    if pytest tests/integration/test_last_year.py; then
+        INTEGRATION_TEST_RESULTS+=("test_last_year.py: passed")
+    else
+        overall_ok=false
+        INTEGRATION_TEST_RESULTS+=("test_last_year.py: failed")
+        log_warning "test_last_year.py had failures"
+    fi
 
     log "Running test_bash_generation.py..."
-    pytest tests/integration/test_bash_generation.py \
-        || log_warning "test_bash_generation.py had failures"
+    if pytest tests/integration/test_bash_generation.py; then
+        INTEGRATION_TEST_RESULTS+=("test_bash_generation.py: passed")
+    else
+        overall_ok=false
+        INTEGRATION_TEST_RESULTS+=("test_bash_generation.py: failed")
+        log_warning "test_bash_generation.py had failures"
+    fi
 
     log "Running test_campaign.py..."
-    pytest tests/integration/test_campaign.py \
-        || log_warning "test_campaign.py had failures"
+    if pytest tests/integration/test_campaign.py; then
+        INTEGRATION_TEST_RESULTS+=("test_campaign.py: passed")
+    else
+        overall_ok=false
+        INTEGRATION_TEST_RESULTS+=("test_campaign.py: failed")
+        log_warning "test_campaign.py had failures"
+    fi
 
     log "Running test_defaults.py..."
-    pytest tests/integration/test_defaults.py \
-        || log_warning "test_defaults.py had failures"
+    if pytest tests/integration/test_defaults.py; then
+        INTEGRATION_TEST_RESULTS+=("test_defaults.py: passed")
+    else
+        overall_ok=false
+        INTEGRATION_TEST_RESULTS+=("test_defaults.py: failed")
+        log_warning "test_defaults.py had failures"
+    fi
 
-    log "Running test_bundles.py..."
-    pytest tests/integration/test_bundles.py \
-        || log_warning "test_bundles.py had failures"
+    if any_bundle_cfg_configured; then
+        log "Running test_bundles.py..."
+        if pytest tests/integration/test_bundles.py; then
+            INTEGRATION_TEST_RESULTS+=("test_bundles.py: passed")
+        else
+            overall_ok=false
+            INTEGRATION_TEST_RESULTS+=("test_bundles.py: failed")
+            log_warning "test_bundles.py had failures"
+        fi
+    else
+        log_warning "Skipping test_bundles.py: no *_bundles cfg in CFGS_TO_RUN (${CFGS_TO_RUN})"
+        INTEGRATION_TEST_RESULTS+=("test_bundles.py: skipped (no _bundles cfg in CFGS_TO_RUN)")
+    fi
 
     # ------------------------------------------------------------------
-    # test_images.py -- must run from a compute node
+    # test_images.py -- now auto-launched via SLURM, no manual step needed.
     # ------------------------------------------------------------------
-    log_warning "test_images.py requires a compute node and must be run manually."
-    log "To run it on ${MACHINE}:"
-    log "  ${SALLOC_CMD}"
-    log "  source ${CONDA_PROFILE}"
-    log "  conda activate ${ZPPY_ENV}"
-    log "  cd ${ZPPY_DIR}"
-    log "  pytest tests/integration/test_images.py"
-    log "  cat test_images_summary.md"
+    log "Auto-launching the image checker (test_images.py) on a compute node..."
+    if ! run_image_checker; then
+        overall_ok=false
+    fi
 
-    log_success "Phase 3 automated tests complete!"
-    log_success "Remember to run test_images.py manually from a compute node."
+    if [ "$overall_ok" = true ]; then
+        log_success "Phase 3 automated tests complete!"
+    else
+        log_error "Phase 3 automated tests completed with failures."
+    fi
+
+    # ------------------------------------------------------------------
+    # Markdown report
+    # ------------------------------------------------------------------
+    generate_markdown_report
+    log_success "Markdown report written: ${REPORT_FILE}"
+
+    [ "$overall_ok" = true ]
+}
+
+# ============================================================================
+# Markdown report generation (Requirement: write the Markdown report)
+# ============================================================================
+#
+# Assembles ${REPORT_FILE} from: the captured integration_test log (this
+# script's own stdout, if it was invoked with `| tee integration_test_runN.log`
+# in the same directory), the per-task env_description.txt files, and the
+# image checker's output/summary table. Sections that require human judgment
+# (e.g. deciding whether image diffs are "expected") are left as TODOs.
+generate_markdown_report() {
+    log "Generating Markdown report..."
+
+    {
+        echo "# ${DATE_STAMP} zppy test"
+        echo ""
+        echo "See [automated testing docs page](https://docs.e3sm.org/zppy/_build/html/main/dev_guide/tests/automated_test.html) for info on setup."
+        echo ""
+    } > "$REPORT_FILE"
+
+    # --- Expected results directory (optional, auto-populated) ---
+    # NOTE: this used to be "Step 1" in the header text, matching the
+    # numbered steps on the docs page. That numbering only made sense when
+    # a human was following the docs page by hand; now that everything
+    # below is generated automatically, the numbers just drift out of sync
+    # with the docs page's own steps, so headers in this report no longer
+    # include them.
+    report_append "## Determine what the current expected results are"
+    report_append ""
+    if [[ -n "$EXPECTED_RESULTS_DIR" && -d "$EXPECTED_RESULTS_DIR" ]]; then
+        report_append "Promotion date for each cfg/task under \`${EXPECTED_RESULTS_DIR}\` -- i.e. when its expected-results files were last copied into place. This is **not** necessarily when those results were actually produced (see Step 2, which uses a different, content-based date for exactly that reason)."
+        report_append ""
+        local cfg cfg_dirname task task_dir mtime_date
+        local _found_any_cfg_dir=false
+        for cfg in "${CFGS_ARRAY[@]}"; do
+            cfg="${cfg// /}"
+            cfg_dirname="expected_${cfg#weekly_}"
+            [[ -d "${EXPECTED_RESULTS_DIR}/${cfg_dirname}" ]] || continue
+            _found_any_cfg_dir=true
+            report_append "\`${cfg_dirname}\`:"
+            report_append ""
+            report_append "| Task | Last promoted |"
+            report_append "| --- | --- |"
+            for task in "${TASKS_ARRAY[@]}"; do
+                task="${task// /}"
+                task_dir="${EXPECTED_RESULTS_DIR}/${cfg_dirname}/${task}"
+                [[ -d "$task_dir" ]] || continue
+                mtime_date="$(date -r "$task_dir" +%Y-%m-%d 2>/dev/null || echo unknown)"
+                report_append "| ${task} | \`${mtime_date}\` |"
+            done
+            report_append ""
+        done
+        if [[ "$_found_any_cfg_dir" == false ]]; then
+            report_append "_No \`expected_<cfg>\` subdirectories found under ${EXPECTED_RESULTS_DIR} for the cfgs in CFGS_TO_RUN._"
+            report_append ""
+        fi
+        unset _found_any_cfg_dir
+    else
+        report_append "_TODO: set EXPECTED_RESULTS_DIR in the config to auto-populate this section._"
+        report_append ""
+    fi
+
+    # --- Changes since expected results were updated ---
+    report_append "## Review changes since expected results were updated"
+    report_append ""
+    report_append "Commits merged on each repo's *expected-results baseline branch* (see the \"Branch tested\" column when it differs from the branch this run actually tested) since that dependency's expected results were actually **produced** (for \`e3sm_to_cmip\`/\`zppy\`, which have no per-task expected results of their own, since they were last **tested** instead -- see the \`*_LAST_TESTED_DATE\` config variables). The \"Since\" date is read from the \`Generated:\` line of the promoted \`env_description.txt\` (the earliest one found across every cfg being tested) -- deliberately not the promotion date from Step 1 above, since results normally sit under review before being promoted, so the promotion date routinely lags well behind the run that actually produced them (set the matching \`*_EXPECTED_RESULTS_DATE\`/\`*_LAST_TESTED_DATE\` in the config to override any date below when you know better, e.g. from a discussion thread). \`zppy-interfaces\` bundles two independently-refreshed tasks, so its row is split into \`global_time_series\` and \`pcmdi_diags\`, each with its own date."
+    report_append ""
+    report_append "| Package | Branch tested | Since | Changes since expected results were produced |"
+    report_append "| --- | --- | --- | --- |"
+    _report_repo_changes "e3sm_to_cmip" "$E3SM_TO_CMIP_DIR" "$E3SM_TO_CMIP_BASE_BRANCH" "$E3SM_TO_CMIP_EXPECTED_RESULTS_BRANCH" "$E3SM_TO_CMIP_LAST_TESTED_DATE" "https://github.com/E3SM-Project/e3sm_to_cmip" "E3SM_TO_CMIP_LAST_TESTED_DATE"
+    _report_repo_changes "e3sm_diags" "$E3SM_DIAGS_DIR" "$DIAGS_BASE_BRANCH" "$DIAGS_EXPECTED_RESULTS_BRANCH" "$DIAGS_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/e3sm_diags" "DIAGS_EXPECTED_RESULTS_DATE"
+    _report_repo_changes "mpas_analysis" "$MPAS_ANALYSIS_DIR" "$MPAS_BASE_BRANCH" "$MPAS_EXPECTED_RESULTS_BRANCH" "$MPAS_EXPECTED_RESULTS_DATE" "https://github.com/MPAS-Dev/MPAS-Analysis" "MPAS_EXPECTED_RESULTS_DATE"
+    _report_repo_changes "zppy-interfaces (global_time_series)" "$ZPPY_INTERFACES_DIR" "$ZI_BASE_BRANCH" "$ZI_EXPECTED_RESULTS_BRANCH" "$ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/zppy-interfaces" "ZI_GLOBAL_TIME_SERIES_EXPECTED_RESULTS_DATE"
+    _report_repo_changes "zppy-interfaces (pcmdi_diags)" "$ZPPY_INTERFACES_DIR" "$ZI_BASE_BRANCH" "$ZI_EXPECTED_RESULTS_BRANCH" "$ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE" "https://github.com/E3SM-Project/zppy-interfaces" "ZI_PCMDI_DIAGS_EXPECTED_RESULTS_DATE"
+    _report_repo_changes "zppy" "$ZPPY_DIR" "$ZPPY_BASE_BRANCH" "$ZPPY_EXPECTED_RESULTS_BRANCH" "$ZPPY_LAST_TESTED_DATE" "https://github.com/E3SM-Project/zppy" "ZPPY_LAST_TESTED_DATE"
+    report_append ""
+
+    # --- Environment descriptions ---
+    report_append "## Environment descriptions"
+    report_append ""
+    report_append "An \`env_description.txt\` (commit hash + conda package list) was written for each task alongside its diagnostic output. Locally cached copies:"
+    report_append ""
+    report_append "| Task | env_description.txt |"
+    report_append "| --- | --- |"
+    local desc_file task
+    if compgen -G "${ENV_DESC_DIR}/*.txt" > /dev/null; then
+        while IFS= read -r desc_file; do
+            task="${desc_file##*/}"
+            task="${task%.txt}"
+            report_append "| ${task} | \`${desc_file}\` |"
+        done < <(find "$ENV_DESC_DIR" -maxdepth 1 -type f -name '*.txt' | sort)
+    else
+        report_append "| _none_ | _env_description.txt files were not captured in ${ENV_DESC_DIR}_ |"
+    fi
+    report_append ""
+
+    # Each cfg also gets its own copy of every task's env_description.txt
+    # under its own "_www" output tree (at <prefix>/<case>/<task>/, see
+    # distribute_env_descriptions), so list the per-cfg prefixes once here
+    # instead of repeating all 9 cfgs' full paths on every row above.
+    if [[ ${#WWW_ROOT_BY_CFG[@]} -gt 0 ]]; then
+        report_append "Each task's \`env_description.txt\` above is also copied to \`<prefix>/<case>/<task>/env_description.txt\` under that cfg's \`_www\` output dir, for each of the following per-cfg prefixes:"
+        report_append ""
+        report_append "| Cfg | \`_www\` prefix |"
+        report_append "| --- | --- |"
+        local cfg
+        for cfg in "${CFGS_ARRAY[@]}"; do
+            cfg="${cfg// /}"
+            [[ -n "${WWW_ROOT_BY_CFG[$cfg]:-}" ]] || continue
+            report_append "| ${cfg} | \`${WWW_ROOT_BY_CFG[$cfg]}\` |"
+        done
+        report_append ""
+    fi
+
+    # --- Unit tests / status files / integration tests summary ---
+    report_append "## Automated test script results"
+    report_append ""
+    report_append "* zppy-interfaces unit tests: \`${ZI_UNIT_TEST_STATUS}\`"
+    report_append "* zppy unit tests: \`${ZPPY_UNIT_TEST_STATUS}\`"
+    report_append "* Image-checker/report unit tests: \`${IMAGE_HELPER_UNIT_TEST_STATUS}\` (\`tests/images/test_image_checker.py\`, \`tests/images/test_image_severity.py\`, \`tests/images/test_image_summary_report.py\`)"
+    report_append "* Output directory status files: \`${STATUS_FILE_CHECK_STATUS}\`"
+    if [[ "$STATUS_FILE_CHECK_STATUS" == "failed" && -n "$STATUS_FILE_ERRORS" ]]; then
+        # Explain exactly why each failing output directory failed --
+        # either the non-OK lines `grep -v "OK" "${dir}"/*status` turned
+        # up, or (if there was nothing to grep) that the directory was
+        # missing or had no status files -- rather than making the reader
+        # dig that up themselves after the fact.
+        report_append "$STATUS_FILE_ERRORS"
+    fi
+    report_append "* Integration tests:"
+    local integration_result
+    for integration_result in "${INTEGRATION_TEST_RESULTS[@]}"; do
+        report_append "  * \`${integration_result}\`"
+    done
+    report_append ""
+    # The point of this script is full automation: if every line above says
+    # "passed", there is nothing left to dig for in the raw log, so only
+    # point at it when something didn't pass.
+    local _any_failure=false
+    [[ "$ZI_UNIT_TEST_STATUS" != "passed" ]] && _any_failure=true
+    [[ "$ZPPY_UNIT_TEST_STATUS" != "passed" ]] && _any_failure=true
+    [[ "$IMAGE_HELPER_UNIT_TEST_STATUS" != "passed" ]] && _any_failure=true
+    [[ "$STATUS_FILE_CHECK_STATUS" != "passed" ]] && _any_failure=true
+    for integration_result in "${INTEGRATION_TEST_RESULTS[@]}"; do
+        [[ "$integration_result" == *": failed" ]] && _any_failure=true
+    done
+    if [[ "$_any_failure" == true ]]; then
+        report_append "_TODO: one or more steps above did not pass -- review the full log captured from this script's stdout (for example, \`integration_test_runN.log\` if you used \`tee integration_test_runN.log\`) and note any unexpected failures here._"
+        report_append ""
+    fi
+    unset _any_failure
+
+    # --- Image checker (auto-launched) ---
+    report_append "## Run Python tests"
+    report_append ""
+    report_append "The image checker (\`pytest tests/integration/test_images.py\`) was launched automatically as a SLURM job and no longer requires a manual compute-node step."
+    report_append ""
+    report_append "* SLURM job ID: \`${IMAGE_CHECKER_JOB_ID:-unknown}\`"
+    report_append "* Terminal state: \`${IMAGE_CHECKER_JOB_STATE:-unknown}\`"
+    report_append "* Exit code: \`${IMAGE_CHECKER_EXIT_CODE:-unknown}\`"
+    report_append "* Summary source: \`${IMAGE_CHECKER_SUMMARY_SOURCE:-unknown}\`"
+    report_append ""
+    # The SLURM stdout/stderr files ARE the full output already; embedding
+    # an excerpt here just duplicates them (and produces an empty code
+    # block when the job failed before pytest wrote a "Captured stdout
+    # call" section), so just point at them directly.
+    if [[ -n "${IMAGE_CHECKER_STDOUT:-}" && -f "${IMAGE_CHECKER_STDOUT:-}" ]]; then
+        report_append "* Full output: \`${IMAGE_CHECKER_STDOUT}\`"
+    else
+        report_append "* Full output: _not found (expected at \`${IMAGE_CHECKER_STDOUT:-unknown}\`)_"
+    fi
+    if [[ -n "${IMAGE_CHECKER_STDERR:-}" && -f "${IMAGE_CHECKER_STDERR:-}" && -s "${IMAGE_CHECKER_STDERR:-}" ]]; then
+        report_append "* Errors: \`${IMAGE_CHECKER_STDERR}\`"
+    fi
+    report_append ""
+
+    local summary_file="${SCRIPT_RUN_DIR}/test_images_summary_${TAG}.md"
+    report_append "### Complete summary table"
+    report_append ""
+    if [[ -f "$summary_file" ]]; then
+        # test_images_summary.md carries its own "# Summary of test
+        # results" H1 title. Dropping it here (rather than `cat`-ing the
+        # whole file) avoids introducing a second, same-level H1 in the
+        # middle of the report, which broke the heading hierarchy below
+        # our own "### Complete summary table" heading.
+        awk 'NR==1 && /^# / { next } { print }' "$summary_file" >> "$REPORT_FILE"
+    else
+        echo "_test_images_summary.md not found._" >> "$REPORT_FILE"
+    fi
+    report_append ""
+
+    report_append "### Summary table -- only failing image-check tests, sorted by task"
+    report_append ""
+    if [[ -f "$summary_file" ]]; then
+        python -m tests.integration.image_summary_report \
+            "$summary_file" "${TASKS_ARRAY[@]}" >> "$REPORT_FILE"
+    else
+        echo "_test_images_summary.md not found; skipping._" >> "$REPORT_FILE"
+    fi
+    report_append ""
+
+    report_append "## Results analysis"
+    report_append ""
+    report_append "_TODO: fill in analysis of any failures above (expected vs. unexpected, whether expected results should be updated, etc.)._"
+    report_append ""
+}
+
+# Helper for generate_markdown_report: append one repo's commit log since
+# its own expected-results production date as a Markdown table row.
+#
+# Two branches matter here and they are frequently NOT the same branch:
+#   - tested_branch: what this run actually checked out (e.g. a feature
+#     branch rebased onto main).
+#   - results_branch: the branch the *expected* (baseline) results were
+#     actually generated from (usually a project's long-lived default
+#     branch, e.g. "main"). This is what "changes since expected results
+#     were updated" needs to be measured against -- looking at
+#     tested_branch's own history would conflate "upstream drift on the
+#     baseline branch" with "commits unique to the branch under test",
+#     and always hardcoding the default branch would be wrong for setups
+#     that intentionally maintain expected results off a different branch.
+#
+# since_date is likewise per-dependency (see _detect_expected_results_date
+# above): different dependencies' expected results can have been produced
+# on different dates, so there is no single script-wide date to use here.
+_report_repo_changes() {
+    local label="$1"
+    local repo_dir="$2"
+    local tested_branch="$3"
+    local results_branch="$4"
+    local since_date="$5"
+    local repo_url="$6"
+    local date_var_name="$7"
+
+    local tested_branch_col="\`${tested_branch}\`"
+    if [[ "$tested_branch" == "$results_branch" ]]; then
+        tested_branch_col="\`${tested_branch}\` (same as baseline)"
+    fi
+
+    if [[ -z "$since_date" ]]; then
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | _unknown_ | _could not determine when this dependency was last tested; set \`${date_var_name}\` in the config_ |"
+        return
+    fi
+
+    local since_col="\`${since_date}\`"
+
+    if [[ ! -d "$repo_dir" ]]; then
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | _repo not found at ${repo_dir}_ |"
+        return
+    fi
+
+    local remote
+    if ! remote=$(get_preferred_git_remote "$repo_dir"); then
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | _unable to identify a git remote for ${repo_dir}_ |"
+        return
+    fi
+
+    local log_ref=""
+    if ! env GIT_TERMINAL_PROMPT=0 \
+        GIT_SSH_COMMAND="ssh -oBatchMode=yes" \
+        git -C "$repo_dir" fetch "$remote" "$results_branch" >/dev/null 2>&1; then
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | _unable to fetch ${remote}/${results_branch}_ |"
+        return
+    elif ! log_ref=$(git -C "$repo_dir" rev-parse FETCH_HEAD 2>/dev/null); then
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | _unable to resolve fetched ${remote}/${results_branch}_ |"
+        return
+    fi
+
+    # Use the start of since_date's day, explicitly, rather than the bare
+    # date. We can't tell whether a commit made on since_date itself landed
+    # before or after the expected results were produced that same day, so
+    # we err on the side of caution and always include the whole day
+    # (some git versions/date-parsers can otherwise be inconsistent about
+    # whether a bare "YYYY-MM-DD" --since value includes that day at all).
+    local commits
+    if ! commits=$(git -C "$repo_dir" log "$log_ref" --since="${since_date} 00:00:00" --oneline 2>/dev/null); then
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | _unable to inspect ${log_ref}_ |"
+        return
+    fi
+
+    if [[ -z "$commits" ]]; then
+        report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | None |"
+        return
+    fi
+
+    local links=""
+    local hash msg pr
+    while IFS= read -r line; do
+        hash="${line%% *}"
+        msg="${line#* }"
+        # Extract a trailing "(#1234)" PR reference if present.
+        if [[ "$msg" =~ \(#([0-9]+)\)$ ]]; then
+            pr="${BASH_REMATCH[1]}"
+            links+="[#${pr}](${repo_url}/pull/${pr}), "
+        else
+            links+="[${hash}](${repo_url}/commit/${hash}), "
+        fi
+    done <<< "$commits"
+    links="${links%, }"
+
+    report_append "| [${label}](${repo_url}/commits/${results_branch}) | ${tested_branch_col} | ${since_col} | ${links} |"
 }
 
 # ============================================================================
@@ -839,6 +1718,7 @@ main() {
     esac
 
     log_success "Integration test automation complete!"
+    log_success "Markdown report: ${REPORT_FILE}"
 }
 
 main
