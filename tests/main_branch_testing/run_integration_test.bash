@@ -575,18 +575,24 @@ wait_for_slurm_jobs() {
 }
 
 # Grep status files in a directory for any non-OK lines.
-# Returns 0 if all OK, 1 if any failures found.
+# Returns 0 if all OK, 1 otherwise (missing directory, no status files
+# present, or actual non-OK entries found). Whichever of those three
+# reasons caused the 1, it is always appended to STATUS_FILE_ERRORS so the
+# Markdown report can explain a "failed" result without the reader having
+# to re-run `grep -v "OK" "${dir}"/*status` themselves afterward.
 check_status_files() {
     local dir="$1"
     local name="$2"
 
     if [ ! -d "$dir" ]; then
         log_warning "$name: Directory not found: $dir"
+        STATUS_FILE_ERRORS+="**${name}** (\`${dir}\`): directory not found."$'\n\n'
         return 1
     fi
 
     if ! compgen -G "${dir}/*status" > /dev/null; then
         log_warning "$name: No status files found in ${dir}"
+        STATUS_FILE_ERRORS+="**${name}** (\`${dir}\`): no \`*status\` files found (\`grep -v \"OK\" ${dir}/*status\` has nothing to check)."$'\n\n'
         return 1
     fi
 
@@ -602,6 +608,20 @@ check_status_files() {
         STATUS_FILE_ERRORS+="**${name}** (\`${dir}\`):"$'\n\n'"\`\`\`"$'\n'"${errors}"$'\n'"\`\`\`"$'\n\n'
         return 1
     fi
+}
+
+# Returns 0 if any entry in CFGS_ARRAY names a bundle cfg (i.e. contains
+# "bundle" -- see CFGS_TO_RUN's docstring in the cfg file), 1 otherwise.
+# Used to gate steps that only make sense when a *_bundles cfg was actually
+# launched: the Phase 2 bundle-status pre-check and, in Phase 3,
+# test_bundles.py itself.
+any_bundle_cfg_configured() {
+    local cfg
+    for cfg in "${CFGS_ARRAY[@]}"; do
+        cfg="${cfg// /}"
+        [[ "$cfg" == *bundle* ]] && return 0
+    done
+    return 1
 }
 
 # ----------------------------------------------------------------------------
@@ -1327,13 +1347,18 @@ phase_3_validation() {
         log_warning "test_defaults.py had failures"
     fi
 
-    log "Running test_bundles.py..."
-    if pytest tests/integration/test_bundles.py; then
-        INTEGRATION_TEST_RESULTS+=("test_bundles.py: passed")
+    if any_bundle_cfg_configured; then
+        log "Running test_bundles.py..."
+        if pytest tests/integration/test_bundles.py; then
+            INTEGRATION_TEST_RESULTS+=("test_bundles.py: passed")
+        else
+            overall_ok=false
+            INTEGRATION_TEST_RESULTS+=("test_bundles.py: failed")
+            log_warning "test_bundles.py had failures"
+        fi
     else
-        overall_ok=false
-        INTEGRATION_TEST_RESULTS+=("test_bundles.py: failed")
-        log_warning "test_bundles.py had failures"
+        log_warning "Skipping test_bundles.py: no *_bundles cfg in CFGS_TO_RUN (${CFGS_TO_RUN})"
+        INTEGRATION_TEST_RESULTS+=("test_bundles.py: skipped (no _bundles cfg in CFGS_TO_RUN)")
     fi
 
     # ------------------------------------------------------------------
@@ -1480,9 +1505,11 @@ generate_markdown_report() {
     report_append "* Image-checker/report unit tests: \`${IMAGE_HELPER_UNIT_TEST_STATUS}\` (\`tests/images/test_image_checker.py\`, \`tests/images/test_image_severity.py\`, \`tests/images/test_image_summary_report.py\`)"
     report_append "* Output directory status files: \`${STATUS_FILE_CHECK_STATUS}\`"
     if [[ "$STATUS_FILE_CHECK_STATUS" == "failed" && -n "$STATUS_FILE_ERRORS" ]]; then
-        # Show exactly what `grep -v "OK" "${dir}"/*status` turned up for
-        # each output directory that had non-OK entries, rather than
-        # making the reader re-run it themselves.
+        # Explain exactly why each failing output directory failed --
+        # either the non-OK lines `grep -v "OK" "${dir}"/*status` turned
+        # up, or (if there was nothing to grep) that the directory was
+        # missing or had no status files -- rather than making the reader
+        # dig that up themselves after the fact.
         report_append "$STATUS_FILE_ERRORS"
     fi
     report_append "* Integration tests:"
