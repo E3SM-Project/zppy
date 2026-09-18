@@ -82,6 +82,11 @@ def test_mpas_analysis_uses_dev_spec_not_dev_yml(monkeypatch, checkout) -> None:
 
     # MPAS-Analysis pins its environment differently from the others.
     assert ["conda", "create"] == calls[0][:2]
+    # dev-spec.txt cannot name channels, and an operator's condarc may list
+    # only `defaults`, where MPAS-Analysis's dependencies do not exist.
+    assert calls[0][calls[0].index("-c") + 1] == "conda-forge"
+    assert "--override-channels" in calls[0]
+    assert "--strict-channel-priority" in calls[0]
     assert "dev-spec.txt" in calls[0]
 
 
@@ -270,3 +275,32 @@ def test_env_types_are_the_three_documented_modes() -> None:
         ENV_TYPE_UNIFIED,
         ENV_TYPE_BASELINE,
     }
+
+
+def test_mamba_creates_the_environment_when_asked(monkeypatch, checkout) -> None:
+    calls: List[List[str]] = []
+    _record(monkeypatch, calls)
+    environments.create_environment(
+        REPO_SPECS_BY_NAME["e3sm_diags"], checkout, "tag", "/conda.sh", solver="mamba"
+    )
+    created = [c for c in calls if c[1:3] == ["env", "create"]]
+    assert created[0] == [
+        "mamba",
+        "env",
+        "create",
+        "-f",
+        "conda-env/dev.yml",
+        "-n",
+        created[0][6],
+        "--yes",
+    ]
+    # Installing the code under test still goes through conda.
+    assert any(c[:2] == ["conda", "run"] for c in calls)
+
+
+def test_a_missing_mamba_falls_back_to_conda(monkeypatch) -> None:
+    monkeypatch.setattr(environments.shutil, "which", lambda name: None)
+    assert environments.resolve_solver("mamba") == "conda"
+    monkeypatch.setattr(environments.shutil, "which", lambda name: "/bin/mamba")
+    assert environments.resolve_solver("mamba") == "mamba"
+    assert environments.resolve_solver("conda") == "conda"

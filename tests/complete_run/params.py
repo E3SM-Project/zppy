@@ -122,6 +122,9 @@ class RepoSpec:
     tasks: Tuple[str, ...] = ()
     # The clone's directory name, when it differs from ``name``.
     directory: str = ""
+    # Channels for a dev-spec.txt, which cannot name its own (a dev.yml does).
+    # Passed explicitly so the run does not depend on the operator's condarc.
+    channels: Tuple[str, ...] = ()
 
     @property
     def clone_dirname(self) -> str:
@@ -159,6 +162,8 @@ REPO_SPECS: Tuple[RepoSpec, ...] = (
         conda_dir="none",
         tasks=("mpas_analysis",),
         directory="MPAS-Analysis",
+        # MPAS-Analysis's README: conda-forge with strict channel priority.
+        channels=("conda-forge",),
     ),
     RepoSpec(
         name="zppy_interfaces",
