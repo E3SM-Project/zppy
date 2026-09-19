@@ -175,31 +175,55 @@ create_links_acyc_climo() {
     done
     shopt -u nullglob
 
-    # Derive monthly climatology files
-    for month in $(seq 1 12); do
-      local MM
-      MM=$(printf "%02d" "${month}")
-      run_nco ncra -O -h -F -d time,"${month}",,12 $(< "${v}_files.txt") "${v}_clm_${MM}.nc"
-    done
+    if [[ -s "${v}_files.txt" ]]; then
+      local ncra_failed=0
+      # Derive monthly climatology files
+      for month in $(seq 1 12); do
+        local MM
+        MM=$(printf "%02d" "${month}")
+        run_nco ncra -O -h -F -d time,"${month}",,12 $(< "${v}_files.txt") "${v}_clm_${MM}.nc"
+        if [[ $? -ne 0 ]]; then
+          ncra_failed=1
+          break
+        fi
+      done
 
-    # Combine to form full annual cycle file
-    local combined_name="${name_key}.${v}.${begin_year}01-${end_year}12.AC.${case_id}.nc"
-    run_nco ncrcat -O -d time,0, "${v}_clm_"*.nc "${combined_name}"
+      if [[ ${ncra_failed} -ne 0 ]]; then
+        rm -f "${v}_clm_"*.nc "${v}_files.txt"
+        cd "${script_dir}" || exit
+        echo "ERROR (${error_num})" > "${prefix}.status"
+        exit "${error_num}"
+      fi
 
-    # Adjust time metadata for PCMDI diagnostics
-    local cmdfix1='time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5}'
-    local cmdfix2='time_bnds[time,bnds]={0,31,31,59,59,90,90,120,120,151,151,181,181,212,212,243,243,273,273,304,304,334,334,365.}'
-    local cmdfix3='time@units="days since 1850-01-01 00:00:00"'
-    local cmdfix4='time@calendar="noleap"'
-    local cmdfix5='time@bounds="time_bnds"'
-    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
+      # Combine to form full annual cycle file
+      local combined_name="${name_key}.${v}.${begin_year}01-${end_year}12.AC.${case_id}.nc"
+      run_nco ncrcat -O -d time,0, "${v}_clm_"*.nc "${combined_name}"
+      if [[ $? -ne 0 ]]; then
+        rm -f "${v}_clm_"*.nc "${v}_files.txt"
+        cd "${script_dir}" || exit
+        echo "ERROR (${error_num})" > "${prefix}.status"
+        exit "${error_num}"
+      fi
 
-    rm -vf "${v}_clm_"*.nc
+      # Adjust time metadata for PCMDI diagnostics
+      local cmdfix1='time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5}'
+      local cmdfix2='time_bnds[time,bnds]={0,31,31,59,59,90,90,120,120,151,151,181,181,212,212,243,243,273,273,304,304,334,334,365.}'
+      local cmdfix3='time@units="days since 1850-01-01 00:00:00"'
+      local cmdfix4='time@calendar="noleap"'
+      local cmdfix5='time@bounds="time_bnds"'
+      run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
+      if [[ $? -ne 0 ]]; then
+        rm -f "${v}_clm_"*.nc "${v}_files.txt"
+        cd "${script_dir}" || exit
+        echo "ERROR (${error_num})" > "${prefix}.status"
+        exit "${error_num}"
+      fi
 
-    if [[ $? -ne 0 ]]; then
-      cd "${script_dir}" || exit
-      echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "${error_num}"
+      rm -vf "${v}_clm_"*.nc
+      rm -f "${v}_files.txt"
+    else
+      echo "Warning: No input files found for variable ${v} in ${ts_dir_source}. Skipping."
+      rm -f "${v}_files.txt"
     fi
   done
 
