@@ -825,9 +825,7 @@ def test_create_links_acyc_climo_obs_date_parsing() -> None:
         "obs.historical.NOAA-20C.00.Amon.sfcWind.198501-199412.AC.vTEST.nc"
     )
     # CERES 2001-2018 does not overlap 1985-1994, so it falls back to its available range 200101-201812
-    assert results[
-        "obs.historical.ceres_ebaf_v4_1.00.Amon.rlus.200101-201812.nc"
-    ] == (
+    assert results["obs.historical.ceres_ebaf_v4_1.00.Amon.rlus.200101-201812.nc"] == (
         "obs.historical.ceres_ebaf_v4_1.00.Amon.rlus.200101-201812.AC.vTEST.nc"
     )
 
