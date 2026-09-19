@@ -244,7 +244,7 @@ There are 2 mean_climate & synthetic_plots parameters:
      - Variables for mean-climate and synthetic-plot diagnostics.
    * - ``clim_regions``
      - No
-     - ``"global,ocean,land"``
+     - ``"global"``
      - Regions used for mean-climate metrics.
 
 Variability_modes parameters
@@ -461,7 +461,7 @@ There are 22 synthetic_plots parameters:
      - Directory containing CMIP variability-mode metrics.
    * - ``cmip_clim_set``
      - No
-     - ``"cmip6.historical.v20250707"``
+     - ``"cmip6.historical.v20250927"``
      - CMIP mean-climate metrics set ID.
    * - ``cmip_enso_set``
      - No
