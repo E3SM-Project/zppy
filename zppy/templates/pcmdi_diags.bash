@@ -275,16 +275,15 @@ create_links_acyc_climo_obs() {
 
     # Check if observation record overlaps the requested period
     if [[ ${YYYYS} -gt ${end_year} || ${YYYYE} -lt ${begin_year} ]]; then
-      echo "create_links_acyc_climo_obs: ${fname} (years ${YYYYS}-${YYYYE}) does not overlap requested range ${begin_year}-${end_year}, skipping."
-      continue
-    fi
-
-    # Clip to specified year range
-    if [[ ${YYYYS} -lt ${begin_year} ]]; then
-      YYYYS="${begin_year}"
-    fi
-    if [[ ${YYYYE} -gt ${end_year} ]]; then
-      YYYYE="${end_year}"
+      echo "create_links_acyc_climo_obs: ${fname} (years ${YYYYS}-${YYYYE}) does not overlap requested range ${begin_year}-${end_year}; using available range ${YYYYS}-${YYYYE}."
+    else
+      # Clip to specified year range
+      if [[ ${YYYYS} -lt ${begin_year} ]]; then
+        YYYYS="${begin_year}"
+      fi
+      if [[ ${YYYYE} -gt ${end_year} ]]; then
+        YYYYE="${end_year}"
+      fi
     fi
 
     ttag="$(printf "%04d" "${YYYYS}")01-$(printf "%04d" "${YYYYE}")12"

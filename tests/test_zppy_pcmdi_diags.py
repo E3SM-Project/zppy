@@ -804,13 +804,13 @@ def test_create_links_acyc_climo_obs_date_parsing() -> None:
         yyyye = int(match.group(4))
 
         if yyyys > end_year or yyyye < begin_year:
-            results[fname] = "skipped"
-            continue
-
-        if yyyys < begin_year:
-            yyyys = begin_year
-        if yyyye > end_year:
-            yyyye = end_year
+            # Fall back to available range if no overlap
+            pass
+        else:
+            if yyyys < begin_year:
+                yyyys = begin_year
+            if yyyye > end_year:
+                yyyye = end_year
 
         ttag = f"{yyyys:04d}01-{yyyye:04d}12"
         results[fname] = f"{substr}.{ttag}.AC.vTEST.nc"
@@ -824,10 +824,11 @@ def test_create_links_acyc_climo_obs_date_parsing() -> None:
     assert results["obs.historical.NOAA-20C.00.Amon.sfcWind.183601-201512.nc"] == (
         "obs.historical.NOAA-20C.00.Amon.sfcWind.198501-199412.AC.vTEST.nc"
     )
-    # CERES 2001-2018 does not overlap 1985-1994, so it should be cleanly skipped
-    assert (
-        results["obs.historical.ceres_ebaf_v4_1.00.Amon.rlus.200101-201812.nc"]
-        == "skipped"
+    # CERES 2001-2018 does not overlap 1985-1994, so it falls back to its available range 200101-201812
+    assert results[
+        "obs.historical.ceres_ebaf_v4_1.00.Amon.rlus.200101-201812.nc"
+    ] == (
+        "obs.historical.ceres_ebaf_v4_1.00.Amon.rlus.200101-201812.AC.vTEST.nc"
     )
 
 
