@@ -848,7 +848,6 @@ def test_pcmdi_diags_bash_template_contains_overlap_check() -> None:
     )
     assert 'YYYYS="${BASH_REMATCH[2]}"    # start year (4 digits)' in content
     assert (
-        'Warning: No input files found for variable ${v} in ${ts_dir_source}. Skipping.'
+        "Warning: No input files found for variable ${v} in ${ts_dir_source}. Skipping."
         in content
     )
-
