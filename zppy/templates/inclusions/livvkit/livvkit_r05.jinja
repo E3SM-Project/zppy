@@ -5,6 +5,9 @@ common: &common
       Case ID: [{{ case_id }}]
       Climatology years: [1980-2020]
       Model: [E3SM-ELM]
+{% endraw %}
+      Model years: [{{ year1 }} - {{ year2 }}]
+{% raw %}
     climo: {{ dir_native }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
     latlon: &climo_ann_file
       {{ dir_native }}/{{ case_id }}_ANN_{sea_s}_{sea_e}_climo.nc
@@ -18,11 +21,11 @@ common: &common
     topov: topo
     landfracv: landfrac
     img_height: 300
-  {% endraw %}
+{% endraw %}
     # These come from zppy
     year_s: {{ year1 }}
     year_e: {{ year2 }}
-  {% raw %}
+{% raw %}
 
 common_smb: &common_smb
     smbv: QICE
