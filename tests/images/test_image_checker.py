@@ -1,7 +1,4 @@
-import os
-from typing import List, Optional
-
-from mache import MachineInfo
+from typing import List
 
 from tests.integration.image_checker import _compare_actual_and_expected
 
@@ -9,7 +6,7 @@ from tests.integration.image_checker import _compare_actual_and_expected
 # Run this test with:
 # cd zppy
 # pytest tests/images/test_image_checker.py
-def test_compare():
+def test_compare(tmp_path):
     missing_images: List[str] = []
     mismatched_images: List[str] = []
 
@@ -21,16 +18,11 @@ def test_compare():
         f"{directory}CRU-TREFHT-ANN-land_60S90N_input_expected.png"
     )
 
-    machine_info = MachineInfo()
-    web_portal_base_path: str = machine_info.config.get("web_portal", "base_path")
-    web_portal_base_url: str = machine_info.config.get("web_portal", "base_url")
-    print(f"web_portal_base_path: {web_portal_base_path}")
-    print(f"web_portal_base_url: {web_portal_base_url}")
-    user: Optional[str] = os.environ.get("USER")
-    if not user:
-        raise RuntimeError("USER could not be determined.")
-    # Example diff dir URL: https://web.lcrc.anl.gov/public/e3sm/diagnostic_output/ac.forsyth2/test_image_checker_diffs/
-    diff_dir: str = f"{web_portal_base_path}/{user}/test_image_checker_diffs"
+    # The diff images are an artifact of the comparison, not what is under
+    # test, so they go to a temporary directory. Deriving a real web portal
+    # path would tie this test to an E3SM machine, where `mache` can discover
+    # one, and leave the diffs behind on the shared filesystem.
+    diff_dir: str = str(tmp_path / "test_image_checker_diffs")
 
     _compare_actual_and_expected(
         missing_images,
