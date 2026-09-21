@@ -481,3 +481,133 @@ def test_an_unexpected_error_fails_the_stage_it_happened_in(
     )
     assert status["stage"] == "submission_failed"
     assert "zppy exploded" in status["error"]
+
+
+def _status_dir(run: automation._Run, cfg: str) -> str:
+    """Create and return a cfg's status directory."""
+    path = run.layout.status_dir(cfg)
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def _write_status(run: automation._Run, cfg: str, name: str, contents: str) -> str:
+    path = os.path.join(_status_dir(run, cfg), f"{name}.status")
+    with open(path, "w") as stream:
+        stream.write(contents)
+    return path
+
+
+def test_stale_waiting_status_files_are_cleared_before_resubmitting(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # zppy skips WAITING and RUNNING, so a cancelled run's leftovers would
+    # otherwise make a resume skip exactly the tasks that never ran.
+    run = _make_run(
+        tmp_path,
+        [
+            "--cfg",
+            "weekly_comprehensive_v3",
+            "--scratch-root",
+            str(tmp_path / "scratch"),
+        ],
+    )
+    waiting = _write_status(run, "weekly_comprehensive_v3", "ts", "WAITING 111")
+    running = _write_status(run, "weekly_comprehensive_v3", "climo", "RUNNING 222")
+    monkeypatch.setattr(automation, "queued_job_ids", lambda user: set())
+
+    assert automation._clear_stale_status_files(run, run.cfgs) == 2
+    assert not os.path.exists(waiting)
+    assert not os.path.exists(running)
+
+
+def test_finished_status_files_survive_a_resume(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # OK means the work is done and ERROR is resubmitted by zppy itself.
+    run = _make_run(
+        tmp_path,
+        [
+            "--cfg",
+            "weekly_comprehensive_v3",
+            "--scratch-root",
+            str(tmp_path / "scratch"),
+        ],
+    )
+    done = _write_status(run, "weekly_comprehensive_v3", "ts", "OK")
+    failed = _write_status(run, "weekly_comprehensive_v3", "climo", "ERROR (1)")
+    monkeypatch.setattr(automation, "queued_job_ids", lambda user: set())
+
+    assert automation._clear_stale_status_files(run, run.cfgs) == 0
+    assert os.path.exists(done)
+    assert os.path.exists(failed)
+
+
+def test_a_genuinely_queued_job_keeps_its_status_file(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Deleting a live job's file would let zppy submit the same task twice.
+    run = _make_run(
+        tmp_path,
+        [
+            "--cfg",
+            "weekly_comprehensive_v3",
+            "--scratch-root",
+            str(tmp_path / "scratch"),
+        ],
+    )
+    live = _write_status(run, "weekly_comprehensive_v3", "ts", "WAITING 111")
+    stale = _write_status(run, "weekly_comprehensive_v3", "climo", "WAITING 222")
+    monkeypatch.setattr(automation, "queued_job_ids", lambda user: {"111"})
+
+    assert automation._clear_stale_status_files(run, run.cfgs) == 1
+    assert os.path.exists(live)
+    assert not os.path.exists(stale)
+
+
+def test_an_unreadable_queue_leaves_every_status_file_alone(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Machines without SLURM, where every WAITING file would look stale.
+    run = _make_run(
+        tmp_path,
+        [
+            "--cfg",
+            "weekly_comprehensive_v3",
+            "--scratch-root",
+            str(tmp_path / "scratch"),
+        ],
+    )
+    waiting = _write_status(run, "weekly_comprehensive_v3", "ts", "WAITING 111")
+
+    def unavailable(user: str) -> set:
+        raise automation.CommandError(["squeue"], -1, "No such file or directory")
+
+    monkeypatch.setattr(automation, "queued_job_ids", unavailable)
+
+    assert automation._clear_stale_status_files(run, run.cfgs) == 0
+    assert os.path.exists(waiting)
+
+
+def test_submitting_clears_stale_status_files_first(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    worktree = _worktree_with_cfgs(tmp_path, ["weekly_comprehensive_v3"])
+    run = _make_run(
+        tmp_path,
+        [
+            "--cfg",
+            "weekly_comprehensive_v3",
+            "--scratch-root",
+            str(tmp_path / "scratch"),
+        ],
+        status={"repos": {"zppy": {"worktree": worktree}}},
+    )
+    run.environments["zppy"] = _zppy_env()
+    stale = _write_status(run, "weekly_comprehensive_v3", "ts", "WAITING 111")
+    monkeypatch.setattr(automation, "run_command", _recording([]))
+    monkeypatch.setattr(automation, "wait_for_user_jobs", lambda *a, **k: "drained")
+    monkeypatch.setattr(automation, "queued_job_ids", lambda user: set())
+
+    automation._stage_submit(run)
+
+    assert not os.path.exists(stale)
