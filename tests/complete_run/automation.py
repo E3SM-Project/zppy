@@ -24,7 +24,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Callable, Dict, List, Sequence, Tuple
+from typing import Callable, Dict, List, Sequence, Set, Tuple
 
 from tests.complete_run import envdiff, provenance
 from tests.complete_run import report as report_module
@@ -64,7 +64,7 @@ from tests.complete_run.params import (
     is_bundles_cfg,
     resolve_machine,
 )
-from tests.complete_run.slurm import wait_for_user_jobs
+from tests.complete_run.slurm import queued_job_ids, wait_for_user_jobs
 from tests.complete_run.worktrees import Checkout, create_checkout, remove_checkouts
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -550,8 +550,63 @@ def _stage_bundles(run: _Run) -> None:
     _submit_cfgs(run, bundle_cfgs, run.args.max_wait_bundles)
 
 
+def _clear_stale_status_files(run: _Run, cfgs: Sequence[str]) -> int:
+    """Drop status files that claim a job is queued when it no longer is.
+
+    ``zppy`` skips a task whose status file begins with OK, WAITING or RUNNING.
+    WAITING and RUNNING outlive the jobs they name whenever a run is cancelled
+    or dies, so resuming into the same output directory would skip exactly the
+    tasks that never ran, and validation would then sweep a tree whose every
+    status file reads OK. Removing them lets zppy resubmit those tasks. OK and
+    ERROR files are left alone: OK means the work is done, and zppy already
+    resubmits ERROR.
+    """
+    try:
+        live: Set[str] = queued_job_ids(run.username)
+    except CommandError as error:
+        # Without the queue there is no way to tell a stale file from a job
+        # that is genuinely pending, and deleting a live one would submit the
+        # task twice. Leaving them is what this harness did before.
+        logger.warning(
+            "Could not read the queue; leaving status files alone: %s", error
+        )
+        return 0
+    cleared: int = 0
+    for cfg in cfgs:
+        for status_file in sorted(
+            glob.glob(os.path.join(run.layout.status_dir(cfg), "*status"))
+        ):
+            try:
+                with open(status_file) as stream:
+                    fields: List[str] = stream.read().split()
+            except OSError as error:
+                logger.warning("Could not read %s: %s", status_file, error)
+                continue
+            if not fields or fields[0] not in ("WAITING", "RUNNING"):
+                continue
+            # "WAITING <jobid>". A job still in the queue is genuinely pending,
+            # so only the ones SLURM has forgotten are stale.
+            if len(fields) > 1 and fields[1] in live:
+                continue
+            try:
+                os.remove(status_file)
+            except OSError as error:
+                logger.warning("Could not remove %s: %s", status_file, error)
+                continue
+            logger.info(
+                "Cleared stale status file %s (%s)",
+                os.path.basename(status_file),
+                " ".join(fields),
+            )
+            cleared += 1
+    if cleared:
+        logger.info("Cleared %s stale status file(s) before submitting", cleared)
+    return cleared
+
+
 def _submit_cfgs(run: _Run, cfgs: Sequence[str], max_wait: int) -> None:
     """Submit cfgs with the zppy under test, then wait for the queue to drain."""
+    _clear_stale_status_files(run, cfgs)
     worktree: str = run.zppy_worktree
     zppy_env: Environment = run.environment("zppy")
     for cfg in cfgs:

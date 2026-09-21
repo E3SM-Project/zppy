@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from typing import Callable, List, Sequence
+from typing import Callable, List, Sequence, Set
 
 from tests.complete_run.commands import CommandError, run_command
 
@@ -98,6 +98,12 @@ def queued_job_count(user: str) -> int:
     """Return how many jobs the user currently has in the queue."""
     output: str = run_command(["squeue", "-h", "-u", user], check=False)
     return len([line for line in output.splitlines() if line.strip()])
+
+
+def queued_job_ids(user: str) -> Set[str]:
+    """Return the IDs of the jobs the user currently has in the queue."""
+    output: str = run_command(["squeue", "-h", "-u", user, "-o", "%i"], check=False)
+    return {line.strip() for line in output.splitlines() if line.strip()}
 
 
 def queued_reasons(user: str) -> List[str]:
