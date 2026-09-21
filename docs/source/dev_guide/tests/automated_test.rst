@@ -252,6 +252,17 @@ Update the ``_EXISTING_ENV`` parameters if you already have an environment from 
     ZI_EXISTING_ENV=""
     ZPPY_EXISTING_ENV=""
 
+Leave ``NCO_PATH`` empty in the common case where NCO is already available on
+``PATH`` via the active environment. Set it only if the machine or task
+you're testing needs a specific NCO installation.
+
+.. code-block::
+
+    # Optional: path to an NCO installation, forwarded into utils.py's
+    # TEST_SPECIFICS["nco_path"]. Leave empty for the common case where NCO
+    # is already on PATH via the active environment.
+    NCO_PATH=""
+
 Update these two parameters to configure which jobs run.
 
 .. code-block::
@@ -379,7 +390,7 @@ Second, the output directories status. It should look like the following:
     ...
     ✓ All status files clean!
 
-If some status files were unsuccessful, the Markdown report's "Automated test script results" section already includes why, for every output directory that failed the check -- either the non-``OK`` lines that ``grep -v "OK" "${dir}"/*status`` found, or a note that the directory was missing or had no ``*status`` files at all (which also counts as a failed check, since there was nothing to confirm as clean). You don't need to re-run the grep yourself, but if you want to dig further into a specific failure:
+If some status files were unsuccessful, the Markdown report's "Automated test script results" section already includes why, for every output directory that failed the check -- either the non-``OK`` lines that ``grep -v "OK" "${dir}"/*status`` found, or a note that the directory was missing or had no ``*status`` files at all (which also counts as a failed check, since there was nothing to confirm as clean). Each of these directories corresponds to a specific ``CFGS_TO_RUN`` cfg (e.g. the "v2" check corresponds to ``weekly_comprehensive_v2``); if you're running a partial test whose ``CFGS_TO_RUN`` leaves that cfg out entirely, its check is skipped rather than reported as a missing-directory failure, since the directory was never going to exist. You don't need to re-run the grep yourself, but if you want to dig further into a specific failure:
 
 .. code-block:: bash
 

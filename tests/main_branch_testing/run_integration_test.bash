@@ -90,6 +90,11 @@ MPAS_EXISTING_ENV="${MPAS_EXISTING_ENV:-}"
 ZI_EXISTING_ENV="${ZI_EXISTING_ENV:-}"
 ZPPY_EXISTING_ENV="${ZPPY_EXISTING_ENV:-}"
 
+# Optional: path to an NCO installation, forwarded into utils.py's
+# TEST_SPECIFICS["nco_path"]. Leave empty (the default) for the common case
+# where NCO is already on PATH via the active environment.
+NCO_PATH="${NCO_PATH:-}"
+
 # Apply defaults for optional *_EXPECTED_RESULTS_BRANCH variables. Each
 # defaults to that component's own *_BASE_BRANCH (i.e. "assume expected
 # results were generated from whatever branch we're testing"). Override
@@ -574,15 +579,40 @@ wait_for_slurm_jobs() {
     echo ""
 }
 
+# Returns 0 if the given cfg name literally appears in CFGS_ARRAY, 1
+# otherwise. Used by check_status_files to tell "this output is missing
+# because the cfg was never submitted" apart from an actual failure.
+cfg_was_run() {
+    local target="$1"
+    local cfg
+    for cfg in "${CFGS_ARRAY[@]}"; do
+        cfg="${cfg// /}"
+        [[ "$cfg" == "$target" ]] && return 0
+    done
+    return 1
+}
+
 # Grep status files in a directory for any non-OK lines.
 # Returns 0 if all OK, 1 otherwise (missing directory, no status files
 # present, or actual non-OK entries found). Whichever of those three
 # reasons caused the 1, it is always appended to STATUS_FILE_ERRORS so the
 # Markdown report can explain a "failed" result without the reader having
 # to re-run `grep -v "OK" "${dir}"/*status` themselves afterward.
+#
+# An optional third argument names the CFGS_TO_RUN cfg that this output
+# directory belongs to. When given and that cfg wasn't actually in
+# CFGS_TO_RUN, the directory was never going to exist -- that's expected,
+# not a failure -- so the check is skipped entirely rather than reported
+# as "directory not found".
 check_status_files() {
     local dir="$1"
     local name="$2"
+    local cfg="${3:-}"
+
+    if [[ -n "$cfg" ]] && ! cfg_was_run "$cfg"; then
+        log "$name: skipping status check ('${cfg}' not in CFGS_TO_RUN)"
+        return 0
+    fi
 
     if [ ! -d "$dir" ]; then
         log_warning "$name: Directory not found: $dir"
@@ -1142,7 +1172,7 @@ with open(utils_file, 'r') as f:
     content = f.read()
 
 replacement = '''TEST_SPECIFICS: Dict[str, Any] = {
-    "nco_path": "",
+    "nco_path": "${NCO_PATH}",
     "e3sm_to_cmip_environment_commands": "${E3SM_TO_CMIP_CMD}",
     "diags_environment_commands": "${DIAGS_CMD}",
     "mpas_analysis_environment_commands": "${MPAS_CMD}",
@@ -1218,9 +1248,9 @@ phase_2_bundles_part2() {
     # These paths are fixed regardless of CFGS_TO_RUN; skip any that don't exist yet.
     log "Checking bundle status files before submitting part 2..."
     local all_ok=true
-    check_status_files "$BUNDLES_OUTPUT"            "Bundles"              || all_ok=false
-    check_status_files "$LEGACY_310_BUNDLES_OUTPUT" "Legacy 3.1.0 Bundles" || all_ok=false
-    check_status_files "$LEGACY_300_BUNDLES_OUTPUT" "Legacy 3.0.0 Bundles" || all_ok=false
+    check_status_files "$BUNDLES_OUTPUT"            "Bundles"              "weekly_bundles"              || all_ok=false
+    check_status_files "$LEGACY_310_BUNDLES_OUTPUT" "Legacy 3.1.0 Bundles" "weekly_legacy_3.1.0_bundles" || all_ok=false
+    check_status_files "$LEGACY_300_BUNDLES_OUTPUT" "Legacy 3.0.0 Bundles" "weekly_legacy_3.0.0_bundles" || all_ok=false
 
     if [ "$all_ok" = false ]; then
         log_error "One or more bundle status files have non-OK entries."
@@ -1278,15 +1308,15 @@ phase_3_validation() {
     # phase_2_bundles_part2's earlier pre-check of the bundle outputs.
     STATUS_FILE_ERRORS=""
 
-    check_status_files "$V2_OUTPUT"                 "v2"                   || all_good=false
-    check_status_files "$LEGACY_310_V2_OUTPUT"      "Legacy 3.1.0 v2"      || all_good=false
-    check_status_files "$LEGACY_300_V2_OUTPUT"      "Legacy 3.0.0 v2"      || all_good=false
-    check_status_files "$V3_OUTPUT"                 "v3"                   || all_good=false
-    check_status_files "$LEGACY_310_V3_OUTPUT"      "Legacy 3.1.0 v3"      || all_good=false
-    check_status_files "$LEGACY_300_V3_OUTPUT"      "Legacy 3.0.0 v3"      || all_good=false
-    check_status_files "$BUNDLES_OUTPUT"            "Bundles"              || all_good=false
-    check_status_files "$LEGACY_310_BUNDLES_OUTPUT" "Legacy 3.1.0 Bundles" || all_good=false
-    check_status_files "$LEGACY_300_BUNDLES_OUTPUT" "Legacy 3.0.0 Bundles" || all_good=false
+    check_status_files "$V2_OUTPUT"                 "v2"                   "weekly_comprehensive_v2"              || all_good=false
+    check_status_files "$LEGACY_310_V2_OUTPUT"      "Legacy 3.1.0 v2"      "weekly_legacy_3.1.0_comprehensive_v2" || all_good=false
+    check_status_files "$LEGACY_300_V2_OUTPUT"      "Legacy 3.0.0 v2"      "weekly_legacy_3.0.0_comprehensive_v2" || all_good=false
+    check_status_files "$V3_OUTPUT"                 "v3"                   "weekly_comprehensive_v3"              || all_good=false
+    check_status_files "$LEGACY_310_V3_OUTPUT"      "Legacy 3.1.0 v3"      "weekly_legacy_3.1.0_comprehensive_v3" || all_good=false
+    check_status_files "$LEGACY_300_V3_OUTPUT"      "Legacy 3.0.0 v3"      "weekly_legacy_3.0.0_comprehensive_v3" || all_good=false
+    check_status_files "$BUNDLES_OUTPUT"            "Bundles"              "weekly_bundles"                       || all_good=false
+    check_status_files "$LEGACY_310_BUNDLES_OUTPUT" "Legacy 3.1.0 Bundles" "weekly_legacy_3.1.0_bundles"          || all_good=false
+    check_status_files "$LEGACY_300_BUNDLES_OUTPUT" "Legacy 3.0.0 Bundles" "weekly_legacy_3.0.0_bundles"          || all_good=false
 
     local overall_ok=true
 
