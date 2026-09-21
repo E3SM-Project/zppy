@@ -189,3 +189,29 @@ def test_batch_script_initializes_conda_before_activating() -> None:
     assert "cd /worktree/zppy" in script
     assert "#SBATCH --partition=debug" in script
     assert "#SBATCH --job-name=zppy_image_checker_x" in script
+
+
+def test_queued_job_ids_parses_the_queue(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(slurm, "run_command", lambda args, **kwargs: "111\n222\n333")
+    assert slurm.queued_job_ids("me") == {"111", "222", "333"}
+
+
+def test_queued_job_ids_is_empty_for_a_drained_queue(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(slurm, "run_command", lambda args, **kwargs: "\n  \n")
+    assert slurm.queued_job_ids("me") == set()
+
+
+def test_queued_job_ids_asks_only_for_the_users_ids(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: List[List[str]] = []
+
+    def record(args, **kwargs) -> str:
+        seen.append(list(args))
+        return ""
+
+    monkeypatch.setattr(slurm, "run_command", record)
+    slurm.queued_job_ids("me")
+    assert seen == [["squeue", "-h", "-u", "me", "-o", "%i"]]
