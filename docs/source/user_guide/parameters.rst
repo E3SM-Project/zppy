@@ -164,13 +164,14 @@ There are 10 machine-specific parameters:
       mail_type = "END,FAIL"
       mail_user = "myemail@example.com"
 
-   Two further caveats:
+   One further caveat: bundled tasks run inside a single SLURM job, so their
+   ``#SBATCH`` lines are inert. A bundle's mail settings come from the first
+   task added to it.
 
-   * Bundled tasks run inside a single SLURM job, so their ``#SBATCH`` lines are
-     inert. A bundle's mail settings come from the first task added to it.
-   * The cfg file is copied to ``www`` as provenance, so an address set in
-     ``mail_user`` is published alongside the diagnostics. Leaving ``mail_user``
-     unset avoids this, since SLURM already defaults to the submitting user.
+   The cfg file is copied as provenance, including to ``www``, but both mail
+   parameters are left out of those copies, so the address is not published
+   alongside the diagnostics. It does still appear in the ``#SBATCH`` lines of
+   the generated scripts under ``output``.
 
 **Environment specifics**
 

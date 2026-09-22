@@ -25,6 +25,7 @@ from zppy.mpas_analysis import mpas_analysis
 from zppy.pcmdi_diags import pcmdi_diags
 from zppy.provenance import (
     build_provenance_extras,
+    copy_config_for_provenance,
     parse_env_case_xml,
     resolve_case_group,
     write_provenance_settings,
@@ -95,7 +96,7 @@ def main():
     except OSError as exc:
         if exc.errno != errno.EEXIST:
             raise OSError("Cannot create script directory")
-    shutil.copy(args.config, provenance)
+    copy_config_for_provenance(args.config, provenance)
     write_provenance_settings(provenance_settings, provenance_extras)
     # Web output directory
     # A dry run must not touch `www`. It is a shared, published location --
@@ -119,7 +120,7 @@ def main():
                 raise OSError(
                     f"Cannot create www case directory {www_case_dir}"
                 ) from exc
-        shutil.copy(args.config, www_provenance)
+        copy_config_for_provenance(args.config, www_provenance)
         if os.path.isfile(provenance_settings):
             shutil.copy(provenance_settings, www_provenance_settings)
     if args.last_year:
