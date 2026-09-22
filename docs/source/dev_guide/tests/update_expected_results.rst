@@ -76,8 +76,11 @@ This is deliberate: a baseline assembled from several runs is hard to reason
 about when a difference later appears, because the results were produced by
 different code and different dependencies.
 
-To accept a change in one task only, rerun the complete test with just the cfgs
-and tasks you need, review it, and promote that run.
+There is no way to accept a change in one task only. Do not promote a run made
+with a reduced ``--cfg`` or ``--task`` selection: a run's expected image lists
+are built by walking its own ``www`` tree, so such a run becomes a baseline
+that holds only the tasks it ran, and every other task then records no
+comparison against it. Promote a run that covered everything.
 
 Deleting old runs
 =================
