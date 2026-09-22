@@ -118,6 +118,29 @@ def test_write_viewer_reads_the_scores_file(tmp_path) -> None:
     assert oct(os.stat(path).st_mode)[-3:] == "644"
 
 
+def test_write_viewer_image_links_resolve(tmp_path) -> None:
+    # The image checker writes <diff_dir>/<name>_{actual,expected,diff}.png,
+    # with names that start with the task, while the page lives one level down
+    # in <diff_dir>/<task>/. Linking the bare name doubled the task directory.
+    diff_dir = tmp_path / "image_check_failures_comprehensive_v3"
+    diff_subdir = diff_dir / "e3sm_diags"
+    diff_subdir.mkdir(parents=True)
+    name = "e3sm_diags/atm_monthly/lat_lon/PRECT.png"
+    (diff_subdir / "image_scores.json").write_text(json.dumps([_score(name, "MAJOR")]))
+    for kind in ("actual", "expected", "diff"):
+        png = diff_dir / f"{name}_{kind}.png"
+        png.parent.mkdir(parents=True, exist_ok=True)
+        png.write_bytes(b"")
+
+    path = viewer.write_viewer(
+        str(diff_subdir), "weekly_comprehensive_v3", "e3sm_diags"
+    )
+    sources = [chunk.split("'")[0] for chunk in open(path).read().split("src='")[1:]]
+    assert len(sources) == 3
+    for source in sources:
+        assert os.path.exists(os.path.join(os.path.dirname(path), source)), source
+
+
 def test_write_viewer_writes_nothing_without_scores(tmp_path) -> None:
     # An empty page would look like a clean result rather than a missing one.
     assert viewer.write_viewer(str(tmp_path), "cfg", "task") == ""
@@ -289,9 +312,32 @@ def test_summary_totals_add_up() -> None:
     page = viewer.render_summary(rows, "tag")
     footer = page[page.index("<tfoot>") : page.index("</tfoot>")]
     # Cosmetic 7, total 10.
-    assert footer.endswith(
-        "<td class='num'>7</td><td class='num'>10</td><td></td></tr>"
-    )
+    assert footer.endswith("<td class='num'>7</td><td class='num'>10</td></tr>")
+
+
+def test_summary_links_packages_and_tasks_where_they_are_visible() -> None:
+    rows = [
+        _row(
+            "MPAS-Analysis", "mpas_analysis", "c1", {"MINOR": 1}, viewer_href="a/i.html"
+        ),
+        _row(
+            "MPAS-Analysis", "mpas_analysis", "c2", {"MINOR": 1}, viewer_href="b/i.html"
+        ),
+        _row("ILAMB", "ilamb", "c1", {}),
+    ]
+    page = viewer.render_summary(rows, "tag")
+    package_table = page[page.index("By package") : page.index("By check")]
+    check_table = page[page.index("By check") :]
+
+    # A package name jumps to its first row among the checks.
+    assert "<a href='#pkg-mpas-analysis'>MPAS-Analysis</a>" in package_table
+    assert check_table.count("id='pkg-mpas-analysis'") == 1
+    assert "id='pkg-ilamb'" in check_table
+    # The review link is on the task, not in a trailing column that a wide
+    # table scrolls out of view.
+    assert "<td><a href='a/i.html'>mpas_analysis \u2192</a></td>" in check_table
+    # A task with no review page is plain text.
+    assert "<td>ilamb</td>" in check_table
 
 
 def test_summary_escapes_and_stays_self_contained() -> None:

@@ -16,6 +16,7 @@ import html
 import json
 import logging
 import os
+import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence
 
@@ -339,6 +340,10 @@ def write_viewer(
             scores,
             cfg,
             task,
+            # The image checker names each image relative to the cfg's diff
+            # directory (e.g. "e3sm_diags/..."), which is the parent of the
+            # task's diff_subdir where this page lives.
+            diff_dir_name="..",
             environment_diffs=environment_diffs,
             environment_note=environment_note,
             summary_href=summary_href,
@@ -472,7 +477,8 @@ def _render_package_table(rows: Sequence[SummaryRow]) -> str:
         tested_at = sorted({row.tested_at for row in group if row.tested_at})
         body.append(
             "<tr>"
-            f"<td><b>{html.escape(package)}</b></td>"
+            f"<td><b><a href='#{_package_anchor(package)}'>"
+            f"{html.escape(package)}</a></b></td>"
             f"<td>{html.escape(', '.join(tested_at)) or '—'}</td>"
             f"<td>{html.escape(', '.join(sorted({row.task for row in group})))}</td>"
             f"<td>{_result_badge(_worst(counts), bool(checked), len(checked) < len(group))}</td>"
@@ -498,15 +504,25 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
     header: str = (
         "<tr><th>Package</th><th>Task</th><th>Cfg</th><th>Result</th>"
         + "".join(f"<th class='num'>{html.escape(s)}</th>" for s in severities)
-        + "<th class='num'>Cosmetic</th><th class='num'>Total</th><th></th></tr>"
+        + "<th class='num'>Cosmetic</th><th class='num'>Total</th></tr>"
     )
 
     body: List[str] = []
+    anchored: set[str] = set()
     for row in rows:
-        link: str = (
-            f"<a href='{html.escape(row.viewer_href)}'>Review \u2192</a>"
+        # The first row of each package is where its name in the package table
+        # jumps to.
+        row_id: str = ""
+        if row.package not in anchored:
+            anchored.add(row.package)
+            row_id = f" id='{_package_anchor(row.package)}'"
+        # The task links to its review page. It is in the first columns so it
+        # is never scrolled out of view on a narrow window.
+        task: str = (
+            f"<a href='{html.escape(row.viewer_href)}'>"
+            f"{html.escape(row.task)} \u2192</a>"
             if row.viewer_href
-            else ""
+            else html.escape(row.task)
         )
         cells: str = "".join(
             _num(row.counts.get(s, 0)) if row.checked else "<td class='num zero'>—</td>"
@@ -514,9 +530,9 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
         )
         cosmetic: int = row.total - row.reviewable
         body.append(
-            "<tr>"
+            f"<tr{row_id}>"
             f"<td>{html.escape(row.package)}</td>"
-            f"<td>{html.escape(row.task)}</td>"
+            f"<td>{task}</td>"
             f"<td>{html.escape(row.cfg)}</td>"
             f"<td>{_result_badge(row.worst, row.checked)}</td>"
             + cells
@@ -525,7 +541,7 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
                 if row.checked
                 else "<td></td><td></td>"
             )
-            + f"<td>{link}</td></tr>"
+            + "</tr>"
         )
 
     totals = _sum_counts([row for row in rows if row.checked])
@@ -535,13 +551,18 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
         + "".join(_num(totals.get(s, 0)) for s in severities)
         + _num(sum(totals.values()) - reviewable_total)
         + _num(sum(totals.values()))
-        + "<td></td></tr>"
+        + "</tr>"
     )
     return (
         "<div class='table-wrap'><table class='summary'>"
         f"<thead>{header}</thead><tbody>{''.join(body)}</tbody>"
         f"<tfoot>{footer}</tfoot></table></div>"
     )
+
+
+def _package_anchor(package: str) -> str:
+    """An element id for a package's rows in the check table."""
+    return "pkg-" + (re.sub(r"[^a-z0-9]+", "-", package.lower()).strip("-") or "x")
 
 
 def _sum_counts(rows: Sequence[SummaryRow]) -> Dict[str, int]:
