@@ -348,6 +348,14 @@ Follow the ``tail`` output until you get to:
     ✓ Markdown report: .../test_report_yyyymmdd_runN.md
     ✓ Integration test automation complete!
 
+The last line always appears once the script finishes, even on a run with
+failures -- it means "the script ran to completion and the report is
+written," not "everything passed." If Phase 3 found problems you'll see
+``✗ Phase 3 automated tests completed with failures.`` right above it
+instead of the ``✓`` line, and the script's own exit code will be nonzero
+(so a wrapper script or cron job can still detect the failure) -- but it
+still finishes and writes the report rather than stopping partway through.
+
 The image checker now runs automatically as part of Phase 3 (submitted as
 its own SLURM batch job and waited on, the same way the earlier zppy jobs
 are), so there is no separate manual compute-node step to run it.
@@ -356,12 +364,19 @@ While jobs are running, ``wait_for_slurm_jobs`` polls ``squeue`` and cancels
 any job it finds in ``DependencyNeverSatisfied`` immediately, by job ID --
 this is common when an *upstream* job failed (e.g. an ``e3sm_to_cmip``
 regridding job) and left downstream jobs (e.g. ``pcmdi_diags``) unable to
-ever satisfy their dependency. Other, still-healthy jobs are left running.
-If this happens the script still exits with an error once the queue drains
-(rather than declaring success), since not everything finished -- check
-``squeue``'s output in the log for which jobs were cancelled and why, then
-look at the ``.o``/``.e`` output of whichever job actually failed upstream
-(see "Review the output" below) before re-running.
+ever satisfy their dependency. Only jobs submitted by *this* run are ever
+polled or cancelled this way -- a stale ``DependencyNeverSatisfied`` job
+left over from an earlier invocation is never mistaken for one of this
+run's own jobs. Other, still-healthy jobs are left running.
+
+If a cancellation happens, the script does **not** stop: it logs a warning
+and moves on to the next phase in the same invocation, so Phase 3's status
+file checks still run against whatever output actually exists. The
+generated Markdown report gets a "SLURM jobs cancelled" section up top
+noting it happened. Check that section, then look at the ``.o``/``.e``
+output of whichever job actually failed upstream (see "Review the output"
+below) to find the root cause -- no re-run is needed just to see the rest
+of the results.
 
 D. Review the output
 ~~~~~~~~~~~~~~~~~~~~
