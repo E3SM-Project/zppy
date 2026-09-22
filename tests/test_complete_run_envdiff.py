@@ -282,3 +282,32 @@ def test_interpretation_does_not_call_an_uncompared_run_clean() -> None:
     note = envdiff.interpretation(diffs, {"zppy": "dev", "e3sm_diags": "dev"})
     assert "`e3sm_diags` could not be compared" in note
     assert "not necessarily attributable" in note
+
+
+def test_packages_only_in_e3sm_unified_are_not_listed(tmp_path) -> None:
+    # Unified bundles every tool; a repository's own environment has a fraction
+    # of them. Only what this run's environment contains is a real difference.
+    candidate = run_layout(str(tmp_path), "20260918_main_run1")
+    baseline = run_layout(str(tmp_path), "20260918_unified113")
+    _write(
+        candidate,
+        "e3sm_diags",
+        EXPORT.replace(
+            "  - xarray=2025.1.0=pyhd8ed1ab_0\n",
+            "  - xarray=2025.1.0=pyhd8ed1ab_0\n  - pytest=9.1.1=pyhd8ed1ab_0\n",
+        ),
+    )
+    _write_description(
+        baseline,
+        "e3sm_diags",
+        UNIFIED_DESCRIPTION
+        + "nco                       5.3.9                h1234_0    conda-forge\n",
+    )
+
+    diff = envdiff.compare_run_environments(candidate, baseline, ["e3sm_diags"])[0]
+    changes = {change.name: change for change in diff.changes}
+
+    assert "nco" not in changes
+    assert "1 more in E3SM-Unified" in diff.detail
+    # New in this run's environment: still listed.
+    assert changes["pytest"].kind == "added"
