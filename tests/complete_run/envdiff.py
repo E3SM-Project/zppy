@@ -249,15 +249,28 @@ def compare_run_environments(
                 # e3sm_diags here. Match by package, not by how it was installed.
                 baseline_packages = _by_package(baseline_packages)
                 candidate_packages = _by_package(candidate_packages)
+                # E3SM-Unified bundles every tool, so most of its packages are
+                # not in this repository's environment at all. Listing them as
+                # removed would bury the dependencies that actually differ.
+                unified_only: int = len(
+                    set(baseline_packages) - set(candidate_packages)
+                )
                 results.append(
                     EnvironmentDiff(
                         repo=repo,
                         detail=(
-                            f"The baseline has no environment export for {repo};"
-                            " compared by version against the package list in"
-                            f" its env_descriptions/{task}.txt."
+                            f"The baseline ran {repo} from E3SM-Unified, compared"
+                            f" by version against env_descriptions/{task}.txt."
+                            " Only packages in this run's environment are listed;"
+                            f" {unified_only} more in E3SM-Unified are not."
                         ),
-                        changes=_diff_packages(baseline_packages, candidate_packages),
+                        changes=[
+                            change
+                            for change in _diff_packages(
+                                baseline_packages, candidate_packages
+                            )
+                            if change.candidate
+                        ],
                     )
                 )
                 continue
