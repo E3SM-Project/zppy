@@ -96,7 +96,7 @@ There are 6 output-specific parameters:
 
 **Machine specifics**
 
-There are 8 machine-specific parameters:
+There are 10 machine-specific parameters:
 
 .. list-table::
    :header-rows: 1
@@ -114,6 +114,14 @@ There are 8 machine-specific parameters:
      - No
      - ``""``
      - The constraint of the machine to run on.
+   * - ``mail_type``
+     - No
+     - ``""``
+     - When to send SLURM job status emails (e.g. ``"BEGIN,END,FAIL"``). Requires ``mail_user`` to be set.
+   * - ``mail_user``
+     - No
+     - ``""``
+     - Email address to send SLURM job status emails to. Requires ``mail_type`` to be set.
    * - ``nodes``
      - No
      - ``1``
