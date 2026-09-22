@@ -386,6 +386,18 @@ declare -A WWW_ROOT_BY_CFG=()
 # checks in phase_3_validation so it reflects only that final validation
 # pass, not any earlier phase_2 pre-checks. Used by generate_markdown_report.
 STATUS_FILE_ERRORS=""
+# Set by wait_for_slurm_jobs (via phase_1_setup / phase_2_bundles_part2) if
+# any job it was tracking landed in DependencyNeverSatisfied and had to be
+# cancelled. Phase 3 still runs in full either way -- a cancelled job means
+# "check the output directories for what actually finished," not "abort the
+# whole script" -- but this flag lets phase_3_validation and the Markdown
+# report call that out explicitly instead of silently reporting success.
+SLURM_JOBS_INCOMPLETE=false
+SLURM_JOBS_INCOMPLETE_DETAIL=""
+# Set by phase_3_validation once it finishes; read by main() after all
+# phases have run. See the comment at the end of phase_3_validation for why
+# this is a global rather than the function's own return code.
+PHASE3_OVERALL_OK=true
 
 # Colors for output
 RED='\033[0;31m'
@@ -525,31 +537,57 @@ get_env_cmd() {
     fi
 }
 
-# Poll squeue until no user jobs remain (or timeout). Any job that lands in
-# DependencyNeverSatisfied is cancelled immediately, by job ID, the moment
-# it's seen -- rather than waiting for either "every remaining job has
-# failed" or the full timeout. This matters because a single failed
-# upstream job (e.g. e3sm_to_cmip) commonly leaves only some downstream
-# jobs (e.g. pcmdi_diags) stuck in DependencyNeverSatisfied while other,
-# unrelated jobs keep running fine -- so "cancel everything only once 100%
-# of the queue is stuck" could wait out the entire max_wait for nothing.
-wait_for_slurm_jobs() {
-    local check_interval=${1:-600}  # seconds between checks (default 10 min)
-    local max_wait=${2:-14400}      # max total wait seconds (default 4 hours)
+# Snapshot this user's current SLURM job IDs (one per line, no header).
+# Used to scope wait_for_slurm_jobs to only the jobs a given phase actually
+# submitted -- see the comment on wait_for_slurm_jobs for why that matters.
+current_slurm_job_ids() {
+    squeue -h -u "${USER}" -o "%i" 2>/dev/null | sort -u || true
+}
 
-    log "Waiting for SLURM jobs to complete (checking every ${check_interval}s, max ${max_wait}s)..."
+# Poll squeue until no *tracked* jobs remain (or timeout). Any tracked job
+# that lands in DependencyNeverSatisfied is cancelled immediately, by job
+# ID, the moment it's seen -- rather than waiting for either "every
+# remaining job has failed" or the full timeout. This matters because a
+# single failed upstream job (e.g. e3sm_to_cmip) commonly leaves only some
+# downstream jobs (e.g. pcmdi_diags) stuck in DependencyNeverSatisfied while
+# other, unrelated jobs keep running fine -- so "cancel everything only once
+# 100% of the queue is stuck" could wait out the entire max_wait for nothing.
+#
+# job_ids_csv (required) restricts every squeue/scancel call in this loop to
+# that specific, comma-separated set of job IDs -- the ones this phase just
+# submitted, captured by the caller via current_slurm_job_ids() before and
+# after submission (see phase_1_setup / phase_2_bundles_part2). Without that
+# scoping, a bare `squeue -u "${USER}"` also sees any job already sitting in
+# the queue from an earlier run (e.g. one that was never cleaned up because
+# an earlier bug in this very function exited the script early) and could
+# mistake a stale DependencyNeverSatisfied job for one from *this* run,
+# declaring an otherwise-successful run "failed."
+#
+# On failure (cancelled jobs, or timeout) this returns 1 instead of exiting
+# the script itself -- callers decide how to proceed (see below).
+wait_for_slurm_jobs() {
+    local job_ids_csv="$1"
+    local check_interval=${2:-600}  # seconds between checks (default 10 min)
+    local max_wait=${3:-14400}      # max total wait seconds (default 4 hours)
+
+    if [[ -z "$job_ids_csv" ]]; then
+        log_warning "wait_for_slurm_jobs: no job IDs to track (nothing was submitted?) -- nothing to wait for."
+        return 0
+    fi
+
+    log "Waiting for SLURM jobs [${job_ids_csv}] to complete (checking every ${check_interval}s, max ${max_wait}s)..."
     local elapsed=0
     local any_cancelled=0
 
     while true; do
         local squeue_out
-        squeue_out=$(squeue -u "${USER}")
+        squeue_out=$(squeue -h -u "${USER}" -j "$job_ids_csv" 2>/dev/null || true)
         local job_count
-        job_count=$(echo "$squeue_out" | wc -l)
-        job_count=$((job_count - 1))  # subtract header
+        job_count=$(echo "$squeue_out" | grep -c . || true)
 
-        # Detect and immediately cancel any DependencyNeverSatisfied jobs,
-        # by ID, without touching any other still-healthy job.
+        # Detect and immediately cancel any DependencyNeverSatisfied jobs
+        # among the ones we're tracking, by ID, without touching any other
+        # still-healthy job (ours or anyone else's).
         local failed_jobs
         failed_jobs=$(echo "$squeue_out" | grep "DependencyNeverSatisfied" || true)
         if [ -n "$failed_jobs" ]; then
@@ -560,16 +598,16 @@ wait_for_slurm_jobs() {
             failed_job_ids=$(echo "$failed_jobs" | awk '{print $1}')
             # shellcheck disable=SC2086
             scancel $failed_job_ids
-            job_count=$(squeue -u "${USER}" | wc -l)
-            job_count=$((job_count - 1))
+            squeue_out=$(squeue -h -u "${USER}" -j "$job_ids_csv" 2>/dev/null || true)
+            job_count=$(echo "$squeue_out" | grep -c . || true)
         fi
 
         if [ "$job_count" -eq 0 ]; then
             if [ "$any_cancelled" -eq 1 ]; then
-                log_error "All SLURM jobs finished, but some had DependencyNeverSatisfied and were cancelled."
+                log_error "All tracked SLURM jobs finished, but some had DependencyNeverSatisfied and were cancelled."
                 return 1
             fi
-            log_success "All SLURM jobs completed!"
+            log_success "All tracked SLURM jobs completed!"
             return 0
         fi
 
@@ -579,7 +617,12 @@ wait_for_slurm_jobs() {
             log_error "  TAG for this run: ${TAG}"
             log_error "  Resume: set START_PHASE=2 and EXPLICIT_TAG=${TAG} in your config, then re-run."
             log_error "  (TAG is also saved in ${TAG_CACHE_FILE})"
-            return 1
+            # Unlike the DependencyNeverSatisfied case above, jobs are still
+            # actually running here -- there's nothing for phase 3 to check
+            # yet, and no point starting it. This is the one case where
+            # wait_for_slurm_jobs really does end the script, so it says so
+            # explicitly (exit) rather than leaving that to the caller.
+            exit 1
         fi
 
         echo -ne "\r${YELLOW}Jobs remaining: $job_count${NC} (elapsed: ${elapsed}s / max: ${max_wait}s)"
@@ -1216,6 +1259,13 @@ PYEOF
     # ------------------------------------------------------------------
     log "Submitting SLURM jobs..."
     env > "${SCRIPT_RUN_DIR}/env_${TAG}.txt"
+
+    # Snapshot the queue *before* submitting so we can tell our own new job
+    # IDs apart from anything already sitting in the queue for this user
+    # (e.g. leftover jobs from a previous run) -- see wait_for_slurm_jobs.
+    local baseline_job_ids
+    baseline_job_ids=$(current_slurm_job_ids)
+
     local cfg cfg_path
     for cfg in "${CFGS_ARRAY[@]}"; do
         cfg="${cfg// /}"
@@ -1229,13 +1279,25 @@ PYEOF
         zppy -c "$cfg_path"
     done
 
+    local job_ids
+    job_ids=$(comm -13 <(echo "$baseline_job_ids") <(current_slurm_job_ids) | paste -sd, -)
+
     local job_count
-    job_count=$(squeue -u "${USER}" | wc -l)
-    job_count=$((job_count - 1))
-    log_success "Submitted jobs. Current queue depth: $job_count"
+    job_count=$(echo "$job_ids" | tr -cd ',' | wc -c)
+    [ -n "$job_ids" ] && job_count=$((job_count + 1))
+    log_success "Submitted jobs. This run's queue depth: $job_count"
 
     checkpoint "Phase 1 jobs submitted. Waiting for them to finish..."
-    wait_for_slurm_jobs 600 14400  # Check every 10 min, max 4 hours
+    if ! wait_for_slurm_jobs "$job_ids" 600 14400; then  # Check every 10 min, max 4 hours
+        # Don't abort the script here: some jobs were cancelled, but
+        # whatever *did* finish is worth checking, and phase 3's output
+        # directory / status file checks below already tolerate missing or
+        # incomplete output -- they're exactly the right tool for reporting
+        # on a partially-completed run. See phase_3_validation.
+        SLURM_JOBS_INCOMPLETE=true
+        SLURM_JOBS_INCOMPLETE_DETAIL+="- Phase 1: one or more jobs hit DependencyNeverSatisfied and were cancelled.\n"
+        log_warning "Phase 1 had cancelled jobs -- continuing on to phase 2/3 to check what actually finished."
+    fi
 
     log_success "Phase 1 complete!"
 }
@@ -1270,6 +1332,12 @@ phase_2_bundles_part2() {
     fi
 
     log "Submitting bundles part 2..."
+    # See phase_1_setup: snapshot before submitting so wait_for_slurm_jobs
+    # below only tracks jobs this phase actually just submitted, not
+    # anything already in the queue (e.g. leftover jobs from a previous run).
+    local baseline_job_ids
+    baseline_job_ids=$(current_slurm_job_ids)
+
     local cfg cfg_path
     for cfg in "${CFGS_ARRAY[@]}"; do
         cfg="${cfg// /}"
@@ -1285,12 +1353,21 @@ phase_2_bundles_part2() {
         fi
     done
 
-    local job_count
-    job_count=$(squeue -u "${USER}" | wc -l)
-    job_count=$((job_count - 1))
-    log_success "Bundles part 2 submitted. Current queue depth: $job_count"
+    local job_ids
+    job_ids=$(comm -13 <(echo "$baseline_job_ids") <(current_slurm_job_ids) | paste -sd, -)
 
-    wait_for_slurm_jobs 600 3600  # Check every 10 min, max 1 hour
+    local job_count
+    job_count=$(echo "$job_ids" | tr -cd ',' | wc -c)
+    [ -n "$job_ids" ] && job_count=$((job_count + 1))
+    log_success "Bundles part 2 submitted. This phase's queue depth: $job_count"
+
+    if ! wait_for_slurm_jobs "$job_ids" 600 3600; then  # Check every 10 min, max 1 hour
+        # As in phase_1_setup: don't abort here. Let phase 3's status-file
+        # checks report on whatever actually finished.
+        SLURM_JOBS_INCOMPLETE=true
+        SLURM_JOBS_INCOMPLETE_DETAIL+="- Phase 2: one or more jobs hit DependencyNeverSatisfied and were cancelled.\n"
+        log_warning "Phase 2 had cancelled jobs -- continuing on to phase 3 to check what actually finished."
+    fi
 
     log_success "Phase 2 complete!"
 }
@@ -1308,6 +1385,10 @@ phase_3_validation() {
     cd "$ZPPY_DIR"
     activate_env "$ZPPY_ENV"
     ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH"
+
+    if [ "$SLURM_JOBS_INCOMPLETE" = true ]; then
+        log_warning "An earlier phase had jobs cancelled for DependencyNeverSatisfied. Proceeding with all of phase 3 anyway; the status-file checks below will show what actually completed."
+    fi
 
     # ------------------------------------------------------------------
     # Status file checks
@@ -1421,7 +1502,16 @@ phase_3_validation() {
     generate_markdown_report
     log_success "Markdown report written: ${REPORT_FILE}"
 
-    [ "$overall_ok" = true ]
+    # Record the result for main() to act on, rather than returning it as
+    # this function's own exit status: under `set -e`, a bare call site
+    # (`phase_3_validation` with no `||`) would treat a nonzero return here
+    # as fatal and exit the *script* immediately -- skipping the "complete!"
+    # messages below even though the report above was already written
+    # successfully. main() checks PHASE3_OVERALL_OK once every phase has
+    # run and exits nonzero *after* announcing completion, so a failed run
+    # still finishes cleanly and a caller (cron, CI) can still detect the
+    # failure via the exit code.
+    PHASE3_OVERALL_OK="$overall_ok"
 }
 
 # ============================================================================
@@ -1442,6 +1532,14 @@ generate_markdown_report() {
         echo "See [automated testing docs page](https://docs.e3sm.org/zppy/_build/html/main/dev_guide/tests/automated_test.html) for info on setup."
         echo ""
     } > "$REPORT_FILE"
+
+    if [ "$SLURM_JOBS_INCOMPLETE" = true ]; then
+        report_append "## SLURM jobs cancelled (DependencyNeverSatisfied)"
+        report_append ""
+        report_append "$(echo -e "$SLURM_JOBS_INCOMPLETE_DETAIL")"
+        report_append "The checks below still ran against whatever output actually exists; a cancelled job usually means an upstream task failed -- check that task's own \`.o\`/\`.e\` output."
+        report_append ""
+    fi
 
     # --- Expected results directory (optional, auto-populated) ---
     # NOTE: this used to be "Step 1" in the header text, matching the
@@ -1759,6 +1857,15 @@ main() {
 
     log_success "Integration test automation complete!"
     log_success "Markdown report: ${REPORT_FILE}"
+
+    # Exit nonzero on a failed run (so cron/CI still notices), but only
+    # *after* the messages above -- the script has genuinely finished and
+    # written the report either way. See the comment at the end of
+    # phase_3_validation for why this is checked here instead of letting
+    # phase_3_validation's own return code decide it under `set -e`.
+    if [ "$PHASE3_OVERALL_OK" != true ]; then
+        exit 1
+    fi
 }
 
 main
