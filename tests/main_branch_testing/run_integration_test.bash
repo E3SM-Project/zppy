@@ -525,40 +525,50 @@ get_env_cmd() {
     fi
 }
 
-# Poll squeue until no user jobs remain (or timeout).
+# Poll squeue until no user jobs remain (or timeout). Any job that lands in
+# DependencyNeverSatisfied is cancelled immediately, by job ID, the moment
+# it's seen -- rather than waiting for either "every remaining job has
+# failed" or the full timeout. This matters because a single failed
+# upstream job (e.g. e3sm_to_cmip) commonly leaves only some downstream
+# jobs (e.g. pcmdi_diags) stuck in DependencyNeverSatisfied while other,
+# unrelated jobs keep running fine -- so "cancel everything only once 100%
+# of the queue is stuck" could wait out the entire max_wait for nothing.
 wait_for_slurm_jobs() {
     local check_interval=${1:-600}  # seconds between checks (default 10 min)
     local max_wait=${2:-14400}      # max total wait seconds (default 4 hours)
 
     log "Waiting for SLURM jobs to complete (checking every ${check_interval}s, max ${max_wait}s)..."
     local elapsed=0
-    local prev_failed_count=0
+    local any_cancelled=0
 
     while true; do
+        local squeue_out
+        squeue_out=$(squeue -u "${USER}")
         local job_count
-        job_count=$(squeue -u "${USER}" | wc -l)
+        job_count=$(echo "$squeue_out" | wc -l)
         job_count=$((job_count - 1))  # subtract header
 
-        # Detect DependencyNeverSatisfied
+        # Detect and immediately cancel any DependencyNeverSatisfied jobs,
+        # by ID, without touching any other still-healthy job.
         local failed_jobs
-        failed_jobs=$(squeue -u "${USER}" | grep "DependencyNeverSatisfied" || true)
-        local failed_count=0
+        failed_jobs=$(echo "$squeue_out" | grep "DependencyNeverSatisfied" || true)
         if [ -n "$failed_jobs" ]; then
-            failed_count=$(echo "$failed_jobs" | wc -l)
-        fi
-
-        if [ "$failed_count" -gt "$prev_failed_count" ]; then
-            log_error "Jobs with DependencyNeverSatisfied:"
+            any_cancelled=1
+            log_error "Jobs with DependencyNeverSatisfied -- cancelling immediately:"
             echo "$failed_jobs"
-            if [ "$job_count" -eq "$failed_count" ]; then
-                log_error "All remaining jobs have DependencyNeverSatisfied -- cancelling."
-                scancel -u "${USER}"
-                return 1
-            fi
+            local failed_job_ids
+            failed_job_ids=$(echo "$failed_jobs" | awk '{print $1}')
+            # shellcheck disable=SC2086
+            scancel $failed_job_ids
+            job_count=$(squeue -u "${USER}" | wc -l)
+            job_count=$((job_count - 1))
         fi
-        prev_failed_count=$failed_count
 
         if [ "$job_count" -eq 0 ]; then
+            if [ "$any_cancelled" -eq 1 ]; then
+                log_error "All SLURM jobs finished, but some had DependencyNeverSatisfied and were cancelled."
+                return 1
+            fi
             log_success "All SLURM jobs completed!"
             return 0
         fi
