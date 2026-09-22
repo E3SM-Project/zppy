@@ -178,6 +178,17 @@ def test_environment_panel_lists_what_changed() -> None:
     assert "2.1.3" in page and "2.2.0" in page
 
 
+def test_environment_panel_does_not_call_an_uncompared_run_clean() -> None:
+    diffs = [_env(repo="zppy"), _env(available=False, detail="No export.")]
+    page = viewer.render_viewer(
+        [_score("a", "MAJOR")], "cfg", "task", environment_diffs=diffs
+    )
+    assert (
+        "Environment: no dependency changed in those compared (1 not compared)" in page
+    )
+    assert "Environment: no dependency changed<" not in page
+
+
 def test_environment_panel_states_when_nothing_changed() -> None:
     # "Nothing changed" is what makes an image difference attributable to code,
     # so its absence would leave a reviewer guessing.

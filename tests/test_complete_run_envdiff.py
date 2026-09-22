@@ -171,3 +171,114 @@ def test_summary_counts(tmp_path) -> None:
     assert summary["change_count"] == 2
     assert summary["notable_change_count"] == 1
     assert summary["unavailable"] == ["mpas_analysis"]
+
+
+# E3SM-Unified baselines #####################################################
+
+# What an env_description.txt carries for a task backed by E3SM-Unified: its own
+# header, then `conda list`.
+UNIFIED_DESCRIPTION = """Task: e3sm_diags
+Generated: 2026-09-18 12:50:18
+
+Repository: N/A (uses a released package via the unified environment)
+
+Conda environment: E3SM-Unified
+
+Package versions:
+-----------------
+# packages in environment at /lcrc/soft/climate/e3sm-unified/default:
+#
+# Name                    Version                   Build  Channel
+python                    3.13.1               h1234_0    conda-forge
+numpy                     2.4.4           py313hf6604e3_0    conda-forge
+xarray                    2025.1.0          pyhd8ed1ab_0    conda-forge
+e3sm-diags                3.2.0                    pypi_0    pypi
+some-tool                 1.2.3                    pypi_0    pypi
+"""
+
+
+def _write_description(layout, task, text):
+    import os
+
+    os.makedirs(layout.env_descriptions, exist_ok=True)
+    with open(os.path.join(layout.env_descriptions, f"{task}.txt"), "w") as stream:
+        stream.write(text)
+
+
+def test_package_list_is_parsed_below_the_description_header() -> None:
+    packages = envdiff.parse_package_list(UNIFIED_DESCRIPTION)
+    assert packages["numpy"] == "2.4.4"
+    assert packages["pip:e3sm-diags"] == "3.2.0"
+    # The description's own lines are not packages.
+    assert "Task:" not in packages and "Generated:" not in packages
+    assert len(packages) == 5
+
+
+def test_a_unified_baseline_is_compared_through_its_package_list(tmp_path) -> None:
+    # The baseline ran e3sm_diags from E3SM-Unified, so it exported no
+    # environment for it; this run solved a dev environment.
+    candidate = run_layout(str(tmp_path), "20260918_main_run1")
+    baseline = run_layout(str(tmp_path), "20260918_unified113")
+    _write(candidate, "e3sm_diags", EXPORT)
+    _write_description(baseline, "e3sm_diags", UNIFIED_DESCRIPTION)
+
+    diff = envdiff.compare_run_environments(candidate, baseline, ["e3sm_diags"])[0]
+
+    assert diff.available
+    changes = {change.name: change for change in diff.changes}
+    # Only versions are compared: conda list and an export write builds
+    # differently, so python and xarray match.
+    assert set(changes) == {"numpy", "e3sm-diags"}
+    assert (changes["numpy"].baseline, changes["numpy"].candidate) == (
+        "2.4.4",
+        "2.1.3",
+    )
+    assert "env_descriptions/e3sm_diags.txt" in diff.detail
+
+
+def test_a_pip_installed_package_matches_its_conda_counterpart(tmp_path) -> None:
+    # The dev environment pip-installs the package under test; E3SM-Unified has
+    # it from conda-forge. Same package, same version: not a change.
+    candidate = run_layout(str(tmp_path), "20260918_main_run1")
+    baseline = run_layout(str(tmp_path), "20260918_unified113")
+    _write(
+        candidate,
+        "e3sm_diags",
+        EXPORT.replace("e3sm-diags==3.0.0", "e3sm-diags==3.2.0"),
+    )
+    _write_description(
+        baseline,
+        "e3sm_diags",
+        UNIFIED_DESCRIPTION.replace(
+            "e3sm-diags                3.2.0                    pypi_0    pypi",
+            "e3sm_diags                3.2.0              pyhc364b38_0    conda-forge",
+        ),
+    )
+
+    diff = envdiff.compare_run_environments(candidate, baseline, ["e3sm_diags"])[0]
+    assert "e3sm-diags" not in {change.name for change in diff.changes}
+    assert "pip:e3sm-diags" not in {change.name for change in diff.changes}
+
+
+def test_any_of_a_repositorys_tasks_supplies_the_package_list(tmp_path) -> None:
+    candidate = run_layout(str(tmp_path), "20260918_main_run1")
+    baseline = run_layout(str(tmp_path), "20260918_unified113")
+    _write(candidate, "zppy_interfaces", EXPORT)
+    _write_description(baseline, "pcmdi_diags", UNIFIED_DESCRIPTION)
+
+    diff = envdiff.compare_run_environments(candidate, baseline, ["zppy_interfaces"])[0]
+    assert diff.available and diff.differs
+    assert "pcmdi_diags.txt" in diff.detail
+
+
+def test_interpretation_does_not_call_an_uncompared_run_clean() -> None:
+    # Only zppy could be compared. Saying "no dependency changed" would credit
+    # every image difference to the code under test when e3sm_diags may have
+    # moved underneath it.
+    diffs = [
+        envdiff.EnvironmentDiff("zppy", changes=[]),
+        envdiff.EnvironmentDiff("e3sm_diags", available=False, detail="missing"),
+    ]
+    note = envdiff.interpretation(diffs, {"zppy": "dev", "e3sm_diags": "dev"})
+    assert "`e3sm_diags` could not be compared" in note
+    assert "not necessarily attributable" in note
