@@ -3,9 +3,11 @@
 ## How to run a cfg
 
 ```
-# Change UNIQUE_ID in tests/integration/utils.py
-#
-$ pip install . && python tests/integration/utils.py
+$ pip install .
+# Either pass the settings explicitly:
+$ python -m tests.integration.utils --unique-id <UNIQUE_ID>
+# or edit TEST_SPECIFICS in tests/integration/utils.py and run:
+$ python tests/integration/utils.py
 ```
 
 Now, if you're running the e3sm_diags task,
@@ -22,7 +24,10 @@ $ mamba env create -f conda-env/dev.yml -n e3sm_diags_<date>
 $ conda activate e3sm_diags_<date>
 $ pip install .
 $ `cd` back to zppy directory
-# Then edit tests/integration/utils.py `diags_environment_commands` to use that environment.
+# Then point the e3sm_diags task at that environment:
+#   python -m tests.integration.utils --unique-id <UNIQUE_ID> \
+#       --env-cmd "e3sm_diags=source <conda.sh>; conda activate e3sm_diags_<date>"
+# (or edit `diags_environment_commands` in tests/integration/utils.py).
 ```
 
 ```
@@ -51,43 +56,22 @@ then you should run the relevant ones to make sure they still work.
 
 These do not have automatic Python testing.
 The comprehensive and bundles tests do have this, however.
-These tests are ideally run weekly on the `main` branch.
+These tests are ideally run weekly on the `main` branch, via
+`python -m tests.complete_run.automation` -- see
+`docs/source/dev_guide/tests/automated_test.rst`.
 
-## Commands to run to replace outdated expected files
+## Commands to promote a baseline
 
+Expected results are no longer produced by copying a run over the previous
+baseline. Each complete run writes into its own immutable directory, and
+promotion points `latest-main` at one:
 
-Basic tests:
 ```
-cd <top level of zppy repo>
-
-chmod u+x tests/integration/generated/update_bash_generation_expected_files_#expand machine#.sh
-./tests/integration/generated/update_bash_generation_expected_files_#expand machine#.sh
-
-chmod u+x tests/integration/generated/update_campaign_expected_files_#expand machine#.sh
-./tests/integration/generated/update_campaign_expected_files_#expand machine#.sh
-# This command also runs the test again.
-# If the test fails on `test_campaign_high_res_v1`, try running the lines of the loop manually:
-rm -rf #expand expected_dir#test_campaign_high_res_v1_expected_files
-mkdir -p #expand expected_dir#test_campaign_high_res_v1_expected_files
-mv test_campaign_high_res_v1_output/post/scripts/*.settings #expand expected_dir#test_campaign_high_res_v1_expected_files
-
-chmod u+x tests/integration/generated/update_defaults_expected_files_#expand machine#.sh
-./tests/integration/generated/update_defaults_expected_files_#expand machine#.sh
+$ python -m tests.complete_run.promote --machine #expand machine# show
+$ python -m tests.complete_run.promote --machine #expand machine# run <tag>
+# Add --allow-failed once you have reviewed the differences and decided the
+# new results are correct.
 ```
 
-Weekly tests require running zppy beforehand:
-```
-cd <top level of zppy repo>
-chmod u+x tests/integration/generated/update_weekly_expected_files_#expand machine#.sh
-./tests/integration/generated/update_weekly_expected_files_#expand machine#.sh
-```
-
-## Commands to generate official expected results for a zppy/Unified release
-
-Edit `release_name` in
-`tests/integration/generated/update_archive_expected_files_#expand machine#.sh`.
-Then, run:
-```
-chmod u+x tests/integration/generated/update_archive_expected_files_#expand machine#.sh
-./tests/integration/generated/update_archive_expected_files_#expand machine#.sh
-```
+Rolling back is promoting the previous run again. See
+`docs/source/dev_guide/tests/update_expected_results.rst`.
