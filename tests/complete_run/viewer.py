@@ -639,6 +639,11 @@ def _render_environment(diffs: List[EnvironmentDiff], note: str) -> str:
             f"{'s' if total != 1 else ''} in "
             + ", ".join(diff.repo for diff in differing)
         )
+    elif comparable and unavailable:
+        heading = (
+            "Environment: no dependency changed in those compared"
+            f" ({len(unavailable)} not compared)"
+        )
     elif comparable:
         heading = "Environment: no dependency changed"
     else:
@@ -651,6 +656,8 @@ def _render_environment(diffs: List[EnvironmentDiff], note: str) -> str:
         body.append(f"<p>{html.escape(diff.repo)}: {html.escape(diff.detail)}</p>")
     for diff in differing:
         body.append(f"<h3>{html.escape(diff.repo)}</h3>")
+        if diff.detail:
+            body.append(f"<p>{html.escape(diff.detail)}</p>")
         body.append(
             "<table><tr><th>Package</th><th>Baseline</th><th>This run</th></tr>"
             + "".join(

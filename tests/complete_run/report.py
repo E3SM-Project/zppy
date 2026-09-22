@@ -233,7 +233,16 @@ def _environment_section(report: Dict[str, Any]) -> List[str]:
     changed = [entry for entry in repos if entry.get("change_count")]
     if not changed:
         if diff.get("compared"):
-            lines.extend(["No dependency changed.", ""])
+            lines.extend(
+                [
+                    (
+                        "No dependency changed in those compared."
+                        if unavailable
+                        else "No dependency changed."
+                    ),
+                    "",
+                ]
+            )
         return lines
 
     lines.extend(

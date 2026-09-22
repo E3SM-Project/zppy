@@ -12,6 +12,10 @@ changed underneath it:
 Package lists are parsed out of ``conda env export`` output. ``name:`` and
 ``prefix:`` are ignored: every run builds its own environment, so those always
 differ and would bury the changes worth seeing.
+
+A baseline whose repository ran from E3SM-Unified has no export for it. Its
+``env_descriptions/<task>.txt`` still carries that environment's ``conda list``,
+so the comparison falls back to that, by version only.
 """
 
 from __future__ import annotations
@@ -22,6 +26,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
 
 from tests.complete_run.layout import RunLayout
+from tests.complete_run.params import REPO_SPECS_BY_NAME
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -168,11 +173,41 @@ def _split_spec(spec: str) -> Tuple[str, str]:
     return spec.strip(), ""
 
 
+def parse_package_list(text: str) -> Dict[str, str]:
+    """Parse ``conda list`` output into package -> version.
+
+    This is the list an ``env_description.txt`` carries, below its own header
+    lines, so parsing starts at ``conda list``'s ``# Name`` header. Packages
+    from PyPI get the same ``pip:`` prefix as in an export.
+    """
+    packages: Dict[str, str] = {}
+    in_list: bool = False
+    for line in text.splitlines():
+        if line.startswith("# Name"):
+            in_list = True
+            continue
+        fields: List[str] = line.split()
+        if not in_list or len(fields) < 2 or fields[0].startswith("#"):
+            continue
+        name: str = fields[0]
+        if len(fields) >= 4 and fields[3] == "pypi":
+            name = f"pip:{name}"
+        packages[name] = fields[1]
+    return packages
+
+
 def diff_environments(baseline_text: str, candidate_text: str) -> List[PackageChange]:
     """Return every package that differs between two exports."""
-    baseline: Dict[str, str] = parse_environment_export(baseline_text)
-    candidate: Dict[str, str] = parse_environment_export(candidate_text)
+    return _diff_packages(
+        parse_environment_export(baseline_text),
+        parse_environment_export(candidate_text),
+    )
 
+
+def _diff_packages(
+    baseline: Dict[str, str], candidate: Dict[str, str]
+) -> List[PackageChange]:
+    """Return every package whose version differs between two package maps."""
     changes: List[PackageChange] = []
     for name in sorted(set(baseline) | set(candidate)):
         before: str = baseline.get(name, "")
@@ -195,6 +230,37 @@ def compare_run_environments(
         baseline_path: str = baseline.environment_file(repo)
         candidate_text: str = _read(candidate_path)
         baseline_text: str = _read(baseline_path)
+
+        if candidate_text and not baseline_text:
+            fallback: Tuple[str, Dict[str, str]] | None = _baseline_package_list(
+                baseline, repo
+            )
+            if fallback is not None:
+                task, baseline_packages = fallback
+                # conda list has no build strings, so compare versions only.
+                candidate_packages: Dict[str, str] = {
+                    name: version.split("=")[0]
+                    for name, version in parse_environment_export(
+                        candidate_text
+                    ).items()
+                }
+                # A dev environment pip-installs the package under test, which
+                # E3SM-Unified has from conda-forge: pip:e3sm-diags there is
+                # e3sm_diags here. Match by package, not by how it was installed.
+                baseline_packages = _by_package(baseline_packages)
+                candidate_packages = _by_package(candidate_packages)
+                results.append(
+                    EnvironmentDiff(
+                        repo=repo,
+                        detail=(
+                            f"The baseline has no environment export for {repo};"
+                            " compared by version against the package list in"
+                            f" its env_descriptions/{task}.txt."
+                        ),
+                        changes=_diff_packages(baseline_packages, candidate_packages),
+                    )
+                )
+                continue
 
         if not candidate_text or not baseline_text:
             missing: List[str] = []
@@ -221,6 +287,35 @@ def compare_run_environments(
         )
 
     return results
+
+
+def _by_package(packages: Dict[str, str]) -> Dict[str, str]:
+    """Key packages by normalized name, dropping how they were installed.
+
+    Where a package is installed both ways, the conda one is kept.
+    """
+    normalized: Dict[str, str] = {}
+    for name in sorted(packages, key=lambda name: name.startswith("pip:")):
+        key: str = name.removeprefix("pip:").lower().replace("_", "-")
+        normalized.setdefault(key, packages[name])
+    return normalized
+
+
+def _baseline_package_list(
+    baseline: RunLayout, repo: str
+) -> Tuple[str, Dict[str, str]] | None:
+    """Return a task and the packages its baseline env_description lists.
+
+    Any of the repository's tasks will do: they all ran in its environment.
+    """
+    spec = REPO_SPECS_BY_NAME.get(repo)
+    for task in spec.tasks if spec else ():
+        packages = parse_package_list(
+            _read(os.path.join(baseline.env_descriptions, f"{task}.txt"))
+        )
+        if packages:
+            return task, packages
+    return None
 
 
 def summarize(diffs: List[EnvironmentDiff]) -> Dict[str, object]:
@@ -260,6 +355,15 @@ def interpretation(
             + " was meant to reproduce the baseline's but does not. Image "
             "differences in this run are **not** attributable to the code "
             "under review until that is resolved."
+        )
+    unavailable: List[str] = sorted(diff.repo for diff in diffs if not diff.available)
+    if not differing and unavailable:
+        # "Could not check" must never read as "nothing changed".
+        return (
+            "No dependency changed in the environments compared, but "
+            + ", ".join(f"`{repo}`" for repo in unavailable)
+            + " could not be compared, so image differences are not necessarily "
+            "attributable to the code under test."
         )
     if not differing:
         return (
