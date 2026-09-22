@@ -3,6 +3,7 @@ import os
 import jinja2
 from configobj import ConfigObj
 
+from zppy.bundle import Bundle
 from zppy.utils import get_tasks
 
 TEMPLATE_DIR = os.path.join("zppy", "templates")
@@ -86,3 +87,35 @@ def test_mail_type_set_on_a_task_section():
     assert len(tasks) == 1
     assert tasks[0]["mail_type"] == "BEGIN,END,FAIL"
     assert tasks[0]["mail_user"] == "me@example.com"
+
+
+def test_bundle_header_gets_mail_parameters(tmp_path):
+    # A bundle builds its own rendering context rather than using the task
+    # dict, so the mail parameters have to be threaded through `Bundle`
+    # explicitly. A bundle takes them from the first task added to it.
+    bundle_context = dict(BASE_CONTEXT)
+    bundle_context.update(
+        {
+            "bundle": "bundle1",
+            "dry_run": False,
+            "debug": False,
+            "environment_commands": "",
+            "scriptDir": str(tmp_path),
+            "mail_type": "END,FAIL",
+            "mail_user": "me@example.com",
+        }
+    )
+    bundle = Bundle(bundle_context)
+    config = ConfigObj(
+        [
+            "[default]",
+            "machine = chrysalis",
+            "account = my_account",
+            f"templateDir = {TEMPLATE_DIR}",
+        ]
+    )
+    bundle.render(config)
+    with open(bundle.bundle_file, "r") as f:
+        rendered = f.read()
+    assert "#SBATCH  --mail-type=END,FAIL\n" in rendered
+    assert "#SBATCH  --mail-user=me@example.com\n" in rendered
