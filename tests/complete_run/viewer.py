@@ -95,7 +95,7 @@ a { color: var(--accent); }
 .env th, .env td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); }
 .env th { color: var(--muted); font-weight: 600; }
 .env td.pkg { font-weight: 600; }
-.env tr.notable td.pkg::after { content: ' \2022'; color: #c25e00; }
+.env tr.notable td.pkg::after { content: ' \\2022'; color: #c25e00; }
 @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
 .back { font-size: 13px; }
 h2 { font-size: 16px; margin: 28px 0 8px; }
