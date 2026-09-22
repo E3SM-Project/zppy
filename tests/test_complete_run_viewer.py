@@ -356,3 +356,11 @@ def test_summary_escapes_and_stays_self_contained() -> None:
     page = viewer.render_summary(rows, "<tag>")
     assert "<pkg>" not in page and "&lt;pkg&gt;" in page
     assert "http://" not in page and "https://" not in page
+
+
+def test_notable_marker_reaches_the_css_as_an_escape() -> None:
+    # A bare "\2022" in the Python source is an octal escape: the page got an
+    # invisible control character and a stray "2" after each notable package.
+    page = viewer.render_viewer([_score("a", "MAJOR")], "cfg", "task")
+    assert "content: ' \\2022'" in page
+    assert "\x82" not in page
