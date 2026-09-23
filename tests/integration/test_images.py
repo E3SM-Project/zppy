@@ -93,7 +93,13 @@ def prepare_test_configs(
         )
 
     if "weekly_legacy_3.1.0_comprehensive_v3" in expansions["cfgs_to_run"]:
-        available_tasks = ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]
+        available_tasks = [
+            "e3sm_diags",
+            "mpas_analysis",
+            "global_time_series",
+            "ilamb",
+            "pcmdi_diags",
+        ]
         tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
         test_configs.append(
             (
