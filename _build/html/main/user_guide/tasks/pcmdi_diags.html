@@ -120,7 +120,7 @@ CMIP-format input data.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">mean_climate</span></code> — climatological mean metrics</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">variability_modes_cpl</span></code> — coupled variability modes (PDO, NPGO, AMO)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">variability_modes_atm</span></code> — atmospheric variability modes (NAM, NAO, PNA, etc.)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">enso</span></code> — ENSO metrics (not currently enabled by default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enso</span></code> — ENSO metrics</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">synthetic_plots</span></code> — composite viewer page combining outputs from other sets</p></li>
 </ul>
 </section>
@@ -271,7 +271,7 @@ CMIP-format input data.</p>
 </section>
 <section id="per-subtask-shared-parameters">
 <h3>Per-subtask shared parameters<a class="headerlink" href="#per-subtask-shared-parameters" title="Link to this heading"></a></h3>
-<p>There are 5 per-subtask shared parameters:</p>
+<p>There are 8 per-subtask shared parameters:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 28.0%" />
@@ -292,28 +292,47 @@ CMIP-format input data.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
 <td><p>Diagnostic set to run.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">obs_sets</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">clim_obs_sets</span></code></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code></p></td>
-<td><p>Observational dataset aliases to use.</p></td>
+<td><p>Observational dataset alias for mean-climate diagnostics.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ref_final_yr</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enso_obs_sets</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;alternate3,default,alternatd4,...&quot;</span></code></p></td>
+<td><p>Per-variable observational dataset aliases for ENSO diagnostics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mova_obs_sets</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;alternate4&quot;</span></code></p></td>
+<td><p>NOAA-20C alias for atmospheric variability modes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">movc_obs_sets</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;alternatd4&quot;</span></code></p></td>
+<td><p>HadISST2 alias for coupled variability modes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ref_final_yr</span></code></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
 <td><p>End year for reference data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ref_start_yr</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ref_start_yr</span></code></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
 <td><p>Start year for reference data.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ref_years</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ref_years</span></code></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">[&quot;&quot;]</span></code></p></td>
 <td><p>Year ranges for reference data.</p></td>
 </tr>
 </tbody>
 </table>
+<p>For non-synthetic subtasks, zppy selects the diagnostic-specific observation
+alias based on <code class="docutils literal notranslate"><span class="pre">current_set</span></code> and passes it downstream as <code class="docutils literal notranslate"><span class="pre">obs_sets</span></code>.
+When a selector contains a comma-separated list, its entries correspond
+positionally to the associated <code class="docutils literal notranslate"><span class="pre">*_vars</span></code> parameter.</p>
 </section>
 <section id="mean-climate-parameters">
 <h3>Mean_climate parameters<a class="headerlink" href="#mean-climate-parameters" title="Link to this heading"></a></h3>
@@ -396,7 +415,7 @@ CMIP-format input data.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">clim_regions</span></code></p></td>
 <td><p>No</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;global,ocean,land&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;global&quot;</span></code></p></td>
 <td><p>Regions used for mean-climate metrics.</p></td>
 </tr>
 </tbody>
@@ -555,11 +574,17 @@ CMIP-format input data.</p>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enso_vars</span></code></p></td>
 <td><p>No</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;psl,pr,prsn,ts,tas,tauu,tauv,hflx,hfss,rlds,rsds,rlus,rlut,rsdt&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;psl,pr,ts,tas,tauu,tauv,hfls,hfss,rlds,rsds,rlus,rlut,rsdt&quot;</span></code></p></td>
 <td><p>Variables used by ENSO diagnostics.</p></td>
 </tr>
 </tbody>
 </table>
+<p>Sea-surface height is opt-in because an <code class="docutils literal notranslate"><span class="pre">ssh</span></code> model time series is not
+generally available in the atmospheric CMIP time-series directory. To include
+it, append <code class="docutils literal notranslate"><span class="pre">ssh</span></code> to <code class="docutils literal notranslate"><span class="pre">enso_vars</span></code> and its observational alias (<code class="docutils literal notranslate"><span class="pre">default</span></code>
+for AVISO) to <code class="docutils literal notranslate"><span class="pre">enso_obs_sets</span></code> in the same position. The model data must first
+be provided as an <code class="docutils literal notranslate"><span class="pre">ssh</span></code> time series; <code class="docutils literal notranslate"><span class="pre">zppy</span></code> does not translate <code class="docutils literal notranslate"><span class="pre">zos</span></code> to
+<code class="docutils literal notranslate"><span class="pre">ssh</span></code>.</p>
 </section>
 <section id="synthetic-plots-parameters">
 <h3>Synthetic_plots parameters<a class="headerlink" href="#synthetic-plots-parameters" title="Link to this heading"></a></h3>
@@ -611,7 +636,7 @@ CMIP-format input data.</p>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">enso_viewer</span></code></p></td>
 <td><p>No</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
 <td><p>Include ENSO panels in the synthetic viewer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">enso_years</span></code></p></td>
@@ -676,7 +701,7 @@ CMIP-format input data.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cmip_clim_set</span></code></p></td>
 <td><p>No</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;cmip6.historical.v20250707&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;cmip6.historical.v20250927&quot;</span></code></p></td>
 <td><p>CMIP mean-climate metrics set ID.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cmip_enso_set</span></code></p></td>

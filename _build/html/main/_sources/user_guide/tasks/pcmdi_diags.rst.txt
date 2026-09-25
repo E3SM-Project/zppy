@@ -16,7 +16,7 @@ The ``current_set`` parameter selects which PMP diagnostic to run:
 - ``mean_climate`` — climatological mean metrics
 - ``variability_modes_cpl`` — coupled variability modes (PDO, NPGO, AMO)
 - ``variability_modes_atm`` — atmospheric variability modes (NAM, NAO, PNA, etc.)
-- ``enso`` — ENSO metrics (not currently enabled by default)
+- ``enso`` — ENSO metrics
 - ``synthetic_plots`` — composite viewer page combining outputs from other sets
 
 Parameters
@@ -135,7 +135,7 @@ There are 14 task-level (all sets except synthetic_plots) parameters:
 Per-subtask shared parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are 5 per-subtask shared parameters:
+There are 8 per-subtask shared parameters:
 
 .. list-table::
    :header-rows: 1
@@ -149,10 +149,22 @@ There are 5 per-subtask shared parameters:
      - No
      - ``""``
      - Diagnostic set to run.
-   * - ``obs_sets``
+   * - ``clim_obs_sets``
      - No
      - ``"default"``
-     - Observational dataset aliases to use.
+     - Observational dataset alias for mean-climate diagnostics.
+   * - ``enso_obs_sets``
+     - No
+     - ``"alternate3,default,alternatd4,..."``
+     - Per-variable observational dataset aliases for ENSO diagnostics.
+   * - ``mova_obs_sets``
+     - No
+     - ``"alternate4"``
+     - NOAA-20C alias for atmospheric variability modes.
+   * - ``movc_obs_sets``
+     - No
+     - ``"alternatd4"``
+     - HadISST2 alias for coupled variability modes.
    * - ``ref_final_yr``
      - No
      - ``""``
@@ -165,6 +177,11 @@ There are 5 per-subtask shared parameters:
      - No
      - ``[""]``
      - Year ranges for reference data.
+
+For non-synthetic subtasks, zppy selects the diagnostic-specific observation
+alias based on ``current_set`` and passes it downstream as ``obs_sets``.
+When a selector contains a comma-separated list, its entries correspond
+positionally to the associated ``*_vars`` parameter.
 
 Mean_climate parameters
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -227,7 +244,7 @@ There are 2 mean_climate & synthetic_plots parameters:
      - Variables for mean-climate and synthetic-plot diagnostics.
    * - ``clim_regions``
      - No
-     - ``"global,ocean,land"``
+     - ``"global"``
      - Regions used for mean-climate metrics.
 
 Variability_modes parameters
@@ -343,8 +360,15 @@ There is 1 ENSO & synthetic_plots parameter:
      - Description
    * - ``enso_vars``
      - No
-     - ``"psl,pr,prsn,ts,tas,tauu,tauv,hflx,hfss,rlds,rsds,rlus,rlut,rsdt"``
+     - ``"psl,pr,ts,tas,tauu,tauv,hfls,hfss,rlds,rsds,rlus,rlut,rsdt"``
      - Variables used by ENSO diagnostics.
+
+Sea-surface height is opt-in because an ``ssh`` model time series is not
+generally available in the atmospheric CMIP time-series directory. To include
+it, append ``ssh`` to ``enso_vars`` and its observational alias (``default``
+for AVISO) to ``enso_obs_sets`` in the same position. The model data must first
+be provided as an ``ssh`` time series; ``zppy`` does not translate ``zos`` to
+``ssh``.
 
 Synthetic_plots parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -385,7 +409,7 @@ There are 22 synthetic_plots parameters:
      - Year range used for coupled variability synthetic panels.
    * - ``enso_viewer``
      - No
-     - ``False``
+     - ``True``
      - Include ENSO panels in the synthetic viewer.
    * - ``enso_years``
      - No
@@ -437,7 +461,7 @@ There are 22 synthetic_plots parameters:
      - Directory containing CMIP variability-mode metrics.
    * - ``cmip_clim_set``
      - No
-     - ``"cmip6.historical.v20250707"``
+     - ``"cmip6.historical.v20250927"``
      - CMIP mean-climate metrics set ID.
    * - ``cmip_enso_set``
      - No
