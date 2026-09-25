@@ -147,6 +147,16 @@ def test_set_component_and_prc_typ():
     assert c["component"] == "rof"
     assert c["prc_typ"] == "mosart"
 
+    c = {"input_component": "mpaso"}
+    set_component_and_prc_typ(c)
+    assert c["component"] == "ocn"
+    assert c["prc_typ"] == "mpasocean"
+
+    c = {"input_component": "mpassi"}
+    set_component_and_prc_typ(c)
+    assert c["component"] == "ice"
+    assert c["prc_typ"] == "mpasseaice"
+
     # Test with input_files
     c = {"input_component": "", "input_files": "cam.extension"}
     set_component_and_prc_typ(c)
@@ -182,6 +192,16 @@ def test_set_component_and_prc_typ():
     set_component_and_prc_typ(c)
     assert c["component"] == "rof"
     assert c["prc_typ"] == "mosart"
+
+    c = {"input_component": "", "input_files": "mpaso.extension"}
+    set_component_and_prc_typ(c)
+    assert c["component"] == "ocn"
+    assert c["prc_typ"] == "mpasocean"
+
+    c = {"input_component": "", "input_files": "mpassi.extension"}
+    set_component_and_prc_typ(c)
+    assert c["component"] == "ice"
+    assert c["prc_typ"] == "mpasseaice"
 
     # Test error case
     c = {"input_component": "", "input_files": ""}
