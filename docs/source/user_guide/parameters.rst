@@ -96,7 +96,7 @@ There are 6 output-specific parameters:
 
 **Machine specifics**
 
-There are 8 machine-specific parameters:
+There are 10 machine-specific parameters:
 
 .. list-table::
    :header-rows: 1
@@ -114,6 +114,19 @@ There are 8 machine-specific parameters:
      - No
      - ``""``
      - The constraint of the machine to run on.
+   * - ``mail_type``
+     - No
+     - ``""``
+     - When to send SLURM job status emails, e.g. ``"BEGIN,END,FAIL"``. Options
+       include (but are not limited to) ``"BEGIN"``, ``"END"``, ``"FAIL"``,
+       ``"ALL"``. Always quote the value. Leave as ``""`` to not request any
+       email notifications. See the note below before enabling this.
+   * - ``mail_user``
+     - No
+     - ``""``
+     - Email address the notifications requested by ``mail_type`` are sent to.
+       Leave as ``""`` to use the address SLURM defaults to for the submitting
+       user.
    * - ``nodes``
      - No
      - ``1``
@@ -138,6 +151,27 @@ There are 8 machine-specific parameters:
      - No
      - ``"02:00:00"``
      - Maximum wall time for the SLURM job.
+
+.. note::
+
+   Use the mail parameters with caution. They apply to *every* job of *every*
+   section that inherits them, so setting them in ``[default]`` means one email
+   per task -- often dozens per run. Enable them only for long-running tasks:
+
+   .. code-block:: ini
+
+      [e3sm_diags]
+      mail_type = "END,FAIL"
+      mail_user = "myemail@example.com"
+
+   One further caveat: bundled tasks run inside a single SLURM job, so their
+   ``#SBATCH`` lines are inert. A bundle's mail settings come from the first
+   task added to it.
+
+   The cfg file is copied as provenance, including to ``www``, but both mail
+   parameters are left out of those copies, so the address is not published
+   alongside the diagnostics. It does still appear in the ``#SBATCH`` lines of
+   the generated scripts under ``output``.
 
 **Environment specifics**
 
