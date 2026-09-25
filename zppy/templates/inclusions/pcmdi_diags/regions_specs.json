@@ -259,5 +259,17 @@
         "value": 0.0,
         "domain": { "latitude":[-70.0, -50.0],
 		    "longitude":[0.0, 360.0]}
+    },
+    "CONUS_RRM": {
+        "domain": { "latitude":[20.0, 50.0],
+                    "longitude":[-125.0, -65.0]}
+    },
+    "EastAsia_RRM": {
+        "domain": { "latitude":[8.0, 50.0],
+                    "longitude":[70.0, 142.5]}
+    },
+    "Amazon_RRM": {
+        "domain": { "latitude":[-28.5, 14.0],
+                    "longitude":[-88.5, -31.0]}
     }
 }
