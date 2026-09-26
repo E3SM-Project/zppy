@@ -2,7 +2,13 @@
 # Run from the top level of the zppy repo
 # Run as `./tests/integration/generated/update_campaign_expected_files.sh`
 
-for campaign in "cryosphere" "cryosphere_override" "high_res_v1" "none" "water_cycle" "water_cycle_override"
+# Update all campaigns
+campaigns=("cryosphere" "cryosphere_override" "high_res_v1" "none" "water_cycle" "water_cycle_override")
+
+# To update only a subset, comment out the line above and use e.g.:
+# campaigns=("cryosphere")
+
+for campaign in "${campaigns[@]}"
 do
     echo ${campaign}
     rm -rf #expand expected_dir#test_campaign_${campaign}_expected_files
