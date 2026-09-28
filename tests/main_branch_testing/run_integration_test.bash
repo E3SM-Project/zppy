@@ -513,10 +513,16 @@ apply_conda_install_line() {
     [[ -n "$install_line" ]] || return 0
 
     log "Applying CONDA_INSTALL_LINE in '$env_name': conda install -n $env_name $install_line --yes"
-    # Intentionally unquoted: install_line may contain multiple
-    # space-separated specs (e.g. "nco<5.4.0 xarray==2023.1.0").
+    # When the package(s) being changed ship activate.d/deactivate.d hooks
+    # (e.g. geometric_features), conda reactivates the *currently active* env
+    # in-place as part of the install -- sourcing those hooks in this same
+    # shell. Those hooks assume nounset is off (they reference conda-internal
+    # variables with no default), same as plain `conda activate` -- see
+    # init_conda_base/activate_env above -- so disable it here too.
+    set +u
     # shellcheck disable=SC2086
     conda install -n "$env_name" $install_line --yes
+    set -u
     log_success "CONDA_INSTALL_LINE applied to '$env_name'"
 }
 
