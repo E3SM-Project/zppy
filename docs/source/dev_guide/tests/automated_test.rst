@@ -243,14 +243,58 @@ Update the ``_EXISTING_ENV`` parameters if you already have an environment from 
 .. code-block::
 
     # Optional: reuse an existing named conda env instead of creating a new one.
-    # When non-empty AND the corresponding ENV_TYPE is "dev", the script skips
-    # conda env creation and activates this env directly.
-    # Leave empty to let the script auto-name and create the env as usual.
+    # When non-empty, the corresponding ENV_TYPE above is ignored entirely (it's
+    # only used to decide how to BUILD an env, and there's nothing left to build
+    # here): the script skips both conda env creation and the test-branch
+    # checkout for that component -- reusing an env implies reusing whatever
+    # branch (possibly a local one that's never been pushed upstream) it was
+    # built against, rather than trying to fetch/switch and risking a failure.
+    # Leave empty to let the script auto-name, branch, and create the env as usual.
     DIAGS_EXISTING_ENV=""
     E3SM_TO_CMIP_EXISTING_ENV=""
     MPAS_EXISTING_ENV=""
     ZI_EXISTING_ENV=""
     ZPPY_EXISTING_ENV=""
+
+An ``_EXISTING_ENV`` deliberately wins over its ``_ENV_TYPE``, not just over
+default env creation. Two consequences worth knowing:
+
+- If you set an ``_EXISTING_ENV`` while leaving its ``_ENV_TYPE`` as
+  ``"unified"`` (or anything other than ``"dev"``), the script still reuses
+  the named env rather than falling back to the unified env -- it doesn't
+  require ``_ENV_TYPE="dev"`` to honor an explicit ``_EXISTING_ENV``.
+- The test-branch checkout for that component is skipped too, not just conda
+  env creation. This matters if the env was built against a local branch
+  that was never pushed to GitHub: without this, a later run using a fresh
+  ``TAG`` would try to fetch/create a new test branch from upstream and fail
+  (or worse, switch away from the local branch the env actually matches).
+  With ``_EXISTING_ENV`` set, the script leaves whatever branch is already
+  checked out alone.
+
+Set a ``_CONDA_INSTALL_LINE`` if you need to pin or override a package
+version -- e.g. because of a bug in a specific dependency release -- and
+creating a whole branch or custom env just for that one change isn't worth
+it.
+
+.. code-block::
+
+    # Optional: pin/override one or two package versions in a component's env
+    # (whether that env was just built or reused via *_EXISTING_ENV above)
+    # without needing a dedicated branch or custom env just for that. Forwarded
+    # verbatim to `conda install -n <env> <line> --yes` right after the env is
+    # activated. Ignored (with a warning) for a component whose ENV_TYPE is
+    # "unified" and has no *_EXISTING_ENV set, since that would modify the
+    # shared unified env. Leave empty for no override.
+    # Example: E3SM_TO_CMIP_CONDA_INSTALL_LINE="nco<5.4.0"
+    DIAGS_CONDA_INSTALL_LINE=""
+    E3SM_TO_CMIP_CONDA_INSTALL_LINE=""
+    MPAS_CONDA_INSTALL_LINE=""
+    ZI_CONDA_INSTALL_LINE=""
+    ZPPY_CONDA_INSTALL_LINE=""
+
+The line can hold more than one space-separated spec (e.g.
+``"nco<5.4.0 xarray==2023.1.0"``) -- it's passed straight through to
+``conda install``, unquoted, after ``-n <env>``.
 
 Leave ``NCO_PATH`` empty in the common case where NCO is already available on
 ``PATH`` via the active environment. Set it only if the machine or task
