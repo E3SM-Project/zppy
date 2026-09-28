@@ -90,6 +90,18 @@ MPAS_EXISTING_ENV="${MPAS_EXISTING_ENV:-}"
 ZI_EXISTING_ENV="${ZI_EXISTING_ENV:-}"
 ZPPY_EXISTING_ENV="${ZPPY_EXISTING_ENV:-}"
 
+# Apply defaults for optional *_CONDA_INSTALL_LINE variables. Each is
+# forwarded verbatim to `conda install -n <env> <line> --yes` right after
+# that component's env is activated (whether the env was just built or
+# reused via *_EXISTING_ENV), so a one-off dependency pin/override doesn't
+# require standing up a whole branch/custom env just for that. Leave empty
+# for the common case of no override. Example: E3SM_TO_CMIP_CONDA_INSTALL_LINE="nco<5.4.0"
+DIAGS_CONDA_INSTALL_LINE="${DIAGS_CONDA_INSTALL_LINE:-}"
+E3SM_TO_CMIP_CONDA_INSTALL_LINE="${E3SM_TO_CMIP_CONDA_INSTALL_LINE:-}"
+MPAS_CONDA_INSTALL_LINE="${MPAS_CONDA_INSTALL_LINE:-}"
+ZI_CONDA_INSTALL_LINE="${ZI_CONDA_INSTALL_LINE:-}"
+ZPPY_CONDA_INSTALL_LINE="${ZPPY_CONDA_INSTALL_LINE:-}"
+
 # Optional: path to an NCO installation, forwarded into utils.py's
 # TEST_SPECIFICS["nco_path"]. Leave empty (the default) for the common case
 # where NCO is already on PATH via the active environment.
@@ -495,13 +507,45 @@ setup_conda_env() {
     log_success "Environment '$env_name' ready"
 }
 
+# Apply an optional CONDA_INSTALL_LINE override in the now-active env.
+# Lets you pin/override one or two packages (e.g. an NCO version) without
+# needing a dedicated branch or custom env just for that -- see
+# zppy_test.cfg. A no-op when install_line is empty.
+apply_conda_install_line() {
+    local env_name="$1"
+    local install_line="$2"
+    [[ -n "$install_line" ]] || return 0
+
+    log "Applying CONDA_INSTALL_LINE in '$env_name': conda install -n $env_name $install_line --yes"
+    # Intentionally unquoted: install_line may contain multiple
+    # space-separated specs (e.g. "nco<5.4.0 xarray==2023.1.0").
+    # shellcheck disable=SC2086
+    conda install -n "$env_name" $install_line --yes
+    log_success "CONDA_INSTALL_LINE applied to '$env_name'"
+}
 
 # Checkout test branch, creating it from upstream/<base> if it doesn't exist.
 # Stashes/commits any in-progress work first.
+#
+# existing_env, when non-empty, is that component's *_EXISTING_ENV value.
+# Its presence means we're deliberately reusing an environment (and
+# whatever branch it was built against, possibly a local branch that was
+# never pushed upstream) from a previous run, so the branch switch below is
+# skipped entirely rather than attempted and left to fail against
+# upstream. We only need a base_branch at all in order to build a fresh
+# environment in the first place; *_EXISTING_ENV means there's nothing left
+# to build.
 ensure_test_branch() {
     local test_branch="$1"
     local base_branch="$2"
+    local existing_env="${3:-}"
     local current_branch
+
+    if [[ -n "$existing_env" ]]; then
+        log "_EXISTING_ENV is set ('$existing_env') -- skipping branch checkout, staying on whatever branch is currently checked out"
+        return 0
+    fi
+
     current_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 
     if [ "$current_branch" = "$test_branch" ]; then
@@ -527,10 +571,16 @@ ensure_test_branch() {
 # Return the environment_commands string for a component.
 # Usage: get_env_cmd "dev" "$ENV_NAME"
 #        get_env_cmd "unified" ""
+#
+# Keyed off env_name rather than env_type: env_name is only ever non-empty
+# when there's an actual conda env to activate -- either a "dev" build or an
+# *_EXISTING_ENV override (which wins over _ENV_TYPE entirely, see the
+# per-component setup blocks below) -- so checking it directly means an
+# _EXISTING_ENV set alongside a non-"dev" _ENV_TYPE is still honored here.
 get_env_cmd() {
-    local env_type="$1"
+    local env_type="${1:-}"
     local env_name="$2"
-    if [[ "$env_type" == "dev" ]]; then
+    if [[ -n "$env_name" ]]; then
         echo "source ${CONDA_PROFILE}; conda activate ${env_name}"
     else
         echo "$UNIFIED_ENV_CMD"
@@ -990,31 +1040,35 @@ phase_1_setup() {
     # ------------------------------------------------------------------
     log "Setting up e3sm_to_cmip..."
 
+    # _EXISTING_ENV always wins over _ENV_TYPE: we only need _ENV_TYPE to
+    # decide how to BUILD an env, and there's nothing left to build once one
+    # is already given to us.
     local E3SM_TO_CMIP_ENV=""
-    if [[ "$E3SM_TO_CMIP_ENV_TYPE" == "dev" ]]; then
-        if [[ -n "$E3SM_TO_CMIP_EXISTING_ENV" ]]; then
-            E3SM_TO_CMIP_ENV="$E3SM_TO_CMIP_EXISTING_ENV"
-        else
-            E3SM_TO_CMIP_ENV="test-e3sm-to-cmip-${E3SM_TO_CMIP_BASE_BRANCH}-${TAG}"
-        fi
+    if [[ -n "$E3SM_TO_CMIP_EXISTING_ENV" ]]; then
+        E3SM_TO_CMIP_ENV="$E3SM_TO_CMIP_EXISTING_ENV"
+    elif [[ "$E3SM_TO_CMIP_ENV_TYPE" == "dev" ]]; then
+        E3SM_TO_CMIP_ENV="test-e3sm-to-cmip-${E3SM_TO_CMIP_BASE_BRANCH}-${TAG}"
     fi
 
     (
         cd "$E3SM_TO_CMIP_DIR"
-        ensure_test_branch "test_e3sm_to_cmip_${TAG}" "$E3SM_TO_CMIP_BASE_BRANCH"
+        ensure_test_branch "test_e3sm_to_cmip_${TAG}" "$E3SM_TO_CMIP_BASE_BRANCH" "$E3SM_TO_CMIP_EXISTING_ENV"
 
         log "Latest e3sm_to_cmip commit (should match https://github.com/E3SM-Project/e3sm_to_cmip/commits/${E3SM_TO_CMIP_BASE_BRANCH}):"
         git log -1 --oneline
 
-        if [[ "$E3SM_TO_CMIP_ENV_TYPE" == "dev" ]]; then
-            if [[ -n "$E3SM_TO_CMIP_EXISTING_ENV" ]]; then
-                log "Reusing existing 'e3sm_to_cmip' env: $E3SM_TO_CMIP_EXISTING_ENV (skipping creation)"
-                activate_env "$E3SM_TO_CMIP_EXISTING_ENV"
-            else
-                setup_conda_env "conda-env" "$E3SM_TO_CMIP_ENV"
-            fi
+        if [[ -n "$E3SM_TO_CMIP_EXISTING_ENV" ]]; then
+            log "Reusing existing 'e3sm_to_cmip' env: $E3SM_TO_CMIP_EXISTING_ENV (skipping creation; _ENV_TYPE ignored)"
+            activate_env "$E3SM_TO_CMIP_EXISTING_ENV"
+            apply_conda_install_line "$E3SM_TO_CMIP_ENV" "$E3SM_TO_CMIP_CONDA_INSTALL_LINE"
+        elif [[ "$E3SM_TO_CMIP_ENV_TYPE" == "dev" ]]; then
+            setup_conda_env "conda-env" "$E3SM_TO_CMIP_ENV"
+            apply_conda_install_line "$E3SM_TO_CMIP_ENV" "$E3SM_TO_CMIP_CONDA_INSTALL_LINE"
         else
             log "Using unified env for e3sm_to_cmip (skipping conda env creation)"
+            if [[ -n "$E3SM_TO_CMIP_CONDA_INSTALL_LINE" ]]; then
+                log_warning "E3SM_TO_CMIP_CONDA_INSTALL_LINE is set but E3SM_TO_CMIP_ENV_TYPE is not 'dev' -- ignoring it rather than modifying the shared unified env."
+            fi
         fi
     )
     capture_env_description "e3sm_to_cmip" "$E3SM_TO_CMIP_DIR" "$E3SM_TO_CMIP_ENV_TYPE" "$E3SM_TO_CMIP_ENV"
@@ -1025,30 +1079,31 @@ phase_1_setup() {
     log "Setting up e3sm_diags..."
 
     local DIAGS_ENV=""
-    if [[ "$DIAGS_ENV_TYPE" == "dev" ]]; then
-        if [[ -n "$DIAGS_EXISTING_ENV" ]]; then
-            DIAGS_ENV="$DIAGS_EXISTING_ENV"
-        else
-            DIAGS_ENV="test-diags-${DIAGS_BASE_BRANCH}-${TAG}"
-        fi
+    if [[ -n "$DIAGS_EXISTING_ENV" ]]; then
+        DIAGS_ENV="$DIAGS_EXISTING_ENV"
+    elif [[ "$DIAGS_ENV_TYPE" == "dev" ]]; then
+        DIAGS_ENV="test-diags-${DIAGS_BASE_BRANCH}-${TAG}"
     fi
 
     (
         cd "$E3SM_DIAGS_DIR"
-        ensure_test_branch "test_e3sm_diags_${TAG}" "$DIAGS_BASE_BRANCH"
+        ensure_test_branch "test_e3sm_diags_${TAG}" "$DIAGS_BASE_BRANCH" "$DIAGS_EXISTING_ENV"
 
         log "Latest e3sm_diags commit (should match https://github.com/E3SM-Project/e3sm_diags/commits/${DIAGS_BASE_BRANCH}):"
         git log -1 --oneline
 
-        if [[ "$DIAGS_ENV_TYPE" == "dev" ]]; then
-            if [[ -n "$DIAGS_EXISTING_ENV" ]]; then
-                log "Reusing existing 'e3sm_diags' env: $DIAGS_EXISTING_ENV (skipping creation)"
-                activate_env "$DIAGS_EXISTING_ENV"
-            else
-                setup_conda_env "conda-env" "$DIAGS_ENV"
-            fi
+        if [[ -n "$DIAGS_EXISTING_ENV" ]]; then
+            log "Reusing existing 'e3sm_diags' env: $DIAGS_EXISTING_ENV (skipping creation; _ENV_TYPE ignored)"
+            activate_env "$DIAGS_EXISTING_ENV"
+            apply_conda_install_line "$DIAGS_ENV" "$DIAGS_CONDA_INSTALL_LINE"
+        elif [[ "$DIAGS_ENV_TYPE" == "dev" ]]; then
+            setup_conda_env "conda-env" "$DIAGS_ENV"
+            apply_conda_install_line "$DIAGS_ENV" "$DIAGS_CONDA_INSTALL_LINE"
         else
             log "Using unified env for e3sm_diags (skipping conda env creation)"
+            if [[ -n "$DIAGS_CONDA_INSTALL_LINE" ]]; then
+                log_warning "DIAGS_CONDA_INSTALL_LINE is set but DIAGS_ENV_TYPE is not 'dev' -- ignoring it rather than modifying the shared unified env."
+            fi
         fi
     )
     capture_env_description "e3sm_diags" "$E3SM_DIAGS_DIR" "$DIAGS_ENV_TYPE" "$DIAGS_ENV"
@@ -1059,30 +1114,31 @@ phase_1_setup() {
     log "Setting up MPAS-Analysis..."
 
     local MPAS_ENV=""
-    if [[ "$MPAS_ENV_TYPE" == "dev" ]]; then
-        if [[ -n "$MPAS_EXISTING_ENV" ]]; then
-            MPAS_ENV="$MPAS_EXISTING_ENV"
-        else
-            MPAS_ENV="test-mpas-${MPAS_BASE_BRANCH}-${TAG}"
-        fi
+    if [[ -n "$MPAS_EXISTING_ENV" ]]; then
+        MPAS_ENV="$MPAS_EXISTING_ENV"
+    elif [[ "$MPAS_ENV_TYPE" == "dev" ]]; then
+        MPAS_ENV="test-mpas-${MPAS_BASE_BRANCH}-${TAG}"
     fi
 
     (
         cd "$MPAS_ANALYSIS_DIR"
-        ensure_test_branch "test_mpas_${TAG}" "$MPAS_BASE_BRANCH"
+        ensure_test_branch "test_mpas_${TAG}" "$MPAS_BASE_BRANCH" "$MPAS_EXISTING_ENV"
 
         log "Latest MPAS-Analysis commit (should match https://github.com/MPAS-Dev/MPAS-Analysis/commits/${MPAS_BASE_BRANCH}):"
         git log -1 --oneline
 
-        if [[ "$MPAS_ENV_TYPE" == "dev" ]]; then
-            if [[ -n "$MPAS_EXISTING_ENV" ]]; then
-                log "Reusing existing 'MPAS-Analysis' env: $MPAS_EXISTING_ENV (skipping creation)"
-                activate_env "$MPAS_EXISTING_ENV"
-            else
-                setup_conda_env "none" "$MPAS_ENV"
-            fi
+        if [[ -n "$MPAS_EXISTING_ENV" ]]; then
+            log "Reusing existing 'MPAS-Analysis' env: $MPAS_EXISTING_ENV (skipping creation; _ENV_TYPE ignored)"
+            activate_env "$MPAS_EXISTING_ENV"
+            apply_conda_install_line "$MPAS_ENV" "$MPAS_CONDA_INSTALL_LINE"
+        elif [[ "$MPAS_ENV_TYPE" == "dev" ]]; then
+            setup_conda_env "none" "$MPAS_ENV"
+            apply_conda_install_line "$MPAS_ENV" "$MPAS_CONDA_INSTALL_LINE"
         else
             log "Using unified env for MPAS-Analysis (skipping conda env creation)"
+            if [[ -n "$MPAS_CONDA_INSTALL_LINE" ]]; then
+                log_warning "MPAS_CONDA_INSTALL_LINE is set but MPAS_ENV_TYPE is not 'dev' -- ignoring it rather than modifying the shared unified env."
+            fi
         fi
     )
     capture_env_description "mpas_analysis" "$MPAS_ANALYSIS_DIR" "$MPAS_ENV_TYPE" "$MPAS_ENV"
@@ -1093,31 +1149,32 @@ phase_1_setup() {
     log "Setting up zppy-interfaces..."
 
     local ZI_ENV=""
-    if [[ "$ZI_ENV_TYPE" == "dev" ]]; then
-        if [[ -n "$ZI_EXISTING_ENV" ]]; then
-            ZI_ENV="$ZI_EXISTING_ENV"
-        else
-            ZI_ENV="test-zi-${ZI_BASE_BRANCH}-${TAG}"
-        fi
+    if [[ -n "$ZI_EXISTING_ENV" ]]; then
+        ZI_ENV="$ZI_EXISTING_ENV"
+    elif [[ "$ZI_ENV_TYPE" == "dev" ]]; then
+        ZI_ENV="test-zi-${ZI_BASE_BRANCH}-${TAG}"
     fi
 
     (
         cd "$ZPPY_INTERFACES_DIR"
-        ensure_test_branch "test_zi_${TAG}" "$ZI_BASE_BRANCH"
+        ensure_test_branch "test_zi_${TAG}" "$ZI_BASE_BRANCH" "$ZI_EXISTING_ENV"
 
         log "Latest zppy-interfaces commit (should match https://github.com/E3SM-Project/zppy-interfaces/commits/${ZI_BASE_BRANCH}):"
         git log -1 --oneline
 
-        if [[ "$ZI_ENV_TYPE" == "dev" ]]; then
-            if [[ -n "$ZI_EXISTING_ENV" ]]; then
-                log "Reusing existing 'zppy-interfaces' env: $ZI_EXISTING_ENV (skipping creation)"
-                activate_env "$ZI_EXISTING_ENV"
-            else
-                setup_conda_env "conda" "$ZI_ENV"
-            fi
+        if [[ -n "$ZI_EXISTING_ENV" ]]; then
+            log "Reusing existing 'zppy-interfaces' env: $ZI_EXISTING_ENV (skipping creation; _ENV_TYPE ignored)"
+            activate_env "$ZI_EXISTING_ENV"
+            apply_conda_install_line "$ZI_ENV" "$ZI_CONDA_INSTALL_LINE"
+        elif [[ "$ZI_ENV_TYPE" == "dev" ]]; then
+            setup_conda_env "conda" "$ZI_ENV"
+            apply_conda_install_line "$ZI_ENV" "$ZI_CONDA_INSTALL_LINE"
         else
             log "Using unified env for zppy-interfaces..."
             activate_unified_env
+            if [[ -n "$ZI_CONDA_INSTALL_LINE" ]]; then
+                log_warning "ZI_CONDA_INSTALL_LINE is set but ZI_ENV_TYPE is not 'dev' -- ignoring it rather than modifying the shared unified env."
+            fi
         fi
 
         log "Running zppy-interfaces unit tests..."
@@ -1149,7 +1206,7 @@ phase_1_setup() {
 
     (
         cd "$ZPPY_DIR"
-        ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH"
+        ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH" "$ZPPY_EXISTING_ENV"
 
         log "Latest zppy commit (should match https://github.com/E3SM-Project/zppy/commits/${ZPPY_BASE_BRANCH}):"
         git log -1 --oneline
@@ -1160,6 +1217,7 @@ phase_1_setup() {
         else
             setup_conda_env "conda" "$ZPPY_ENV"
         fi
+        apply_conda_install_line "$ZPPY_ENV" "$ZPPY_CONDA_INSTALL_LINE"
 
         log "Running zppy unit tests..."
         pytest tests/test_*.py
@@ -1169,7 +1227,7 @@ phase_1_setup() {
 
     (
         cd "$ZPPY_DIR"
-        ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH"
+        ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH" "$ZPPY_EXISTING_ENV"
         init_conda_base
         conda activate "$ZPPY_ENV"
 
@@ -1199,7 +1257,7 @@ phase_1_setup() {
     # the zppy command is available and cd/env state is consistent.
     cd "$ZPPY_DIR"
     activate_env "$ZPPY_ENV"
-    ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH"
+    ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH" "$ZPPY_EXISTING_ENV"
 
     UTILS_FILE="tests/integration/utils.py"
 
@@ -1314,7 +1372,7 @@ phase_2_bundles_part2() {
 
     cd "$ZPPY_DIR"
     activate_env "$ZPPY_ENV"
-    ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH"
+    ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH" "$ZPPY_EXISTING_ENV"
 
     # Verify bundle status files are clean before submitting part 2.
     # These paths are fixed regardless of CFGS_TO_RUN; skip any that don't exist yet.
@@ -1384,7 +1442,7 @@ phase_3_validation() {
 
     cd "$ZPPY_DIR"
     activate_env "$ZPPY_ENV"
-    ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH"
+    ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH" "$ZPPY_EXISTING_ENV"
 
     if [ "$SLURM_JOBS_INCOMPLETE" = true ]; then
         log_warning "An earlier phase had jobs cancelled for DependencyNeverSatisfied. Proceeding with all of phase 3 anyway; the status-file checks below will show what actually completed."
