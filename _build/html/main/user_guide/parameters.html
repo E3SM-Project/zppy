@@ -202,7 +202,7 @@ infer this path from Mache. See <a class="reference internal" href="tasks/simboa
 </tbody>
 </table>
 <p><strong>Machine specifics</strong></p>
-<p>There are 8 machine-specific parameters:</p>
+<p>There are 10 machine-specific parameters:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 22.0%" />
@@ -227,6 +227,21 @@ infer this path from Mache. See <a class="reference internal" href="tasks/simboa
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
 <td><p>The constraint of the machine to run on.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mail_type</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>When to send SLURM job status emails, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;BEGIN,END,FAIL&quot;</span></code>. Options
+include (but are not limited to) <code class="docutils literal notranslate"><span class="pre">&quot;BEGIN&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;END&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;FAIL&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;ALL&quot;</span></code>. Always quote the value. Leave as <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> to not request any
+email notifications. See the note below before enabling this.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mail_user</span></code></p></td>
+<td><p>No</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Email address the notifications requested by <code class="docutils literal notranslate"><span class="pre">mail_type</span></code> are sent to.
+Leave as <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> to use the address SLURM defaults to for the submitting
+user.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nodes</span></code></p></td>
 <td><p>No</p></td>
@@ -260,6 +275,24 @@ infer this path from Mache. See <a class="reference internal" href="tasks/simboa
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use the mail parameters with caution. They apply to <em>every</em> job of <em>every</em>
+section that inherits them, so setting them in <code class="docutils literal notranslate"><span class="pre">[default]</span></code> means one email
+per task – often dozens per run. Enable them only for long-running tasks:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[e3sm_diags]</span>
+<span class="na">mail_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"END,FAIL"</span>
+<span class="na">mail_user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"myemail@example.com"</span>
+</pre></div>
+</div>
+<p>One further caveat: bundled tasks run inside a single SLURM job, so their
+<code class="docutils literal notranslate"><span class="pre">#SBATCH</span></code> lines are inert. A bundle’s mail settings come from the first
+task added to it.</p>
+<p>The cfg file is copied as provenance, including to <code class="docutils literal notranslate"><span class="pre">www</span></code>, but both mail
+parameters are left out of those copies, so the address is not published
+alongside the diagnostics. It does still appear in the <code class="docutils literal notranslate"><span class="pre">#SBATCH</span></code> lines of
+the generated scripts under <code class="docutils literal notranslate"><span class="pre">output</span></code>.</p>
+</div>
 <p><strong>Environment specifics</strong></p>
 <p>There are 3 environment-specific parameters:</p>
 <table class="docutils align-default">
