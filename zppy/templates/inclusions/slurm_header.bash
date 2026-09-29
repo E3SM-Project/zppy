@@ -10,6 +10,12 @@
 {% if reservation  %}
 #SBATCH  --reservation={{ reservation }}
 {% endif %}
+{%- if mail_type %}
+#SBATCH  --mail-type={{ mail_type }}
+{%- endif %}
+{%- if mail_user %}
+#SBATCH  --mail-user={{ mail_user }}
+{%- endif %}
 {% if machine in ['anvil', 'chrysalis'] %}
 #SBATCH  --partition={{ partition }}
 

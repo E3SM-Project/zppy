@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 from zppy.provenance import (
     build_diagnostics_url,
     build_provenance_extras,
+    copy_config_for_provenance,
     parse_env_case_xml,
     resolve_case_group,
     write_provenance_settings,
@@ -188,6 +189,58 @@ def test_build_diagnostics_url_missing_machine_cfg():
 def test_build_diagnostics_url_empty_www():
     mi = _fake_machine_info(web_portal={"base_path": "/x", "base_url": "https://x"})
     assert build_diagnostics_url("", "case", mi) is None
+
+
+# ---------------------------------------------------------------------------
+# copy_config_for_provenance
+# ---------------------------------------------------------------------------
+
+
+def test_copy_config_for_provenance_omits_mail_parameters(tmp_path):
+    src = tmp_path / "user.cfg"
+    src.write_text(
+        "[default]\n"
+        'case = "v3.LR.historical_0051"\n'
+        "\n"
+        "[e3sm_diags]\n"
+        "active = True\n"
+        '  mail_type = "END,FAIL"\n'
+        '  mail_user = "myemail@example.com"\n'
+    )
+    dst = tmp_path / "provenance.cfg"
+    copy_config_for_provenance(str(src), str(dst))
+    content = dst.read_text()
+    assert "myemail@example.com" not in content
+    assert '"END,FAIL"' not in content
+    # The omission is recorded, with the original indentation.
+    assert "  # mail_type = <omitted from provenance>\n" in content
+    assert "  # mail_user = <omitted from provenance>\n" in content
+    # Everything else is untouched.
+    assert '[default]\ncase = "v3.LR.historical_0051"\n' in content
+    assert "[e3sm_diags]\nactive = True\n" in content
+
+
+def test_copy_config_for_provenance_is_verbatim_without_mail_parameters(tmp_path):
+    src = tmp_path / "user.cfg"
+    src.write_text(
+        "# A comment\n"
+        "[default]\n"
+        'case = "v3.LR.historical_0051"\n'
+        '  mailing_list = "not-a-mail-parameter"\n'
+        "# mail_user = already commented out\n"
+    )
+    dst = tmp_path / "provenance.cfg"
+    copy_config_for_provenance(str(src), str(dst))
+    assert dst.read_text() == src.read_text()
+
+
+def test_copy_config_for_provenance_preserves_mode(tmp_path):
+    src = tmp_path / "user.cfg"
+    src.write_text('[default]\nmail_user = "myemail@example.com"\n')
+    os.chmod(str(src), 0o644)
+    dst = tmp_path / "provenance.cfg"
+    copy_config_for_provenance(str(src), str(dst))
+    assert stat.S_IMODE(dst.stat().st_mode) == 0o644
 
 
 # ---------------------------------------------------------------------------

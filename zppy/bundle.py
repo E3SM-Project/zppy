@@ -19,6 +19,8 @@ class Bundle(object):
         self.debug: bool = c["debug"]
         self.environment_commands: str = c["environment_commands"]
         self.script_dir: str = c["scriptDir"]
+        self.mail_type: str = c["mail_type"]
+        self.mail_user: str = c["mail_user"]
         self.nodes: int = c["nodes"]
         self.partition: str = c["partition"]
         self.reservation: str = c["reservation"]
@@ -50,6 +52,8 @@ class Bundle(object):
         c["nodes"] = self.nodes
         c["partition"] = self.partition
         c["reservation"] = self.reservation
+        c["mail_type"] = self.mail_type
+        c["mail_user"] = self.mail_user
         c["qos"] = self.qos
         c["walltime"] = self.walltime
         c["tasks"] = [os.path.split(t)[-1] for t in self.tasks]

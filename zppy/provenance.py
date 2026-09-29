@@ -6,8 +6,10 @@ See https://github.com/E3SM-Project/zppy/issues/831.
 
 import configparser
 import os
+import re
+import shutil
 import xml.etree.ElementTree as ET
-from typing import Dict, Mapping, Optional
+from typing import Dict, List, Mapping, Optional
 
 from mache import MachineInfo
 
@@ -22,6 +24,14 @@ _ENV_CASE_FIELDS = {
     "hpc_username": "REALUSER",
     "case_group": "CASE_GROUP",
 }
+
+# Parameters kept out of the provenance cfg copies. `mail_user` is an email
+# address, and one of the copies goes to `www`, which is published.
+_REDACTED_PARAMETERS = ("mail_type", "mail_user")
+
+_REDACTED_LINE = re.compile(
+    r"^(?P<indent>\s*)(?P<key>" + "|".join(_REDACTED_PARAMETERS) + r")\s*="
+)
 
 
 def parse_env_case_xml(input_dir: str) -> Dict[str, str]:
@@ -95,6 +105,30 @@ def build_diagnostics_url(
         return None
     www_suffix = www[len(base_path) :]
     return f"{base_url}{www_suffix}/{case}"
+
+
+def copy_config_for_provenance(src: str, dst: str) -> None:
+    """Copy the user's cfg to `dst`, leaving out the mail parameters.
+
+    The provenance cfg is otherwise a verbatim copy, so the user's formatting
+    and comments survive. `mail_user` is an email address, though, and the
+    provenance cfg is copied to `www` alongside the diagnostics, so it would be
+    published. Such lines are replaced by a comment rather than dropped, so a
+    reader can still tell the run requested email without learning the address.
+    The `#SBATCH --mail-*` lines in `post/scripts/*.bash` are unaffected; those
+    stay in `output`, which is not published.
+    """
+    with open(src, "r") as file_read:
+        lines: List[str] = file_read.readlines()
+    redacted: List[str] = []
+    for line in lines:
+        match = _REDACTED_LINE.match(line)
+        if match:
+            line = f"{match.group('indent')}# {match.group('key')} = <omitted from provenance>\n"
+        redacted.append(line)
+    with open(dst, "w") as file_write:
+        file_write.writelines(redacted)
+    shutil.copymode(src, dst)
 
 
 def write_provenance_settings(
