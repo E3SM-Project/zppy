@@ -50,9 +50,10 @@ These 3 parameters are specific to the ``tc_analysis`` task:
      - No
      - ``""``
      - Native model grid of the input files, e.g. ``ne30pg2``, ``ne120pg2``,
-       ``ne30np4``. When set, the resolution and pg2 flag are derived from
-       this value automatically. Required for EAMxx. Accepted formats:
-       ``neXpg2`` or ``neXnp4`` (e.g. ``ne30pg2``, ``ne120np4``).
+       ``ne256pg2``, ``ne30np4``. When set, the resolution and pg2 flag are
+       derived from this value automatically. Required for EAMxx. Accepted
+       formats: ``neXpg2`` or ``neXnp4`` (e.g. ``ne30pg2``, ``ne120np4``).
+       Supported resolutions are ne30, ne120, and ne256.
    * - ``res``
      - No
      - ``""``

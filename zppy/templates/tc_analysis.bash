@@ -39,7 +39,7 @@ if [[ -n "${input_grid}" ]]; then
         res="${BASH_REMATCH[1]}"
         [[ "${BASH_REMATCH[2]}" == "pg2" ]] && pg2=true
     else
-        echo "ERROR: unsupported input_grid='${input_grid}'. Expected ne30pg2, ne30np4, ne120pg2, or ne120np4."
+        echo "ERROR: unsupported input_grid='${input_grid}'. Expected neXpg2 or neXnp4 (e.g. ne30pg2, ne120np4, ne256pg2)."
         cd {{ scriptDir }}
         echo 'ERROR (1)' > {{ prefix }}.status
         exit 1
@@ -226,8 +226,10 @@ cd "${result_dir}" || {
 # TC candidate detection. Detection threshold including:
 # 1. The sea-level pressure (SLP) must be a local minimum;
 # 2. SLP must have a sufficient decrease (300 Pa) compared to surrounding nodes within 4 degree radius;
-# 3. The average of the 200 hPa and 500 hPa level temperature decreases by 0.6 K in all directions
-#    within a 4 degree radius from the location to fSLP minima
+# 3. Warm core: the maximum of the 200/500 hPa average temperature is searched for within
+#    temp_threshold_radius degrees of the SLP minimum (about one grid spacing, so it depends
+#    on resolution), and from that maximum the field must decrease by 0.6 K in all directions
+#    within a 4 degree radius.
 # ------------------------------------------------------------
 if [ "${res}" == 120 ]; then
     echo "${res}"
@@ -235,8 +237,11 @@ if [ "${res}" == 120 ]; then
 elif [ "${res}" == 30 ]; then
     echo "${res}"
     temp_threshold_radius=1.0
+elif [ "${res}" == 256 ]; then
+    echo "${res}"
+    temp_threshold_radius=0.15
 else
-    echo "ERROR: ${res} value not supported"
+    echo "ERROR: ${res} value not supported. Supported resolutions: 30, 120, 256."
     cd {{ scriptDir }}
     echo 'ERROR (13)' > {{ prefix }}.status
     exit 13
