@@ -65,3 +65,26 @@ def test_input_is_subsampled_to_6_hourly():
     vorticity = re.search(r"^VariableProcessor .*?^$", script, re.M | re.S)
     assert tc_detect is not None and '--timefilter "6hr"' in tc_detect.group(0)
     assert vorticity is not None and '--timefilter "6hr"' in vorticity.group(0)
+
+
+@pytest.mark.parametrize(
+    "candidates, returncode",
+    [("", 19), ("1850\t1\t1\t0\t0\n1850\t1\t1\t0\t6\n", 0)],
+)
+def test_no_6_hourly_time_step_fails(candidates, returncode, tmp_path):
+    template_env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(searchpath=TEMPLATE_DIR)
+    )
+    script = template_env.get_template("tc_analysis.bash").render(**CONTEXT)
+    match = re.search(r'^if ! grep -q "\^\[0-9\]".*?^fi$', script, re.M | re.S)
+    assert match is not None
+    block = match.group(0).replace("/path/to/scripts", str(tmp_path))
+    (tmp_path / "cyclones_case_0001_0002.txt").write_text(candidates)
+    setup = f'result_dir="{tmp_path}/"\nfile_name="case_0001_0002"\n'
+    result = subprocess.run(
+        ["bash", "-c", setup + block], capture_output=True, text=True
+    )
+    assert result.returncode == returncode
+    if returncode:
+        status = tmp_path / "tc_analysis_0001-0002.status"
+        assert status.read_text().strip() == "ERROR (19)"

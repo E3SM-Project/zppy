@@ -8,7 +8,7 @@ set +e
 set_pkg_manager
 
 # A Bash script to post-process E3SM 6 hourly (h2) instantaneous output to generate a text file storing Tropical Cyclone tracks
-# Higher-frequency output (e.g. 3 hourly) is subsampled to 00, 06, 12, and 18Z, since the tracking criteria count time steps.
+# Only time steps at 00, 06, 12, and 18Z are used (TempestExtremes --timefilter "6hr"), since the tracking criteria count time steps.
 # tempestremap and tempestextremes are built in e3sm-unified from version 1.5.0.
 
 #For typical EAM v2 ne gp2 grids.
@@ -267,6 +267,13 @@ if [ $? != 0 ]; then
 fi
 
 cat "${result_dir}"out.dat0* > "${result_dir}cyclones_${file_name}.txt" 2>/dev/null
+if ! grep -q "^[0-9]" "${result_dir}cyclones_${file_name}.txt"; then
+    echo "ERROR: no input time steps are at 00:00, 06:00, 12:00, or 18:00 UTC."
+    echo "       tc_analysis uses only these time steps (TempestExtremes --timefilter \"6hr\")."
+    cd {{ scriptDir }}
+    echo 'ERROR (19)' > {{ prefix }}.status
+    exit 19
+fi
 echo "Completed DetectNodes"
 
 # Stitch all candidate nodes in time to form tracks.
