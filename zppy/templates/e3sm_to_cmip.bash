@@ -47,10 +47,10 @@ EOF
   {% if prc_typ in ('cam', 'eam', 'eamxx') -%}
   #add code to do vertical interpolation variables at model levels before e3sm_to_cmip
   {%- if prc_typ == 'eamxx' %}
-  # ncremap needs an explicit source vertical grid file for EAMxx. When the user
-  # has not supplied one, it is derived below from the first file actually
-  # remapped, so that any vertical grid (L72, L128v1, L128v4, ...) works without
-  # a staged file.
+  # ncremap reads the source vertical grid from the input file only when the
+  # vertical variables carry it with CF formula_terms. Older EAMxx output does
+  # not, so unless vrt_in_file is set, an explicit --vrt_in file is derived
+  # below from the first file remapped (any vertical grid works).
   {%- if vrt_in_file == '' %}
   vrt_in_file=vrt_in.nc
   {%- else %}
@@ -76,8 +76,7 @@ EOF
         {%- if prc_typ == 'eamxx' and vrt_in_file == '' %}
         # Derive the source vertical grid once, from a file we are about to remap.
         # This needs the [ts] task to have kept hyai,hyam,hybi,hybm via extra_vars.
-        # P0 comes from the file when it is there; EAMxx does not write one yet,
-        # so fall back to the reference pressure.
+        # Use the file's P0 if present, else the reference pressure.
         if [ ! -f "${vrt_in_file}" ]; then
           run_nco ncks -O -v hyai,hybi,hyam,hybm,P0 ${file} ${vrt_in_file} 2> /dev/null || \
             { run_nco ncks -O -v hyai,hybi,hyam,hybm ${file} ${vrt_in_file} && \

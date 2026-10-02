@@ -77,9 +77,13 @@ changed between them) and stores output differently from EAM. Key differences
 when configuring ``zppy`` for EAMxx:
 
 - Set ``input_component = eamxx`` in ``[climo]`` and ``[ts]`` sections.
-- Vertical remapping needs a source vertical coordinate file. ``zppy`` derives
-  one at run time from the run's own output, so any EAMxx vertical grid works;
-  set ``vrt_in_file`` to override it with a file of your own.
+- Vertical remapping needs the source vertical grid (the hybrid coefficients
+  ``hyai``, ``hybi``, ``hyam``, ``hybm``). ``ncremap`` reads it from the input
+  file only when the vertical variables carry it with the CF ``formula_terms``
+  convention, which older EAMxx output does not. ``zppy`` therefore derives an
+  explicit source vertical grid file at run time from the run's own output, so
+  any EAMxx vertical grid works; set ``vrt_in_file`` to use a file of your own
+  instead.
 - Vertical remapping (``vrt_remap_vars``) is often needed to produce
   pressure-level data for diagnostics.
 

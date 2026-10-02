@@ -120,10 +120,11 @@ fi
 mkdir output_plev
 {%- if prc_typ == 'eamxx' %}
 {%- if vrt_in_file == '' %}
-# ncremap needs an explicit source vertical grid file for EAMxx. Derive it from
-# this run's own output rather than a staged file, so any vertical grid (L72,
-# L128v1, L128v4, ...) works. Take P0 from the output too when it is there;
-# EAMxx does not write one yet, so fall back to the reference pressure.
+# ncremap reads the source vertical grid from the input file only when the
+# vertical variables carry it with CF formula_terms. Older EAMxx output does
+# not, so derive an explicit --vrt_in file from this run's own output (any
+# vertical grid works). Use the output's P0 if present, else the reference
+# pressure.
 raw_file=`head -n 1 input.txt`
 run_nco ncks -O -v hyai,hybi,hyam,hybm,P0 ${raw_file} vrt_in.nc 2> /dev/null || \
   { run_nco ncks -O -v hyai,hybi,hyam,hybm ${raw_file} vrt_in.nc && \
