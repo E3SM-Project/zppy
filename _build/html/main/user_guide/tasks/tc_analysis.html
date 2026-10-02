@@ -116,6 +116,14 @@ Wave (AEW) analysis on E3SM output. It uses high-frequency atmospheric data
 <p>Both EAM and EAMxx output are supported. EAMxx requires the <code class="docutils literal notranslate"><span class="pre">input_grid</span></code>
 parameter to be set because its output sets <code class="docutils literal notranslate"><span class="pre">topography_file=&quot;NONE&quot;</span></code>,
 preventing automatic grid inference.</p>
+<p>The input should be instantaneous output whose time steps include 00:00,
+06:00, 12:00, and 18:00 UTC, such as 6-, 3-, or 1-hourly output. Only those
+time steps are used (TempestExtremes <code class="docutils literal notranslate"><span class="pre">--timefilter</span> <span class="pre">&quot;6hr&quot;</span></code>), because the
+tracking criteria count time steps and the observations used by
+<code class="docutils literal notranslate"><span class="pre">e3sm_diags</span></code> are 6-hourly. Other time steps are skipped, so, for example,
+4-hourly output is reduced to 00:00 and 12:00 UTC. The task fails with
+<code class="docutils literal notranslate"><span class="pre">ERROR</span> <span class="pre">(19)</span></code> if no time step is at one of those hours, e.g. 3-hourly output
+at 01:00, 04:00, 07:00, and so on.</p>
 <section id="configuration-example">
 <h2>Configuration example<a class="headerlink" href="#configuration-example" title="Link to this heading"></a></h2>
 <p>EAM:</p>
@@ -156,9 +164,10 @@ preventing automatic grid inference.</p>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
 <td><p>Native model grid of the input files, e.g. <code class="docutils literal notranslate"><span class="pre">ne30pg2</span></code>, <code class="docutils literal notranslate"><span class="pre">ne120pg2</span></code>,
-<code class="docutils literal notranslate"><span class="pre">ne30np4</span></code>. When set, the resolution and pg2 flag are derived from
-this value automatically. Required for EAMxx. Accepted formats:
-<code class="docutils literal notranslate"><span class="pre">neXpg2</span></code> or <code class="docutils literal notranslate"><span class="pre">neXnp4</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">ne30pg2</span></code>, <code class="docutils literal notranslate"><span class="pre">ne120np4</span></code>).</p></td>
+<code class="docutils literal notranslate"><span class="pre">ne256pg2</span></code>, <code class="docutils literal notranslate"><span class="pre">ne30np4</span></code>. When set, the resolution and pg2 flag are
+derived from this value automatically. Required for EAMxx. Accepted
+formats: <code class="docutils literal notranslate"><span class="pre">neXpg2</span></code> or <code class="docutils literal notranslate"><span class="pre">neXnp4</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">ne30pg2</span></code>, <code class="docutils literal notranslate"><span class="pre">ne120np4</span></code>).
+Supported resolutions are ne30, ne120, and ne256.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">res</span></code></p></td>
 <td><p>No</p></td>
