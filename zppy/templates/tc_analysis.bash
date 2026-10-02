@@ -267,13 +267,6 @@ if [ $? != 0 ]; then
 fi
 
 cat "${result_dir}"out.dat0* > "${result_dir}cyclones_${file_name}.txt" 2>/dev/null
-if ! grep -q "^[0-9]" "${result_dir}cyclones_${file_name}.txt"; then
-    echo "ERROR: no input time steps fall on 00, 06, 12, or 18Z."
-    echo "       tc_analysis requires instantaneous output at 6 hourly or higher frequency."
-    cd {{ scriptDir }}
-    echo 'ERROR (19)' > {{ prefix }}.status
-    exit 19
-fi
 echo "Completed DetectNodes"
 
 # Stitch all candidate nodes in time to form tracks.
