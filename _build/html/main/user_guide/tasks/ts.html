@@ -205,10 +205,9 @@ after generating time-series files. Output is written to a sibling
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vrt_in_file</span></code></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
-<td><p>Path to the source vertical coordinate file for <code class="docutils literal notranslate"><span class="pre">ncremap</span></code>. Required
-for EAMxx (L128 grid). Defaults to a standard file under
-<code class="docutils literal notranslate"><span class="pre">diagnostics_base_path</span></code> when <code class="docutils literal notranslate"><span class="pre">input_component</span></code> is <code class="docutils literal notranslate"><span class="pre">eamxx</span></code> and
-this is left empty.</p></td>
+<td><p>Path to the source vertical coordinate file for <code class="docutils literal notranslate"><span class="pre">ncremap</span></code>. Needed for
+EAMxx. When left empty, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> derives it at run time from the run’s
+own output.</p></td>
 </tr>
 </tbody>
 </table>

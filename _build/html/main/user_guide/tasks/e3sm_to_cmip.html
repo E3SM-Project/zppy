@@ -161,8 +161,10 @@ supported variables.</p></td>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">vrt_in_file</span></code></p></td>
 <td><p>No</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
-<td><p>Source vertical coordinate file for <code class="docutils literal notranslate"><span class="pre">ncremap</span></code>. Required for
-EAMxx (L128 grid).</p></td>
+<td><p>Source vertical coordinate file for <code class="docutils literal notranslate"><span class="pre">ncremap</span></code>. Needed for EAMxx. When
+left empty, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> derives it at run time from the time series files,
+which must then retain <code class="docutils literal notranslate"><span class="pre">hyai,hyam,hybi,hybm</span></code> via the <code class="docutils literal notranslate"><span class="pre">[ts]</span></code>
+<code class="docutils literal notranslate"><span class="pre">extra_vars</span></code>.</p></td>
 </tr>
 </tbody>
 </table>

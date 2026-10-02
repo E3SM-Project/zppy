@@ -171,13 +171,18 @@ vertical grid (L128) and a different file format.</p></li>
 </section>
 <section id="eamxx-configuration">
 <h2>EAMxx configuration<a class="headerlink" href="#eamxx-configuration" title="Link to this heading"></a></h2>
-<p>EAMxx uses a 128-level vertical grid (L128) and stores output differently
-from EAM. Key differences when configuring <code class="docutils literal notranslate"><span class="pre">zppy</span></code> for EAMxx:</p>
+<p>EAMxx uses a fine vertical grid (L128 in v3 and v4, though the grid itself
+changed between them) and stores output differently from EAM. Key differences
+when configuring <code class="docutils literal notranslate"><span class="pre">zppy</span></code> for EAMxx:</p>
 <ul class="simple">
 <li><p>Set <code class="docutils literal notranslate"><span class="pre">input_component</span> <span class="pre">=</span> <span class="pre">eamxx</span></code> in <code class="docutils literal notranslate"><span class="pre">[climo]</span></code> and <code class="docutils literal notranslate"><span class="pre">[ts]</span></code> sections.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">vrt_in_file</span></code> parameter may be needed for vertical remapping.
-When <code class="docutils literal notranslate"><span class="pre">input_component</span> <span class="pre">=</span> <span class="pre">eamxx</span></code>, <code class="docutils literal notranslate"><span class="pre">zppy</span></code> defaults to a
-<code class="docutils literal notranslate"><span class="pre">vert_L128.nc</span></code> file under <code class="docutils literal notranslate"><span class="pre">diagnostics_base_path</span></code>.</p></li>
+<li><p>Vertical remapping needs the source vertical grid (the hybrid coefficients
+<code class="docutils literal notranslate"><span class="pre">hyai</span></code>, <code class="docutils literal notranslate"><span class="pre">hybi</span></code>, <code class="docutils literal notranslate"><span class="pre">hyam</span></code>, <code class="docutils literal notranslate"><span class="pre">hybm</span></code>). <code class="docutils literal notranslate"><span class="pre">ncremap</span></code> reads it from the input
+file only when the vertical variables carry it with the CF <code class="docutils literal notranslate"><span class="pre">formula_terms</span></code>
+convention, which older EAMxx output does not. <code class="docutils literal notranslate"><span class="pre">zppy</span></code> therefore derives an
+explicit source vertical grid file at run time from the run’s own output, so
+any EAMxx vertical grid works; set <code class="docutils literal notranslate"><span class="pre">vrt_in_file</span></code> to use a file of your own
+instead.</p></li>
 <li><p>Vertical remapping (<code class="docutils literal notranslate"><span class="pre">vrt_remap_vars</span></code>) is often needed to produce
 pressure-level data for diagnostics.</p></li>
 </ul>
