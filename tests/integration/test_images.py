@@ -79,21 +79,15 @@ def prepare_test_configs(
 
     # Legacy 3.1.0 comprehensive tests
     print("Preparing legacy 3.1.0 cfg tests")
-    if "weekly_legacy_3.1.0_comprehensive_v2" in expansions["cfgs_to_run"]:
-        available_tasks = ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "legacy_3.1.0_comprehensive_v2",
-                V2_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
 
     if "weekly_legacy_3.1.0_comprehensive_v3" in expansions["cfgs_to_run"]:
-        available_tasks = ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]
+        available_tasks = [
+            "e3sm_diags",
+            "mpas_analysis",
+            "global_time_series",
+            "ilamb",
+            "pcmdi_diags",
+        ]
         tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
         test_configs.append(
             (
@@ -105,34 +99,8 @@ def prepare_test_configs(
             )
         )
 
-    if "weekly_legacy_3.1.0_bundles" in expansions["cfgs_to_run"]:
-        # No mpas_analysis
-        available_tasks = ["e3sm_diags", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "legacy_3.1.0_bundles",
-                V3_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
-
     # Legacy 3.0.0 comprehensive tests
     print("Preparing legacy 3.0.0 cfg tests")
-    if "weekly_legacy_3.0.0_comprehensive_v2" in expansions["cfgs_to_run"]:
-        available_tasks = ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "legacy_3.0.0_comprehensive_v2",
-                V2_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
 
     if "weekly_legacy_3.0.0_comprehensive_v3" in expansions["cfgs_to_run"]:
         available_tasks = ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]
@@ -140,20 +108,6 @@ def prepare_test_configs(
         test_configs.append(
             (
                 "legacy_3.0.0_comprehensive_v3",
-                V3_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
-
-    if "weekly_legacy_3.0.0_bundles" in expansions["cfgs_to_run"]:
-        # No mpas_analysis
-        available_tasks = ["e3sm_diags", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "legacy_3.0.0_bundles",
                 V3_CASE_NAME,
                 expansions,
                 diff_dir_suffix,
