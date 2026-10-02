@@ -8,6 +8,7 @@ set +e
 set_pkg_manager
 
 # A Bash script to post-process E3SM 6 hourly (h2) instantaneous output to generate a text file storing Tropical Cyclone tracks
+# Only time steps at 00, 06, 12, and 18Z are used (TempestExtremes --timefilter "6hr"), since the tracking criteria count time steps.
 # tempestremap and tempestextremes are built in e3sm-unified from version 1.5.0.
 
 #For typical EAM v2 ne gp2 grids.
@@ -39,7 +40,7 @@ if [[ -n "${input_grid}" ]]; then
         res="${BASH_REMATCH[1]}"
         [[ "${BASH_REMATCH[2]}" == "pg2" ]] && pg2=true
     else
-        echo "ERROR: unsupported input_grid='${input_grid}'. Expected ne30pg2, ne30np4, ne120pg2, or ne120np4."
+        echo "ERROR: unsupported input_grid='${input_grid}'. Expected neXpg2 or neXnp4 (e.g. ne30pg2, ne120np4, ne256pg2)."
         cd {{ scriptDir }}
         echo 'ERROR (1)' > {{ prefix }}.status
         exit 1
@@ -226,8 +227,10 @@ cd "${result_dir}" || {
 # TC candidate detection. Detection threshold including:
 # 1. The sea-level pressure (SLP) must be a local minimum;
 # 2. SLP must have a sufficient decrease (300 Pa) compared to surrounding nodes within 4 degree radius;
-# 3. The average of the 200 hPa and 500 hPa level temperature decreases by 0.6 K in all directions
-#    within a 4 degree radius from the location to fSLP minima
+# 3. Warm core: the maximum of the 200/500 hPa average temperature is searched for within
+#    temp_threshold_radius degrees of the SLP minimum (about one grid spacing, so it depends
+#    on resolution), and from that maximum the field must decrease by 0.6 K in all directions
+#    within a 4 degree radius.
 # ------------------------------------------------------------
 if [ "${res}" == 120 ]; then
     echo "${res}"
@@ -235,8 +238,11 @@ if [ "${res}" == 120 ]; then
 elif [ "${res}" == 30 ]; then
     echo "${res}"
     temp_threshold_radius=1.0
+elif [ "${res}" == 256 ]; then
+    echo "${res}"
+    temp_threshold_radius=0.15
 else
-    echo "ERROR: ${res} value not supported"
+    echo "ERROR: ${res} value not supported. Supported resolutions: 30, 120, 256."
     cd {{ scriptDir }}
     echo 'ERROR (13)' > {{ prefix }}.status
     exit 13
@@ -249,7 +255,7 @@ DetectNodes \
     --mergedist 6.0 \
     --searchbymin "${var_psl}" \
     --outputcmd "${var_psl},min,0;_VECMAG(${var_ubot},${var_vbot}),max,2" \
-    --timestride 1 \
+    --timefilter "6hr" \
     --in_data_list "${result_dir}inputfile_${file_name}.txt" \
     --out "${result_dir}out.dat"
 
@@ -261,6 +267,13 @@ if [ $? != 0 ]; then
 fi
 
 cat "${result_dir}"out.dat0* > "${result_dir}cyclones_${file_name}.txt" 2>/dev/null
+if ! grep -q "^[0-9]" "${result_dir}cyclones_${file_name}.txt"; then
+    echo "ERROR: no input time steps are at 00:00, 06:00, 12:00, or 18:00 UTC."
+    echo "       tc_analysis uses only these time steps (TempestExtremes --timefilter \"6hr\")."
+    cd {{ scriptDir }}
+    echo 'ERROR (19)' > {{ prefix }}.status
+    exit 19
+fi
 echo "Completed DetectNodes"
 
 # Stitch all candidate nodes in time to form tracks.
@@ -315,7 +328,8 @@ VariableProcessor \
     --out_data_list "${result_dir}outputfile_${file_name}.txt" \
     --var "_CURL{4,0.5}(${var_u850},${var_v850})" \
     --varout "VORT" \
-    --in_connect "${connect_file}"
+    --in_connect "${connect_file}" \
+    --timefilter "6hr"
 
 if [ $? != 0 ]; then
     echo "ERROR: VariableProcessor failed while computing VORT from ${var_u850},${var_v850}."
