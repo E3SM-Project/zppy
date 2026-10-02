@@ -11,6 +11,11 @@ Both EAM and EAMxx output are supported. EAMxx requires the ``input_grid``
 parameter to be set because its output sets ``topography_file="NONE"``,
 preventing automatic grid inference.
 
+The input must be instantaneous output at 6-hourly or higher frequency.
+Higher-frequency output (e.g. 3-hourly) is subsampled to 00, 06, 12, and 18Z,
+because the tracking criteria count time steps and the observations used by
+``e3sm_diags`` are 6-hourly.
+
 Configuration example
 ---------------------
 
