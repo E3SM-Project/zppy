@@ -52,3 +52,16 @@ def test_unsupported_resolution_fails(tmp_path):
     assert "Supported resolutions: 30, 120, 256." in result.stdout
     status = tmp_path / "tc_analysis_0001-0002.status"
     assert status.read_text().strip() == "ERROR (13)"
+
+
+def test_input_is_subsampled_to_6_hourly():
+    template_env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(searchpath=TEMPLATE_DIR)
+    )
+    script = template_env.get_template("tc_analysis.bash").render(**CONTEXT)
+    assert "--timestride" not in script
+    # TC detection and the AEW vorticity both use 00, 06, 12, and 18Z only.
+    tc_detect = re.search(r"^DetectNodes .*?^$", script, re.M | re.S)
+    vorticity = re.search(r"^VariableProcessor .*?^$", script, re.M | re.S)
+    assert tc_detect is not None and '--timefilter "6hr"' in tc_detect.group(0)
+    assert vorticity is not None and '--timefilter "6hr"' in vorticity.group(0)

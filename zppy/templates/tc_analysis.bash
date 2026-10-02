@@ -8,6 +8,7 @@ set +e
 set_pkg_manager
 
 # A Bash script to post-process E3SM 6 hourly (h2) instantaneous output to generate a text file storing Tropical Cyclone tracks
+# Higher-frequency output (e.g. 3 hourly) is subsampled to 00, 06, 12, and 18Z, since the tracking criteria count time steps.
 # tempestremap and tempestextremes are built in e3sm-unified from version 1.5.0.
 
 #For typical EAM v2 ne gp2 grids.
@@ -254,7 +255,7 @@ DetectNodes \
     --mergedist 6.0 \
     --searchbymin "${var_psl}" \
     --outputcmd "${var_psl},min,0;_VECMAG(${var_ubot},${var_vbot}),max,2" \
-    --timestride 1 \
+    --timefilter "6hr" \
     --in_data_list "${result_dir}inputfile_${file_name}.txt" \
     --out "${result_dir}out.dat"
 
@@ -266,6 +267,13 @@ if [ $? != 0 ]; then
 fi
 
 cat "${result_dir}"out.dat0* > "${result_dir}cyclones_${file_name}.txt" 2>/dev/null
+if ! grep -q "^[0-9]" "${result_dir}cyclones_${file_name}.txt"; then
+    echo "ERROR: no input time steps fall on 00, 06, 12, or 18Z."
+    echo "       tc_analysis requires instantaneous output at 6 hourly or higher frequency."
+    cd {{ scriptDir }}
+    echo 'ERROR (19)' > {{ prefix }}.status
+    exit 19
+fi
 echo "Completed DetectNodes"
 
 # Stitch all candidate nodes in time to form tracks.
@@ -320,7 +328,8 @@ VariableProcessor \
     --out_data_list "${result_dir}outputfile_${file_name}.txt" \
     --var "_CURL{4,0.5}(${var_u850},${var_v850})" \
     --varout "VORT" \
-    --in_connect "${connect_file}"
+    --in_connect "${connect_file}" \
+    --timefilter "6hr"
 
 if [ $? != 0 ]; then
     echo "ERROR: VariableProcessor failed while computing VORT from ${var_u850},${var_v850}."
