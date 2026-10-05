@@ -153,13 +153,16 @@ def test_wait_for_user_jobs_cancels_cascading_dependency_failures(
     monkeypatch.setattr(slurm, "queued_jobs", lambda user: next(queued, {}))
     monkeypatch.setattr(slurm, "cancel_job", cancelled.append)
 
-    assert slurm.wait_for_user_jobs(
-        "me",
-        job_ids={"111", "222", "333"},
-        check_interval=1,
-        max_wait=10,
-        sleep=lambda _: None,
-    ) == "dependency_never_satisfied"
+    assert (
+        slurm.wait_for_user_jobs(
+            "me",
+            job_ids={"111", "222", "333"},
+            check_interval=1,
+            max_wait=10,
+            sleep=lambda _: None,
+        )
+        == "dependency_never_satisfied"
+    )
     assert cancelled == ["111", "222"]
 
 
@@ -186,13 +189,16 @@ def test_wait_for_user_jobs_preserves_healthy_and_unrelated_jobs(
         slurm, "cancel_job", lambda job_id: pytest.fail("should not cancel")
     )
 
-    assert slurm.wait_for_user_jobs(
-        "me",
-        job_ids={"111", "222"},
-        check_interval=1,
-        max_wait=10,
-        sleep=lambda _: None,
-    ) == "drained"
+    assert (
+        slurm.wait_for_user_jobs(
+            "me",
+            job_ids={"111", "222"},
+            check_interval=1,
+            max_wait=10,
+            sleep=lambda _: None,
+        )
+        == "drained"
+    )
 
 
 def test_wait_for_user_jobs_times_out(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -256,7 +262,9 @@ def test_queued_job_ids_asks_only_for_the_users_ids(
     assert seen == [["squeue", "-h", "-u", "me", "-o", "%i"]]
 
 
-def test_queued_jobs_parses_job_ids_and_reasons(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_queued_jobs_parses_job_ids_and_reasons(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(
         slurm,
         "run_command",
