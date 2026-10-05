@@ -216,7 +216,7 @@ def test_wait_returns_quietly_when_the_queue_drains(
 def test_wait_tracks_only_job_ids_from_submitted_cfgs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    run = _make_run(tmp_path)
+    run = _make_run(tmp_path, ["--scratch-root", str(tmp_path / "scratch")])
     submitted_status = os.path.join(run.layout.status_dir("cfg"), "task.status")
     unrelated_status = os.path.join(run.layout.status_dir("other"), "task.status")
     os.makedirs(os.path.dirname(submitted_status), exist_ok=True)
