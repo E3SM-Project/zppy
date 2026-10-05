@@ -13,3 +13,4 @@ This page collects documentation on testing ``zppy``.
    automated_test
    image_checking
    update_expected_results
+   complete_run_internals
