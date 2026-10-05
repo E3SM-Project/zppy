@@ -627,7 +627,9 @@ def _wait(run: _Run, max_wait: int, cfgs: Sequence[str] | None = None) -> None:
     """Wait for the queue to drain, mapping the outcome onto a terminal stage."""
     job_ids: Set[str] = set()
     for cfg in cfgs if cfgs is not None else run.cfgs:
-        for status_file in glob.glob(os.path.join(run.layout.status_dir(cfg), "*status")):
+        for status_file in glob.glob(
+            os.path.join(run.layout.status_dir(cfg), "*status")
+        ):
             try:
                 with open(status_file) as stream:
                     fields: List[str] = stream.read().split()

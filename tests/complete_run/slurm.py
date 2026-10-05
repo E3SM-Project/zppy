@@ -114,9 +114,7 @@ def queued_reasons(user: str) -> List[str]:
 
 def queued_jobs(user: str) -> Dict[str, str]:
     """Return each queued job ID and its pending reason."""
-    output: str = run_command(
-        ["squeue", "-h", "-u", user, "-o", "%i|%r"], check=False
-    )
+    output: str = run_command(["squeue", "-h", "-u", user, "-o", "%i|%r"], check=False)
     jobs: Dict[str, str] = {}
     for line in output.splitlines():
         job_id, separator, reason = line.partition("|")
@@ -218,9 +216,7 @@ def wait_for_user_jobs(
         if not remaining:
             logger.info("Queue drained after %ss", elapsed)
             return (
-                "dependency_never_satisfied"
-                if cancelled_dependency_job
-                else "drained"
+                "dependency_never_satisfied" if cancelled_dependency_job else "drained"
             )
 
         blocked: List[str] = [
