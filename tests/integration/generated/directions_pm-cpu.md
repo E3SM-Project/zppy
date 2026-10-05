@@ -53,41 +53,18 @@ These do not have automatic Python testing.
 The comprehensive and bundles tests do have this, however.
 These tests are ideally run weekly on the `main` branch.
 
-## Commands to run to replace outdated expected files
+## Commands to promote a baseline
 
+Expected results are no longer produced by copying a run over the previous
+baseline. Each complete run writes into its own immutable directory, and
+promotion points `latest-main` at one:
 
-Basic tests:
 ```
-cd <top level of zppy repo>
-
-chmod u+x tests/integration/generated/update_bash_generation_expected_files_pm-cpu.sh
-./tests/integration/generated/update_bash_generation_expected_files_pm-cpu.sh
-
-chmod u+x tests/integration/generated/update_campaign_expected_files_pm-cpu.sh
-./tests/integration/generated/update_campaign_expected_files_pm-cpu.sh
-# This command also runs the test again.
-# If the test fails on `test_campaign_high_res_v1`, try running the lines of the loop manually:
-rm -rf /global/cfs/cdirs/e3sm/www/zppy_test_resources/test_campaign_high_res_v1_expected_files
-mkdir -p /global/cfs/cdirs/e3sm/www/zppy_test_resources/test_campaign_high_res_v1_expected_files
-mv test_campaign_high_res_v1_output/post/scripts/*.settings /global/cfs/cdirs/e3sm/www/zppy_test_resources/test_campaign_high_res_v1_expected_files
-
-chmod u+x tests/integration/generated/update_defaults_expected_files_pm-cpu.sh
-./tests/integration/generated/update_defaults_expected_files_pm-cpu.sh
+$ python -m tests.complete_run.promote --machine pm-cpu show
+$ python -m tests.complete_run.promote --machine pm-cpu run <tag>
+# Add --allow-failed once you have reviewed the differences and decided the
+# new results are correct.
 ```
 
-Weekly tests require running zppy beforehand:
-```
-cd <top level of zppy repo>
-chmod u+x tests/integration/generated/update_weekly_expected_files_pm-cpu.sh
-./tests/integration/generated/update_weekly_expected_files_pm-cpu.sh
-```
-
-## Commands to generate official expected results for a zppy/Unified release
-
-Edit `release_name` in
-`tests/integration/generated/update_archive_expected_files_pm-cpu.sh`.
-Then, run:
-```
-chmod u+x tests/integration/generated/update_archive_expected_files_pm-cpu.sh
-./tests/integration/generated/update_archive_expected_files_pm-cpu.sh
-```
+Rolling back is promoting the previous run again. See
+`docs/source/dev_guide/tests/update_expected_results.rst`.

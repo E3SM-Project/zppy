@@ -1,116 +1,107 @@
 .. _updating-expected-results:
 
-***************************************
-Updating expected results for the tests
-***************************************
+*************************
+Updating expected results
+*************************
 
+Expected results are not a copy of a run. They *are* a run: the complete run
+test writes each run into its own immutable directory, and promotion points
+``baselines/latest-main`` at one of them.
 
-Machine-specific setup
-~~~~~~~~~~~~~~~~~~~~~~
+That has three consequences worth knowing before you promote anything:
 
-Chrysalis:
+* Promotion is instant and atomic, however many images the run produced.
+* The previous baseline is not destroyed. It is still a run directory sitting
+  beside the new one, so rolling back is promoting it again.
+* There is nothing to archive by hand beforehand.
 
-.. code-block:: bash
+Choosing a run to promote
+=========================
 
-    machine_name=chrysalis
-    repo_parent_dir=~/ez/ # Or wherever you keep your repos
-    expected_results_dir=/lcrc/group/e3sm/public_html/zppy_test_resources
-    expected_results_records_dir=/lcrc/group/e3sm/public_html/zppy_test_resources_previous
-
-    launch_compute_node()    
-    {
-        salloc --nodes=1 --partition=debug --time=02:00:00 --account=e3sm
-    }
-
-Compy:
+List what is promoted now, and what the run you are considering contains:
 
 .. code-block:: bash
 
-    machine_name=compy
-    repo_parent_dir=~/ez/ # Or wherever you keep your repos
-    expected_results_dir=/compyfs/www/zppy_test_resources
-    expected_results_records_dir=/compyfs/fors729/zppy_test_resources_previous
+    python -m tests.complete_run.promote --machine chrysalis show
+    ls /lcrc/group/e3sm/public_html/zppy_complete_run/runs
 
-    launch_compute_node()    
-    {
-        salloc --nodes=1 --partition=short --time=01:00:00 --account=e3sm
-    }
+Read the run's report before promoting it. If images changed, open the diff
+viewer the run produced and confirm each change is one you meant to accept --
+see :ref:`image_checking` for how to read severities.
 
-Note that Compy doesn't give write access to ``/compyfs/www/``, so we can't add a new directory there. That's why ``zppy_test_resources_previous`` is in a separate path.
-
-Perlmutter:
+Promoting
+=========
 
 .. code-block:: bash
 
-    machine_name=pm-cpu
-    repo_parent_dir=~/ez/ # Or wherever you keep your repos
-    expected_results_dir=/global/cfs/cdirs/e3sm/www/zppy_test_resources
-    expected_results_records_dir=/global/cfs/cdirs/e3sm/www/zppy_test_resources_previous
+    python -m tests.complete_run.promote --machine chrysalis run 20260918_run1
 
-    launch_compute_node()    
-    {
-        salloc --nodes=1 --qos=interactive --time=01:00:00 --constraint=cpu --account=e3sm
-    }
+Promotion reads the run's own report and manifest rather than trusting the
+command line, and refuses a run that did not pass or that was built from a
+feature branch.
 
-
-Process
-~~~~~~~
+When a dependency legitimately changes a plot, the run will not have passed --
+that is the normal case for updating expected results. Promote it deliberately:
 
 .. code-block:: bash
 
-    # First, let's copy over the old expected results #############################
-    cp -r ${expected_results_dir} ${expected_results_records_dir}/expected_results_until_yyyymmdd 
-    # Use today's date
-    # Chrysalis -- takes between 20 and 60 minutes
+    python -m tests.complete_run.promote --machine chrysalis run 20260918_run1 \
+        --allow-failed
 
-    # Second, update the expected results #########################################
-    # Let's update the simpler tests' results first:
-    cd ${repo_parent_dir}/zppy
-    git status
-    # You might have changed branches since you ran the tests.
-    # Make sure you're now back on the correct branch: test-zppy-yyyymmdd
-    # Also confirm you're back in the correct env: zppy-yyyymmdd or the Unified env
+Use ``--allow-failed`` after reviewing the differences, not instead of it.
 
-    # Make sure the update script permissions are set up
-    chmod 755 tests/integration/generated/update_bash_generation_expected_files_${machine_name}.sh
-    chmod 755 tests/integration/generated/update_campaign_expected_files_${machine_name}.sh
-    chmod 755 tests/integration/generated/update_defaults_expected_files_${machine_name}.sh
-    chmod 755 tests/integration/generated/update_weekly_expected_files_${machine_name}.sh
-
-    # These scripts update the expected results and re-run the tests:
-    ./tests/integration/generated/update_bash_generation_expected_files_${machine_name}.sh
-    ./tests/integration/generated/update_campaign_expected_files_${machine_name}.sh
-    ./tests/integration/generated/update_defaults_expected_files_${machine_name}.sh
-
-    # This script only updates the expected results
-    ./tests/integration/generated/update_weekly_expected_files_${machine_name}.sh
-    # Chrysalis -- takes about 40 minutes
-    # Perlmutter -- takes about 25 minutes
-    ls ${expected_results_dir}
-    # Confirm there are expected results subdirs and image lists for each cfg
-
-    cd ${repo_parent_dir}/zppy
-    pytest tests/integration/test_bundles.py
-    launch_compute_node
-
-    start_bash_subshell
-    # EITHER:
-    # Activate EITHER a dev environment or the Unified env:
-    conda activate zppy-yyyymmdd
-    # OR: the command from `activate_unified_env`
-
-    pytest tests/integration/test_images.py
-    exit # Exit bash shell
-    exit # Exit compute note
-
-Only do this part if you're updating the Official Results (i.e., the results we'd expect from a specific ``zppy`` version):
+Rolling back
+============
 
 .. code-block:: bash
 
-    alias this_release=unified_1.13.0 # Or whatever the release is
+    python -m tests.complete_run.promote --machine chrysalis run 20260911_run1
 
-    # Third, let's copy the expected results into a special official results dir ##
-    cp -r ${expected_results_dir} ${expected_results_records_dir}/expected_results_for_${this_release}
-    # Compy -- takes about 1h20m
-    ls ${expected_results_records_dir}/expected_results_for_${this_release}
-    # Confirm there are expected results subdirs and image lists for each cfg
+Release snapshots
+=================
+
+A release snapshot is another channel pointing at the same kind of run, not
+another copy of the images:
+
+.. code-block:: bash
+
+    python -m tests.complete_run.promote --machine chrysalis run 20260918_run1 \
+        --channel unified_1.13.0
+
+Partial updates
+===============
+
+A baseline is one whole run, so a promotion updates every cfg and task at once.
+This is deliberate: a baseline assembled from several runs is hard to reason
+about when a difference later appears, because the results were produced by
+different code and different dependencies.
+
+There is no way to accept a change in one task only. Do not promote a run made
+with a reduced ``--cfg`` or ``--task`` selection: a run's expected image lists
+are built by walking its own ``www`` tree, so such a run becomes a baseline
+that holds only the tasks it ran, and every other task then records no
+comparison against it. Promote a run that covered everything.
+
+Deleting old runs
+=================
+
+Runs that a channel points at are kept indefinitely. Everything else is subject
+to pruning:
+
+.. code-block:: bash
+
+    # Reports what it would delete.
+    python -m tests.complete_run.promote --machine chrysalis prune --keep 8
+    # Actually delete.
+    python -m tests.complete_run.promote --machine chrysalis prune --keep 8 --delete
+
+Comparing against something other than latest-main
+==================================================
+
+.. code-block:: bash
+
+    python -m tests.complete_run.automation --machine chrysalis \
+        --baseline-dir /lcrc/group/e3sm/public_html/zppy_complete_run/runs/20260901_run1
+
+When running the image checker directly, set ``ZPPY_COMPLETE_RUN_BASELINE``
+instead.
