@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+from pathlib import Path
 from typing import List, Sequence, Tuple
 
 import pytest
@@ -210,6 +211,31 @@ def test_wait_returns_quietly_when_the_queue_drains(
 ) -> None:
     monkeypatch.setattr(automation, "wait_for_user_jobs", lambda *a, **k: "drained")
     automation._wait(_make_run(tmp_path), 10)
+
+
+def test_wait_tracks_only_job_ids_from_submitted_cfgs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    run = _make_run(tmp_path)
+    submitted_status = os.path.join(run.layout.status_dir("cfg"), "task.status")
+    unrelated_status = os.path.join(run.layout.status_dir("other"), "task.status")
+    os.makedirs(os.path.dirname(submitted_status), exist_ok=True)
+    os.makedirs(os.path.dirname(unrelated_status), exist_ok=True)
+    with open(submitted_status, "w") as stream:
+        stream.write("WAITING 111\n")
+    with open(unrelated_status, "w") as stream:
+        stream.write("WAITING 999\n")
+
+    seen: dict[str, object] = {}
+
+    def wait_for_jobs(user: str, **kwargs: object) -> str:
+        seen.update(kwargs)
+        return "drained"
+
+    monkeypatch.setattr(automation, "wait_for_user_jobs", wait_for_jobs)
+    automation._wait(run, 10, ["cfg"])
+
+    assert seen["job_ids"] == {"111"}
 
 
 def test_submit_stage_names_the_missing_cfg(tmp_path) -> None:

@@ -102,65 +102,104 @@ def test_wait_for_job_times_out_without_cancelling(
 
 
 def test_wait_for_user_jobs_returns_drained(monkeypatch: pytest.MonkeyPatch) -> None:
-    counts = iter([5, 2, 0])
-    monkeypatch.setattr(slurm, "queued_job_count", lambda user: next(counts))
-    monkeypatch.setattr(slurm, "queued_reasons", lambda user: ["Priority"])
+    queued = iter([{"123": "Priority"}, {"123": "None"}, {}])
+    monkeypatch.setattr(slurm, "queued_jobs", lambda user: next(queued, {}))
 
     assert (
         slurm.wait_for_user_jobs(
-            "me", check_interval=1, max_wait=10, sleep=lambda _: None
+            "me", job_ids={"123"}, check_interval=1, max_wait=10, sleep=lambda _: None
         )
         == "drained"
     )
 
 
-def test_wait_for_user_jobs_cancels_permanently_blocked_jobs(
+def test_wait_for_user_jobs_cancels_directly_blocked_run_job(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    cancelled: List[str] = []
-    monkeypatch.setattr(slurm, "queued_job_count", lambda user: 3)
-    monkeypatch.setattr(
-        slurm,
-        "queued_reasons",
-        lambda user: [slurm.DEPENDENCY_NEVER_SATISFIED] * 3,
+    queued = iter(
+        [
+            {"111": slurm.DEPENDENCY_NEVER_SATISFIED, "999": "Priority"},
+            {"999": "Priority"},
+            {},
+        ]
     )
-    monkeypatch.setattr(slurm, "cancel_all", lambda user: cancelled.append(user))
+    cancelled: List[str] = []
+    monkeypatch.setattr(slurm, "queued_jobs", lambda user: next(queued, {}))
+    monkeypatch.setattr(slurm, "cancel_job", cancelled.append)
 
     outcome = slurm.wait_for_user_jobs(
-        "me", check_interval=1, max_wait=10, sleep=lambda _: None
+        "me", job_ids={"111"}, check_interval=1, max_wait=10, sleep=lambda _: None
     )
     assert outcome == "dependency_never_satisfied"
-    assert cancelled == ["me"]
+    assert cancelled == ["111"]
 
 
-def test_wait_for_user_jobs_keeps_waiting_when_only_some_are_blocked(
+def test_wait_for_user_jobs_cancels_cascading_dependency_failures(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    counts = iter([3, 0])
-    monkeypatch.setattr(slurm, "queued_job_count", lambda user: next(counts))
-    monkeypatch.setattr(
-        slurm,
-        "queued_reasons",
-        lambda user: [slurm.DEPENDENCY_NEVER_SATISFIED, "Priority"],
+    queued = iter(
+        [
+            {
+                "111": slurm.DEPENDENCY_NEVER_SATISFIED,
+                "222": "Dependency",
+                "333": "Priority",
+            },
+            {"222": slurm.DEPENDENCY_NEVER_SATISFIED, "333": "Priority"},
+            {"333": "Priority"},
+            {},
+        ]
     )
+    cancelled: List[str] = []
+    monkeypatch.setattr(slurm, "queued_jobs", lambda user: next(queued, {}))
+    monkeypatch.setattr(slurm, "cancel_job", cancelled.append)
+
+    assert slurm.wait_for_user_jobs(
+        "me",
+        job_ids={"111", "222", "333"},
+        check_interval=1,
+        max_wait=10,
+        sleep=lambda _: None,
+    ) == "dependency_never_satisfied"
+    assert cancelled == ["111", "222"]
+
+
+def test_wait_for_user_jobs_preserves_healthy_and_unrelated_jobs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    queued = iter(
+        [
+            {
+                "111": "Priority",
+                "222": "Dependency",
+                "999": slurm.DEPENDENCY_NEVER_SATISFIED,
+            },
+            {
+                "111": "Priority",
+                "222": "None",
+                "999": slurm.DEPENDENCY_NEVER_SATISFIED,
+            },
+            {},
+        ]
+    )
+    monkeypatch.setattr(slurm, "queued_jobs", lambda user: next(queued, {}))
     monkeypatch.setattr(
-        slurm, "cancel_all", lambda user: pytest.fail("should not cancel")
+        slurm, "cancel_job", lambda job_id: pytest.fail("should not cancel")
     )
 
-    assert (
-        slurm.wait_for_user_jobs(
-            "me", check_interval=1, max_wait=10, sleep=lambda _: None
-        )
-        == "drained"
-    )
+    assert slurm.wait_for_user_jobs(
+        "me",
+        job_ids={"111", "222"},
+        check_interval=1,
+        max_wait=10,
+        sleep=lambda _: None,
+    ) == "drained"
 
 
 def test_wait_for_user_jobs_times_out(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(slurm, "queued_job_count", lambda user: 4)
-    monkeypatch.setattr(slurm, "queued_reasons", lambda user: ["Priority"])
+    monkeypatch.setattr(slurm, "queued_jobs", lambda user: {"123": "Priority"})
     assert (
         slurm.wait_for_user_jobs(
-            "me", check_interval=1, max_wait=2, sleep=lambda _: None
+            "me", job_ids={"123"}, check_interval=1, max_wait=2, sleep=lambda _: None
         )
         == "timed_out"
     )
@@ -215,3 +254,15 @@ def test_queued_job_ids_asks_only_for_the_users_ids(
     monkeypatch.setattr(slurm, "run_command", record)
     slurm.queued_job_ids("me")
     assert seen == [["squeue", "-h", "-u", "me", "-o", "%i"]]
+
+
+def test_queued_jobs_parses_job_ids_and_reasons(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        slurm,
+        "run_command",
+        lambda args, **kwargs: "111|DependencyNeverSatisfied\n222|Priority",
+    )
+    assert slurm.queued_jobs("me") == {
+        "111": "DependencyNeverSatisfied",
+        "222": "Priority",
+    }

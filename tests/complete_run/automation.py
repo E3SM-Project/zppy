@@ -620,19 +620,35 @@ def _submit_cfgs(run: _Run, cfgs: Sequence[str], max_wait: int) -> None:
         logger.info("Submitting %s", cfg_path)
         run_command(zppy_env.run_args(["zppy", "-c", cfg_path]), cwd=worktree)
 
-    _wait(run, max_wait)
+    _wait(run, max_wait, cfgs)
 
 
-def _wait(run: _Run, max_wait: int) -> None:
+def _wait(run: _Run, max_wait: int, cfgs: Sequence[str] | None = None) -> None:
     """Wait for the queue to drain, mapping the outcome onto a terminal stage."""
+    job_ids: Set[str] = set()
+    for cfg in cfgs if cfgs is not None else run.cfgs:
+        for status_file in glob.glob(os.path.join(run.layout.status_dir(cfg), "*status")):
+            try:
+                with open(status_file) as stream:
+                    fields: List[str] = stream.read().split()
+            except OSError as error:
+                logger.warning("Could not read %s: %s", status_file, error)
+                continue
+            if len(fields) > 1 and fields[0] in ("WAITING", "RUNNING"):
+                job_ids.add(fields[1])
+
     outcome: str = wait_for_user_jobs(
-        run.username, check_interval=run.args.poll_seconds, max_wait=max_wait
+        run.username,
+        job_ids=job_ids,
+        check_interval=run.args.poll_seconds,
+        max_wait=max_wait,
     )
     if outcome == "dependency_never_satisfied":
         raise StageError(
             "dependency_never_satisfied",
-            "Every remaining job had an unsatisfiable dependency; they were "
-            "cancelled. Check the status files of the jobs that failed first.",
+            "One or more jobs had an unsatisfiable dependency; blocked jobs were "
+            "cancelled after this run's queue drained. Check the status files of "
+            "the jobs that failed first.",
         )
     if outcome == "timed_out":
         raise StageError("timed_out", f"Jobs did not finish within {max_wait} seconds.")
@@ -744,7 +760,9 @@ def _stage_report(run: _Run, stages_run: Sequence[str] = ()) -> None:
     if "validate" in stages_run and str(run.status.get("stage")) not in FAILURE_STAGES:
         run.status["stage"] = "passed"
     report = report_module.render_report(run.status, run.layout)
-    report_module.write_report(report, run.layout.root)
+    json_path, markdown_path = report_module.write_report(report, run.layout.root)
+    logger.info("Run reports: %s and %s", json_path, markdown_path)
+    logger.info("Job scripts and logs: %s", run.layout.output)
 
 
 _STAGE_FUNCTIONS: Dict[str, Callable[[_Run], None]] = {

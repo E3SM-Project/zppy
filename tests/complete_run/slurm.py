@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from typing import Callable, List, Sequence, Set
+from typing import Callable, Dict, List, Sequence, Set
 
 from tests.complete_run.commands import CommandError, run_command
 
@@ -112,6 +112,27 @@ def queued_reasons(user: str) -> List[str]:
     return [line.strip() for line in output.splitlines() if line.strip()]
 
 
+def queued_jobs(user: str) -> Dict[str, str]:
+    """Return each queued job ID and its pending reason."""
+    output: str = run_command(
+        ["squeue", "-h", "-u", user, "-o", "%i|%r"], check=False
+    )
+    jobs: Dict[str, str] = {}
+    for line in output.splitlines():
+        job_id, separator, reason = line.partition("|")
+        if separator and job_id.strip():
+            jobs[job_id.strip()] = reason.strip()
+    return jobs
+
+
+def cancel_job(job_id: str) -> None:
+    """Cancel one job without affecting other jobs owned by the user."""
+    try:
+        run_command(["scancel", job_id])
+    except CommandError as error:
+        logger.warning("Could not cancel job %s: %s", job_id, error)
+
+
 def cancel_all(user: str) -> None:
     """Cancel every job belonging to the user."""
     try:
@@ -168,41 +189,59 @@ def wait_for_job(
 def wait_for_user_jobs(
     user: str,
     *,
+    job_ids: Set[str],
     check_interval: int = 600,
     max_wait: int = 14400,
     sleep: Callable[[float], None] = time.sleep,
 ) -> str:
-    """Wait for all of a user's jobs to leave the queue.
+    """Wait for this run's jobs to leave the queue.
 
     zppy submits a dependency graph rather than one job, so the run waits on the
-    queue draining rather than on individual IDs.
+    queue draining rather than on individual IDs. Jobs with permanently
+    unsatisfiable dependencies are cancelled individually; downstream jobs can
+    then acquire the same reason on a later poll.
 
     Returns
     -------
     str
         ``"drained"`` when the queue empties, ``"dependency_never_satisfied"``
-        when every remaining job is permanently blocked (those jobs are
-        cancelled first, since they would otherwise wait forever), or
+        when any job was cancelled for an unsatisfiable dependency, or
         ``"timed_out"``.
     """
     elapsed: int = 0
+    cancelled_dependency_job: bool = False
     while elapsed < max_wait:
-        remaining: int = queued_job_count(user)
-        if remaining == 0:
+        queued: Dict[str, str] = queued_jobs(user)
+        remaining: Dict[str, str] = {
+            job_id: reason for job_id, reason in queued.items() if job_id in job_ids
+        }
+        if not remaining:
             logger.info("Queue drained after %ss", elapsed)
-            return "drained"
-
-        reasons: List[str] = queued_reasons(user)
-        if reasons and all(reason == DEPENDENCY_NEVER_SATISFIED for reason in reasons):
-            logger.error(
-                "All %s remaining jobs have unsatisfiable dependencies; cancelling",
-                remaining,
+            return (
+                "dependency_never_satisfied"
+                if cancelled_dependency_job
+                else "drained"
             )
-            cancel_all(user)
-            return "dependency_never_satisfied"
+
+        blocked: List[str] = [
+            job_id
+            for job_id, reason in remaining.items()
+            if reason == DEPENDENCY_NEVER_SATISFIED
+        ]
+        if blocked:
+            logger.error(
+                "%s run job(s) have unsatisfiable dependencies; cancelling",
+                len(blocked),
+            )
+            for job_id in blocked:
+                cancel_job(job_id)
+            cancelled_dependency_job = True
 
         logger.info(
-            "Jobs remaining: %s (elapsed %ss / max %ss)", remaining, elapsed, max_wait
+            "Run jobs remaining: %s (elapsed %ss / max %ss)",
+            len(remaining),
+            elapsed,
+            max_wait,
         )
         sleep(check_interval)
         elapsed += check_interval
