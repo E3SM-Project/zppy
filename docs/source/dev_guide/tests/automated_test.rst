@@ -118,6 +118,11 @@ drift on the expected-results baseline with commits that only exist on the
 branch under test. When the two differ, the report's table adds a "Branch
 tested" column so that's visible at a glance.
 
+If you test ``zppy`` as it exists in E3SM-Unified (``ZPPY_ENV_TYPE="unified"``,
+see below), keep in mind that the ``zppy`` row lists commits on the baseline
+branch, which may include commits that are *not yet in the Unified release*
+being tested. The report adds a note to that effect in this case.
+
 For the remaining tasks (``climo``, ``ts``, ``tc_analysis``, ``ilamb``, ``livvkit``), we typically just use the associated package's latest release rather than making dev environments. As such, their latest development will have no impact on our tests unless we have started using one of their newer releases.
 
 The report's table looks like:
@@ -140,7 +145,7 @@ The automated test script
 The automated test script handles the following steps from the manual testing process:
 
 * Step 3: Set up environments for called packages
-* Step 4: Set up zppy environment
+* Step 4: Set up zppy environment (either a dev environment or E3SM-Unified's zppy; see ``ZPPY_ENV_TYPE`` below)
 * Step 5: Launch zppy jobs
 * Step 6: Launch zppy jobs – bundles part 2
 * Step 7: Review finished returns
@@ -149,8 +154,8 @@ The automated test script handles the following steps from the manual testing pr
 It additionally:
 
 * Runs the "tests of the tests" (``tests/images/test_image_checker.py``, ``tests/images/test_image_severity.py``, and ``tests/images/test_image_summary_report.py``), which validate the image-checking logic itself, independent of any particular run's output.
-* Writes an ``env_description.txt`` for each task (e.g. ``global_time_series/env_description.txt``), recording the commit hash of the relevant dev repo (or noting that a released package was used) plus the full ``conda list`` package versions for that task's environment.
-* Writes a Markdown report (``test_report_<TAG>.md``) summarizing all of the above, including the complete and failing-only image-check summary tables.
+* Writes an ``env_description.txt`` for each task (e.g. ``global_time_series/env_description.txt``), recording the commit hash of the relevant dev repo (or noting that a released package was used) plus the full ``conda list`` package versions for that task's environment. A ``zppy.txt`` is also cached locally; when ``zppy`` comes from E3SM-Unified it records the test checkout's commit separately from the released package.
+* Writes a Markdown report (``test_report_<TAG>.md``) summarizing all of the above, including which ``zppy`` was tested and the complete and failing-only image-check summary tables.
 
 A. Set up the test script
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -238,6 +243,55 @@ Update the ``_ENV_TYPE`` parameters if you want to use E3SM-Unified rather than 
     MPAS_ENV_TYPE="dev"
     ZI_ENV_TYPE="dev"
 
+``zppy`` itself has the same choice via ``ZPPY_ENV_TYPE``. This parameter is
+optional and defaults to ``"dev"`` if omitted, so existing cfgs keep working
+unchanged.
+
+.. code-block::
+
+    # "dev"     = build a dedicated conda env from the zppy repo's conda/dev.yml
+    #             and pip-install the checked-out branch into it
+    # "unified" = test zppy as it exists in E3SM-Unified
+    ZPPY_ENV_TYPE="dev"
+
+With ``ZPPY_ENV_TYPE="unified"``:
+
+* The ``zppy`` that submits the jobs, ``zppy``'s unit tests, the integration
+  pytests, and the image-checker SLURM job all run in E3SM-Unified.
+* The checked-out ``zppy`` source is **not** pip-installed over Unified (that
+  would modify a shared install, and would defeat the purpose of testing
+  Unified's ``zppy``).
+* The ``zppy`` repo is **still** checked out to ``test_zppy_<TAG>``, created
+  from ``upstream/${ZPPY_BASE_BRANCH}``. The tests and cfg templates under
+  ``tests/`` therefore come from that branch, which lets you run testing
+  updates made since the Unified release against the released ``zppy``.
+* No conda environment is created for ``zppy``, and ``ZPPY_CONDA_INSTALL_LINE``
+  is ignored with a warning (it would modify the shared Unified environment).
+* The run log records which ``zppy`` is active (executable, version, and
+  package location), and the Markdown report states which ``zppy`` was tested.
+
+A few things to be aware of when testing Unified's ``zppy``:
+
+* **Test dependencies.** E3SM-Unified is not guaranteed to include everything
+  the tests need. The script stops early with a clear message if ``pytest``
+  is missing. If other test dependencies are missing, build a small env
+  containing the released ``zppy`` plus those dependencies and point
+  ``ZPPY_EXISTING_ENV`` at it. Note that ``ZPPY_EXISTING_ENV`` skips the
+  branch checkout, so you would need to check out the branch you want
+  yourself.
+* **Newer tests vs. older zppy.** The tests and cfg templates come from the
+  branch, but the code under test is the released ``zppy``. Failures in
+  ``test_bash_generation.py`` or ``test_defaults.py`` may reflect options or
+  behavior added after the Unified release rather than a regression.
+* **Which code the tests import.** The ``zppy`` command-line tool always comes
+  from Unified. However, the tests run from inside the ``zppy`` repo
+  checkout, and depending on how pytest sets up ``sys.path`` for the ``tests``
+  package, a test that does ``import zppy`` may pick up the checkout rather
+  than Unified's install. The ``zppy`` unit tests in particular may therefore
+  exercise the checked-out source. The integration tests, which compare
+  generated scripts and outputs produced by the ``zppy`` command, are
+  unaffected.
+
 Update the ``_EXISTING_ENV`` parameters if you already have an environment from a previous test run to use.
 
 .. code-block::
@@ -262,7 +316,8 @@ default env creation. Two consequences worth knowing:
 - If you set an ``_EXISTING_ENV`` while leaving its ``_ENV_TYPE`` as
   ``"unified"`` (or anything other than ``"dev"``), the script still reuses
   the named env rather than falling back to the unified env -- it doesn't
-  require ``_ENV_TYPE="dev"`` to honor an explicit ``_EXISTING_ENV``.
+  require ``_ENV_TYPE="dev"`` to honor an explicit ``_EXISTING_ENV``. This
+  applies to ``ZPPY_ENV_TYPE`` as well.
 - The test-branch checkout for that component is skipped too, not just conda
   env creation. This matters if the env was built against a local branch
   that was never pushed to GitHub: without this, a later run using a fresh
@@ -270,6 +325,11 @@ default env creation. Two consequences worth knowing:
   (or worse, switch away from the local branch the env actually matches).
   With ``_EXISTING_ENV`` set, the script leaves whatever branch is already
   checked out alone.
+
+By contrast, an ``_ENV_TYPE`` of ``"unified"`` does **not** skip the branch
+checkout: only an ``_EXISTING_ENV`` does. That is what makes
+``ZPPY_ENV_TYPE="unified"`` useful for testing Unified's ``zppy`` against
+newer tests.
 
 Set a ``_CONDA_INSTALL_LINE`` if you need to pin or override a package
 version -- e.g. because of a bug in a specific dependency release -- and
@@ -284,7 +344,8 @@ it.
     # verbatim to `conda install -n <env> <line> --yes` right after the env is
     # activated. Ignored (with a warning) for a component whose ENV_TYPE is
     # "unified" and has no *_EXISTING_ENV set, since that would modify the
-    # shared unified env. Leave empty for no override.
+    # shared unified env. (This includes ZPPY_CONDA_INSTALL_LINE when
+    # ZPPY_ENV_TYPE="unified".) Leave empty for no override.
     # Example: E3SM_TO_CMIP_CONDA_INSTALL_LINE="nco<5.4.0"
     DIAGS_CONDA_INSTALL_LINE=""
     E3SM_TO_CMIP_CONDA_INSTALL_LINE=""
@@ -436,7 +497,20 @@ D. Review the output
 
 Let's review the test script's output log.
 
-First, the unit tests. Early in setup, you should see:
+If you set ``ZPPY_ENV_TYPE="unified"``, first confirm the log shows the
+``zppy`` you intended to test, near the start of Phase 1 and again whenever
+the ``zppy`` environment is activated:
+
+.. code-block::
+
+    zppy executable:       /.../e3sm-unified/.../bin/zppy
+    zppy version:          <the released version>
+    zppy package location: /.../site-packages/zppy
+
+The package location should point at Unified's ``site-packages``, not at your
+``zppy`` repo checkout.
+
+Next, the unit tests. Early in setup, you should see:
 
 .. code-block::
 
@@ -551,3 +625,8 @@ makes it straightforward to run on a weekly cron schedule.
    having the cron wrapper ``mail`` or post that file's contents somewhere
    visible (e.g. a Slack webhook or a PR comment) so failures don't go
    unnoticed.
+
+6. If you want the weekly run to exercise Unified's ``zppy`` against the
+   latest tests on ``main``, set ``ZPPY_ENV_TYPE="unified"`` in the cfg used
+   by the driver script. This also avoids building a fresh ``zppy`` conda
+   environment each week.

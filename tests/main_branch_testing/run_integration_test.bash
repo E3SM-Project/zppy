@@ -20,6 +20,11 @@
 #   - An env_description.txt is written for each task, recording the commit
 #     hash of the relevant package (or "release" for unified-env tasks) and
 #     the conda environment's package versions.
+#   - zppy itself can be tested either from a dev env (ZPPY_ENV_TYPE="dev",
+#     the default) or as it exists in E3SM-Unified (ZPPY_ENV_TYPE="unified").
+#     In the "unified" case the Unified `zppy` is what gets run, but the zppy
+#     repo is still checked out to a test branch so the tests/cfg templates
+#     from that branch are used. See ZPPY_ENV_TYPE in zppy_test.cfg.
 #   - To resume from Phase 2 or 3 on a later day, set EXPLICIT_TAG in your config
 #     to the TAG printed at the start of Phase 1 (or stored in ~/.zppy_test_tag),
 #     and set START_PHASE accordingly.
@@ -82,6 +87,19 @@ if [[ ${#_missing[@]} -gt 0 ]]; then
     exit 1
 fi
 
+# Optional: how to provide the zppy used to drive the test (the `zppy -c ...`
+# job submissions, zppy's own unit tests, the integration pytests, and the
+# image-checker SLURM job). Unlike the other four components, this is
+# optional and defaults to "dev" so existing cfgs keep working unchanged.
+#   dev     = build a dedicated conda env from the zppy repo's conda/dev.yml
+#             (and pip-install the checked-out branch into it)
+#   unified = use the zppy that ships in the machine's E3SM-Unified env
+#             (UNIFIED_ENV_CMD). The zppy repo is STILL checked out to the
+#             test branch so tests/cfgs from that branch are used, but the
+#             checked-out zppy source is NOT pip-installed over Unified.
+# As with the other components, ZPPY_EXISTING_ENV (if set) wins over this.
+ZPPY_ENV_TYPE="${ZPPY_ENV_TYPE:-dev}"
+
 # Apply defaults for optional *_EXISTING_ENV variables so the rest of the
 # script can reference them unconditionally.
 DIAGS_EXISTING_ENV="${DIAGS_EXISTING_ENV:-}"
@@ -139,6 +157,12 @@ ZPPY_LAST_TESTED_DATE="${ZPPY_LAST_TESTED_DATE:-}"
 case "$MACHINE" in
     chrysalis|compy|perlmutter) ;;
     *) echo "Error: Unknown MACHINE '${MACHINE}'. Valid values: chrysalis | compy | perlmutter"; exit 1 ;;
+esac
+
+# Validate ZPPY_ENV_TYPE value.
+case "$ZPPY_ENV_TYPE" in
+    dev|unified) ;;
+    *) echo "Error: Unknown ZPPY_ENV_TYPE '${ZPPY_ENV_TYPE}'. Valid values: dev | unified"; exit 1 ;;
 esac
 
 # ============================================================================
@@ -351,9 +375,22 @@ fi
 
 UNIQUE_ID="zppy_main_branch_test_${TAG}"
 
-ZPPY_ENV="test-zppy-${ZPPY_BASE_BRANCH}-${TAG}"
+# Which zppy are we running/testing?
+#   1. ZPPY_EXISTING_ENV (if set) always wins, exactly like the other components.
+#   2. Else ZPPY_ENV_TYPE="unified" -> the zppy in E3SM-Unified (no conda env of
+#      our own; ZPPY_ENV stays empty on purpose so any code path that wrongly
+#      tries to `conda activate "$ZPPY_ENV"` fails loudly instead of silently).
+#   3. Else ZPPY_ENV_TYPE="dev" -> a dedicated, freshly built dev env.
+# ZPPY_ENV_DESC is a plain-text description used only by the Markdown report.
 if [[ -n "$ZPPY_EXISTING_ENV" ]]; then
     ZPPY_ENV="$ZPPY_EXISTING_ENV"
+    ZPPY_ENV_DESC="existing conda env ${ZPPY_EXISTING_ENV} (branch checkout skipped)"
+elif [[ "$ZPPY_ENV_TYPE" == "unified" ]]; then
+    ZPPY_ENV=""
+    ZPPY_ENV_DESC="E3SM-Unified (released zppy); tests/cfgs from checkout of test_zppy_${TAG} (based on ${ZPPY_BASE_BRANCH})"
+else
+    ZPPY_ENV="test-zppy-${ZPPY_BASE_BRANCH}-${TAG}"
+    ZPPY_ENV_DESC="dev env ${ZPPY_ENV} (built from checkout of test_zppy_${TAG}, based on ${ZPPY_BASE_BRANCH})"
 fi
 
 # Output directories (status file locations)
@@ -479,6 +516,55 @@ activate_unified_env() {
     set -u
 }
 
+# Returns 0 if zppy itself should come from E3SM-Unified, 1 if it should come
+# from a dev env (freshly built or ZPPY_EXISTING_ENV). ZPPY_EXISTING_ENV wins
+# over ZPPY_ENV_TYPE, same as every other component.
+zppy_uses_unified() {
+    [[ "$ZPPY_ENV_TYPE" == "unified" && -z "$ZPPY_EXISTING_ENV" ]]
+}
+
+# Fail early (with a clear message) if the currently active env has no pytest.
+# E3SM-Unified is not guaranteed to ship every test dependency a dev env has.
+require_pytest() {
+    if ! command -v pytest >/dev/null 2>&1; then
+        log_error "pytest was not found in the active environment (${1:-unknown env})."
+        log_error "If this is E3SM-Unified, it does not provide everything the zppy tests need."
+        log_error "Either build a small env containing the released zppy plus the test dependencies and set ZPPY_EXISTING_ENV, or use ZPPY_ENV_TYPE=\"dev\"."
+        return 1
+    fi
+}
+
+# Record which zppy is actually active so the run log shows it unambiguously.
+# NOTE: this deliberately runs python from "/" and not from the current
+# directory: the zppy repo has a top-level "zppy/" package, and python puts
+# the current directory first on sys.path, so running this from inside
+# ZPPY_DIR would report the *checkout*, not the installed (Unified) zppy.
+log_zppy_provenance() {
+    local zppy_bin zppy_ver zppy_path
+    zppy_bin="$(command -v zppy 2>/dev/null || echo 'not found')"
+    zppy_ver="$(cd / && python -c 'import importlib.metadata as m; print(m.version("zppy"))' 2>/dev/null || echo unknown)"
+    zppy_path="$(cd / && python -c 'import zppy, os; print(os.path.dirname(zppy.__file__))' 2>/dev/null || echo unknown)"
+    log "zppy executable:      ${zppy_bin}"
+    log "zppy version:         ${zppy_ver}"
+    log "zppy package location: ${zppy_path}"
+}
+
+# Activate whichever environment zppy should be driven/tested from:
+#   - unified: load E3SM-Unified. No pip install -- we must NOT overwrite
+#     Unified's zppy with the checked-out source (that is the whole point,
+#     and it is a shared install we usually can't write to anyway).
+#   - otherwise: activate the dev/existing env and pip-install the checkout
+#     into it, exactly as before.
+activate_zppy_env() {
+    if zppy_uses_unified; then
+        activate_unified_env
+        require_pytest "E3SM-Unified" || exit 1
+        log_zppy_provenance
+    else
+        activate_env "$ZPPY_ENV"
+    fi
+}
+
 # Create (if needed) and activate a conda environment.
 setup_conda_env() {
     local conda_dir="$1"   # Directory containing dev.yml (e.g. "conda" or "conda-env")
@@ -537,6 +623,10 @@ apply_conda_install_line() {
 # upstream. We only need a base_branch at all in order to build a fresh
 # environment in the first place; *_EXISTING_ENV means there's nothing left
 # to build.
+#
+# Note this is independent of *_ENV_TYPE: a component using the unified env
+# (including zppy with ZPPY_ENV_TYPE="unified") still gets its test branch
+# checked out, because only *_EXISTING_ENV is passed in here.
 ensure_test_branch() {
     local test_branch="$1"
     local base_branch="$2"
@@ -767,7 +857,10 @@ any_bundle_cfg_configured() {
 # ${ENV_DESC_DIR}/<task>.txt. For dev environments, this includes the git
 # commit hash of the relevant package repo plus `conda list` output. For
 # unified/release environments there's no dedicated dev repo, so only the
-# conda package list is captured.
+# conda package list is captured. (If a pkg_dir is still given for a
+# unified/release environment -- as for zppy with ZPPY_ENV_TYPE="unified" --
+# it is recorded as the *test checkout* only, to make clear that the code
+# under test is the released package, not that checkout.)
 #
 #   capture_env_description <task_name> <pkg_dir_or_empty> <env_type> <env_name>
 capture_env_description() {
@@ -790,6 +883,11 @@ capture_env_description() {
             echo "Branch: $(git -C "$pkg_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
         else
             echo "Repository: N/A (uses a released package via the unified environment)"
+            if [[ -n "$pkg_dir" && -d "$pkg_dir" ]]; then
+                echo "Test checkout (tests/cfgs only, NOT the code under test): ${pkg_dir}"
+                echo "Test checkout commit: $(git -C "$pkg_dir" rev-parse HEAD 2>/dev/null || echo unknown)"
+                echo "Test checkout branch: $(git -C "$pkg_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
+            fi
         fi
         echo ""
         if [[ "$env_type" == "dev" ]]; then
@@ -948,6 +1046,16 @@ run_image_checker() {
     local job_name="zppy_image_checker_${TAG}"
     local image_checker_ok=true
 
+    # How the batch job should activate the zppy environment. This mirrors
+    # activate_zppy_env, but as text for the sbatch script (which runs in a
+    # fresh shell on a compute node, so it can't call our shell functions).
+    local zppy_activate
+    if zppy_uses_unified; then
+        zppy_activate="${UNIFIED_ENV_CMD}"
+    else
+        zppy_activate="conda activate ${ZPPY_ENV}"
+    fi
+
     log "Preparing image checker SLURM batch job..."
     rm -f "${ZPPY_DIR}/test_images_summary.md" "${ZPPY_DIR}/early_test_images_summary.md"
     cat > "$IMAGE_CHECKER_SBATCH" <<EOF
@@ -962,7 +1070,7 @@ set -e
 set +u
 source ~/.bashrc
 ${CONDA_ACTIVATION_CMD}
-conda activate ${ZPPY_ENV}
+${zppy_activate}
 set -u
 cd ${ZPPY_DIR}
 pytest tests/integration/test_images.py
@@ -1031,6 +1139,7 @@ phase_1_setup() {
     log "Date stamp:  $DATE_STAMP"
     log "TAG:         $TAG  (saved to ${TAG_CACHE_FILE})"
     log "Unique ID:   $UNIQUE_ID"
+    log "zppy under test: $ZPPY_ENV_DESC"
     log ""
     log "To resume from a later phase, set in your config:"
     log "  START_PHASE=2"
@@ -1208,18 +1317,28 @@ phase_1_setup() {
 
     (
         cd "$ZPPY_DIR"
+        # Always check out the test branch (unless ZPPY_EXISTING_ENV is set),
+        # even when zppy itself comes from E3SM-Unified: the tests and cfg
+        # templates under tests/ come from this checkout.
         ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH" "$ZPPY_EXISTING_ENV"
 
         log "Latest zppy commit (should match https://github.com/E3SM-Project/zppy/commits/${ZPPY_BASE_BRANCH}):"
         git log -1 --oneline
 
         if [[ -n "$ZPPY_EXISTING_ENV" ]]; then
-            log "Reusing existing 'zppy' env: $ZPPY_EXISTING_ENV (skipping creation)"
-            activate_env "$ZPPY_ENV"
+            log "Reusing existing 'zppy' env: $ZPPY_EXISTING_ENV (skipping creation; _ENV_TYPE ignored)"
+            activate_zppy_env
+            apply_conda_install_line "$ZPPY_ENV" "$ZPPY_CONDA_INSTALL_LINE"
+        elif zppy_uses_unified; then
+            log "Using unified env for zppy (skipping conda env creation; zppy itself is Unified's, tests/cfgs come from the checked-out branch)"
+            activate_zppy_env
+            if [[ -n "$ZPPY_CONDA_INSTALL_LINE" ]]; then
+                log_warning "ZPPY_CONDA_INSTALL_LINE is set but ZPPY_ENV_TYPE is 'unified' -- ignoring it rather than modifying the shared unified env."
+            fi
         else
             setup_conda_env "conda" "$ZPPY_ENV"
+            apply_conda_install_line "$ZPPY_ENV" "$ZPPY_CONDA_INSTALL_LINE"
         fi
-        apply_conda_install_line "$ZPPY_ENV" "$ZPPY_CONDA_INSTALL_LINE"
 
         log "Running zppy unit tests..."
         pytest tests/test_*.py
@@ -1230,8 +1349,7 @@ phase_1_setup() {
     (
         cd "$ZPPY_DIR"
         ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH" "$ZPPY_EXISTING_ENV"
-        init_conda_base
-        conda activate "$ZPPY_ENV"
+        activate_zppy_env
 
         log "Running tests of the image checker itself..."
         pytest tests/images/test_image_checker.py
@@ -1240,6 +1358,14 @@ phase_1_setup() {
     )
     IMAGE_HELPER_UNIT_TEST_STATUS="passed"
     log_success "Image-checker/report unit tests passed"
+
+    # Record which zppy was tested. When zppy comes from E3SM-Unified this
+    # notes the test checkout's commit separately from the released package.
+    local zppy_effective_env_type="dev"
+    if zppy_uses_unified; then
+        zppy_effective_env_type="unified"
+    fi
+    capture_env_description "zppy" "$ZPPY_DIR" "$zppy_effective_env_type" "$ZPPY_ENV"
 
     # ------------------------------------------------------------------
     # Generate config files (update utils.py TEST_SPECIFICS, then run it)
@@ -1258,7 +1384,7 @@ phase_1_setup() {
     # Config generation and job submission run in the parent shell so that
     # the zppy command is available and cd/env state is consistent.
     cd "$ZPPY_DIR"
-    activate_env "$ZPPY_ENV"
+    activate_zppy_env
     ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH" "$ZPPY_EXISTING_ENV"
 
     UTILS_FILE="tests/integration/utils.py"
@@ -1373,7 +1499,7 @@ phase_2_bundles_part2() {
     log "========================================="
 
     cd "$ZPPY_DIR"
-    activate_env "$ZPPY_ENV"
+    activate_zppy_env
     ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH" "$ZPPY_EXISTING_ENV"
 
     # Verify bundle status files are clean before submitting part 2.
@@ -1441,7 +1567,7 @@ phase_3_validation() {
     log "========================================="
 
     cd "$ZPPY_DIR"
-    activate_env "$ZPPY_ENV"
+    activate_zppy_env
     ensure_test_branch "test_zppy_${TAG}" "$ZPPY_BASE_BRANCH" "$ZPPY_EXISTING_ENV"
 
     if [ "$SLURM_JOBS_INCOMPLETE" = true ]; then
@@ -1642,6 +1768,10 @@ generate_markdown_report() {
     report_append ""
     report_append "Commits merged on each repo's *expected-results baseline branch* (see the \"Branch tested\" column when it differs from the branch this run actually tested) since that dependency's expected results were actually **produced** (for \`e3sm_to_cmip\`/\`zppy\`, which have no per-task expected results of their own, since they were last **tested** instead -- see the \`*_LAST_TESTED_DATE\` config variables). The \"Since\" date is read from the \`Generated:\` line of the promoted \`env_description.txt\` (the earliest one found across every cfg being tested) -- deliberately not the promotion date from Step 1 above, since results normally sit under review before being promoted, so the promotion date routinely lags well behind the run that actually produced them (set the matching \`*_EXPECTED_RESULTS_DATE\`/\`*_LAST_TESTED_DATE\` in the config to override any date below when you know better, e.g. from a discussion thread). \`zppy-interfaces\` bundles two independently-refreshed tasks, so its row is split into \`global_time_series\` and \`pcmdi_diags\`, each with its own date."
     report_append ""
+    if zppy_uses_unified; then
+        report_append "_Note: this run tested the **released zppy from E3SM-Unified**, not the tip of the zppy baseline branch, so the \`zppy\` row below lists commits that may not yet be in the release being tested._"
+        report_append ""
+    fi
     report_append "| Package | Branch tested | Since | Changes since expected results were produced |"
     report_append "| --- | --- | --- | --- |"
     _report_repo_changes "e3sm_to_cmip" "$E3SM_TO_CMIP_DIR" "$E3SM_TO_CMIP_BASE_BRANCH" "$E3SM_TO_CMIP_EXPECTED_RESULTS_BRANCH" "$E3SM_TO_CMIP_LAST_TESTED_DATE" "https://github.com/E3SM-Project/e3sm_to_cmip" "E3SM_TO_CMIP_LAST_TESTED_DATE"
@@ -1692,6 +1822,7 @@ generate_markdown_report() {
     # --- Unit tests / status files / integration tests summary ---
     report_append "## Automated test script results"
     report_append ""
+    report_append "* zppy under test: ${ZPPY_ENV_DESC}"
     report_append "* zppy-interfaces unit tests: \`${ZI_UNIT_TEST_STATUS}\`"
     report_append "* zppy unit tests: \`${ZPPY_UNIT_TEST_STATUS}\`"
     report_append "* Image-checker/report unit tests: \`${IMAGE_HELPER_UNIT_TEST_STATUS}\` (\`tests/images/test_image_checker.py\`, \`tests/images/test_image_severity.py\`, \`tests/images/test_image_summary_report.py\`)"
@@ -1889,6 +2020,7 @@ main() {
     log "TAG:          $TAG"
     log "Auto mode:    $AUTO_MODE"
     log "Start phase:  $START_PHASE"
+    log "zppy env:     $ZPPY_ENV_DESC"
 
     case "$START_PHASE" in
         1)
