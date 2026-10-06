@@ -292,6 +292,24 @@ A few things to be aware of when testing Unified's ``zppy``:
   generated scripts and outputs produced by the ``zppy`` command, are
   unaffected.
 
+Set ``UNIFIED_LOAD_SCRIPT`` to test a specific E3SM-Unified, such as a release
+candidate, instead of the latest one. It is the path to a load script that the
+test script will ``source``; leave it empty to use the machine's
+``load_latest_e3sm_unified_*.sh``.
+
+.. code-block::
+
+    # Example on Chrysalis, testing a release candidate:
+    UNIFIED_LOAD_SCRIPT="/lcrc/soft/climate/e3sm-unified/test_e3sm_unified_1.14.0rc2_chrysalis.sh"
+
+This applies everywhere Unified is used: components with ``*_ENV_TYPE="unified"``,
+``zppy`` when ``ZPPY_ENV_TYPE="unified"``, the image-checker job, and every task
+that has no dev env of its own. It does not affect components using a dev env or
+an ``*_EXISTING_ENV``. To test a release candidate across the board, set all
+``*_ENV_TYPE`` values (including ``ZPPY_ENV_TYPE``) to ``"unified"``. The script
+checks that the file exists, and the chosen load command is recorded in each
+``env_description.txt`` and in the Markdown report.
+
 Update the ``_EXISTING_ENV`` parameters if you already have an environment from a previous test run to use.
 
 .. code-block::
