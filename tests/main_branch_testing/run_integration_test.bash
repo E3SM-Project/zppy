@@ -125,6 +125,10 @@ ZPPY_CONDA_INSTALL_LINE="${ZPPY_CONDA_INSTALL_LINE:-}"
 # where NCO is already on PATH via the active environment.
 NCO_PATH="${NCO_PATH:-}"
 
+# Optional: path to a specific E3SM-Unified load script (e.g. a release
+# candidate), used instead of the machine's "load_latest" script.
+UNIFIED_LOAD_SCRIPT="${UNIFIED_LOAD_SCRIPT:-}"
+
 # Apply defaults for optional *_EXPECTED_RESULTS_BRANCH variables. Each
 # defaults to that component's own *_BASE_BRANCH (i.e. "assume expected
 # results were generated from whatever branch we're testing"). Override
@@ -193,6 +197,18 @@ case "$MACHINE" in
         SBATCH_DIRECTIVES=$'#SBATCH --qos=debug\n#SBATCH --time=01:00:00\n#SBATCH --constraint=cpu\n#SBATCH --account=e3sm'
         ;;
 esac
+
+# Allow the config to pin a specific Unified version (e.g. a release candidate)
+# instead of the machine's "latest" script. Everything downstream (zppy
+# environment_commands, the image-checker sbatch job, env_description.txt)
+# keys off UNIFIED_ENV_CMD, so overriding it here is sufficient.
+if [[ -n "$UNIFIED_LOAD_SCRIPT" ]]; then
+    if [[ ! -f "$UNIFIED_LOAD_SCRIPT" ]]; then
+        echo "Error: UNIFIED_LOAD_SCRIPT does not exist: ${UNIFIED_LOAD_SCRIPT}"
+        exit 1
+    fi
+    UNIFIED_ENV_CMD="source ${UNIFIED_LOAD_SCRIPT}"
+fi
 
 # Derive the filename suffix used by generated zppy cfg files.
 case "$MACHINE" in
@@ -387,7 +403,7 @@ if [[ -n "$ZPPY_EXISTING_ENV" ]]; then
     ZPPY_ENV_DESC="existing conda env ${ZPPY_EXISTING_ENV} (branch checkout skipped)"
 elif [[ "$ZPPY_ENV_TYPE" == "unified" ]]; then
     ZPPY_ENV=""
-    ZPPY_ENV_DESC="E3SM-Unified (released zppy); tests/cfgs from checkout of test_zppy_${TAG} (based on ${ZPPY_BASE_BRANCH})"
+    ZPPY_ENV_DESC="E3SM-Unified via '${UNIFIED_ENV_CMD}' (released zppy); tests/cfgs from checkout of test_zppy_${TAG} (based on ${ZPPY_BASE_BRANCH})"
 else
     ZPPY_ENV="test-zppy-${ZPPY_BASE_BRANCH}-${TAG}"
     ZPPY_ENV_DESC="dev env ${ZPPY_ENV} (built from checkout of test_zppy_${TAG}, based on ${ZPPY_BASE_BRANCH})"
@@ -507,8 +523,9 @@ activate_env() {
 
 # Activate the machine-specific unified environment.
 # UNIFIED_ENV_CMD is always "source /path/to/script.sh" (set in the
-# machine-specific case block above), so we strip the leading "source "
-# and source the path directly -- no eval required.
+# machine-specific case block above, or overridden via UNIFIED_LOAD_SCRIPT),
+# so we strip the leading "source " and source the path directly -- no eval
+# required.
 activate_unified_env() {
     init_conda_base
     # shellcheck disable=SC1090
@@ -898,6 +915,7 @@ capture_env_description() {
             ( init_conda_base && conda list -n "${env_name}" ) 2>/dev/null || echo "(unable to list packages for ${env_name})"
         else
             echo "Conda environment: E3SM-Unified"
+            echo "Unified load command: ${UNIFIED_ENV_CMD}"
             echo ""
             echo "Package versions:"
             echo "-----------------"
@@ -2021,6 +2039,7 @@ main() {
     log "Auto mode:    $AUTO_MODE"
     log "Start phase:  $START_PHASE"
     log "zppy env:     $ZPPY_ENV_DESC"
+    log "Unified cmd:   $UNIFIED_ENV_CMD"
 
     case "$START_PHASE" in
         1)
