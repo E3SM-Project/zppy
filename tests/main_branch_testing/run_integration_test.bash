@@ -413,8 +413,7 @@ fi
 BUNDLES_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_bundles_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
 V2_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_comprehensive_v2_output/${UNIQUE_ID}/v2.LR.historical_0201/post/scripts"
 V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_comprehensive_v3_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
-LEGACY_310_V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_legacy_3.1.0_comprehensive_v3_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
-LEGACY_300_V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_legacy_3.0.0_comprehensive_v3_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
+LEGACY_320_V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_legacy_3.2.0_comprehensive_v3_output/${UNIQUE_ID}/v3.LR.historical_0051/post/scripts"
 
 # Where cached env_description.txt snippets (one per task) are staged before
 # being copied out to each cfg's "_www" output tree. See capture_env_description
@@ -1603,8 +1602,7 @@ phase_3_validation() {
 
     check_status_files "$V2_OUTPUT"                 "v2"                   "weekly_comprehensive_v2"              || all_good=false
     check_status_files "$V3_OUTPUT"                 "v3"                   "weekly_comprehensive_v3"              || all_good=false
-    check_status_files "$LEGACY_310_V3_OUTPUT"      "Legacy 3.1.0 v3"      "weekly_legacy_3.1.0_comprehensive_v3" || all_good=false
-    check_status_files "$LEGACY_300_V3_OUTPUT"      "Legacy 3.0.0 v3"      "weekly_legacy_3.0.0_comprehensive_v3" || all_good=false
+    check_status_files "$LEGACY_320_V3_OUTPUT"      "Legacy 3.2.0 v3"      "weekly_legacy_3.2.0_comprehensive_v3" || all_good=false
     check_status_files "$BUNDLES_OUTPUT"            "Bundles"              "weekly_bundles"                       || all_good=false
 
     local overall_ok=true

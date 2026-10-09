@@ -77,10 +77,10 @@ def prepare_test_configs(
             )
         )
 
-    # Legacy 3.1.0 comprehensive tests
-    print("Preparing legacy 3.1.0 cfg tests")
+    # Legacy 3.2.0 comprehensive tests
+    print("Preparing legacy 3.2.0 cfg tests")
 
-    if "weekly_legacy_3.1.0_comprehensive_v3" in expansions["cfgs_to_run"]:
+    if "weekly_legacy_3.2.0_comprehensive_v3" in expansions["cfgs_to_run"]:
         available_tasks = [
             "e3sm_diags",
             "mpas_analysis",
@@ -91,23 +91,7 @@ def prepare_test_configs(
         tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
         test_configs.append(
             (
-                "legacy_3.1.0_comprehensive_v3",
-                V3_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
-
-    # Legacy 3.0.0 comprehensive tests
-    print("Preparing legacy 3.0.0 cfg tests")
-
-    if "weekly_legacy_3.0.0_comprehensive_v3" in expansions["cfgs_to_run"]:
-        available_tasks = ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "legacy_3.0.0_comprehensive_v3",
+                "legacy_3.2.0_comprehensive_v3",
                 V3_CASE_NAME,
                 expansions,
                 diff_dir_suffix,
