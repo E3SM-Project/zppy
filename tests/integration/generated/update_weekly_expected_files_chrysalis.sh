@@ -17,6 +17,19 @@ tests=("comprehensive_v2" "comprehensive_v3" "bundles" "legacy_3.1.0_comprehensi
 # Update legacy 3.0.0 only
 #tests=("legacy_3.0.0_comprehensive_v2" "legacy_3.0.0_comprehensive_v3" "legacy_3.0.0_bundles")
 
+# ------------------------------------------------------------------------------
+# Restrict updates to specific diagnostic subdirectories, e.g. e3sm_diags,
+# mpas_analysis, global_time_series, ilamb, livvkit, pcmdi_diags.
+# Leave empty (tasks=()) to update every task subdirectory (old/full behavior).
+# Example -- only refresh e3sm_diags:
+# tasks=("e3sm_diags")
+# This applies uniformly across every entry in `tests` above.
+# "bundle_files" (the bundle*.bash files, only relevant when "bundles" is in
+# `tests`) is treated as its own selectable name -- include it in `tasks` if you
+# want it refreshed during a partial update; it's always refreshed on a full one.
+tasks=()
+# ------------------------------------------------------------------------------
+
 for test_name in "${tests[@]}"
 do
     # Example for Chrysalis:
@@ -31,32 +44,59 @@ do
     #
     # Each of those subdirectories has a corresponding image list of the form:
     # `image_list_<subdir_name>.txt`
+    #
+    # Each of those subdirectories in turn contains task subdirectories,
+    # e.g.: e3sm_diags, global_time_series, ilamb, livvkit, mpas_analysis, pcmdi_diags
 
-    # Remove old expected files.
-    rm -rf /lcrc/group/e3sm/public_html/zppy_test_resources/expected_${test_name}
+    expected_dir=/lcrc/group/e3sm/public_html/zppy_test_resources/expected_${test_name}
 
-    # Your output will now become the new expectation.
-    # Copy output so you don't have to rerun zppy to generate the output.
     if [[ "${test_name,,}" =~ "v2" ]]; then
       # We need the v2 case name
-      cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_weekly_${test_name}_www/unique_id/v2.LR.historical_0201 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_${test_name}
+      output_case_dir=/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_weekly_${test_name}_www/unique_id/v2.LR.historical_0201
     else
       # We need the v3 case name
-      cp -r /lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_weekly_${test_name}_www/unique_id/v3.LR.historical_0051 /lcrc/group/e3sm/public_html/zppy_test_resources/expected_${test_name}
+      output_case_dir=/lcrc/group/e3sm/public_html/diagnostic_output/ac.forsyth2/zppy_weekly_${test_name}_www/unique_id/v3.LR.historical_0051
+    fi
+
+    if [[ ${#tasks[@]} -eq 0 ]]; then
+      # Full update: remove old expected files, copy the entire output over.
+      rm -rf ${expected_dir}
+      # Your output will now become the new expectation.
+      # Copy output so you don't have to rerun zppy to generate the output.
+      cp -r ${output_case_dir} ${expected_dir}
+    else
+      # Partial update: only refresh the named task subdirectories, leaving the
+      # rest of expected_${test_name} untouched.
+      mkdir -p ${expected_dir}
+      for task_name in "${tasks[@]}"
+      do
+        if [[ "${task_name}" == "bundle_files" ]]; then
+          continue # handled below, alongside the "bundles" test_name check
+        fi
+        if [[ -d ${output_case_dir}/${task_name} ]]; then
+          rm -rf ${expected_dir}/${task_name}
+          cp -r ${output_case_dir}/${task_name} ${expected_dir}/${task_name}
+        else
+          echo "WARNING: ${output_case_dir}/${task_name} does not exist -- skipping (test_name=${test_name})."
+        fi
+      done
     fi
 
     # test_bundles.py also needs the bash files transferred.
     # Note that for legacy cfgs, we're only testing test_images.py
     if [[ "${test_name,,}" == "bundles" ]]; then
-      mkdir -p /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
-      cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_bundles_output/unique_id/v3.LR.historical_0051/post/scripts/bundle*.bash /lcrc/group/e3sm/public_html/zppy_test_resources/expected_bundles/bundle_files
+      if [[ ${#tasks[@]} -eq 0 ]] || [[ " ${tasks[*]} " =~ " bundle_files " ]]; then
+        mkdir -p ${expected_dir}/bundle_files
+        cp -r /lcrc/group/e3sm/ac.forsyth2/zppy_weekly_bundles_output/unique_id/v3.LR.historical_0051/post/scripts/bundle*.bash ${expected_dir}/bundle_files
+      fi
     fi
 
     zppy_top_level=$(pwd)
-    cd /lcrc/group/e3sm/public_html/zppy_test_resources/expected_${test_name}
+    cd ${expected_dir}
     # Remove the image check failures, so they don't end up in the expected files.
     rm -rf image_check_failures_${test_name}
-    # This file will list all the expected images.
+    # This file will list all the expected images -- a mix of freshly-updated
+    # and previously-existing task subdirectories, if `tasks` restricted scope.
     find . -type f -name '*.png' > ../image_list_expected_${test_name}.txt
     cd ${zppy_top_level}
 done
