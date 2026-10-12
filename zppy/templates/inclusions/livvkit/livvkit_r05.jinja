@@ -377,7 +377,6 @@ common_snow_storage_vars: &common_snow_storage_vars
     units: "mm"
     ac_axis: 0
     cmin: 0.0
-    cmax: 25000
     cmap: YlGnBu
     cmin_d: -8000
     cmax_d: 8000
@@ -388,7 +387,6 @@ common_snow_storage_vars: &common_snow_storage_vars
     units: "mm"
     ac_axis: 0
     cmin: 0.0
-    cmax: 25000
     cmap: YlGnBu
     cmin_d: -8000
     cmax_d: 8000
@@ -428,25 +426,21 @@ common_river_vars: &common_river_vars
   - title: "Total discharge to ocean: ice"
     model: TOTAL_DISCHARGE_TO_OCEAN_ICE
     sign: 1
-    scales: {model: 1}
-    units: "m^3 s^-1"
+    scales: {model: 365 * 24 * 3600}
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    units: "mm w.e. yr^-1"
     ac_axis: 0
     cmin: 0.0
-    # cmax: 5000
     cmap: YlGnBu
-    # cmin_d: -8000
-    # cmax_d: 8000
   - title: "Total discharge to ocean: liquid"
     model: TOTAL_DISCHARGE_TO_OCEAN_LIQ
     sign: 1
-    scales: {model: 1}
-    units: "m^3 s^-1"
+    scales: {model: 365 * 24 * 3600}
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    units: "mm w.e. yr^-1"
     ac_axis: 0
     cmin: 0.0
-    # cmax: 5000
     cmap: YlGnBu
-    # cmin_d: -8000
-    # cmax_d: 8000
 
 common_racmo_energy_vars: &common_racmo_energy_vars
   - title: Surface temperature
