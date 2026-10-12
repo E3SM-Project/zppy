@@ -46,6 +46,13 @@ common_snow: &common_snow
     References:
       - {{ livvproj_dir }}/livvkit.bib
 
+common_river: &common_river
+    cmap: YlGnBu
+    cmap_diff: BrBG
+    units: m^3 s^-1
+    References:
+      - {{ livvproj_dir }}/livvkit.bib
+
 common_energy: &common_energy
   desc: Surface energy balance component {component}{comment} from {data_var_names}
   references:
@@ -63,7 +70,17 @@ common_elm: &common_elm
   ts_file_patterns:
     model: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
   masks:
-    model: /global/cfs/cdirs/e3sm/diagnostics/livvkit_data/grids/msk_{icesheet}_rcm_r05.nc
+    model: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
+
+common_mosart: &common_mosart
+  climo_river: {{ dir_river }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
+  dataset_names: { model: MOSART }
+  timeseries_dirs:
+    model: "{{ dir_ts_river }}"
+  ts_file_patterns:
+    model: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+  masks:
+    model: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
 
 common_racmo: &common_racmo
   clim_years:
@@ -155,8 +172,8 @@ common_modis: &common_modis
   in_dirs: {dset_a: /global/cfs/cdirs/e3sm/zender/mod10cm/rgr/}
   file_patterns: {dset_a: 'mod10cm_{season}_{sea_s}_{sea_e}_climo.nc'}
   masks:
-    dset_a: /global/cfs/cdirs/e3sm/diagnostics/livvkit_data/grids/msk_{icesheet}_rcm_r05.nc
-    model: /global/cfs/cdirs/e3sm/diagnostics/livvkit_data/grids/msk_{icesheet}_rcm_r05.nc
+    dset_a: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
+    model: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
 
 common_racmo_gis: &common_racmo_gis
   climo_remap: {{ dir_racmo_gis }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
@@ -406,6 +423,30 @@ common_snow_cover_vars: &common_snow_cover_vars
     cmin: 0
     cmax: 100
     cmap: YlGnBu
+
+common_river_vars: &common_river_vars
+  - title: "Total discharge to ocean: ice"
+    model: TOTAL_DISCHARGE_TO_OCEAN_ICE
+    sign: 1
+    scales: {model: 1}
+    units: "m^3 s^-1"
+    ac_axis: 0
+    cmin: 0.0
+    # cmax: 5000
+    cmap: YlGnBu
+    # cmin_d: -8000
+    # cmax_d: 8000
+  - title: "Total discharge to ocean: liquid"
+    model: TOTAL_DISCHARGE_TO_OCEAN_LIQ
+    sign: 1
+    scales: {model: 1}
+    units: "m^3 s^-1"
+    ac_axis: 0
+    cmin: 0.0
+    # cmax: 5000
+    cmap: YlGnBu
+    # cmin_d: -8000
+    # cmax_d: 8000
 
 common_racmo_energy_vars: &common_racmo_energy_vars
   - title: Surface temperature
@@ -771,7 +812,21 @@ Snow_Cover_GIS:
   primary_var: FSNO
   desc: "{component} snow cover from {data_var_names}"
   references:
-    - /global/cfs/cdirs/e3sm/diagnostics/livvkit_data/livvkit.bib
+    - {{ livvproj_dir }}/livvkit.bib
+{% endif %}
+
+{% if river %}
+River_Discharge_GIS:
+  module: /global/homes/m/mek/livvext/livvext/river/river.py
+  data_vars: *common_river_vars
+  icesheet: gis
+  <<: [*common, *common_river, *common_mosart]
+  scales:
+    { model: 1,}
+  primary_var: TOTAL_DISCHARGE_TO_OCEAN_LIQ
+  desc: "{component} river discharge from {data_var_names}"
+  references:
+    - {{ livvproj_dir }}/livvkit.bib
 {% endif %}
 
 {% if energy_racmo %}
@@ -856,7 +911,21 @@ Snow_Cover_AIS:
   desc: "{component} snow storage from {data_var_names}"
   icesheet: ais
   references:
-    - /global/cfs/cdirs/e3sm/diagnostics/livvkit_data/livvkit.bib
+    - {{ livvproj_dir }}/livvkit.bib
+{% endif %}
+
+{% if river %}
+River_Discharge_AIS:
+  module: /global/homes/m/mek/livvext/livvext/river/river.py
+  data_vars: *common_river_vars
+  icesheet: ais
+  <<: [*common, *common_mosart, *common_river,]
+  scales:
+    { model: 1,}
+  primary_var: TOTAL_DISCHARGE_TO_OCEAN_LIQ
+  desc: "{component} river discharge from {data_var_names}"
+  references:
+    - {{ livvproj_dir }}/livvkit.bib
 {% endif %}
 
 {% if energy_racmo %}
