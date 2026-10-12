@@ -1,4 +1,6 @@
-from typing import List, Tuple
+import os
+import re
+from typing import Dict, List, Tuple
 from unittest.mock import patch
 
 import pytest
@@ -14,8 +16,80 @@ from zppy.pcmdi_diags import (
     define_relevant_years,
     define_relevant_years_for_synthetic_plots,
     define_year_sets,
+    pcmdi_diags,
+    resolve_obs_sets,
 )
 from zppy.utils import ParameterNotProvidedError
+
+
+def test_pcmdi_diags_processes_enso_tasks() -> None:
+    task = {
+        "current_set": "enso",
+        "enso_obs_sets": "default",
+        "infer_path_parameters": False,
+        "subsection": "enso",
+    }
+
+    with (
+        patch("zppy.pcmdi_diags.initialize_template", return_value=(None, None)),
+        patch("zppy.pcmdi_diags.get_tasks", return_value=[task]),
+        patch("zppy.pcmdi_diags.get_value_from_parameter", return_value="enso"),
+        patch("zppy.pcmdi_diags.check_parameters_for_bash") as check_bash,
+        patch("zppy.pcmdi_diags.check_parameters_for_pcmdi"),
+        patch("zppy.pcmdi_diags.define_year_sets", return_value=[]),
+    ):
+        existing_bundles = pcmdi_diags(None, "/scripts", set(), None)
+
+    check_bash.assert_called_once_with(task)
+    assert existing_bundles == set()
+
+
+@pytest.mark.parametrize(
+    ("current_set", "parameter"),
+    [
+        ("mean_climate", "clim_obs_sets"),
+        ("variability_modes_atm", "mova_obs_sets"),
+        ("variability_modes_cpl", "movc_obs_sets"),
+        ("enso", "enso_obs_sets"),
+    ],
+)
+def test_resolve_obs_sets_uses_diagnostic_default(
+    current_set: str, parameter: str
+) -> None:
+    task = {
+        "current_set": current_set,
+        parameter: "diagnostic-default",
+    }
+
+    resolve_obs_sets(task)
+
+    assert task["obs_sets"] == "diagnostic-default"
+
+
+def test_resolve_obs_sets_rejects_removed_parameter() -> None:
+    task = {
+        "current_set": "enso",
+        "enso_obs_sets": "diagnostic-default",
+        "obs_sets": "legacy-override",
+    }
+
+    with pytest.raises(ValueError, match="use enso_obs_sets instead"):
+        resolve_obs_sets(task)
+
+
+def test_resolve_obs_sets_ignores_synthetic_plots() -> None:
+    task = {"current_set": "synthetic_plots"}
+
+    resolve_obs_sets(task)
+
+    assert "obs_sets" not in task
+
+
+def test_resolve_obs_sets_requires_diagnostic_default() -> None:
+    task = {"current_set": "enso", "enso_obs_sets": ""}
+
+    with pytest.raises(ParameterNotProvidedError, match="enso_obs_sets"):
+        resolve_obs_sets(task)
 
 
 def test_define_current_set():
@@ -243,6 +317,25 @@ def test_check_parameters_for_pcmdi():
     }
     check_parameters_for_pcmdi(c)
     assert c["cmip_enso_dir"] == "placeholder_dir"
+
+    # Test enso_viewer=True (should infer cmip_enso_dir)
+    c = {
+        "current_set": "synthetic_plots",
+        "figure_sets": ["enso_metric"],
+        "cmip_enso_dir": "",
+        "cmip_clim_dir": "",
+        "cmip_movs_dir": "",
+        "enso_viewer": True,
+        "clim_viewer": False,
+        "mova_viewer": False,
+        "movc_viewer": False,
+        "diagnostics_base_path": "diags/post",
+        "infer_path_parameters": True,
+    }
+    check_parameters_for_pcmdi(c)
+    assert c["cmip_enso_dir"] == "diags/post/pcmdi_data/metrics_data/enso_metric"
+    assert c["cmip_clim_dir"] == "placeholder_dir"
+    assert c["cmip_movs_dir"] == "placeholder_dir"
 
     # Test when parameters are already defined
     c = {
@@ -619,6 +712,25 @@ def test_add_pcmdi_dependencies(mock_exists):
     ]
     assert dependencies == expected_dependencies
 
+    # Test enso_viewer=True (should add the enso status file dependency)
+    dependencies = []
+    c = {
+        "run_type": "model_vs_obs",
+        "year1": 2000,
+        "year2": 2010,
+        "figure_sets": ["enso_metric"],
+        "clim_viewer": False,
+        "mova_viewer": False,
+        "movc_viewer": False,
+        "enso_viewer": True,
+    }
+
+    add_pcmdi_dependencies(c, dependencies, script_dir)
+    expected_dependencies = [
+        "/scripts/pcmdi_diags_enso_model_vs_obs_2000-2010.status",
+    ]
+    assert dependencies == expected_dependencies
+
     # Test with non-existing status files
     dependencies = []
     c = {
@@ -665,4 +777,76 @@ def test_add_pcmdi_dependencies(mock_exists):
     assert (
         dependencies[0]
         == "/scripts/pcmdi_diags_mean_climate_model_vs_obs_2000-2010.status"
+    )
+
+
+def test_create_links_acyc_climo_obs_date_parsing() -> None:
+    pattern = re.compile(
+        r"^(.+)\.([0-9]{4})([0-9]{2}){1,2}[-_]([0-9]{4})([0-9]{2}){1,2}\.nc$"
+    )
+
+    filenames = [
+        "obs.historical.GPCP_v2_3.00.Amon.pr.197901-201712.nc",
+        "obs.historical.ERA5.00.Amon.psl.197901-201912.nc",
+        "obs.historical.NOAA-20C.00.Amon.sfcWind.183601-201512.nc",
+        "obs.historical.ceres_ebaf_v4_1.00.Amon.rlus.200101-201812.nc",
+    ]
+
+    begin_year = 1985
+    end_year = 1994
+
+    results: Dict[str, str] = {}
+    for fname in filenames:
+        match = pattern.match(fname)
+        assert match is not None
+        substr = match.group(1)
+        yyyys = int(match.group(2))
+        yyyye = int(match.group(4))
+
+        if yyyys > end_year or yyyye < begin_year:
+            # Fall back to available range if no overlap
+            pass
+        else:
+            if yyyys < begin_year:
+                yyyys = begin_year
+            if yyyye > end_year:
+                yyyye = end_year
+
+        ttag = f"{yyyys:04d}01-{yyyye:04d}12"
+        results[fname] = f"{substr}.{ttag}.AC.vTEST.nc"
+
+    assert results["obs.historical.GPCP_v2_3.00.Amon.pr.197901-201712.nc"] == (
+        "obs.historical.GPCP_v2_3.00.Amon.pr.198501-199412.AC.vTEST.nc"
+    )
+    assert results["obs.historical.ERA5.00.Amon.psl.197901-201912.nc"] == (
+        "obs.historical.ERA5.00.Amon.psl.198501-199412.AC.vTEST.nc"
+    )
+    assert results["obs.historical.NOAA-20C.00.Amon.sfcWind.183601-201512.nc"] == (
+        "obs.historical.NOAA-20C.00.Amon.sfcWind.198501-199412.AC.vTEST.nc"
+    )
+    # CERES 2001-2018 does not overlap 1985-1994, so it falls back to its available range 200101-201812
+    assert results["obs.historical.ceres_ebaf_v4_1.00.Amon.rlus.200101-201812.nc"] == (
+        "obs.historical.ceres_ebaf_v4_1.00.Amon.rlus.200101-201812.AC.vTEST.nc"
+    )
+
+
+def test_pcmdi_diags_bash_template_contains_overlap_check() -> None:
+    template_path = os.path.join(
+        os.path.dirname(__file__), "..", "zppy", "templates", "pcmdi_diags.bash"
+    )
+    with open(template_path, "r") as f:
+        content = f.read()
+
+    assert (
+        "create_links_acyc_climo_obs: ${fname} (years ${YYYYS}-${YYYYE}) does not overlap"
+        in content
+    )
+    assert (
+        "create_links_ts_obs: ${fname} (years ${YYYYS}-${YYYYE}) does not overlap"
+        in content
+    )
+    assert 'YYYYS="${BASH_REMATCH[2]}"    # start year (4 digits)' in content
+    assert (
+        "Warning: No input files found for variable ${v} in ${ts_dir_source}. Skipping."
+        in content
     )

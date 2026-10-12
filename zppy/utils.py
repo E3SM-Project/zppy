@@ -164,6 +164,16 @@ def get_tasks(config: ConfigObj, section_name: str) -> List[Dict[str, Any]]:
             if (isinstance(c[key], str)) and ("$USER" in c[key]):
                 c[key] = c[key].replace("$USER", username)
 
+    # `mail_type`/`mail_user` are only declared in `[default]` of the configspec.
+    # When they are set on a task section instead, configobj never validates
+    # them, so an unquoted `mail_type = BEGIN,END,FAIL` arrives here as a list
+    # and would be rendered into the SLURM header as `['BEGIN', 'END', 'FAIL']`.
+    # Join such values back together so both forms produce a valid header.
+    for c in tasks:
+        for key in ["mail_type", "mail_user"]:
+            if (key in c) and isinstance(c[key], list):
+                c[key] = ",".join(c[key])
+
     return tasks
 
 

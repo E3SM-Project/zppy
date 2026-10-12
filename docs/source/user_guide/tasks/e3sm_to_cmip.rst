@@ -46,8 +46,10 @@ These 6 parameters are specific to the ``e3sm_to_cmip`` task.
    * - ``vrt_in_file``
      - No
      - ``""``
-     - Source vertical coordinate file for ``ncremap``. Required for
-       EAMxx (L128 grid).
+     - Source vertical coordinate file for ``ncremap``. Needed for EAMxx. When
+       left empty, ``zppy`` derives it at run time from the time series files,
+       which must then retain ``hyai,hyam,hybi,hybm`` via the ``[ts]``
+       ``extra_vars``.
 
 Parameters at the top-level
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

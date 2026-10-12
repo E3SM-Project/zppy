@@ -175,31 +175,55 @@ create_links_acyc_climo() {
     done
     shopt -u nullglob
 
-    # Derive monthly climatology files
-    for month in $(seq 1 12); do
-      local MM
-      MM=$(printf "%02d" "${month}")
-      run_nco ncra -O -h -F -d time,"${month}",,12 $(< "${v}_files.txt") "${v}_clm_${MM}.nc"
-    done
+    if [[ -s "${v}_files.txt" ]]; then
+      local ncra_failed=0
+      # Derive monthly climatology files
+      for month in $(seq 1 12); do
+        local MM
+        MM=$(printf "%02d" "${month}")
+        run_nco ncra -O -h -F -d time,"${month}",,12 $(< "${v}_files.txt") "${v}_clm_${MM}.nc"
+        if [[ $? -ne 0 ]]; then
+          ncra_failed=1
+          break
+        fi
+      done
 
-    # Combine to form full annual cycle file
-    local combined_name="${name_key}.${v}.${begin_year}01-${end_year}12.AC.${case_id}.nc"
-    run_nco ncrcat -O -d time,0, "${v}_clm_"*.nc "${combined_name}"
+      if [[ ${ncra_failed} -ne 0 ]]; then
+        rm -f "${v}_clm_"*.nc "${v}_files.txt"
+        cd "${script_dir}" || exit
+        echo "ERROR (${error_num})" > "${prefix}.status"
+        exit "${error_num}"
+      fi
 
-    # Adjust time metadata for PCMDI diagnostics
-    local cmdfix1='time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5}'
-    local cmdfix2='time_bnds[time,bnds]={0,31,31,59,59,90,90,120,120,151,151,181,181,212,212,243,243,273,273,304,304,334,334,365.}'
-    local cmdfix3='time@units="days since 1850-01-01 00:00:00"'
-    local cmdfix4='time@calendar="noleap"'
-    local cmdfix5='time@bounds="time_bnds"'
-    run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
+      # Combine to form full annual cycle file
+      local combined_name="${name_key}.${v}.${begin_year}01-${end_year}12.AC.${case_id}.nc"
+      run_nco ncrcat -O -d time,0, "${v}_clm_"*.nc "${combined_name}"
+      if [[ $? -ne 0 ]]; then
+        rm -f "${v}_clm_"*.nc "${v}_files.txt"
+        cd "${script_dir}" || exit
+        echo "ERROR (${error_num})" > "${prefix}.status"
+        exit "${error_num}"
+      fi
 
-    rm -vf "${v}_clm_"*.nc
+      # Adjust time metadata for PCMDI diagnostics
+      local cmdfix1='time[time]={15.5, 45, 74.5, 105, 125.5, 166, 196.5, 227.5, 258, 288.5,319, 349.5}'
+      local cmdfix2='time_bnds[time,bnds]={0,31,31,59,59,90,90,120,120,151,151,181,181,212,212,243,243,273,273,304,304,334,334,365.}'
+      local cmdfix3='time@units="days since 1850-01-01 00:00:00"'
+      local cmdfix4='time@calendar="noleap"'
+      local cmdfix5='time@bounds="time_bnds"'
+      run_nco ncap2 -O -h -s "${cmdfix1};${cmdfix2};${cmdfix3};${cmdfix4};${cmdfix5}" "${combined_name}" "${combined_name}"
+      if [[ $? -ne 0 ]]; then
+        rm -f "${v}_clm_"*.nc "${v}_files.txt"
+        cd "${script_dir}" || exit
+        echo "ERROR (${error_num})" > "${prefix}.status"
+        exit "${error_num}"
+      fi
 
-    if [[ $? -ne 0 ]]; then
-      cd "${script_dir}" || exit
-      echo "ERROR (${error_num})" > "${prefix}.status"
-      exit "${error_num}"
+      rm -vf "${v}_clm_"*.nc
+      rm -f "${v}_files.txt"
+    else
+      echo "Warning: No input files found for variable ${v} in ${ts_dir_source}. Skipping."
+      rm -f "${v}_files.txt"
     fi
   done
 
@@ -239,21 +263,28 @@ create_links_acyc_climo_obs() {
       continue
     fi
 
-    # Match two date patterns (YYYYMM or YYYYMMDD) separated by _ or -
-    if [[ ${fname} =~ ([0-9]{6,8})[_-]([0-9]{6,8}) ]]; then
-      YYYYS="${BASH_REMATCH[1]}"
-      YYYYE="${BASH_REMATCH[2]}"
+    # Match two time patterns (YYYYMM or YYYYMMDD) separated by _ or -
+    if [[ $fname =~ ^(.+)\.([0-9]{4})([0-9]{2}){1,2}[-_]([0-9]{4})([0-9]{2}){1,2}\.nc$ ]]; then
+      SUBSTR="${BASH_REMATCH[1]}"   # everything before the .YYYY...
+      YYYYS="${BASH_REMATCH[2]}"    # start year (4 digits)
+      YYYYE="${BASH_REMATCH[4]}"    # end year (4 digits)
     else
       echo "Warning: Could not extract dates from ${fname}, basename of ${file}"
       continue
     fi
 
-    # Clip to specified year range
-    if [[ ${YYYYS} -lt ${begin_year} ]]; then YYYYS=${begin_year}; fi
-    if [[ ${YYYYE} -gt ${end_year} ]]; then YYYYE=${end_year}; fi
-
-    # Extract prefix before the date range (removes from .${YYYYS} or -${YYYYS})
-    SUBSTR="${fname%%[._-]${YYYYS}*}"
+    # Check if observation record overlaps the requested period
+    if [[ ${YYYYS} -gt ${end_year} || ${YYYYE} -lt ${begin_year} ]]; then
+      echo "create_links_acyc_climo_obs: ${fname} (years ${YYYYS}-${YYYYE}) does not overlap requested range ${begin_year}-${end_year}; using available range ${YYYYS}-${YYYYE}."
+    else
+      # Clip to specified year range
+      if [[ ${YYYYS} -lt ${begin_year} ]]; then
+        YYYYS="${begin_year}"
+      fi
+      if [[ ${YYYYE} -gt ${end_year} ]]; then
+        YYYYE="${end_year}"
+      fi
+    fi
 
     ttag="$(printf "%04d" "${YYYYS}")01-$(printf "%04d" "${YYYYE}")12"
     tmp_file="tmp_combine_${ttag}.nc"
@@ -425,6 +456,12 @@ create_links_ts_obs() {
     else
 
       echo "Warning: Could not extract dates from ${fname}, basename of ${file}"
+      continue
+    fi
+
+    # Check if observation record overlaps the requested period
+    if [[ ${YYYYS} -gt ${end_year} || ${YYYYE} -lt ${begin_year} ]]; then
+      echo "create_links_ts_obs: ${fname} (years ${YYYYS}-${YYYYE}) does not overlap requested range ${begin_year}-${end_year}, skipping."
       continue
     fi
 

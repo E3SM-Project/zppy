@@ -19,7 +19,13 @@ def _default_ini_path() -> Path:
     return Path(__file__).resolve().parents[2] / "zppy" / "defaults" / "default.ini"
 
 
-def _write_cfg(tmp_path: Path, *, www: str, simboard_enabled: bool) -> Path:
+def _write_cfg(
+    tmp_path: Path,
+    *,
+    www: str,
+    simboard_enabled: bool,
+    simulation_type: str = "production",
+) -> Path:
     config_path = tmp_path / "simboard_settings.cfg"
     config_path.write_text(
         "\n".join(
@@ -34,7 +40,7 @@ def _write_cfg(tmp_path: Path, *, www: str, simboard_enabled: bool) -> Path:
                 "",
                 "[simboard]",
                 f"enabled = {'True' if simboard_enabled else 'False'}",
-                "simulation_type = production",
+                f"simulation_type = {simulation_type}",
                 "",
             ]
         )
@@ -61,6 +67,7 @@ def _fake_machine_info(
 
     machine_info = MagicMock()
     machine_info.machine = "pm-cpu"
+    machine_info.username = "test_user"
     machine_info.config = machine_config
     machine_info.get_account_defaults.return_value = ("e3sm", "regular", "cpu", None)
     return machine_info
@@ -106,6 +113,33 @@ def test_simboard_enabled_infers_www_from_machine_info(tmp_path: Path) -> None:
     default_settings = _read_default_settings(settings_path)
 
     assert default_settings["www"] == expected_www
+
+
+def test_simboard_development_www_includes_username(tmp_path: Path) -> None:
+    config_path = _write_cfg(
+        tmp_path, www="", simboard_enabled=True, simulation_type="development"
+    )
+    config = _validated_config(config_path)
+    expected_www = f"{_WEB_PORTAL_BASE_PATH}/diagnostics_archive/development/test_user/"
+
+    updated_config = _determine_parameters(_fake_machine_info(), config)
+    settings_path = _write_default_settings(tmp_path, updated_config)
+    default_settings = _read_default_settings(settings_path)
+
+    assert default_settings["www"] == expected_www
+
+
+def test_simboard_production_www_omits_username(tmp_path: Path) -> None:
+    config_path = _write_cfg(
+        tmp_path, www="", simboard_enabled=True, simulation_type="production"
+    )
+    config = _validated_config(config_path)
+
+    updated_config = _determine_parameters(_fake_machine_info(), config)
+    settings_path = _write_default_settings(tmp_path, updated_config)
+    default_settings = _read_default_settings(settings_path)
+
+    assert "test_user" not in default_settings["www"]
 
 
 def test_simboard_enabled_preserves_explicit_www(tmp_path: Path) -> None:

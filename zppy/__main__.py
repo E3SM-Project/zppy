@@ -25,6 +25,7 @@ from zppy.mpas_analysis import mpas_analysis
 from zppy.pcmdi_diags import pcmdi_diags
 from zppy.provenance import (
     build_provenance_extras,
+    copy_config_for_provenance,
     parse_env_case_xml,
     resolve_case_group,
     write_provenance_settings,
@@ -34,6 +35,7 @@ from zppy.simboard import (
     simboard,
     simboard_enabled,
     validate_simboard_config,
+    validate_www_access,
 )
 from zppy.tc_analysis import tc_analysis
 from zppy.ts import ts
@@ -94,17 +96,18 @@ def main():
     except OSError as exc:
         if exc.errno != errno.EEXIST:
             raise OSError("Cannot create script directory")
-    shutil.copy(args.config, provenance)
+    copy_config_for_provenance(args.config, provenance)
     write_provenance_settings(provenance_settings, provenance_extras)
     # Web output directory
     # A dry run must not touch `www`. It is a shared, published location --
     # with `[simboard] enabled = True` it is inferred to the machine-wide
     # diagnostics_archive -- so creating directories and copying provenance
     # there would publish artifacts for a run that never happens.
+    www = config["default"]["www"]
+    username = os.environ.get("USER")
+    www = www.replace("$USER", username)
+    validate_www_access(config, www, config["default"]["case"])
     if not config["default"]["dry_run"]:
-        www = config["default"]["www"]
-        username = os.environ.get("USER")
-        www = www.replace("$USER", username)
         www_case_dir = os.path.join(www, config["default"]["case"])
         www_provenance = os.path.join(www_case_dir, f"provenance.{ts_utc}.cfg")
         www_provenance_settings = os.path.join(
@@ -114,8 +117,10 @@ def main():
             os.makedirs(www_case_dir)
         except OSError as exc:
             if exc.errno != errno.EEXIST:
-                raise OSError("Cannot create www case directory")
-        shutil.copy(args.config, www_provenance)
+                raise OSError(
+                    f"Cannot create www case directory {www_case_dir}"
+                ) from exc
+        copy_config_for_provenance(args.config, www_provenance)
         if os.path.isfile(provenance_settings):
             shutil.copy(provenance_settings, www_provenance_settings)
     if args.last_year:

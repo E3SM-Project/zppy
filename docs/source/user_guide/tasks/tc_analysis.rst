@@ -11,6 +11,15 @@ Both EAM and EAMxx output are supported. EAMxx requires the ``input_grid``
 parameter to be set because its output sets ``topography_file="NONE"``,
 preventing automatic grid inference.
 
+The input should be instantaneous output whose time steps include 00:00,
+06:00, 12:00, and 18:00 UTC, such as 6-, 3-, or 1-hourly output. Only those
+time steps are used (TempestExtremes ``--timefilter "6hr"``), because the
+tracking criteria count time steps and the observations used by
+``e3sm_diags`` are 6-hourly. Other time steps are skipped, so, for example,
+4-hourly output is reduced to 00:00 and 12:00 UTC. The task fails with
+``ERROR (19)`` if no time step is at one of those hours, e.g. 3-hourly output
+at 01:00, 04:00, 07:00, and so on.
+
 Configuration example
 ---------------------
 
@@ -50,9 +59,10 @@ These 3 parameters are specific to the ``tc_analysis`` task:
      - No
      - ``""``
      - Native model grid of the input files, e.g. ``ne30pg2``, ``ne120pg2``,
-       ``ne30np4``. When set, the resolution and pg2 flag are derived from
-       this value automatically. Required for EAMxx. Accepted formats:
-       ``neXpg2`` or ``neXnp4`` (e.g. ``ne30pg2``, ``ne120np4``).
+       ``ne256pg2``, ``ne30np4``. When set, the resolution and pg2 flag are
+       derived from this value automatically. Required for EAMxx. Accepted
+       formats: ``neXpg2`` or ``neXnp4`` (e.g. ``ne30pg2``, ``ne120np4``).
+       Supported resolutions are ne30, ne120, and ne256.
    * - ``res``
      - No
      - ``""``
