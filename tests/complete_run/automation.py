@@ -600,6 +600,13 @@ def _record_baseline(run: _Run) -> RunLayout | None:
                     requested=run.args.baseline_overrides,
                 )
             except FileNotFoundError as error:
+                requested = run.args.baseline_overrides
+                if f"{cfg}:{task}" in requested or task in requested:
+                    raise StageError(
+                        "prepare_failed",
+                        f"Could not resolve the requested baseline for "
+                        f"{cfg}/{task}: {error}",
+                    ) from error
                 logger.info("No baseline for %s/%s: %s", cfg, task, error)
                 continue
             manifest = read_json_object(selected.manifest)

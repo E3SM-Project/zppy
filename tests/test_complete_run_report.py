@@ -241,6 +241,30 @@ def test_markdown_names_the_baseline_and_when_it_was_produced(paths) -> None:
     assert "* Baseline: `20260701_run1` (produced 2026-07-01)" in markdown
 
 
+def test_markdown_lists_mixed_baselines_by_cfg_and_task(paths) -> None:
+    status = _passing_status()
+    status["baseline_by_cfg_task"] = {
+        "weekly_comprehensive_v3:climo": {
+            "tag": "20260701_run1",
+            "generated": "2026-07-01T08:00:00+00:00",
+            "repos": {"zppy": {"sha": "a" * 40}},
+        },
+        "weekly_comprehensive_v3:e3sm_diags": {
+            "tag": "20260708_run1",
+            "generated": "2026-07-08T08:00:00+00:00",
+            "repos": {"e3sm_diags": {"sha": "b" * 40}},
+        },
+    }
+
+    markdown = report_module.render_markdown(report_module.render_report(status, paths))
+
+    assert "* Baseline: mixed per cfg/task (2 runs; see selections below)" in markdown
+    assert "| `weekly_comprehensive_v3` | `climo` | `20260701_run1` | 2026-07-01 |" in markdown
+    assert "| `weekly_comprehensive_v3` | `e3sm_diags` | `20260708_run1` | 2026-07-08 |" in markdown
+    assert "`zppy` aaaaaaaaaaaa" in markdown
+    assert "`e3sm_diags` bbbbbbbbbbbb" in markdown
+
+
 def test_markdown_says_when_there_is_no_baseline(paths) -> None:
     markdown = report_module.render_markdown(
         report_module.render_report(_passing_status(), paths)

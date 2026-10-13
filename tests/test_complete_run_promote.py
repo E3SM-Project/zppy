@@ -203,15 +203,31 @@ def test_partial_promotion_adds_an_override_without_moving_default(tmp_path) -> 
     _make_run(tmp_path, "20260908_run1", status="jobs_failed")
     promote.promote(str(tmp_path), "20260901_run1")
 
-    promote.promote(
-        str(tmp_path), "20260908_run1", tasks=("climo",)
-    )
+    promote.promote(str(tmp_path), "20260908_run1", tasks=("climo",))
 
     assert promote.show(str(tmp_path))["tag"] == "20260901_run1"
     assert baseline_run_for(
         str(tmp_path), "weekly_comprehensive_v3", "climo"
     ).root.endswith("20260908_run1")
     assert "20260908_run1" in promote.promoted_tags(str(tmp_path))
+    assert os.path.isfile(tmp_path / "baselines" / "main.overrides.json")
+
+
+def test_partial_promotion_can_roll_back_an_entry_to_the_default(tmp_path) -> None:
+    _make_run(tmp_path, "20260901_run1")
+    _make_run(tmp_path, "20260908_run1")
+    promote.promote(str(tmp_path), "20260901_run1")
+    promote.promote(str(tmp_path), "20260908_run1", tasks=("climo",))
+
+    promote.promote(str(tmp_path), "20260901_run1", tasks=("climo",))
+
+    assert baseline_run_for(
+        str(tmp_path), "weekly_comprehensive_v3", "climo"
+    ).root.endswith("20260901_run1")
+    assert promote.promoted_tags(str(tmp_path)) == ["20260901_run1"]
+    assert json.loads(
+        (tmp_path / "baselines" / "main.overrides.json").read_text()
+    ) == {}
 
 
 def test_partial_promotion_checks_only_the_selected_entry(tmp_path) -> None:

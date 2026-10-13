@@ -278,8 +278,8 @@ def promoted_tags(root: str) -> List[str]:
         link: str = os.path.join(baselines, name)
         if os.path.islink(link):
             tags.append(os.path.basename(os.path.realpath(link)))
-        elif name.startswith("latest-") and name.endswith(".overrides.json"):
-            channel = name[len("latest-") : -len(".overrides.json")]
+        elif name.endswith(".overrides.json"):
+            channel = name[: -len(".overrides.json")]
             tags.extend(baseline_overrides(root, channel).values())
 
     return sorted(set(tags))

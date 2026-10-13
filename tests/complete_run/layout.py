@@ -127,7 +127,7 @@ def baseline_link(root: str, channel: str = DEFAULT_CHANNEL) -> str:
 
 def baseline_overrides_path(root: str, channel: str = DEFAULT_CHANNEL) -> str:
     """Return the per-cfg/task override file for a baseline channel."""
-    return os.path.join(baselines_root(root), f"latest-{channel}.overrides.json")
+    return os.path.join(baselines_root(root), f"{channel}.overrides.json")
 
 
 def baseline_overrides(root: str, channel: str = DEFAULT_CHANNEL) -> Dict[str, str]:

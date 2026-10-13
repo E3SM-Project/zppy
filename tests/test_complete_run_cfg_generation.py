@@ -138,6 +138,41 @@ def test_cfg_generation_resolves_a_cfg_task_baseline_override(
     ]["tag"] == "cfg"
 
 
+def test_cfg_generation_rejects_a_missing_explicit_baseline(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    from tests.integration import utils
+
+    class Config:
+        def get(self, section: str, key: str) -> str:
+            return {
+                ("web_portal", "username"): "tester",
+                ("web_portal", "base_path"): "/www",
+                ("diagnostics", "base_path"): "/diagnostics",
+            }[(section, key)]
+
+    class Machine:
+        config = Config()
+        machine = "chrysalis"
+
+    root = tmp_path / "shared"
+    root.mkdir()
+    monkeypatch.setattr(utils, "MachineInfo", Machine)
+    monkeypatch.setattr(utils, "_load_run_settings", lambda: {})
+    specifics = build_specifics(
+        cfgs_to_run=["weekly_comprehensive_v3"],
+        tasks_to_run=["pcmdi_diags"],
+        baseline_overrides={"pcmdi_diags": "missing-run"},
+    )
+
+    with pytest.raises(FileNotFoundError, match="missing-run"):
+        utils.get_expansions(
+            specifics=specifics,
+            run_dir=str(root / "runs" / "current"),
+            output_dir="/scratch/output",
+        )
+
+
 def test_unknown_task_is_rejected() -> None:
     with pytest.raises(ValueError, match="Unknown task"):
         build_specifics(env_commands={"not_a_task": "source conda.sh"})

@@ -135,6 +135,13 @@ def test_non_plotting_task_gets_package_row_and_not_applicable_images(tmp_path) 
                 "e3sm_to_cmip": "2 failed jobs",
             }
         },
+        baselines_by_cfg_task={
+            "weekly_comprehensive_v3:climo": {
+                "tag": "20260901_run1",
+                "generated": "2026-09-01T12:00:00+00:00",
+                "repos": {"zppy": {"sha": "c" * 40}},
+            }
+        },
     )
 
     summary = (tmp_path / "index.html").read_text()
@@ -144,6 +151,7 @@ def test_non_plotting_task_gets_package_row_and_not_applicable_images(tmp_path) 
     assert "main @ bbbbbbbb" in summary
     assert "OK" in summary
     assert "2 failed jobs" in summary
+    assert "20260901_run1 (2026-09-01); zppy@cccccccc" in summary
     assert summary.count(">n/a</td>") == 8
     assert "Image check not applicable: no plotting tasks selected." in summary
     assert paths[-1] == str(tmp_path / "index.html")

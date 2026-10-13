@@ -396,6 +396,8 @@ def _apply_run_locations(
                         run_root, cfg, task, requested=requested
                     )
                 except FileNotFoundError:
+                    if f"{cfg}:{task}" in requested or task in requested:
+                        raise
                     continue
                 by_cfg_task[f"{cfg}:{task}"] = {
                     "tag": os.path.basename(selected.root),

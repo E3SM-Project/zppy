@@ -172,5 +172,5 @@ def test_baseline_overrides_are_atomically_written(tmp_path) -> None:
     )
 
     assert layout.baseline_overrides(root) == {"weekly_bundles:pcmdi_diags": "tag"}
-    assert os.listdir(tmp_path / "baselines") == ["latest-main.overrides.json"]
-    assert path.endswith("latest-main.overrides.json")
+    assert os.listdir(tmp_path / "baselines") == ["main.overrides.json"]
+    assert path.endswith("main.overrides.json")
