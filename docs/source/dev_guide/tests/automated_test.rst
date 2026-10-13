@@ -75,6 +75,7 @@ directory under a shared, group-writable root that the web portal serves:
         image_check/               diffs and their viewers
       baselines/
         latest-main -> ../runs/<tag>
+        main.overrides.json       optional cfg/task -> run-tag mappings
 
 Any maintainer can read, compare against, or promote any run. Nothing encodes
 whose account produced it.
@@ -129,10 +130,9 @@ Step 1: Determine what the current baseline is
 
     python -m tests.complete_run.promote --machine chrysalis show
 
-That prints the run ``latest-main`` points at, the machine it ran on, when it
-was produced, and the commit each repository was at. Because the baseline is a
-run rather than a copy of one, this is exact -- there is no promotion date to
-confuse with a production date.
+That prints the channel's default run, any cfg/task overrides, and each run's
+repository SHAs, commit dates, and ages. Because baselines point to immutable
+runs rather than copies, the recorded production and commit dates remain exact.
 
 For a per-task view, read the ``Generated:`` line of the baseline's environment
 descriptions:
@@ -401,11 +401,12 @@ Both reports land in the run directory under the shared root:
         artifacts/                 Copied out of the worktree.
         image_checker_<tag>.o<id>  Image checker output.
 
-The Markdown report opens with the overall status and the baseline it was
-compared against (with the date that baseline was produced), then covers what was tested
-(each repository's commit and environment), the job status-file sweep, the
-integration test results, and the image checker's severity breakdown. Paste it
-into the `weekly testing log <https://github.com/E3SM-Project/zppy/discussions/845>`_.
+The Markdown report opens with the overall status and the baseline selected for
+each cfg/task, including its production date and repository commits. It then
+covers what was tested (each repository's commit and environment), the job
+status-file sweep, the integration test results, and the image checker's
+severity breakdown. Paste it into the `weekly testing log
+<https://github.com/E3SM-Project/zppy/discussions/845>`_.
 
 The severity table separates images that need review from ones that do not.
 ``IDENTICAL`` and ``NEGLIGIBLE`` do not fail the test; ``MINOR`` through
@@ -415,9 +416,10 @@ Reviewing image differences
 ---------------------------
 
 Start from the run's summary page, ``runs/<tag>/index.html``. It has two
-tables. **By package** gives each package (``e3sm_diags``, ``MPAS-Analysis``,
-``zppy-interfaces``, ``ILAMB``, ``LIVVkit``), the commit or environment it was
-tested at, its worst result, and how many checks and images need review.
+tables. **By package** gives each package whose task ran, including ``zppy``
+and ``e3sm_to_cmip``, the commit or environment it was tested at, its result,
+and how many checks and images need review. Non-plotting tasks show ``n/a`` for
+image counts and report their SLURM status.
 **By check** has one row per cfg and task with the full severity breakdown and
 a link to that task's page. A task that should have been image-checked but
 recorded no comparison is listed as *not checked*, rather than being left out.
@@ -569,12 +571,45 @@ Release snapshots are another channel rather than another copy:
     python -m tests.complete_run.promote --machine chrysalis run 20260918_run1 \
         --channel unified_1.13.0
 
+Partial updates
+---------------
+
+Repeat ``--cfg`` and ``--task`` to promote only selected entries. The command
+atomically records overrides from each cfg/task pair to the selected run while
+leaving the default and other entries unchanged:
+
+.. code-block:: bash
+
+    python -m tests.complete_run.promote --machine chrysalis run 20260918_run1 \
+        --cfg weekly_comprehensive_v3 --task pcmdi_diags
+
+Partial promotion checks only the selected entries. A passing task can be
+promoted even when another task in that run failed; ``--allow-failed`` and
+``--allow-non-main`` remain available after review. Promote the older run with
+the same selectors to roll back. Promoting without selectors moves the channel
+default and clears its overrides. No files are copied into a baseline.
+
 Comparing against a specific baseline
 -------------------------------------
 
 ``--baseline-dir`` on cfg generation, or ``ZPPY_COMPLETE_RUN_BASELINE`` when
 running the image checker directly, compares against a run other than
 ``latest-main``.
+
+Automation accepts repeatable task-wide or cfg/task-specific ``--baseline``
+selections. An exact cfg/task selection takes precedence over a task-wide
+selection; otherwise the channel's resolved default or override is used:
+
+.. code-block:: bash
+
+    python -m tests.complete_run.automation --machine chrysalis \
+        --baseline pcmdi_diags=20260911_run1 \
+        --baseline weekly_comprehensive_v3:pcmdi_diags=20260918_run1
+
+For ``--env-type <repo>=baseline``, all selected tasks using that repository's
+environment must resolve to the same run; different selected runs cause a
+clear error. ``prune`` protects runs referenced by any channel default or
+override, and ``--older-than DAYS`` further limits pruning to old candidates.
 
 Deleting old runs
 -----------------

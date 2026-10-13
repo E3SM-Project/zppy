@@ -251,6 +251,25 @@ def test_a_unified_baseline_is_compared_through_its_package_list(tmp_path) -> No
     assert "env_descriptions/e3sm_diags.txt" in diff.detail
 
 
+def test_unified_fallback_keeps_the_cfg_task_metadata(tmp_path) -> None:
+    candidate = run_layout(str(tmp_path), "candidate")
+    baseline = run_layout(str(tmp_path), "baseline")
+    _write(candidate, "zppy_interfaces", EXPORT)
+    _write_description(baseline, "global_time_series", UNIFIED_DESCRIPTION)
+
+    diff = envdiff.compare_run_environments(
+        candidate,
+        baseline,
+        ["zppy_interfaces"],
+        cfg="weekly_comprehensive_v3",
+        task="pcmdi_diags",
+    )[0]
+
+    assert diff.cfg == "weekly_comprehensive_v3"
+    assert diff.task == "pcmdi_diags"
+    assert "env_descriptions/global_time_series.txt" in diff.detail
+
+
 def test_a_pip_installed_package_matches_its_conda_counterpart(tmp_path) -> None:
     # The dev environment pip-installs the package under test; E3SM-Unified has
     # it from conda-forge. Same package, same version: not a change.

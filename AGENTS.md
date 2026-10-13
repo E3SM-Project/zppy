@@ -200,10 +200,12 @@ Key properties to keep in mind when changing this code:
   directory, so any maintainer can inspect and promote any run. The cfg
   templates no longer encode whose account is running.
 - **A run is its own baseline material.** Expected results are not a copy of a
-  run; `baselines/latest-main` is a symlink pointing at one. Promotion
-  (`python -m tests.complete_run.promote`) flips that link, so it is atomic,
-  instant, and does not destroy the previous baseline. Code that copies a run
-  over a baseline directory is a regression.
+  run; `baselines/latest-main` is the channel's default run and optional
+  `baselines/main.overrides.json` maps cfg/task entries to other run tags.
+  Promotion (`python -m tests.complete_run.promote`) changes the default link
+  or writes per-entry overrides atomically; it never copies or destroys run
+  material. A whole-run promotion clears that channel's overrides. Pruning must
+  protect every run referenced by any channel default or override.
 - **A complete run never promotes on its own.** Promotion is always a separate,
   explicit command, and it refuses a run that did not pass or came from a
   feature branch unless overridden.

@@ -255,6 +255,37 @@ def test_partial_promotion_checks_only_the_selected_entry(tmp_path) -> None:
         promote.promote(str(tmp_path), "20260908_run1", tasks=("e3sm_to_cmip",))
 
 
+def test_partial_promotion_does_not_require_images_for_unchecked_plot_tasks(
+    tmp_path,
+) -> None:
+    layout = _make_run(tmp_path, "20260908_run1")
+    manifest = json.loads(open(layout.manifest).read())
+    manifest["cfgs"] = ["weekly_legacy_3.0.0_comprehensive_v3"]
+    manifest["tasks"] = ["global_time_series"]
+    with open(layout.manifest, "w") as stream:
+        json.dump(manifest, stream)
+    with open(layout.status, "w") as stream:
+        json.dump(
+            {
+                "task_status_by_cfg": {
+                    "weekly_legacy_3.0.0_comprehensive_v3": {
+                        "global_time_series": "OK"
+                    }
+                }
+            },
+            stream,
+        )
+
+    promote.promote(
+        str(tmp_path),
+        "20260908_run1",
+        cfgs=("weekly_legacy_3.0.0_comprehensive_v3",),
+        tasks=("global_time_series",),
+    )
+
+    assert "20260908_run1" in promote.promoted_tags(str(tmp_path))
+
+
 def test_prune_protects_runs_referenced_only_by_overrides(tmp_path) -> None:
     _make_run(tmp_path, "20260901_run1")
     _make_run(tmp_path, "20260908_run1")

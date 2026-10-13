@@ -38,7 +38,12 @@ from tests.complete_run.params import repo_for_task
 from tests.complete_run.validate import _latest_diff_subdirs, load_scores
 from tests.complete_run.validate import reviewable_count
 from tests.complete_run.viewer import count_severities
-from tests.integration.weekly_cfgs import PLOTTING_TASKS, TASK_NAMES, task_sections_for_cfg
+from tests.integration.weekly_cfgs import (
+    PLOTTING_TASKS,
+    TASK_NAMES,
+    WEEKLY_CFGS_BY_NAME,
+    task_sections_for_cfg,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -179,7 +184,11 @@ def _check_selected_entries(
                 f"Refusing to promote {cfg}/{task}: job status is {result!r}."
             )
 
-        if task in PLOTTING_TASKS:
+        image_checked: bool = (
+            cfg in WEEKLY_CFGS_BY_NAME
+            and task in WEEKLY_CFGS_BY_NAME[cfg].image_tasks
+        )
+        if task in PLOTTING_TASKS and image_checked:
             scores = _latest_diff_subdirs(layout, cfg).get(task)
             entries_for_task = load_scores(scores) if scores else None
             if entries_for_task is None and not allow_failed:

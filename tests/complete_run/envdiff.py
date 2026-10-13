@@ -255,7 +255,7 @@ def compare_run_environments(
                 baseline, repo
             )
             if fallback is not None:
-                task, baseline_packages = fallback
+                fallback_task, baseline_packages = fallback
                 # conda list has no build strings, so compare versions only.
                 candidate_packages: Dict[str, str] = {
                     name: version.split("=")[0]
@@ -281,7 +281,7 @@ def compare_run_environments(
                         task=task,
                         detail=(
                             f"The baseline ran {repo} from E3SM-Unified, compared"
-                            f" by version against env_descriptions/{task}.txt."
+                            f" by version against env_descriptions/{fallback_task}.txt."
                             " Only packages in this run's environment are listed;"
                             f" {unified_only} more in E3SM-Unified are not."
                         ),
