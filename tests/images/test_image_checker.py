@@ -4,7 +4,7 @@ from typing import Any, List
 from tests.cfg_suite import viewer
 from tests.integration import image_checker
 from tests.integration.image_checker import Results, _compare_actual_and_expected
-from tests.integration.image_severity import MISSING, MINOR, Comparison
+from tests.integration.image_severity import MINOR, MISSING, Comparison
 
 
 # Run this test with:
@@ -79,11 +79,7 @@ def test_markdown_and_html_attention_counts_match(
 ) -> None:
     class Config:
         def get(self, section: str, key: str) -> str:
-            return (
-                "/unrelated"
-                if key == "base_path"
-                else "https://example.invalid"
-            )
+            return "/unrelated" if key == "base_path" else "https://example.invalid"
 
     class FakeMachineInfo:
         config = Config()
@@ -103,9 +99,7 @@ def test_markdown_and_html_attention_counts_match(
     )
     summary_path = tmp_path / "summary.md"
 
-    image_checker.construct_markdown_summary_table(
-        {"cfg": result}, str(summary_path)
-    )
+    image_checker.construct_markdown_summary_table({"cfg": result}, str(summary_path))
     markdown = summary_path.read_text()
     markdown_row = next(
         line for line in markdown.splitlines() if line.startswith("| cfg |")

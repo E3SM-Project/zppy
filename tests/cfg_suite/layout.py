@@ -60,9 +60,7 @@ SHARED_ROOT_ENV_VAR: str = "ZPPY_CFG_SUITE_ROOT"
 # Group-writable and served by each machine's web portal, so reports and image
 # diffs have a URL without being copied anywhere.
 DEFAULT_SHARED_ROOTS: Dict[str, Optional[str]] = {
-    "chrysalis": os.path.join(
-        "/lcrc/group/e3sm/public_html", SUITE_ROOT_DIRNAME
-    ),
+    "chrysalis": os.path.join("/lcrc/group/e3sm/public_html", SUITE_ROOT_DIRNAME),
     "pm-cpu": os.path.join("/global/cfs/cdirs/e3sm/www", SUITE_ROOT_DIRNAME),
     "perlmutter": os.path.join("/global/cfs/cdirs/e3sm/www", SUITE_ROOT_DIRNAME),
     # Compy does not grant write access to /compyfs/www, so it has no shared
@@ -134,9 +132,7 @@ def baseline_overrides_path(root: str, channel: str = DEFAULT_CHANNEL) -> str:
 
 def baseline_overrides(root: str, channel: str = DEFAULT_CHANNEL) -> Dict[str, str]:
     """Read a channel's task overrides, ignoring malformed entries."""
-    recorded: Dict[str, Any] = read_json_object(
-        baseline_overrides_path(root, channel)
-    )
+    recorded: Dict[str, Any] = read_json_object(baseline_overrides_path(root, channel))
     return {
         str(key): str(tag)
         for key, tag in recorded.items()

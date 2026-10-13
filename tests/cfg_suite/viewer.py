@@ -485,9 +485,7 @@ def render_summary(
         " See also <a href='cfg-suite-report.md'>the run report</a>.</div>",
         "</header>",
         _render_environment(environment_diffs or [], environment_note),
-        _render_changes_since_baseline(
-            changes_since_baseline or [], changes_note
-        ),
+        _render_changes_since_baseline(changes_since_baseline or [], changes_note),
         "<h2>By package</h2>",
         _render_package_table(rows),
         "<h2>By check</h2>",
@@ -535,16 +533,16 @@ def _render_package_table(rows: Sequence[SummaryRow]) -> str:
             f"{html.escape(package)}</a></b></td>"
             f"<td>{html.escape(', '.join(tested_at)) or '—'}</td>"
             f"<td>{html.escape(', '.join(sorted({row.task for row in group})))}</td>"
-            f"<td>{result}</td>"
-            + image_cells
-            + "</tr>"
+            f"<td>{result}</td>" + image_cells + "</tr>"
         )
 
     return (
         "<div class='table-wrap'><table class='summary'><thead><tr>"
         "<th>Package</th><th>Tested at</th><th>Tasks</th><th>Result</th>"
         "<th class='num'>Checks needing review</th><th class='num'>Checks</th>"
-        + "".join(f"<th class='num'>{html.escape(name)}</th>" for name in IMAGE_REVIEW_COLUMNS)
+        + "".join(
+            f"<th class='num'>{html.escape(name)}</th>" for name in IMAGE_REVIEW_COLUMNS
+        )
         + "<th class='num'>Images</th>"
         + "</tr></thead><tbody>"
         + "".join(body)
@@ -558,7 +556,9 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
     severities: List[str] = list(reversed(REVIEWABLE_SEVERITIES))
     header: str = (
         "<tr><th>Package</th><th>Task</th><th>Cfg</th><th>Baseline</th><th>Result</th>"
-        + "".join(f"<th class='num'>{html.escape(name)}</th>" for name in IMAGE_REVIEW_COLUMNS)
+        + "".join(
+            f"<th class='num'>{html.escape(name)}</th>" for name in IMAGE_REVIEW_COLUMNS
+        )
         + "".join(f"<th class='num'>{html.escape(s)}</th>" for s in severities)
         + "<th class='num'>Cosmetic</th><th class='num'>Total</th></tr>"
     )
@@ -582,9 +582,11 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
         )
         cells: str = (
             "".join(
-                _num(row.counts.get(s, 0))
-                if row.checked
-                else "<td class='num zero'>—</td>"
+                (
+                    _num(row.counts.get(s, 0))
+                    if row.checked
+                    else "<td class='num zero'>—</td>"
+                )
                 for s in severities
             )
             if row.image_applicable
@@ -648,8 +650,7 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
     return (
         "<div class='table-wrap'><table class='summary'>"
         f"<thead>{header}</thead><tbody>{''.join(body)}</tbody>"
-        f"<tfoot>{footer}</tfoot></table></div>"
-        + _image_review_legend()
+        f"<tfoot>{footer}</tfoot></table></div>" + _image_review_legend()
     )
 
 
@@ -710,6 +711,7 @@ def _task_result_badge(statuses: Sequence[str]) -> str:
         return "<span class='result result-clean'>OK</span>"
     return "<span class='result result-unchecked'>not run</span>"
 
+
 def _num(value: int) -> str:
     css: str = "num zero" if value == 0 else "num"
     return f"<td class='{css}'>{value}</td>"
@@ -743,9 +745,7 @@ def write_summary(
     return path
 
 
-def _render_changes_since_baseline(
-    changes: Sequence[Dict[str, Any]], note: str
-) -> str:
+def _render_changes_since_baseline(changes: Sequence[Dict[str, Any]], note: str) -> str:
     """Render commit and Unified package changes on the run index page."""
     if not changes:
         return ""
@@ -763,13 +763,9 @@ def _render_changes_since_baseline(
         label = f"{repo} ({task_label})" if task_label else repo
         baseline_tag = html.escape(str(baseline.get("tag") or "unknown"))
         baseline_date = html.escape(str(baseline.get("generated") or "unknown")[:10])
-        baseline_commit = html.escape(
-            str(baseline.get("commit") or "date-based")[:12]
-        )
+        baseline_commit = html.escape(str(baseline.get("commit") or "date-based")[:12])
         branch = html.escape(str(tested.get("branch") or "unknown"))
-        tested_commit = html.escape(
-            str(tested.get("commit") or "E3SM-Unified")[:12]
-        )
+        tested_commit = html.escape(str(tested.get("commit") or "E3SM-Unified")[:12])
         body.append(
             f"<h3>{html.escape(label)}</h3><p>Baseline: {baseline_tag} "
             f"(produced {baseline_date}; {baseline_commit}); tested: {branch} "
@@ -793,9 +789,7 @@ def _render_changes_since_baseline(
                 subject = html.escape(str(commit.get("subject") or ""))
                 url = str(commit.get("url") or "")
                 if url:
-                    subject = (
-                        f"<a href='{html.escape(url, quote=True)}'>{subject}</a>"
-                    )
+                    subject = f"<a href='{html.escape(url, quote=True)}'>{subject}</a>"
                 body.append(
                     f"<li><code>{html.escape(str(commit.get('sha') or '')[:12])}</code> "
                     f"({html.escape(str(commit.get('date') or 'date unknown'))}): "

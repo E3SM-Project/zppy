@@ -32,8 +32,9 @@ from datetime import datetime
 from typing import Callable, Dict, List, Sequence, Set, Tuple
 
 from tests.cfg_suite import changes as changes_module
+from tests.cfg_suite import envdiff
 from tests.cfg_suite import environments as environments_module
-from tests.cfg_suite import envdiff, provenance
+from tests.cfg_suite import provenance
 from tests.cfg_suite import report as report_module
 from tests.cfg_suite import validate
 from tests.cfg_suite.commands import CommandError, run_command, run_command_status
@@ -70,15 +71,16 @@ from tests.cfg_suite.params import (
     ZPPY_INTERFACES_UNIT_TESTS,
     ZPPY_TASK_UNIT_TESTS,
     ZPPY_UNIT_TESTS,
-    integration_test_files_for_tasks,
     MachineProfile,
     RepoSpec,
     generated_cfg_path,
+    integration_test_files_for_tasks,
     is_bundles_cfg,
     repo_for_task,
     resolve_machine,
 )
 from tests.cfg_suite.slurm import queued_job_ids, wait_for_user_jobs
+from tests.cfg_suite.worktrees import Checkout, create_checkout, remove_checkouts
 from tests.integration.weekly_cfgs import (
     PLOTTING_TASKS,
     TASK_NAMES,
@@ -86,7 +88,6 @@ from tests.integration.weekly_cfgs import (
     task_for_status_file,
     task_sections_for_cfg,
 )
-from tests.cfg_suite.worktrees import Checkout, create_checkout, remove_checkouts
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -118,6 +119,7 @@ _FAILURE_FOR_STAGE: Dict[str, str] = {
     "bundles": "submission_failed",
     "validate": "validation_failed",
 }
+
 
 class StageError(RuntimeError):
     """A stage failed in a way that ends the run."""
@@ -226,17 +228,13 @@ def _start_run(args: argparse.Namespace) -> _Run:
     load_script_was_requested: bool = bool(args.unified_load_script)
     machine: MachineProfile = resolve_machine(args.machine)
     if args.unified_load_script:
-        load_script: str = os.path.abspath(
-            os.path.expanduser(args.unified_load_script)
-        )
+        load_script: str = os.path.abspath(os.path.expanduser(args.unified_load_script))
         if not os.path.isfile(load_script):
             raise ValueError(
                 f"Unified load script does not exist: {args.unified_load_script}"
             )
         args.unified_load_script = load_script
-        machine = replace(
-            machine, unified_env_cmd=f"source {shlex.quote(load_script)}"
-        )
+        machine = replace(machine, unified_env_cmd=f"source {shlex.quote(load_script)}")
     else:
         args.unified_load_script = _unified_load_script(machine)
     for attribute in ("repo_root", "shared_root", "scratch_root", "conda_profile"):
@@ -266,9 +264,7 @@ def _start_run(args: argparse.Namespace) -> _Run:
                 f"--tag {tag!r} is only for resuming an existing run with status.json"
             )
     elif os.path.exists(layout.root):
-        raise ValueError(
-            f"Run {tag!r} already exists; use --tag {tag} to resume it."
-        )
+        raise ValueError(f"Run {tag!r} already exists; use --tag {tag} to resume it.")
     else:
         os.makedirs(os.path.dirname(layout.root), exist_ok=True)
         try:
@@ -725,7 +721,9 @@ def _run_unit_tests(run: _Run) -> None:
         logger.warning("Skipping unit tests at the caller's request")
         return
 
-    by_name: Dict[str, Checkout] = {checkout.name: checkout for checkout in run.checkouts}
+    by_name: Dict[str, Checkout] = {
+        checkout.name: checkout for checkout in run.checkouts
+    }
     targets_by_repo: Dict[str, Set[str]] = {"zppy": set(ZPPY_UNIT_TESTS)}
     for task in run.tasks:
         targets_by_repo["zppy"].update(ZPPY_TASK_UNIT_TESTS.get(task, ()))
@@ -1291,9 +1289,7 @@ def _write_environment_viewers(
             baseline=summary_baseline,
             task_status_by_cfg=_mapping(run.status.get("task_status_by_cfg")),
             baselines_by_cfg_task=baseline_entries,
-            changes_since_baseline=_sequence(
-                run.status.get("changes_since_baseline")
-            ),
+            changes_since_baseline=_sequence(run.status.get("changes_since_baseline")),
             changes_note=str(run.status.get("changes_since_baseline_note") or ""),
         )
     except OSError as error:
@@ -1583,9 +1579,7 @@ def _effective_configuration(
 ) -> Dict[str, object]:
     """Return the resolved, JSON-safe run configuration."""
     return {
-        key: value
-        for key, value in vars(args).items()
-        if not key.startswith("_")
+        key: value for key, value in vars(args).items() if not key.startswith("_")
     } | {"cfgs": list(cfgs), "tasks": list(tasks)}
 
 
@@ -1598,7 +1592,9 @@ def _build_parser(
         description=__doc__,
     )
     parser.add_argument("--config", default="", help="INI automation configuration.")
-    parser.add_argument("--machine", default=None, help="chrysalis | compy | perlmutter")
+    parser.add_argument(
+        "--machine", default=None, help="chrysalis | compy | perlmutter"
+    )
     parser.add_argument(
         "--account", default="e3sm", help="SLURM account for the image checker."
     )

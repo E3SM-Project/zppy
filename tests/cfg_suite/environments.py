@@ -91,7 +91,7 @@ class Environment:
                 else ""
             )
             command = (
-                f'{self.activation_command} && '
+                f"{self.activation_command} && "
                 f"{source_path}"
                 f"exec {shlex.join(command_args)}"
             )

@@ -132,9 +132,10 @@ def test_cfg_generation_resolves_a_cfg_task_baseline_override(
         output_dir="/scratch/output",
     )
 
-    assert expansions["baseline_by_cfg_task"][
-        "weekly_comprehensive_v3:pcmdi_diags"
-    ]["tag"] == "cfg"
+    assert (
+        expansions["baseline_by_cfg_task"]["weekly_comprehensive_v3:pcmdi_diags"]["tag"]
+        == "cfg"
+    )
 
 
 def test_cfg_generation_preserves_new_cfg_as_not_compared(

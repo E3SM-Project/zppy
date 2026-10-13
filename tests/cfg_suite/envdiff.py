@@ -228,9 +228,7 @@ def diff_environments(baseline_text: str, candidate_text: str) -> List[PackageCh
     )
 
 
-def diff_package_lists(
-    baseline_text: str, candidate_text: str
-) -> List[PackageChange]:
+def diff_package_lists(baseline_text: str, candidate_text: str) -> List[PackageChange]:
     """Return package changes between two ``conda list`` snapshots."""
     return _diff_packages(
         parse_package_list_details(baseline_text),
@@ -260,9 +258,7 @@ def _diff_packages(
     changes.sort(
         key=lambda change: (
             not change.notable,
-            0
-            if change.name.lower() in {"pcmdi_metrics", "pcmdi-metrics"}
-            else 1,
+            0 if change.name.lower() in {"pcmdi_metrics", "pcmdi-metrics"} else 1,
             change.name,
         )
     )

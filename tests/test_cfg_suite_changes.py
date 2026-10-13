@@ -34,9 +34,7 @@ def _new_repo(tmp_path: Path) -> Tuple[Path, Path]:
     return repo, remote
 
 
-def _commit(
-    repo: Path, message: str, date: str, filename: str, content: str
-) -> str:
+def _commit(repo: Path, message: str, date: str, filename: str, content: str) -> str:
     (repo / filename).write_text(content)
     _git(repo, "add", filename)
     env = os.environ.copy()
@@ -97,14 +95,10 @@ def test_non_ancestor_baseline_uses_merge_base(tmp_path: Path) -> None:
     repo, _remote = _new_repo(tmp_path)
     root = _commit(repo, "Root", "2020-01-01T00:00:00Z", "root", "root")
     _git(repo, "checkout", "-b", "baseline")
-    baseline = _commit(
-        repo, "Baseline-only", "2021-01-01T00:00:00Z", "base", "base"
-    )
+    baseline = _commit(repo, "Baseline-only", "2021-01-01T00:00:00Z", "base", "base")
     _git(repo, "push", "upstream", "baseline")
     _git(repo, "checkout", "main")
-    tested = _commit(
-        repo, "Tested change", "2022-01-01T00:00:00Z", "tested", "tested"
-    )
+    tested = _commit(repo, "Tested change", "2022-01-01T00:00:00Z", "tested", "tested")
     _git(repo, "push", "-u", "upstream", "main")
 
     result = changes.collect_changes(
@@ -157,6 +151,4 @@ def test_unified_task_reports_package_version_change(tmp_path: Path) -> None:
     result = changes.collect_changes(status, {}, str(env_dir))[0]
 
     assert result["range_type"] == "package-version"
-    assert result["changes"] == [
-        {"name": "ILAMB", "baseline": "1.2", "tested": "2.0"}
-    ]
+    assert result["changes"] == [{"name": "ILAMB", "baseline": "1.2", "tested": "2.0"}]

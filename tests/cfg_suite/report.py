@@ -45,8 +45,7 @@ def render_report(status: Dict[str, Any], layout: RunLayout) -> Dict[str, Any]:
     pytest_results: List[Dict[str, Any]] = _sequence(status.get("pytest_results"))
     repos: Dict[str, Any] = _mapping(status.get("repos"))
     uses_unified: bool = bool(status.get("unified")) or any(
-        _mapping(entry).get("environment_type") == "unified"
-        for entry in repos.values()
+        _mapping(entry).get("environment_type") == "unified" for entry in repos.values()
     )
 
     severity_counts: "OrderedDict[str, int]" = OrderedDict(
@@ -101,9 +100,7 @@ def render_report(status: Dict[str, Any], layout: RunLayout) -> Dict[str, Any]:
         "environment_note": status.get("environment_note", ""),
         "environment_drift": _mapping(status.get("environment_drift")),
         "changes_since_baseline": list(status.get("changes_since_baseline") or []),
-        "changes_since_baseline_note": status.get(
-            "changes_since_baseline_note", ""
-        ),
+        "changes_since_baseline_note": status.get("changes_since_baseline_note", ""),
         "paths": {
             "results_dir": layout.root,
             "output": status.get("output_dir", ""),
@@ -186,7 +183,9 @@ def _baseline_line(
         if _mapping(entry).get("tag")
     }
     if len(tags) > 1:
-        return f"* Baseline: mixed per cfg/task ({len(tags)} runs; see selections below)"
+        return (
+            f"* Baseline: mixed per cfg/task ({len(tags)} runs; see selections below)"
+        )
     if tags:
         tag = next(iter(tags))
         produced_values = {
@@ -194,7 +193,9 @@ def _baseline_line(
             for entry in (selected or {}).values()
             if str(_mapping(entry).get("tag") or "") == tag
         }
-        produced = next(iter(produced_values)) if len(produced_values) == 1 else "varies"
+        produced = (
+            next(iter(produced_values)) if len(produced_values) == 1 else "varies"
+        )
         return f"* Baseline: `{tag}` (produced {produced})"
     if not baseline.get("tag"):
         return "* Baseline: _none promoted_"
@@ -223,15 +224,16 @@ def _baseline_selection_section(report: Dict[str, Any]) -> List[str]:
             run = "new cfg: no baseline (not compared)"
             produced = "—"
             commits = "—"
-            lines.append(
-                f"| `{cfg}` | `{task}` | {run} | {produced} | {commits} |"
-            )
+            lines.append(f"| `{cfg}` | `{task}` | {run} | {produced} | {commits} |")
             continue
-        commits = ", ".join(
-            f"`{name}` {str(_mapping(repo).get('sha') or 'n/a')[:12]}"
-            for name, repo in sorted(repos.items())
-            if _mapping(repo).get("sha")
-        ) or "—"
+        commits = (
+            ", ".join(
+                f"`{name}` {str(_mapping(repo).get('sha') or 'n/a')[:12]}"
+                for name, repo in sorted(repos.items())
+                if _mapping(repo).get("sha")
+            )
+            or "—"
+        )
         lines.append(
             f"| `{cfg}` | `{task}` | `{entry.get('tag') or 'unknown'}` | "
             f"{str(entry.get('generated') or 'unknown')[:10]} | {commits} |"
@@ -242,9 +244,7 @@ def _baseline_selection_section(report: Dict[str, Any]) -> List[str]:
 
 def _changes_since_baseline_section(report: Dict[str, Any]) -> List[str]:
     """List first-parent commits or Unified package changes since each baseline."""
-    changes: List[Dict[str, Any]] = _sequence(
-        report.get("changes_since_baseline")
-    )
+    changes: List[Dict[str, Any]] = _sequence(report.get("changes_since_baseline"))
     if not changes:
         return []
 
@@ -283,7 +283,9 @@ def _changes_since_baseline_section(report: Dict[str, Any]) -> List[str]:
 
         for change in _sequence(entry.get("commits")):
             subject = str(change.get("subject") or "")
-            subject = subject.replace("|", "\\|").replace("[", "\\[").replace("]", "\\]")
+            subject = (
+                subject.replace("|", "\\|").replace("[", "\\[").replace("]", "\\]")
+            )
             url = str(change.get("url") or "")
             linked = f"[{subject}]({url})" if url else subject
             lines.append(
@@ -296,7 +298,11 @@ def _changes_since_baseline_section(report: Dict[str, Any]) -> List[str]:
                 f"`{change.get('baseline') or 'unknown'}` → "
                 f"`{change.get('tested') or 'unknown'}`"
             )
-        if not entry.get("commits") and not entry.get("changes") and not entry.get("error"):
+        if (
+            not entry.get("commits")
+            and not entry.get("changes")
+            and not entry.get("error")
+        ):
             lines.append("_No changes since the baseline._")
         lines.append("")
     return lines
@@ -333,7 +339,9 @@ def _repos_section(report: Dict[str, Any]) -> List[str]:
             version: str = str(packages.get(package, "")) or "unknown"
             if name == "zppy":
                 runtime: Dict[str, Any] = _mapping(report.get("zppy_runtime"))
-                version = str(packages.get(package) or runtime.get("version") or version)
+                version = str(
+                    packages.get(package) or runtime.get("version") or version
+                )
                 commit: str = str(entry.get("sha", ""))[:12] or "n/a"
                 lines.append(
                     f"| `{name}` | `{entry.get('branch', 'n/a')}` | `{commit}` | "
@@ -355,9 +363,7 @@ def _repos_section(report: Dict[str, Any]) -> List[str]:
     return lines
 
 
-def _environment_heading(
-    diff: Dict[str, Any], drift: Dict[str, Any], note: str
-) -> str:
+def _environment_heading(diff: Dict[str, Any], drift: Dict[str, Any], note: str) -> str:
     """Summarize environment drift and baseline differences."""
     drift_count: int = int(drift.get("change_count", 0) or 0)
     diff_count: int = int(diff.get("change_count", 0) or 0)
@@ -380,9 +386,7 @@ def _environment_heading(
             f"{'s' if drift_count != 1 else ''} changed during this run"
         )
     if unavailable_count:
-        return (
-            f"Environment: WARNING {unavailable_count} environments not compared"
-        )
+        return f"Environment: WARNING {unavailable_count} environments not compared"
     if drift:
         return "Environment: no package changed during this run"
     if diff.get("compared"):
@@ -414,9 +418,7 @@ def _environment_pin_lines(
     """Render environment setup notes and requested/applied dependency pins."""
     lines: List[str] = []
     if load_script:
-        lines.extend(
-            [f"E3SM-Unified load script: `{html.escape(load_script)}`", ""]
-        )
+        lines.extend([f"E3SM-Unified load script: `{html.escape(load_script)}`", ""])
     if pins:
         lines.extend(["Requested dependency pins:", ""])
         lines.extend(f"* `{html.escape(str(spec))}`" for spec in pins)

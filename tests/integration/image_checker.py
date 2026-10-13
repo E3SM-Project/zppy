@@ -142,9 +142,7 @@ def set_up_and_run_image_checker(
                 f"{baseline_www}zppy_{cfg_name}_www/"
                 f"{BASELINE_RUN_SEGMENT}/{case_name}"
             )
-            expected_images_list = (
-                f"{baseline_image_lists}image_list_{cfg_name}.txt"
-            )
+            expected_images_list = f"{baseline_image_lists}image_list_{cfg_name}.txt"
         else:
             # A machine with no promoted baseline yet.
             expected_images_dir = (
@@ -359,7 +357,9 @@ def construct_markdown_summary_table(
                 has_missing: bool = missing > 0
                 if has_missing:
                     if os.path.exists(f"{diff_subdir}/missing_images.txt"):
-                        missing_str = f"{missing} ([list]({web_link}/missing_images.txt))"
+                        missing_str = (
+                            f"{missing} ([list]({web_link}/missing_images.txt))"
+                        )
                     else:
                         missing_str = f"{missing} (no list created)"
                 has_mismatched: bool = needs_review > 0

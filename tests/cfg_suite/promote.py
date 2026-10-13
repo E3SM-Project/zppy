@@ -34,10 +34,9 @@ from tests.cfg_suite.layout import (
     shared_root,
     write_baseline_overrides,
 )
-from tests.cfg_suite.report import JSON_FILENAME, LEGACY_JSON_FILENAME
 from tests.cfg_suite.params import repo_for_task
-from tests.cfg_suite.validate import _latest_diff_subdirs, load_scores
-from tests.cfg_suite.validate import reviewable_count
+from tests.cfg_suite.report import JSON_FILENAME, LEGACY_JSON_FILENAME
+from tests.cfg_suite.validate import _latest_diff_subdirs, load_scores, reviewable_count
 from tests.cfg_suite.viewer import count_severities
 from tests.integration.weekly_cfgs import (
     PLOTTING_TASKS,
@@ -190,16 +189,13 @@ def _check_selected_entries(
             )
 
         image_checked: bool = (
-            cfg in WEEKLY_CFGS_BY_NAME
-            and task in WEEKLY_CFGS_BY_NAME[cfg].image_tasks
+            cfg in WEEKLY_CFGS_BY_NAME and task in WEEKLY_CFGS_BY_NAME[cfg].image_tasks
         )
         if task in PLOTTING_TASKS and image_checked:
             scores = _latest_diff_subdirs(layout, cfg).get(task)
             entries_for_task = load_scores(scores) if scores else None
             baseline_entry = baseline_by_cfg_task.get(f"{cfg}:{task}", {})
-            baseline_entry = (
-                baseline_entry if isinstance(baseline_entry, dict) else {}
-            )
+            baseline_entry = baseline_entry if isinstance(baseline_entry, dict) else {}
             first_comparison = (
                 baseline_entry.get("state") == "not-compared"
                 and baseline_entry.get("reason") == "new cfg"
@@ -221,7 +217,11 @@ def _check_selected_entries(
         repo_entry = repositories.get(spec.name, {}) if spec else {}
         if isinstance(repo_entry, dict):
             branch = str(repo_entry.get("branch") or "")
-            if branch and branch not in ("main", "master", "develop") and not allow_non_main:
+            if (
+                branch
+                and branch not in ("main", "master", "develop")
+                and not allow_non_main
+            ):
                 raise PromotionError(
                     f"Refusing to promote {cfg}/{task} from feature branch "
                     f"{branch!r}; pass --allow-non-main after review."
@@ -249,9 +249,7 @@ def show(root: str, channel: str = DEFAULT_CHANNEL) -> Dict[str, Any]:
         "repos": manifest.get("repos", {}),
         "unified": manifest.get("unified", {}),
         "default_run": described[os.path.basename(default.root)],
-        "overrides": {
-            key: described[tag] for key, tag in sorted(overrides.items())
-        },
+        "overrides": {key: described[tag] for key, tag in sorted(overrides.items())},
         "runs": described,
     }
 
@@ -375,9 +373,11 @@ def _run_timestamp(root: str, tag: str) -> float:
         except ValueError:
             continue
     try:
-        return datetime.strptime(tag[:8], "%Y%m%d").replace(
-            tzinfo=timezone.utc
-        ).timestamp()
+        return (
+            datetime.strptime(tag[:8], "%Y%m%d")
+            .replace(tzinfo=timezone.utc)
+            .timestamp()
+        )
     except ValueError:
         return os.path.getmtime(os.path.join(runs_root(root), tag))
 

@@ -93,9 +93,7 @@ def test_render_appends_pin_and_unified_provenance(checkout: Checkout) -> None:
 
 def test_refresh_changes_only_the_package_listing(tmp_path) -> None:
     path = tmp_path / "env_description.txt"
-    path.write_text(
-        PROMOTED_EXAMPLE + "\nPinned: xarray==2025.1.0\n", encoding="utf-8"
-    )
+    path.write_text(PROMOTED_EXAMPLE + "\nPinned: xarray==2025.1.0\n", encoding="utf-8")
 
     assert provenance.refresh_env_description_packages(
         str(path),
@@ -110,9 +108,7 @@ def test_refresh_changes_only_the_package_listing(tmp_path) -> None:
     assert "Pinned: xarray==2025.1.0" in refreshed
 
 
-def test_package_listing_logs_replacement_characters(
-    monkeypatch, caplog
-) -> None:
+def test_package_listing_logs_replacement_characters(monkeypatch, caplog) -> None:
     monkeypatch.setattr(provenance, "run_command", lambda *args, **kwargs: "name �\n")
     environment = Environment("e3sm_diags", ENV_TYPE_DEV, "env", "activate")
 

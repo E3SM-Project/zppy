@@ -167,9 +167,7 @@ def test_baseline_run_for_prefers_exact_requested_override(tmp_path) -> None:
 
 def test_baseline_overrides_are_atomically_written(tmp_path) -> None:
     root = str(tmp_path)
-    path = layout.write_baseline_overrides(
-        root, {"weekly_bundles:pcmdi_diags": "tag"}
-    )
+    path = layout.write_baseline_overrides(root, {"weekly_bundles:pcmdi_diags": "tag"})
 
     assert layout.baseline_overrides(root) == {"weekly_bundles:pcmdi_diags": "tag"}
     assert os.listdir(tmp_path / "baselines") == ["main.overrides.json"]

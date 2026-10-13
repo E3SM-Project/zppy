@@ -215,9 +215,10 @@ def test_run_args_run_inside_the_environment() -> None:
         'source u.sh && export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}" '
         "&& exec python -m pytest",
     ]
-    assert "from zppy.__main__ import main; main()" in unified.run_args(
-        ["zppy", "-c", "x.cfg"]
-    )[2]
+    assert (
+        "from zppy.__main__ import main; main()"
+        in unified.run_args(["zppy", "-c", "x.cfg"])[2]
+    )
     assert "export PYTHONPATH" not in unified.run_args(["zppy", "-c", "x.cfg"])[2]
 
 

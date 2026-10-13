@@ -114,6 +114,4 @@ def test_config_template_documents_every_required_variable() -> None:
 
 
 def test_controller_is_executable() -> None:
-    assert os.access(
-        os.path.join(CFG_SUITE_DIR, "cfg-suite-controller.sh"), os.X_OK
-    )
+    assert os.access(os.path.join(CFG_SUITE_DIR, "cfg-suite-controller.sh"), os.X_OK)

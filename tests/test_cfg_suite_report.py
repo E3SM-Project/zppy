@@ -15,7 +15,9 @@ from tests.cfg_suite.layout import run_layout
 
 @pytest.fixture
 def paths():
-    return run_layout("/lcrc/group/e3sm/public_html/zppy_complete_run", "20260804_000001")
+    return run_layout(
+        "/lcrc/group/e3sm/public_html/zppy_complete_run", "20260804_000001"
+    )
 
 
 def _passing_status() -> Dict[str, Any]:
@@ -207,10 +209,7 @@ def test_changes_since_baseline_are_in_json_and_markdown(paths) -> None:
     assert report["changes_since_baseline"][0]["count"] == 1
     assert "## Changes since the baseline" in markdown
     assert "Worktree caveat." in markdown
-    assert (
-        "[Fix issue (#42)](https://github.com/E3SM-Project/zppy/pull/42)"
-        in markdown
-    )
+    assert "[Fix issue (#42)](https://github.com/E3SM-Project/zppy/pull/42)" in markdown
 
 
 def test_new_cfg_baseline_is_reported_as_not_compared(paths) -> None:
@@ -243,9 +242,7 @@ def test_environment_section_records_pins_and_unified_script(paths) -> None:
     status["pin_dependencies"] = ["nco<5.4.0", "e3sm_diags:xarray==2025.1.0"]
     status["applied_pins"] = {"e3sm_diags": ["nco<5.4.0"]}
     status["unified_load_script"] = "/opt/e3sm/load-unified.sh"
-    markdown = report_module.render_markdown(
-        report_module.render_report(status, paths)
-    )
+    markdown = report_module.render_markdown(report_module.render_report(status, paths))
     assert "Requested dependency pins:" in markdown
     assert "`nco<5.4.0`" in markdown
     assert "Applied dependency pins:" in markdown
@@ -263,9 +260,7 @@ def test_unified_zppy_report_identifies_the_tested_commit_and_runtime(paths) -> 
         "path": "/opt/unified/lib/python3.13/site-packages/zppy/__init__.py",
         "version": "3.3.0",
     }
-    markdown = report_module.render_markdown(
-        report_module.render_report(status, paths)
-    )
+    markdown = report_module.render_markdown(report_module.render_report(status, paths))
     assert "E3SM-Unified 1.13.0" in markdown
     assert "a" * 12 in markdown
     assert "/opt/unified/lib/python3.13/site-packages/zppy/__init__.py" in markdown
@@ -322,8 +317,14 @@ def test_markdown_lists_mixed_baselines_by_cfg_and_task(paths) -> None:
     markdown = report_module.render_markdown(report_module.render_report(status, paths))
 
     assert "* Baseline: mixed per cfg/task (2 runs; see selections below)" in markdown
-    assert "| `weekly_comprehensive_v3` | `climo` | `20260701_000001` | 2026-07-01 |" in markdown
-    assert "| `weekly_comprehensive_v3` | `e3sm_diags` | `20260708_000001` | 2026-07-08 |" in markdown
+    assert (
+        "| `weekly_comprehensive_v3` | `climo` | `20260701_000001` | 2026-07-01 |"
+        in markdown
+    )
+    assert (
+        "| `weekly_comprehensive_v3` | `e3sm_diags` | `20260708_000001` | 2026-07-08 |"
+        in markdown
+    )
     assert "`zppy` aaaaaaaaaaaa" in markdown
     assert "`e3sm_diags` bbbbbbbbbbbb" in markdown
 
@@ -437,9 +438,7 @@ def test_unavailable_environment_explains_why_in_report(paths) -> None:
         ],
     }
 
-    markdown = report_module.render_markdown(
-        report_module.render_report(status, paths)
-    )
+    markdown = report_module.render_markdown(report_module.render_report(status, paths))
 
     assert "Not compared for:" in markdown
     assert "No environment export or package listing for this run." in markdown

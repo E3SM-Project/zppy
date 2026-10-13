@@ -222,9 +222,7 @@ def export_environment_file(environment: Environment, destination: str) -> str:
             ["conda", "env", "export", "-n", environment.name], check=False
         )
     except CommandError as error:
-        logger.warning(
-            "Could not export environment %s: %s", environment.name, error
-        )
+        logger.warning("Could not export environment %s: %s", environment.name, error)
         exported = ""
     if not exported or "dependencies:" not in exported:
         logger.warning(
@@ -308,9 +306,7 @@ def refresh_env_description_packages(path: str, package_list: str) -> bool:
     start: int = header + 2
     suffix: int = len(lines)
     for index in range(start, len(lines)):
-        if lines[index].startswith(
-            ("E3SM-Unified load script:", "Pinned:")
-        ):
+        if lines[index].startswith(("E3SM-Unified load script:", "Pinned:")):
             suffix = index
             while suffix > start and not lines[suffix - 1].strip():
                 suffix -= 1

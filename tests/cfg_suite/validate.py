@@ -153,12 +153,8 @@ def sweep_status_files(
             tasks_by_cfg.get(cfg, set()) if tasks_by_cfg is not None else None
         )
         if selected_tasks is not None:
-            sweep.job_counts_by_cfg_task[cfg] = {
-                task: 0 for task in selected_tasks
-            }
-            sweep.failed_jobs_by_cfg_task[cfg] = {
-                task: 0 for task in selected_tasks
-            }
+            sweep.job_counts_by_cfg_task[cfg] = {task: 0 for task in selected_tasks}
+            sweep.failed_jobs_by_cfg_task[cfg] = {task: 0 for task in selected_tasks}
         status_dir: str = layout.status_dir(cfg)
         if not os.path.isdir(status_dir):
             if selected_tasks is not None and not selected_tasks:
@@ -596,10 +592,10 @@ def write_viewers(
             diff_subdir: str = diff_subdirs.get(task, "")
             image_applicable: bool = task in PLOTTING_TASKS
             baseline_entry = (baselines_by_cfg_task or {}).get(f"{cfg}:{task}", {})
-            baseline_entry = (
-                baseline_entry if isinstance(baseline_entry, dict) else {}
+            baseline_entry = baseline_entry if isinstance(baseline_entry, dict) else {}
+            scores = (
+                load_scores(diff_subdir) if diff_subdir and image_applicable else None
             )
-            scores = load_scores(diff_subdir) if diff_subdir and image_applicable else None
             viewer_href: str = ""
             if scores is not None:
                 path: str = write_viewer(
@@ -622,7 +618,9 @@ def write_viewers(
                     viewer_href=viewer_href,
                     tested_at=_tested_at(task, repos or {}),
                     image_applicable=image_applicable,
-                    task_status=(task_status_by_cfg or {}).get(cfg, {}).get(task, "not run"),
+                    task_status=(task_status_by_cfg or {})
+                    .get(cfg, {})
+                    .get(task, "not run"),
                     baseline=_baseline_label(baseline_entry),
                     comparison_state=str(baseline_entry.get("state") or ""),
                 )

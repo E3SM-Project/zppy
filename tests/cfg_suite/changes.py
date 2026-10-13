@@ -60,9 +60,10 @@ def collect_changes(
         baseline_tag = str(selected.get("tag") or "unknown")
         generated = str(selected.get("generated") or "")
         if not baseline_sha:
-            generated = _baseline_task_date(
-                str(selected.get("run_dir") or ""), task
-            ) or generated
+            generated = (
+                _baseline_task_date(str(selected.get("run_dir") or ""), task)
+                or generated
+            )
         # zppy-interfaces baselines can intentionally vary by task. Other tasks
         # share one repository section when their baseline revision is the same.
         task_group = task if repo == "zppy_interfaces" else repo
@@ -95,7 +96,9 @@ def collect_changes(
     for group in groups.values():
         changes.append(_collect_repository_log(group))
     changes.extend(unified_changes)
-    changes.sort(key=lambda item: (str(item.get("repo", "")), str(item.get("task", ""))))
+    changes.sort(
+        key=lambda item: (str(item.get("repo", "")), str(item.get("task", "")))
+    )
 
     if _mapping(tested_repos.get("zppy")).get("environment_type") == "unified":
         status["changes_since_baseline_note"] = (
@@ -192,9 +195,7 @@ def _collect_repository_log(group: Dict[str, Any]) -> Dict[str, Any]:
         if log[0] != 0:
             result["error"] = log[2].strip() or "Could not read the default branch log."
             return result
-        result["commits"] = _parse_log(
-            log[1], str(result.get("repository_url") or "")
-        )
+        result["commits"] = _parse_log(log[1], str(result.get("repository_url") or ""))
         result["count"] = len(result["commits"])
         if fetch_warning:
             result["warning"] = fetch_warning
@@ -236,9 +237,12 @@ def _parse_log(output: str, repository_url: str) -> List[Dict[str, str]]:
                 "sha": sha,
                 "date": date,
                 "subject": subject,
-                "commit_url": f"{repository_url}/commit/{sha}" if repository_url else "",
+                "commit_url": (
+                    f"{repository_url}/commit/{sha}" if repository_url else ""
+                ),
                 "pr_url": pr_url,
-                "url": pr_url or (f"{repository_url}/commit/{sha}" if repository_url else ""),
+                "url": pr_url
+                or (f"{repository_url}/commit/{sha}" if repository_url else ""),
             }
         )
     return commits

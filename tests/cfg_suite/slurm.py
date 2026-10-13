@@ -270,10 +270,7 @@ def build_batch_script(
         activation: str = environment.activation_command
         source_path: str = 'export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"\n'
     else:
-        activation = (
-            f"source {conda_profile}\n"
-            f"conda activate {env_name}"
-        )
+        activation = f"source {conda_profile}\n" f"conda activate {env_name}"
         source_path = ""
     return f"""#!/bin/bash
 #SBATCH --job-name={job_name}

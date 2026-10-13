@@ -127,7 +127,7 @@ def test_non_plotting_task_gets_package_row_and_not_applicable_images(tmp_path) 
                 "sha": "a" * 40,
                 "branch": "main",
                 "environment_type": "dev",
-            }
+            },
         },
         task_status_by_cfg={
             "weekly_comprehensive_v3": {

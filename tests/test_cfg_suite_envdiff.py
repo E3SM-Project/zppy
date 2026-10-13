@@ -231,8 +231,7 @@ def test_package_list_is_parsed_below_the_description_header() -> None:
 
 def test_package_list_details_preserve_unicode_build_and_channel() -> None:
     packages = envdiff.parse_package_list_details(
-        "# Name Version Build Channel\n"
-        "métrique 2.0.0 build-é dépôt\n"
+        "# Name Version Build Channel\n" "métrique 2.0.0 build-é dépôt\n"
     )
     assert packages == {"métrique": "2.0.0 build-é dépôt"}
 

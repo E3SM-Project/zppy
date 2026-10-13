@@ -9,11 +9,11 @@ import pytest
 from PIL import Image
 
 from tests.integration.image_severity import (
-    IMAGE_REVIEW_COLUMNS,
     IDENTICAL,
+    IMAGE_REVIEW_COLUMNS,
     MAJOR,
-    MISSING,
     MINOR,
+    MISSING,
     NEGLIGIBLE,
     STRUCTURAL,
     Comparison,

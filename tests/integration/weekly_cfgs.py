@@ -6,9 +6,9 @@ run test, and ``test_images.py`` all read it, so a cfg cannot be submitted but
 never checked, or checked against the wrong case.
 """
 
-from dataclasses import dataclass
 import os
 import re
+from dataclasses import dataclass
 from typing import Dict, List, Sequence, Tuple
 
 V2_CASE_NAME: str = "v2.LR.historical_0201"
@@ -51,7 +51,9 @@ TASK_DEPENDENCIES: Dict[str, Tuple[str, ...]] = {
 }
 
 
-def expand_task_selection(tasks: Sequence[str]) -> Tuple[List[str], Dict[str, List[str]]]:
+def expand_task_selection(
+    tasks: Sequence[str],
+) -> Tuple[List[str], Dict[str, List[str]]]:
     """Return requested tasks and their dependencies in dependency-first order."""
     unknown: List[str] = sorted(set(tasks) - set(TASK_NAMES))
     if unknown:

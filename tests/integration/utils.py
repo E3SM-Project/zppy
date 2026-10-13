@@ -8,11 +8,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from mache import MachineInfo
 
-from tests.integration.weekly_cfgs import (
-    TASK_NAMES,
-    WEEKLY_CFGS,
-    expand_task_selection,
-)
+from tests.integration.weekly_cfgs import TASK_NAMES, WEEKLY_CFGS, expand_task_selection
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -301,9 +297,7 @@ def get_expansions(
         "livvkit": ["active_livvkit"],
         "pcmdi_diags": ["active_pcmdi_diags"],
     }
-    for activation in {
-        name for names in task_activations.values() for name in names
-    }:
+    for activation in {name for names in task_activations.values() for name in names}:
         expansions[activation] = "False"
 
     selected_tasks, required_by = expand_task_selection(specifics["tasks_to_run"])
@@ -384,9 +378,7 @@ def _apply_run_locations(
         expansions["baseline_image_lists"] = ""
 
     by_cfg_task: Dict[str, Dict[str, str]] = {}
-    not_compared = set(
-        (specifics or TEST_SPECIFICS).get("baseline_not_compared", [])
-    )
+    not_compared = set((specifics or TEST_SPECIFICS).get("baseline_not_compared", []))
     if run_root:
         selected_tasks, _ = expand_task_selection(
             (specifics or TEST_SPECIFICS).get("tasks_to_run", TASK_NAMES)

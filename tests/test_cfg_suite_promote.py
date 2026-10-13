@@ -258,9 +258,9 @@ def test_partial_promotion_can_roll_back_an_entry_to_the_default(tmp_path) -> No
         str(tmp_path), "weekly_comprehensive_v3", "climo"
     ).root.endswith("20260901_000001")
     assert promote.promoted_tags(str(tmp_path)) == ["20260901_000001"]
-    assert json.loads(
-        (tmp_path / "baselines" / "main.overrides.json").read_text()
-    ) == {}
+    assert (
+        json.loads((tmp_path / "baselines" / "main.overrides.json").read_text()) == {}
+    )
 
 
 def test_partial_promotion_checks_only_the_selected_entry(tmp_path) -> None:
@@ -301,9 +301,7 @@ def test_first_promotion_of_new_cfg_does_not_require_image_comparison(
         json.dump(
             {
                 "task_status_by_cfg": {
-                    "weekly_legacy_3.2.0_comprehensive_v3": {
-                        "global_time_series": "OK"
-                    }
+                    "weekly_legacy_3.2.0_comprehensive_v3": {"global_time_series": "OK"}
                 },
                 "baseline_by_cfg_task": {
                     "weekly_legacy_3.2.0_comprehensive_v3:global_time_series": {
