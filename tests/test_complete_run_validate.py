@@ -52,6 +52,35 @@ def test_sweep_reports_non_ok_entries(tmp_path) -> None:
     assert "ERROR" in sweep.failures_by_cfg["weekly_comprehensive_v3"][0]
 
 
+def test_sweep_counts_only_selected_task_jobs(tmp_path) -> None:
+    _write_status_dir(
+        str(tmp_path),
+        "weekly_comprehensive_v3",
+        "v3.LR.historical_0051",
+        {
+            "e3sm_to_cmip_atm.status": "ERROR\n",
+            "e3sm_diags.status": "ERROR\n",
+            "ts_atm_monthly.status": "ERROR\n",
+        },
+    )
+    sweep = validate.sweep_status_files(
+        RunLayout(str(tmp_path)),
+        ["weekly_comprehensive_v3"],
+        {"weekly_comprehensive_v3": {"e3sm_to_cmip"}},
+    )
+
+    assert sweep.failure_count == 1
+    assert sweep.job_counts_by_cfg_task == {
+        "weekly_comprehensive_v3": {"e3sm_to_cmip": 1}
+    }
+    assert sweep.failed_jobs_by_cfg_task == {
+        "weekly_comprehensive_v3": {"e3sm_to_cmip": 1}
+    }
+    assert validate.task_statuses_by_cfg(
+        sweep, {"weekly_comprehensive_v3": {"e3sm_to_cmip"}}
+    ) == {"weekly_comprehensive_v3": {"e3sm_to_cmip": "1 failed jobs"}}
+
+
 def test_sweep_uses_the_v2_case_for_v2_cfgs(tmp_path) -> None:
     _write_status_dir(
         str(tmp_path),
@@ -69,6 +98,44 @@ def test_sweep_records_a_missing_directory(tmp_path) -> None:
     sweep = validate.sweep_status_files(RunLayout(str(tmp_path)), ["weekly_bundles"])
     assert not sweep.passed
     assert sweep.missing_dirs == ["weekly_bundles"]
+
+
+def test_non_plotting_task_gets_package_row_and_not_applicable_images(tmp_path) -> None:
+    layout = RunLayout(str(tmp_path))
+    paths = validate.write_viewers(
+        layout,
+        ["weekly_comprehensive_v3"],
+        tasks=["climo", "e3sm_to_cmip"],
+        repos={
+            "zppy": {
+                "sha": "b" * 40,
+                "branch": "main",
+                "environment_type": "dev",
+            },
+            "e3sm_to_cmip": {
+                "sha": "a" * 40,
+                "branch": "main",
+                "environment_type": "dev",
+            }
+        },
+        task_status_by_cfg={
+            "weekly_comprehensive_v3": {
+                "climo": "OK",
+                "e3sm_to_cmip": "2 failed jobs",
+            }
+        },
+    )
+
+    summary = (tmp_path / "index.html").read_text()
+    assert "e3sm_to_cmip" in summary
+    assert "main @ aaaaaaaa" in summary
+    assert "zppy" in summary
+    assert "main @ bbbbbbbb" in summary
+    assert "OK" in summary
+    assert "2 failed jobs" in summary
+    assert summary.count(">n/a</td>") == 8
+    assert "Image check not applicable: no plotting tasks selected." in summary
+    assert paths[-1] == str(tmp_path / "index.html")
 
 
 def test_summarize_severities_covers_every_severity(tmp_path) -> None:
