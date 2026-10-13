@@ -782,9 +782,7 @@ def _write_env_descriptions(run: _Run) -> None:
     ):
         if task not in run.tasks:
             continue
-        task_environment_key: str = (
-            environment.name or environment.activation_command
-        )
+        task_environment_key: str = environment.name or environment.activation_command
         if task_environment_key not in package_lists:
             package_lists[task_environment_key] = provenance.conda_package_list(
                 environment
@@ -1404,8 +1402,7 @@ def _nested_string_mapping(value: object) -> Dict[str, Dict[str, str]]:
     return {
         key: mapping
         for key, item in value.items()
-        if isinstance(key, str)
-        and (mapping := _string_mapping(item))
+        if isinstance(key, str) and (mapping := _string_mapping(item))
     }
 
 

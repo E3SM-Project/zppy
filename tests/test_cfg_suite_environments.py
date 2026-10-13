@@ -11,7 +11,7 @@ of code and dependencies was held fixed:
 """
 
 import os
-from typing import List
+from typing import List, Sequence
 
 import pytest
 

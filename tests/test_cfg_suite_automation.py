@@ -535,9 +535,7 @@ def test_report_refreshes_package_snapshot_and_environment_export(
 
     snapshots = automation._mapping(run.status.get("environment_snapshots_final"))
     e3sm_snapshot = automation._mapping(snapshots.get("e3sm_to_cmip"))
-    assert e3sm_snapshot["numpy"] == (
-        "2.2.0 py313_0 conda-forge"
-    )
+    assert e3sm_snapshot["numpy"] == ("2.2.0 py313_0 conda-forge")
     drift = automation._mapping(run.status.get("environment_drift"))
     assert automation._string_list(drift.get("changed_environments")) == [
         "e3sm_to_cmip"
