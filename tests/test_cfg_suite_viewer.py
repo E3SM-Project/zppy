@@ -173,7 +173,7 @@ def test_environment_panel_lists_what_changed() -> None:
         [_score("a", "MAJOR")], "cfg", "task", environment_diffs=diffs
     )
 
-    assert "Environment: 1 dependency change" in page
+    assert "Environment: WARNING 1 dependency change in e3sm_diags" in page
     assert "numpy" in page
     assert "2.1.3" in page and "2.2.0" in page
 
@@ -184,7 +184,8 @@ def test_environment_panel_does_not_call_an_uncompared_run_clean() -> None:
         [_score("a", "MAJOR")], "cfg", "task", environment_diffs=diffs
     )
     assert (
-        "Environment: no dependency changed in those compared (1 not compared)" in page
+        "Environment: WARNING no dependency changed in those compared "
+        "(1 not compared)" in page
     )
     assert "Environment: no dependency changed<" not in page
 
@@ -294,7 +295,7 @@ def test_environment_package_names_are_html_escaped() -> None:
     assert "métrique&lt;script&gt;alert(1)&lt;/script&gt;" in page
     assert "build-é dépôt" in page
     assert "<script>alert(1)</script>" not in page
-    assert "No image needs review" in page
+    assert "data-severity='MAJOR'" in page
 
 
 def test_write_viewer_passes_the_environment_through(tmp_path) -> None:
@@ -330,9 +331,11 @@ def test_summary_rolls_packages_up_across_cfgs() -> None:
     page = viewer.render_summary(rows, "20260918_000001")
 
     package_table = page[page.index("By package") : page.index("By check")]
-    # e3sm_diags: 1 of 2 checks needs review, 2 of 15 images.
+    # e3sm_diags: 1 of 2 checks needs review, 2 needing review, 2 total
+    # needing attention, and 15 images.
     assert (
-        "<td class='num'>1</td><td class='num'>2</td><td class='num'>2</td><td class='num'>15</td>"
+        "<td class='num'>1</td><td class='num'>2</td><td class='num zero'>0</td>"
+        "<td class='num'>2</td><td class='num'>2</td><td class='num'>15</td>"
         in package_table
     )
     assert "sev-MAJOR" in package_table

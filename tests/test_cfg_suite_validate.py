@@ -152,7 +152,7 @@ def test_non_plotting_task_gets_package_row_and_not_applicable_images(tmp_path) 
     assert "OK" in summary
     assert "2 failed jobs" in summary
     assert "20260901_000001 (2026-09-01); zppy@cccccccc" in summary
-    assert summary.count(">n/a</td>") == 8
+    assert summary.count(">n/a</td>") == 32
     assert "Image check not applicable: no plotting tasks selected." in summary
     assert paths[-1] == str(tmp_path / "index.html")
 

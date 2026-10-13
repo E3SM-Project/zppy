@@ -883,7 +883,7 @@ def test_zppy_can_run_from_unified_using_its_test_worktree(
     assert status["unified_load_script"] == str(unified_script)
     assert status["applied_pins"] == {}
     zppy_test = next(
-        args for args in fake_prepare if "tests/test_smoke.py" in " ".join(args)
+        args for args in fake_prepare if "tests/test_zppy_main.py" in " ".join(args)
     )
     assert zppy_test[0:2] == ["bash", "-c"]
     assert "source " in zppy_test[2]

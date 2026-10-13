@@ -448,6 +448,18 @@ def _stage_prepare(run: _Run) -> None:
                 repos[spec.name] = {"environment_type": ENV_TYPE_UNIFIED}
             continue
 
+        environment_file: str = ""
+        if env_type == ENV_TYPE_BASELINE:
+            repo_baseline = _baseline_for_repo(run, spec, baseline)
+            if repo_baseline is None:
+                raise StageError(
+                    "prepare_failed",
+                    "No baseline is promoted or available to rebuild environments "
+                    "from. Promote a run with "
+                    "`python -m tests.cfg_suite.promote`, or use --env-type dev.",
+                )
+            environment_file = repo_baseline.environment_file(spec.name)
+
         checkout: Checkout = create_checkout(
             spec.name,
             _repo_path(run.args, spec),
@@ -455,17 +467,6 @@ def _stage_prepare(run: _Run) -> None:
             run.worktree_root,
         )
         run.checkouts.append(checkout)
-        environment_file: str = ""
-        if env_type == ENV_TYPE_BASELINE:
-            repo_baseline = _baseline_for_repo(run, spec, baseline)
-            if repo_baseline is None:
-                raise StageError(
-                    "prepare_failed",
-                    "No baseline is available to rebuild environments from. Promote "
-                    "a run with `python -m tests.cfg_suite.promote`, or use "
-                    "--env-type dev.",
-                )
-            environment_file = repo_baseline.environment_file(spec.name)
         to_build.append((spec, checkout, environment_file))
 
     for (spec, checkout, environment_file), environment in zip(
@@ -696,7 +697,7 @@ def _baseline_for_repo(
     if missing:
         raise StageError(
             "prepare_failed",
-            f"No baseline run resolves for {spec.name} task(s): "
+            f"No baseline is promoted or selected for {spec.name} task(s): "
             f"{', '.join(sorted(missing))}.",
         )
     if len(matching) > 1:

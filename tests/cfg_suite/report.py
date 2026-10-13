@@ -421,7 +421,7 @@ def _environment_pin_lines(
         lines.extend([f"E3SM-Unified load script: `{html.escape(load_script)}`", ""])
     if pins:
         lines.extend(["Requested dependency pins:", ""])
-        lines.extend(f"* `{html.escape(str(spec))}`" for spec in pins)
+        lines.extend(f"* `{spec}`" for spec in pins)
         lines.append("")
     if applied_pins:
         lines.extend(["Applied dependency pins:", ""])
@@ -429,7 +429,7 @@ def _environment_pin_lines(
             values: List[Any] = specs if isinstance(specs, list) else [specs]
             lines.append(
                 f"* `{html.escape(str(repo))}`: "
-                + ", ".join(f"`{html.escape(str(spec))}`" for spec in values)
+                + ", ".join(f"`{spec}`" for spec in values)
             )
         lines.append("")
     return lines
