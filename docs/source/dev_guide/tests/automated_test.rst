@@ -331,6 +331,27 @@ Run a subset of cfgs or tasks:
         --cfg weekly_comprehensive_v3 --cfg weekly_bundles \
         --task e3sm_diags --task global_time_series
 
+``--task`` accepts each zppy task independently: ``climo``, ``ts``,
+``e3sm_to_cmip``, ``tc_analysis``, ``e3sm_diags``, ``mpas_analysis``,
+``global_time_series``, ``ilamb``, ``livvkit``, and ``pcmdi_diags``. Required
+input tasks are enabled automatically and logged (for example, selecting
+``pcmdi_diags`` also enables ``ts`` and ``e3sm_to_cmip``). Only repositories,
+task-specific unit tests, and status files for the selected tasks and their
+dependencies are included; the broad integration suite runs when all tasks are
+selected. The ``By package`` table includes non-plot tasks
+such as ``climo`` and ``e3sm_to_cmip``; their image columns are ``n/a`` and
+their result comes from the SLURM status files.
+
+For example, to exercise only CMIP conversion without running the image checker:
+
+.. code-block:: bash
+
+    python -m tests.complete_run.automation --machine chrysalis \
+        --cfg weekly_comprehensive_v3 --task e3sm_to_cmip
+
+When no plotting task is selected, the report states that image checking is not
+applicable rather than treating the absence of image scores as a failure.
+
 Reuse environments from an earlier run today:
 
 .. code-block:: bash

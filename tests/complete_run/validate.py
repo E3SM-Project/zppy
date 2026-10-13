@@ -161,6 +161,9 @@ def sweep_status_files(
             }
         status_dir: str = layout.status_dir(cfg)
         if not os.path.isdir(status_dir):
+            if selected_tasks is not None and not selected_tasks:
+                logger.info("%s: no selected task sections; skipping status sweep", cfg)
+                continue
             logger.warning("Status directory not found for %s: %s", cfg, status_dir)
             sweep.missing_dirs.append(cfg)
             continue

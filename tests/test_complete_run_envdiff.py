@@ -5,6 +5,8 @@ run was holding fixed, so these tests pin the interpretation as much as the
 parsing.
 """
 
+import pytest
+
 from tests.complete_run import envdiff
 from tests.complete_run.layout import run_layout
 
@@ -68,6 +70,19 @@ def test_notable_packages_sort_first() -> None:
     assert changes[0].name == "numpy"
     assert changes[0].notable
     assert not changes[-1].notable
+
+
+@pytest.mark.parametrize("name", ["pcmdi_metrics", "pcmdi-metrics"])
+def test_pmp_names_are_notable_and_sort_first(name: str) -> None:
+    before = EXPORT.replace("numpy=2.1.3=py313_0", f"{name}=1.0=n0")
+    after = EXPORT.replace("numpy=2.1.3=py313_0", f"{name}=2.0=n0")
+    before = before.replace("some-tool==1.2.3", "some-tool==1.3.0")
+    after = after.replace("some-tool==1.2.3", "some-tool==1.4.0")
+
+    changes = envdiff.diff_environments(before, after)
+
+    assert changes[0].name == name
+    assert changes[0].notable
 
 
 def test_a_build_string_change_counts() -> None:

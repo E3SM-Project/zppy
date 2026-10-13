@@ -12,7 +12,11 @@ from tests.complete_run import automation
 from tests.complete_run import environments as environments_module
 from tests.complete_run import provenance, worktrees
 from tests.complete_run.environments import Environment
-from tests.complete_run.params import REPO_SPECS_BY_NAME, resolve_machine
+from tests.complete_run.params import (
+    INTEGRATION_TEST_FILES,
+    REPO_SPECS_BY_NAME,
+    resolve_machine,
+)
 
 
 def _make_run(tmp_path, argv: Sequence[str] = (), status=None) -> automation._Run:
@@ -56,6 +60,14 @@ def test_stages_run_in_order() -> None:
     assert automation._stages_to_run("prepare", None) == list(automation.STAGES)
     assert automation._stages_to_run("validate", None) == ["validate", "report"]
     assert automation._stages_to_run("prepare", "generate") == ["prepare", "generate"]
+
+
+def test_broad_integration_tests_run_only_for_full_task_selection() -> None:
+    assert automation.integration_test_files_for_tasks(["e3sm_to_cmip"]) == ()
+    assert (
+        automation.integration_test_files_for_tasks(automation.TASK_NAMES)
+        == INTEGRATION_TEST_FILES
+    )
 
 
 def test_stop_before_start_is_rejected() -> None:
@@ -136,7 +148,8 @@ def test_a_resumed_run_keeps_its_selections(tmp_path) -> None:
 
     resumed = _make_run(tmp_path, ["--start-stage", "submit"])
     assert resumed.cfgs == ["weekly_bundles"]
-    assert resumed.tasks == ["e3sm_diags"]
+    assert resumed.selected_tasks == ["e3sm_diags"]
+    assert resumed.tasks == ["climo", "ts", "tc_analysis", "e3sm_diags"]
 
 
 def test_a_resumed_run_keeps_its_unified_load_script(tmp_path) -> None:
@@ -278,6 +291,24 @@ def test_wait_tracks_only_job_ids_from_submitted_cfgs(
     automation._wait(run, 10, ["weekly_comprehensive_v3"])
 
     assert seen["job_ids"] == {"111"}
+
+
+def test_bundle_status_is_not_expected_without_a_selected_task(
+    tmp_path: Path,
+) -> None:
+    run = _make_run(
+        tmp_path,
+        [
+            "--task",
+            "tc_analysis",
+            "--cfg",
+            "weekly_bundles",
+            "--scratch-root",
+            str(tmp_path / "scratch"),
+        ],
+    )
+
+    assert automation._tasks_by_cfg(run) == {"weekly_bundles": set()}
 
 
 def test_submit_stage_names_the_missing_cfg(tmp_path) -> None:
@@ -702,6 +733,21 @@ def test_prepare_builds_and_tests_only_task_repositories(tmp_path, fake_prepare)
         "-n",
         "test-zppy-main-tag",
     ]
+
+
+def test_unit_test_globs_are_expanded(
+    tmp_path, fake_prepare, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        automation, "ZPPY_UNIT_TESTS", ("tests/test_one.py", "tests/test_two.py")
+    )
+
+    assert _cli(tmp_path, "--stop-after", "prepare") == 0
+
+    pytest_runs = [args for args in fake_prepare if "pytest" in args]
+    zppy_run = next(args for args in pytest_runs if "tests/test_one.py" in args)
+    assert "tests/test_two.py" in zppy_run
+    assert not any("*" in arg for args in pytest_runs for arg in args)
 
 
 def test_a_partial_run_keeps_its_worktrees_to_resume_from(

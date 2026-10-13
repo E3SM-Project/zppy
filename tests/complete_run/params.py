@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List, Sequence, Tuple
 
 from tests.integration.weekly_cfgs import (  # noqa: F401 - re-exported
+    TASK_NAMES,
     WEEKLY_CFGS,
     case_name_for_cfg,
 )
@@ -20,6 +21,12 @@ INTEGRATION_TEST_FILES: Tuple[str, ...] = (
     "tests/integration/test_defaults.py",
     "tests/integration/test_bundles.py",
 )
+
+
+def integration_test_files_for_tasks(tasks: Sequence[str]) -> Tuple[str, ...]:
+    """Run broad zppy integration tests only when the full task set is selected."""
+    return INTEGRATION_TEST_FILES if set(tasks) == set(TASK_NAMES) else ()
+
 
 # "Tests of the tests" -- the unit tests covering the image checker itself.
 IMAGE_HELPER_TEST_FILES: Tuple[str, ...] = (

@@ -60,13 +60,13 @@ from tests.complete_run.layout import (
 from tests.complete_run.params import (
     DEFAULT_CFGS_TO_RUN,
     DEFAULT_TASKS_TO_RUN,
-    INTEGRATION_TEST_FILES,
     IMAGE_HELPER_TEST_FILES,
     REPO_SPECS,
     REPO_SPECS_BY_NAME,
     ZPPY_INTERFACES_UNIT_TESTS,
     ZPPY_TASK_UNIT_TESTS,
     ZPPY_UNIT_TESTS,
+    integration_test_files_for_tasks,
     MachineProfile,
     RepoSpec,
     generated_cfg_path,
@@ -901,9 +901,7 @@ def _stage_validate(run: _Run) -> None:
     )
 
     plotting_selected: bool = bool(set(run.tasks) & set(PLOTTING_TASKS))
-    integration_tests: Sequence[str] = (
-        INTEGRATION_TEST_FILES if plotting_selected else ()
-    )
+    integration_tests: Sequence[str] = integration_test_files_for_tasks(run.tasks)
     pytest_results = validate.run_pytest_files(
         worktree, zppy_env, test_files=integration_tests
     )
@@ -1043,7 +1041,7 @@ def _tasks_by_cfg(run: _Run, cfgs: Sequence[str] | None = None) -> Dict[str, Set
     tasks_by_cfg: Dict[str, Set[str]] = {}
     for cfg in selected_cfgs:
         tasks = set(task_sections_for_cfg(cfg)) & set(run.tasks)
-        if is_bundles_cfg(cfg):
+        if is_bundles_cfg(cfg) and tasks:
             tasks.add("bundle")
         tasks_by_cfg[cfg] = tasks
     return tasks_by_cfg

@@ -81,6 +81,31 @@ def test_failing_image_checker_fails_the_report(paths) -> None:
     assert report["status"] == "images_failed"
 
 
+def test_no_plot_run_reports_job_failure_and_output_location(paths) -> None:
+    status = _passing_status()
+    status["stage"] = "validation_failed"
+    status["tasks"] = ["e3sm_to_cmip"]
+    status["status_sweep"] = {
+        "passed": False,
+        "failure_count": 1,
+        "failures_by_cfg": {
+            "weekly_comprehensive_v3": ["e3sm_to_cmip_atm.status: ERROR"]
+        },
+    }
+    status["image_check"] = {"state": "NOT_APPLICABLE"}
+    status["output_dir"] = "/scratch/zppy_complete_run/tag/output"
+
+    report = report_module.render_report(status, paths)
+    markdown = report_module.render_markdown(report)
+
+    assert report["status"] == "jobs_failed"
+    assert "Image check not applicable: no plotting tasks selected." in markdown
+    assert (
+        "Job scripts and logs are under `/scratch/zppy_complete_run/tag/output`"
+        in markdown
+    )
+
+
 @pytest.mark.parametrize(
     "stage",
     [

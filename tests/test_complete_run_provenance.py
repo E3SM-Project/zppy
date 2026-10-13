@@ -273,6 +273,7 @@ UNIFIED_LIST = """# packages in environment at /lcrc/soft/climate/e3sm-unified/e
 e3sm_diags                3.2.0              pyhc364b38_0    conda-forge
 mpas-analysis             1.15.0             pyhcf101f3_0    conda-forge
 numpy                     2.3.1              py313h0_0       conda-forge
+pcmdi_metrics             3.0.1              pyh0_0          conda-forge
 unrelated-package         9.9                0               conda-forge
 zppy-interfaces           0.2.1              pyhc364b38_0    conda-forge
 """
@@ -293,6 +294,7 @@ def test_describe_unified_reads_the_version_the_run_actually_used(tmp_path) -> N
         "e3sm_diags": "3.2.0",
         "mpas-analysis": "1.15.0",
         "numpy": "2.3.1",
+        "pcmdi_metrics": "3.0.1",
         "zppy-interfaces": "0.2.1",
     }
 

@@ -100,6 +100,17 @@ def test_sweep_records_a_missing_directory(tmp_path) -> None:
     assert sweep.missing_dirs == ["weekly_bundles"]
 
 
+def test_sweep_skips_cfgs_without_selected_task_sections(tmp_path) -> None:
+    sweep = validate.sweep_status_files(
+        RunLayout(str(tmp_path)),
+        ["weekly_comprehensive_v3"],
+        {"weekly_comprehensive_v3": set()},
+    )
+
+    assert sweep.passed
+    assert sweep.missing_dirs == []
+
+
 def test_non_plotting_task_gets_package_row_and_not_applicable_images(tmp_path) -> None:
     layout = RunLayout(str(tmp_path))
     paths = validate.write_viewers(

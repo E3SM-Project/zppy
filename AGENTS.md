@@ -235,13 +235,21 @@ Test selection is configurable. The weekly cfgs, the case each runs against,
 and the tasks whose plots are image-checked are defined once, in
 `tests/integration/weekly_cfgs.py`; `DEFAULT_CFGS_TO_RUN` and
 `test_images.py` both read that table, and `tests/test_weekly_cfgs.py` fails
-if it disagrees with the templates. Adding a plotting task to a weekly cfg
-means adding it to `image_tasks` there. Legacy cfgs exist only to exercise
-older cfg syntax; one that has become a copy of a current cfg apart from its
-paths should be removed, not kept. `DEFAULT_TASKS_TO_RUN` is in
-`tests/complete_run/params.py`.
-When testing a pull request, a human typically reduces these to the minimum
-relevant set with `--cfg` and `--task`.
+if it disagrees with the templates. The same file defines every independently
+selectable task and its input-task dependencies. `--task` accepts `climo`, `ts`,
+`e3sm_to_cmip`, `tc_analysis`, `e3sm_diags`, `mpas_analysis`,
+`global_time_series`, `ilamb`, `livvkit`, and `pcmdi_diags`; required tasks are
+included automatically. Environments, task-specific unit tests, and status
+file sweeps are limited to the selected tasks and their dependencies. The
+complete-run report includes a row for every task package, including the
+non-plotting `zppy` and `e3sm_to_cmip` tasks.
+
+Adding a plotting task to a weekly cfg means adding it to `image_tasks` there.
+Legacy cfgs exist only to exercise older cfg syntax; one that has become a copy
+of a current cfg apart from its paths should be removed, not kept.
+`DEFAULT_TASKS_TO_RUN` is in `tests/complete_run/params.py`. When testing a pull
+request, a human typically reduces these to the minimum relevant set with
+`--cfg` and `--task`.
 
 Each task's `.bash` file begins with `{{ environment_commands }}`, which
 specifies the environment that task runs in. That environment is usually

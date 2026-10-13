@@ -37,6 +37,62 @@ def test_env_commands_map_onto_their_cfg_keys() -> None:
     assert specifics["global_time_series_environment_commands"].endswith("zi_env")
 
 
+def test_task_selection_enables_dependencies_and_logs_them(
+    monkeypatch: pytest.MonkeyPatch, caplog
+) -> None:
+    from tests.integration import utils
+
+    caplog.set_level("INFO", logger="tests.integration.utils")
+
+    class Config:
+        def get(self, section: str, key: str) -> str:
+            return {
+                ("web_portal", "username"): "tester",
+                ("web_portal", "base_path"): "/www",
+                ("diagnostics", "base_path"): "/diagnostics",
+            }[(section, key)]
+
+    class Machine:
+        config = Config()
+        machine = "chrysalis"
+
+    monkeypatch.setattr(utils, "MachineInfo", Machine)
+    monkeypatch.setattr(utils, "_load_run_settings", lambda: {})
+    specifics = build_specifics(
+        cfgs_to_run=["weekly_comprehensive_v3"],
+        tasks_to_run=["pcmdi_diags"],
+    )
+
+    expansions = utils.get_expansions(
+        specifics=specifics, baseline_dir="", output_dir="/scratch/output"
+    )
+
+    assert expansions["active_pcmdi_diags"] == "True"
+    assert expansions["active_ts_month_atm"] == "True"
+    assert expansions["active_e3sm_to_cmip_month_atm"] == "True"
+    assert expansions["active_e3sm_diags"] == "False"
+    assert expansions["active_mpas_analysis"] == "False"
+    assert {
+        name
+        for name, value in expansions.items()
+        if name.startswith("active_") and value == "True"
+    } == {
+        "active_ts_daily_atm",
+        "active_ts_month_atm",
+        "active_ts_month_atm_glb",
+        "active_ts_month_lnd",
+        "active_ts_month_lnd_for_livvkit",
+        "active_ts_month_lnd_glb",
+        "active_ts_month_rof",
+        "active_e3sm_to_cmip_month_atm",
+        "active_e3sm_to_cmip_month_lnd",
+        "active_pcmdi_diags",
+    }
+    assert expansions["tasks_to_run"] == ["ts", "e3sm_to_cmip", "pcmdi_diags"]
+    assert "also running ts (required by pcmdi_diags)" in caplog.text
+    assert "also running e3sm_to_cmip (required by pcmdi_diags)" in caplog.text
+
+
 def test_unknown_task_is_rejected() -> None:
     with pytest.raises(ValueError, match="Unknown task"):
         build_specifics(env_commands={"not_a_task": "source conda.sh"})
