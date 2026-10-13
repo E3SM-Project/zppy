@@ -41,6 +41,11 @@ def render_report(status: Dict[str, Any], layout: RunLayout) -> Dict[str, Any]:
     image_check: Dict[str, Any] = _mapping(status.get("image_check"))
     sweep: Dict[str, Any] = _mapping(status.get("status_sweep"))
     pytest_results: List[Dict[str, Any]] = _sequence(status.get("pytest_results"))
+    repos: Dict[str, Any] = _mapping(status.get("repos"))
+    uses_unified: bool = bool(status.get("unified")) or any(
+        _mapping(entry).get("environment_type") == "unified"
+        for entry in repos.values()
+    )
 
     severity_counts: "OrderedDict[str, int]" = OrderedDict(
         (str(name), int(count))
@@ -57,8 +62,14 @@ def render_report(status: Dict[str, Any], layout: RunLayout) -> Dict[str, Any]:
         "error": status.get("error"),
         "cfgs": list(status.get("cfgs") or []),
         "tasks": list(status.get("tasks") or []),
-        "repos": _mapping(status.get("repos")),
+        "repos": repos,
         "unified": _mapping(status.get("unified")),
+        "pins": list(status.get("pin_dependencies") or []),
+        "applied_pins": _mapping(status.get("applied_pins")),
+        "unified_load_script": (
+            status.get("unified_load_script", "") if uses_unified else ""
+        ),
+        "zppy_runtime": _mapping(status.get("zppy_runtime")),
         "status_sweep": {
             "ran": bool(sweep),
             "passed": bool(sweep.get("passed", False)),
@@ -189,6 +200,16 @@ def _repos_section(report: Dict[str, Any]) -> List[str]:
         if entry.get("environment_type") == "unified":
             package: str = str(REPO_CONDA_PACKAGES.get(name, name))
             version: str = str(packages.get(package, "")) or "unknown"
+            if name == "zppy":
+                runtime: Dict[str, Any] = _mapping(report.get("zppy_runtime"))
+                version = str(packages.get(package) or runtime.get("version") or version)
+                commit: str = str(entry.get("sha", ""))[:12] or "n/a"
+                lines.append(
+                    f"| `{name}` | `{entry.get('branch', 'n/a')}` | `{commit}` | "
+                    f"E3SM-Unified {unified.get('version') or '?'} "
+                    f"(`{package}` {version}; `{runtime.get('path') or 'path unknown'}`) |"
+                )
+                continue
             lines.append(
                 f"| `{name}` | — | — | E3SM-Unified {unified.get('version') or '?'}"
                 f" (`{package}` {version}) |"
@@ -212,12 +233,28 @@ def _environment_section(report: Dict[str, Any]) -> List[str]:
     """
     diff: Dict[str, Any] = _mapping(report.get("environment_diff"))
     note: str = str(report.get("environment_note") or "")
-    if not diff and not note:
+    pins: List[Any] = list(report.get("pins") or [])
+    applied_pins: Dict[str, Any] = _mapping(report.get("applied_pins"))
+    load_script: str = str(report.get("unified_load_script") or "")
+    if not diff and not note and not pins and not applied_pins and not load_script:
         return []
 
     lines: List[str] = ["## Environment", ""]
     if note:
         lines.extend([note, ""])
+    if load_script:
+        lines.extend([f"E3SM-Unified load script: `{load_script}`", ""])
+    if pins:
+        lines.extend(["Requested dependency pins:", ""])
+        for spec in pins:
+            lines.append(f"* `{spec}`")
+        lines.append("")
+    if applied_pins:
+        lines.extend(["Applied dependency pins:", ""])
+        for repo, specs in sorted(applied_pins.items()):
+            values: List[Any] = specs if isinstance(specs, list) else [specs]
+            lines.append(f"* `{repo}`: " + ", ".join(f"`{spec}`" for spec in values))
+        lines.append("")
 
     unavailable: List[Any] = list(diff.get("unavailable") or [])
     if unavailable:

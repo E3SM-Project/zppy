@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Sequence, Set
 
 from tests.complete_run.commands import CommandError, run_command
+from tests.complete_run.environments import ENV_TYPE_UNIFIED, Environment
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -254,6 +255,7 @@ def build_batch_script(
     env_name: str,
     workdir: str,
     body: str,
+    environment: Environment | None = None,
 ) -> str:
     """Build a batch script that activates an environment and runs ``body``.
 
@@ -264,6 +266,15 @@ def build_batch_script(
     references unset variables.
     """
     directive_block: str = "\n".join(directives)
+    if environment is not None and environment.env_type == ENV_TYPE_UNIFIED:
+        activation: str = environment.activation_command
+        source_path: str = 'export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"\n'
+    else:
+        activation = (
+            f"source {conda_profile}\n"
+            f"conda activate {env_name}"
+        )
+        source_path = ""
     return f"""#!/bin/bash
 #SBATCH --job-name={job_name}
 #SBATCH --nodes=1
@@ -273,9 +284,9 @@ def build_batch_script(
 
 set -e
 set +u
-source {conda_profile}
-conda activate {env_name}
+{activation}
 set -u
 cd {workdir}
+{source_path}
 {body}
 """

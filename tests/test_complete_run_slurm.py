@@ -236,6 +236,25 @@ def test_batch_script_initializes_conda_before_activating() -> None:
     assert "#SBATCH --job-name=zppy_image_checker_x" in script
 
 
+def test_unified_batch_script_uses_the_worktree_source() -> None:
+    from tests.complete_run.environments import ENV_TYPE_UNIFIED, Environment
+
+    script = slurm.build_batch_script(
+        job_name="zppy_image_checker_x",
+        output_prefix="/results/image_checker_x",
+        directives=(),
+        conda_profile="",
+        env_name="",
+        workdir="/worktree/zppy",
+        body="python -m pytest tests/integration/test_images.py",
+        environment=Environment("zppy", ENV_TYPE_UNIFIED, "", "source unified.sh"),
+    )
+
+    assert "source unified.sh" in script
+    assert 'export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"' in script
+    assert script.index("cd /worktree/zppy") < script.index("export PYTHONPATH")
+
+
 def test_queued_job_ids_parses_the_queue(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(slurm, "run_command", lambda args, **kwargs: "111\n222\n333")
     assert slurm.queued_job_ids("me") == {"111", "222", "333"}

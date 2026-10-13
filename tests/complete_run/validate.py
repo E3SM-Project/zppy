@@ -231,6 +231,7 @@ def run_image_checker(
     account: str = "",
     check_interval: int = IMAGE_CHECK_POLL_SECONDS,
     max_wait: int = 7200,
+    environment: Environment | None = None,
 ) -> ImageCheckResult:
     """Submit the image checker as a batch job and wait for it.
 
@@ -257,6 +258,7 @@ def run_image_checker(
         env_name=env_name,
         workdir=workdir,
         body="python -m pytest tests/integration/test_images.py",
+        environment=environment,
     )
     with open(script_path, "w") as stream:
         stream.write(script)

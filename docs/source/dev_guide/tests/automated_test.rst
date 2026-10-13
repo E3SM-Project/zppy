@@ -8,11 +8,12 @@ The complete run test builds development environments for ``zppy`` and the four
 packages whose tasks it launches, submits the weekly test configurations,
 validates the results, and writes a report.
 
-One command runs all of it:
+The automation accepts either command-line options or an INI configuration:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis --account e3sm
+    python -m tests.complete_run.automation \
+        --config tests/complete_run/complete-run.example.cfg
 
 The rest of this page covers what that command does, how to configure it, how to
 read its report, and how to run it on a schedule.
@@ -25,17 +26,19 @@ directory, so an interrupted run can be resumed and a crashed one still produces
 a report.
 
 Everything that exercises zppy -- cfg generation, ``zppy -c``, and every test --
-runs inside the environment built from the commit under test (via ``conda run``),
-never in whatever environment launched the run. The environment you start the
-run from only needs Python and ``mache``.
+runs inside its selected dev or E3SM-Unified environment, never in whatever
+environment launched the run. In dev mode, the zppy worktree is installed into
+its environment. In Unified mode, the worktree supplies the tested source and
+Unified supplies the dependencies without being modified. The environment you
+start the run from only needs Python and ``mache``.
 
 ``prepare``
     Resolves each repository's branch to an immutable commit, checks that commit
-    out into a detached worktree, builds a conda environment from it, and runs
-    the unit tests that gate the run (``zppy``, ``zppy-interfaces``, and the
-    tests covering the image checker itself). Records which baseline the run
-    compares against, and writes one ``env_description.txt`` per task and a
-    ``manifest.json`` for the run.
+    out into a detached worktree, builds or selects its environment, applies any
+    requested dependency pins, and runs the unit tests that gate the run
+    (``zppy``, ``zppy-interfaces``, and the tests covering the image checker
+    itself). Records which baseline the run compares against, and writes one
+    ``env_description.txt`` per task and a ``manifest.json`` for the run.
 
 ``generate``
     Generates the machine-specific cfgs from their templates.
@@ -173,16 +176,16 @@ The run expects the five repositories cloned under one directory
     ~/ez/MPAS-Analysis
     ~/ez/zppy-interfaces
 
-Then, from the ``zppy`` repository:
+Copy and edit the INI template, then run from the ``zppy`` repository:
 
 .. code-block:: bash
 
+    cp tests/complete_run/complete-run.example.cfg ~/.zppy-complete-run.cfg
+    $EDITOR ~/.zppy-complete-run.cfg
     screen  # So the run survives a dropped connection.
     ulimit -s unlimited  # Required for MPAS-Analysis to work inside `screen`.
 
-    python -m tests.complete_run.automation \
-        --machine chrysalis \
-        --account e3sm \
+    python -m tests.complete_run.automation --config ~/.zppy-complete-run.cfg \
         2>&1 | tee complete_run.log
     # Ctrl-A D to detach from screen.
 
@@ -262,8 +265,18 @@ environment and use the released one:
 
 This is much faster when you only care about one package. ``livvkit`` always
 runs from E3SM-Unified, as do ``climo``, ``ts``, ``tc_analysis``, and ``ilamb``.
-``zppy`` itself cannot: the run installs the revision under test and runs pytest
-from its worktree.
+``zppy`` can also use Unified:
+
+.. code-block:: bash
+
+    python -m tests.complete_run.automation --machine chrysalis \
+        --env-type zppy=unified --cfg weekly_comprehensive_v3 --task e3sm_diags
+
+The zppy worktree is still checked out and supplies the tested source; nothing is
+installed into Unified. The run requires ``pytest`` and ``zppy`` to be importable
+there and records the Unified zppy version, executable, package path, and tested
+commit. Override the load script with ``--unified-load-script`` when a different
+Unified release is needed.
 
 The three modes mix per repository, so testing an ``e3sm_diags`` branch against
 baseline dependencies while everything else comes from E3SM-Unified is one
@@ -290,6 +303,22 @@ and ``environment_source``, so a reader can tell what was held fixed.
    <https://github.com/E3SM-Project/zppy/discussions/856>`_); the exports exist
    so that a *branch* can be evaluated against a known-good environment, not so
    that the weekly run stops seeing dependency changes.
+
+For a temporary dependency-isolation test, add repeatable ``--pin`` options or
+the comma-separated ``pin_dependencies`` config key. A spec without a repository
+prefix applies to every mutable environment; ``e3sm_diags:xarray==2025.1.0``
+limits it to one repository. Unified environments are not modified, so matching
+pins are warned about and ignored. The applied pins appear in status, the
+manifest, the report, and a final ``Pinned:`` line in each relevant environment
+description. This is for isolating a known dependency issue, not frozen-
+environment testing.
+
+The ``--config`` INI has a single ``[complete_run]`` section. Its keys are the
+long option names with underscores (for example, ``env_type`` and
+``pin_dependencies``); list values are comma-separated and repo-keyed values use
+``repo=value``. Explicit CLI options override the INI, which overrides defaults.
+Unknown keys are rejected. The resolved configuration is logged at startup and
+stored in ``status.json``.
 
 Common options
 --------------
@@ -434,21 +463,25 @@ with them:
 Running it on a schedule
 ========================
 
-``tests/complete_run/`` carries a controller and a crontab template. The
-controller holds a lock (``LOCK_FILE``, ``~/.zppy_complete_run.lock`` by
-default) for the length of a run, so a second firing while one is still going
-exits immediately rather than overlapping. Leave ``SHARED_ROOT`` empty to use the
-machine's default shared root.
+``tests/complete_run/`` carries a controller and a crontab template. Keep the
+automation INI and controller environment file outside the repository. The
+controller environment file contains controller-only settings and the path to
+the INI; machine, account, paths, selections, and environment settings belong in
+the INI. The controller holds a lock (``LOCK_FILE``,
+``~/.zppy_complete_run.lock`` by default) for the length of a run, so a second
+firing exits instead of overlapping.
 
 Chrysalis has no ``scrontab`` -- that is NERSC-specific -- so this is an
 ordinary login-node crontab.
 
-1. Copy the configuration template somewhere outside the repository and fill it
-   in. It names accounts and paths specific to you:
+1. Copy the automation INI and controller environment template outside the
+   repository and edit them:
 
    .. code-block:: bash
 
+       cp tests/complete_run/complete-run.example.cfg ~/.zppy-complete-run.cfg
        cp tests/complete_run/complete-run.config.env.template ~/.zppy-complete-run.env
+       $EDITOR ~/.zppy-complete-run.cfg
        $EDITOR ~/.zppy-complete-run.env
 
 2. Fill in the crontab template's placeholders and install it:
@@ -471,9 +504,9 @@ ordinary login-node crontab.
    does not exist on ``chrlogin2``. Install it on one node, record which one,
    and check there when a run does not appear.
 
-Set ``WEEK_PARITY`` to ``even`` or ``odd`` in the configuration file to gate the
-weekly schedule down to biweekly; standard cron cannot express "every second
-Monday" across month boundaries on its own.
+Set ``WEEK_PARITY`` to ``even`` or ``odd`` in the controller environment file to
+gate the weekly schedule down to biweekly; standard cron cannot express "every
+second Monday" across month boundaries on its own.
 
 Promoting a baseline
 ====================

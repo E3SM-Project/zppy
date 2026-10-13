@@ -139,6 +139,20 @@ def test_a_resumed_run_keeps_its_selections(tmp_path) -> None:
     assert resumed.tasks == ["e3sm_diags"]
 
 
+def test_a_resumed_run_keeps_its_unified_load_script(tmp_path) -> None:
+    script = tmp_path / "load_unified.sh"
+    script.write_text("#!/bin/bash\n")
+    first = _make_run(
+        tmp_path, ["--unified-load-script", str(script), "--env-type", "zppy=unified"]
+    )
+    first.write_status()
+
+    resumed = _make_run(tmp_path)
+
+    assert resumed.args.unified_load_script == str(script)
+    assert resumed.machine.unified_env_cmd == f"source {script}"
+
+
 def test_zppy_worktree_comes_from_the_status_file(tmp_path) -> None:
     run = _make_run(
         tmp_path, status={"repos": {"zppy": {"worktree": "/scratch/wt/zppy"}}}
@@ -150,6 +164,15 @@ def test_zppy_worktree_raises_when_prepare_never_ran(tmp_path) -> None:
     run = _make_run(tmp_path)
     with pytest.raises(automation.StageError, match="prepare stage first"):
         run.zppy_worktree
+
+
+def test_environment_returns_unified_runtime_without_conda_name(tmp_path) -> None:
+    run = _make_run(tmp_path)
+    run.environments["zppy"] = environments_module.unified_environment(
+        "zppy", run.machine
+    )
+
+    assert run.environment("zppy").env_type == "unified"
 
 
 def test_key_value_action_rejects_an_unknown_repository() -> None:
@@ -343,14 +366,6 @@ def test_a_failed_stage_is_never_overwritten_with_passed(tmp_path) -> None:
         assert run.status["stage"] == stage
 
 
-def test_zppy_cannot_run_from_unified(tmp_path) -> None:
-    # The run installs the revision under test and runs pytest from its
-    # worktree, so zppy itself always needs a dev build.
-    run = _make_run(tmp_path, ["--env-type", "zppy=unified", "--skip-unit-tests"])
-    with pytest.raises(automation.StageError, match="cannot run from E3SM-Unified"):
-        automation._stage_prepare(run)
-
-
 def test_baseline_env_requires_a_promoted_baseline(tmp_path) -> None:
     # Reproducing a baseline's dependencies is meaningless with no baseline.
     run = _make_run(tmp_path, ["--env-type", "e3sm_diags=baseline"])
@@ -379,6 +394,7 @@ def fake_prepare(tmp_path, monkeypatch: pytest.MonkeyPatch):
     def fake_checkout(name, repo, branch, worktree_root):
         path = os.path.join(str(tmp_path / "wt"), name)
         os.makedirs(os.path.join(path, "tests"), exist_ok=True)
+        Path(path, "tests", "test_smoke.py").touch()
         return worktrees.Checkout(
             name=name,
             source_repo=repo,
@@ -399,6 +415,15 @@ def fake_prepare(tmp_path, monkeypatch: pytest.MonkeyPatch):
 
     def fake_command_status(args, **kwargs) -> Tuple[int, str]:
         commands.append(list(args))
+        if "import json" in " ".join(args):
+            return 0, json.dumps(
+                {
+                    "executable": "/unified/bin/zppy",
+                    "version": "3.3.0",
+                    "path": "/unified/lib/python3.13/site-packages/zppy/__init__.py",
+                    "python": "/unified/bin/python",
+                }
+            )
         return 0, ""
 
     monkeypatch.setattr(automation, "create_checkout", fake_checkout)
@@ -437,6 +462,196 @@ def test_cli_runs_prepare_and_leaves_a_report(tmp_path, fake_prepare) -> None:
     assert status["repos"]["zppy"]["environment"] == "test-zppy-main-tag"
     assert (run_dir / "complete-run-report.md").is_file()
     assert (run_dir / "manifest.json").is_file()
+    assert status["configuration"]["machine"] == "chrysalis"
+
+
+def test_configuration_file_values_and_cli_overrides_are_recorded(
+    tmp_path, fake_prepare
+) -> None:
+    config = tmp_path / "run.cfg"
+    config.write_text(
+        "[complete_run]\n"
+        "machine = chrysalis\n"
+        "account = config-account\n"
+        "cfg = weekly_bundles\n"
+        "task = e3sm_diags\n"
+    )
+
+    assert _cli(
+        tmp_path,
+        "--config",
+        str(config),
+        "--cfg",
+        "weekly_comprehensive_v3",
+        "--stop-after",
+        "prepare",
+        "--skip-unit-tests",
+    ) == 0
+    status = json.loads(
+        (tmp_path / "shared" / "runs" / "tag" / "status.json").read_text()
+    )
+    assert status["configuration"]["account"] == "config-account"
+    assert status["cfgs"] == ["weekly_comprehensive_v3"]
+    assert status["tasks"] == ["e3sm_diags"]
+
+
+def test_cli_can_override_true_config_boolean(tmp_path) -> None:
+    config = tmp_path / "run.cfg"
+    config.write_text(
+        "[complete_run]\n"
+        "machine = chrysalis\n"
+        "skip_unit_tests = true\n"
+    )
+
+    args = automation._build_parser(automation._read_config(str(config))).parse_args(
+        ["--config", str(config), "--no-skip-unit-tests"]
+    )
+
+    assert args.skip_unit_tests is False
+
+
+def test_configuration_rejects_unknown_keys_by_name(tmp_path, capsys) -> None:
+    config = tmp_path / "invalid.cfg"
+    config.write_text("[complete_run]\nmystery_option = true\n")
+
+    with pytest.raises(SystemExit):
+        automation.main(["--config", str(config)])
+    assert "Unknown configuration key: mystery_option" in capsys.readouterr().err
+
+
+def test_unified_load_script_must_exist_at_startup(tmp_path) -> None:
+    with pytest.raises(SystemExit):
+        automation.main(
+            [
+                "--machine",
+                "chrysalis",
+                "--unified-load-script",
+                str(tmp_path / "missing.sh"),
+            ]
+        )
+
+
+def test_dependency_pins_are_recorded_and_applied_to_mutable_environments(
+    tmp_path, fake_prepare
+) -> None:
+    assert _cli(
+        tmp_path,
+        "--pin",
+        "nco<5.4.0",
+        "--pin",
+        "e3sm_diags:xarray==2025.1.0",
+        "--stop-after",
+        "prepare",
+        "--skip-unit-tests",
+    ) == 0
+
+    status = json.loads(
+        (tmp_path / "shared" / "runs" / "tag" / "status.json").read_text()
+    )
+    assert status["pin_dependencies"] == [
+        "nco<5.4.0",
+        "e3sm_diags:xarray==2025.1.0",
+    ]
+    assert status["applied_pins"]["e3sm_diags"] == [
+        "nco<5.4.0",
+        "xarray==2025.1.0",
+    ]
+    install_commands = [
+        args for args in fake_prepare if "install" in args and "conda" in args
+    ]
+    assert install_commands
+    assert all("--yes" in args for args in install_commands)
+    manifest = json.loads(
+        (tmp_path / "shared" / "runs" / "tag" / "manifest.json").read_text()
+    )
+    assert manifest["requested_pins"] == status["pin_dependencies"]
+    assert manifest["pins"] == status["applied_pins"]
+
+
+def test_dependency_pin_failure_fails_prepare_clearly(
+    tmp_path, fake_prepare, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail_pin(args, **kwargs):
+        if "install" in args:
+            raise automation.CommandError(args, 1, "solver failed")
+        return ""
+
+    monkeypatch.setattr(environments_module, "run_command", fail_pin)
+    assert _cli(
+        tmp_path,
+        "--pin",
+        "nco<5.4.0",
+        "--stop-after",
+        "prepare",
+        "--skip-unit-tests",
+    ) == 1
+    status = json.loads(
+        (tmp_path / "shared" / "runs" / "tag" / "status.json").read_text()
+    )
+    assert status["stage"] == "prepare_failed"
+    assert "Could not apply dependency pins to e3sm_diags" in status["error"]
+
+
+def test_zppy_can_run_from_unified_using_its_test_worktree(
+    tmp_path, fake_prepare
+) -> None:
+    unified_script = tmp_path / "load_unified.sh"
+    unified_script.write_text("#!/bin/bash\n")
+    assert _cli(
+        tmp_path,
+        "--env-type",
+        "zppy=unified",
+        "--unified-load-script",
+        str(unified_script),
+        "--pin",
+        "zppy:nco<5.4.0",
+        "--stop-after",
+        "prepare",
+    ) == 0
+    status = json.loads(
+        (tmp_path / "shared" / "runs" / "tag" / "status.json").read_text()
+    )
+    assert status["repos"]["zppy"]["environment_type"] == "unified"
+    assert status["repos"]["zppy"]["sha"] == "a" * 40
+    assert status["zppy_runtime"]["version"] == "3.3.0"
+    assert status["unified_load_script"] == str(unified_script)
+    assert status["applied_pins"] == {}
+    zppy_test = next(
+        args for args in fake_prepare if "tests/test_smoke.py" in " ".join(args)
+    )
+    assert zppy_test[0:2] == ["bash", "-c"]
+    assert "source " in zppy_test[2]
+    assert "python -m pytest" in zppy_test[2]
+    assert not any("pip" in args for args in fake_prepare)
+    manifest = json.loads(
+        (tmp_path / "shared" / "runs" / "tag" / "manifest.json").read_text()
+    )
+    assert manifest["unified_load_script"] == str(unified_script)
+    assert str(unified_script) in (
+        tmp_path / "shared" / "runs" / "tag" / "env_descriptions" / "livvkit.txt"
+    ).read_text()
+
+
+def test_unified_zppy_requires_importable_pytest(
+    tmp_path, fake_prepare, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        automation,
+        "run_command_status",
+        lambda args, **kwargs: (1, "No module named pytest"),
+    )
+    assert _cli(
+        tmp_path,
+        "--env-type",
+        "zppy=unified",
+        "--stop-after",
+        "prepare",
+    ) == 1
+    status = json.loads(
+        (tmp_path / "shared" / "runs" / "tag" / "status.json").read_text()
+    )
+    assert status["stage"] == "prepare_failed"
+    assert "must provide importable pytest" in status["error"]
 
 
 def test_unit_test_globs_are_expanded(tmp_path, fake_prepare) -> None:

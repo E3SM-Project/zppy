@@ -157,9 +157,10 @@ Key properties to keep in mind when changing this code:
   resolved commit.** A run must never commit, switch branches, or otherwise
   modify a developer's clone. Code that checks out a branch in a developer's
   repository is a regression.
-- **Configuration is passed as arguments, never written into source.** The run
-  drives cfg generation through `python -m tests.integration.utils` flags; it
-  does not edit `TEST_SPECIFICS` in `tests/integration/utils.py`.
+- **Configuration is passed as automation arguments or an INI file, never
+  written into source.** The run drives cfg generation through
+  `python -m tests.integration.utils` flags; it does not edit `TEST_SPECIFICS`
+  in `tests/integration/utils.py`.
 - **`env_description.txt` has a fixed format** (see
   `tests/complete_run/provenance.py`). Every task's plots carry one, including
   in promoted baselines and older expected-results directories, and
@@ -170,10 +171,11 @@ Key properties to keep in mind when changing this code:
   crashed one still produces a report. A resumed run rebuilds its environments
   and selections from that file; stages must not rely on in-memory state that
   only `prepare` produces.
-- **Anything that exercises zppy runs in the environment under test**, via
-  `Environment.run_args` (`conda run -n <env>`). A bare `zppy` or
-  `python -m pytest` would use the controller's environment, not the commit
-  being tested.
+- **Anything that exercises zppy runs in the selected environment under test**,
+  via `Environment.run_args` (`conda run -n <env>` for dev and the configured
+  activation script for Unified). The zppy worktree supplies the tested source
+  in either mode; a bare `zppy` or `python -m pytest` would use the controller's
+  environment.
 - **Tests go through the real CLI** (`automation.main([...])` or
   `_build_parser().parse_args`), not hand-built `argparse.Namespace` objects,
   which is how a flag the parser never defined once went unnoticed.
@@ -185,6 +187,9 @@ Key properties to keep in mind when changing this code:
   cannot rebuild an environment. Note this is *not* frozen-environment testing,
   which the team decided against; it exists so a branch can be evaluated against
   known-good dependencies.
+- **Dependency pins are temporary isolation, not frozen-environment testing.**
+  Apply configured pins to mutable environments before exporting or describing
+  them; never install into E3SM-Unified.
 - **Every image viewer and report states how the environment differed from the
   baseline's** (`tests/complete_run/envdiff.py`). This is not decoration: in a
   fresh-solve run the dependency list *is* the finding, and in a

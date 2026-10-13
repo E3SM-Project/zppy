@@ -208,8 +208,47 @@ def test_run_args_run_inside_the_environment() -> None:
         "-c",
         "x.cfg",
     ]
-    with pytest.raises(ValueError, match="no name"):
-        Environment("livvkit", ENV_TYPE_UNIFIED, "", "source u.sh").run_args(["x"])
+    unified = Environment("livvkit", ENV_TYPE_UNIFIED, "", "source u.sh")
+    assert unified.run_args(["python", "-m", "pytest"]) == [
+        "bash",
+        "-c",
+        'source u.sh && export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}" '
+        "&& exec python -m pytest",
+    ]
+    assert "from zppy.__main__ import main; main()" in unified.run_args(
+        ["zppy", "-c", "x.cfg"]
+    )[2]
+    assert "export PYTHONPATH" not in unified.run_args(["zppy", "-c", "x.cfg"])[2]
+
+
+def test_apply_dependency_pins_uses_the_selected_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: List[List[str]] = []
+    monkeypatch.setattr(
+        environments,
+        "run_command",
+        lambda args, **kwargs: calls.append(list(args)) or "",
+    )
+    environment = Environment("e3sm_diags", ENV_TYPE_DEV, "diags-env", "activate")
+
+    environments.apply_dependency_pins(environment, ["xarray==2025.1.0"])
+
+    assert calls == [
+        [
+            "conda",
+            "run",
+            "--no-capture-output",
+            "-n",
+            "diags-env",
+            "conda",
+            "install",
+            "-n",
+            "diags-env",
+            "--yes",
+            "xarray==2025.1.0",
+        ]
+    ]
 
 
 def test_environment_from_status_restores_a_resumed_run() -> None:

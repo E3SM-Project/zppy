@@ -15,12 +15,10 @@ fi
 
 # shellcheck source=/dev/null
 source "$1"
-: "${MACHINE:?}"
 : "${REPO_ROOT:?}"
+: "${AUTOMATION_CONFIG:?}"
 : "${CONDA_BASE:?}"
 : "${CONTROLLER_ENV:?}"
-: "${CONDA_PROFILE:?}"
-: "${SLURM_ACCOUNT:?}"
 
 # Standard cron cannot express "every second Monday" across month boundaries,
 # so the schedule fires weekly and the controller gates it here.
@@ -63,21 +61,9 @@ conda activate "$CONTROLLER_ENV"
 
 cd "$REPO_ROOT/zppy"
 
-# Empty means the machine's default shared root.
-SHARED_ROOT_ARGS=()
-if [[ -n "${SHARED_ROOT:-}" ]]; then
-    SHARED_ROOT_ARGS=(--shared-root "$SHARED_ROOT")
-fi
-
 AUTOMATION_EXIT=0
-# shellcheck disable=SC2086 # EXTRA_AUTOMATION_ARGS is deliberately word-split.
 python -m tests.complete_run.automation \
-    --machine "$MACHINE" \
-    --account "$SLURM_ACCOUNT" \
-    --repo-root "$REPO_ROOT" \
-    --conda-profile "$CONDA_PROFILE" \
-    "${SHARED_ROOT_ARGS[@]}" \
-    ${EXTRA_AUTOMATION_ARGS:-} || AUTOMATION_EXIT=$?
+    --config "$AUTOMATION_CONFIG" || AUTOMATION_EXIT=$?
 
 if [[ "$AUTOMATION_EXIT" -ne 0 ]]; then
     printf '%s\n' "Complete run finished with exit code ${AUTOMATION_EXIT}." >&2

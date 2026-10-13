@@ -150,6 +150,39 @@ def test_markdown_lists_the_tested_commits(paths) -> None:
     assert "test-zppy-main-20260804_run1" in markdown
 
 
+def test_environment_section_records_pins_and_unified_script(paths) -> None:
+    status = _passing_status()
+    status["pin_dependencies"] = ["nco<5.4.0", "e3sm_diags:xarray==2025.1.0"]
+    status["applied_pins"] = {"e3sm_diags": ["nco<5.4.0"]}
+    status["unified_load_script"] = "/opt/e3sm/load-unified.sh"
+    markdown = report_module.render_markdown(
+        report_module.render_report(status, paths)
+    )
+    assert "Requested dependency pins:" in markdown
+    assert "`nco<5.4.0`" in markdown
+    assert "Applied dependency pins:" in markdown
+    assert "E3SM-Unified load script: `/opt/e3sm/load-unified.sh`" in markdown
+
+
+def test_unified_zppy_report_identifies_the_tested_commit_and_runtime(paths) -> None:
+    status = _passing_status()
+    status["repos"]["zppy"]["environment_type"] = "unified"
+    status["unified"] = {
+        "version": "1.13.0",
+        "packages": {"zppy": "3.3.0"},
+    }
+    status["zppy_runtime"] = {
+        "path": "/opt/unified/lib/python3.13/site-packages/zppy/__init__.py",
+        "version": "3.3.0",
+    }
+    markdown = report_module.render_markdown(
+        report_module.render_report(status, paths)
+    )
+    assert "E3SM-Unified 1.13.0" in markdown
+    assert "a" * 12 in markdown
+    assert "/opt/unified/lib/python3.13/site-packages/zppy/__init__.py" in markdown
+
+
 def test_markdown_shows_the_error_when_a_run_died(paths) -> None:
     status = {
         "stage": "timed_out",

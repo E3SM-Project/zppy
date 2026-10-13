@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import logging
 import os
+import shlex
 import shutil
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Sequence, Tuple
 
 from tests.complete_run.commands import run_command
 from tests.complete_run.params import (
@@ -63,6 +64,7 @@ class Environment:
     activation_command: str
     # True when this environment already existed and was reused as-is.
     reused: bool = False
+    pinned: Tuple[str, ...] = ()
 
     def run_args(self, args: List[str]) -> List[str]:
         """Wrap a command so it runs inside this environment.
@@ -71,6 +73,29 @@ class Environment:
         ``python -m pytest`` would exercise whatever zppy is installed there
         rather than the revision under test.
         """
+        if not self.name and self.env_type == ENV_TYPE_UNIFIED:
+            command_args: List[str] = (
+                [
+                    "python",
+                    "-c",
+                    "import sys; sys.path.insert(0, '.'); "
+                    "from zppy.__main__ import main; main()",
+                    *args[1:],
+                ]
+                if args and args[0] == "zppy"
+                else args
+            )
+            source_path: str = (
+                'export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}" && '
+                if args[:3] == ["python", "-m", "pytest"]
+                else ""
+            )
+            command = (
+                f'{self.activation_command} && '
+                f"{source_path}"
+                f"exec {shlex.join(command_args)}"
+            )
+            return ["bash", "-c", command]
         if not self.name:
             raise ValueError(
                 f"The {self.env_type} environment for {self.repo_name} has no "
@@ -229,6 +254,20 @@ def _pip_install(env_name: str, worktree: str) -> None:
         cwd=worktree,
     )
     logger.info("Installed %s into %s", worktree, env_name)
+
+
+def apply_dependency_pins(environment: Environment, specs: Sequence[str]) -> None:
+    """Install temporary dependency constraints into one named environment."""
+    if environment.env_type == ENV_TYPE_UNIFIED:
+        raise ValueError("Dependency pins cannot be installed into E3SM-Unified")
+    if not environment.name or not specs:
+        return
+    run_command(
+        environment.run_args(
+            ["conda", "install", "-n", environment.name, "--yes", *specs]
+        )
+    )
+    logger.info("Applied dependency pins to %s: %s", environment.repo_name, specs)
 
 
 def environment_from_status(

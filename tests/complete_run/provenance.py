@@ -76,6 +76,8 @@ def render_env_description(
     environment: Environment,
     package_list: str,
     generated: datetime | None = None,
+    pinned: Sequence[str] = (),
+    unified_load_script: str = "",
 ) -> str:
     """Render one task's environment description.
 
@@ -118,6 +120,10 @@ def render_env_description(
         lines.append("Conda environment: E3SM-Unified")
 
     lines.extend(["", "Package versions:", "-----------------", package_list])
+    if unified_load_script:
+        lines.extend(["", f"E3SM-Unified load script: {unified_load_script}"])
+    if pinned:
+        lines.extend(["", f"Pinned: {', '.join(pinned)}"])
     return "\n".join(lines).rstrip("\n") + "\n"
 
 
@@ -226,6 +232,8 @@ def write_env_description(
     environment: Environment,
     generated: datetime | None = None,
     package_list: str | None = None,
+    pinned: Sequence[str] = (),
+    unified_load_script: str = "",
 ) -> str:
     """Write one task's environment description to the run's cache directory.
 
@@ -237,7 +245,13 @@ def write_env_description(
     if package_list is None:
         package_list = conda_package_list(environment)
     content: str = render_env_description(
-        task, checkout, environment, package_list, generated
+        task,
+        checkout,
+        environment,
+        package_list,
+        generated,
+        pinned,
+        unified_load_script,
     )
     with open(path, "w") as stream:
         stream.write(content)
@@ -339,6 +353,10 @@ def build_manifest(
     tasks: Sequence[str],
     zppy_version: str,
     unified: Dict[str, object] | None = None,
+    pins: Dict[str, List[str]] | None = None,
+    unified_load_script: str = "",
+    zppy_runtime: Dict[str, object] | None = None,
+    requested_pins: Sequence[str] = (),
 ) -> Dict[str, object]:
     """Build the machine-readable record of what this run tested.
 
@@ -370,6 +388,7 @@ def build_manifest(
             "worktree": checkout.path,
             "environment": environment.name if environment else "",
             "environment_type": environment.env_type if environment else "",
+            "pinned": list(environment.pinned) if environment else [],
         }
 
     return {
@@ -382,6 +401,10 @@ def build_manifest(
         "tasks": list(tasks),
         "repos": repos,
         "unified": unified or {},
+        "pins": pins or {},
+        "requested_pins": list(requested_pins),
+        "unified_load_script": unified_load_script,
+        "zppy_runtime": zppy_runtime or {},
     }
 
 

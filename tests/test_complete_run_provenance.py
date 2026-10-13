@@ -72,6 +72,25 @@ def test_render_matches_the_promoted_format(
     assert rendered == PROMOTED_EXAMPLE
 
 
+def test_render_appends_pin_and_unified_provenance(checkout: Checkout) -> None:
+    pinned = provenance.render_env_description(
+        "global_time_series",
+        checkout,
+        Environment("zppy_interfaces", ENV_TYPE_DEV, "test-env", "activate"),
+        "packages",
+        pinned=["xarray==2025.1.0"],
+    )
+    assert pinned.endswith("Pinned: xarray==2025.1.0\n")
+    unified = provenance.render_env_description(
+        "livvkit",
+        None,
+        Environment("livvkit", ENV_TYPE_UNIFIED, "", "source unified.sh"),
+        "packages",
+        unified_load_script="/opt/e3sm/load-unified.sh",
+    )
+    assert unified.endswith("E3SM-Unified load script: /opt/e3sm/load-unified.sh\n")
+
+
 def test_generated_date_round_trips(
     tmp_path, checkout: Checkout, dev_environment: Environment
 ) -> None:
@@ -205,6 +224,9 @@ def test_manifest_records_every_repository(
         cfgs=["weekly_comprehensive_v3"],
         tasks=["global_time_series"],
         zppy_version="v3.2.0",
+        pins={"zppy_interfaces": ["xarray==2025.1.0"]},
+        unified_load_script="/opt/e3sm/load-unified.sh",
+        requested_pins=["zppy_interfaces:xarray==2025.1.0"],
     )
     path = provenance.write_manifest(str(tmp_path), manifest)
 
@@ -214,6 +236,9 @@ def test_manifest_records_every_repository(
     assert written["tag"] == "20260804_run1"
     assert written["repos"]["zppy_interfaces"]["sha"] == checkout.sha
     assert written["repos"]["zppy_interfaces"]["environment"] == dev_environment.name
+    assert written["pins"] == {"zppy_interfaces": ["xarray==2025.1.0"]}
+    assert written["requested_pins"] == ["zppy_interfaces:xarray==2025.1.0"]
+    assert written["unified_load_script"] == "/opt/e3sm/load-unified.sh"
     assert os.path.basename(path) == provenance.MANIFEST_FILENAME
 
 
