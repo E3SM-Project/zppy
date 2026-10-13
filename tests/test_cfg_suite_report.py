@@ -239,6 +239,7 @@ def test_new_cfg_baseline_is_reported_as_not_compared(paths) -> None:
 
 def test_environment_section_records_pins_and_unified_script(paths) -> None:
     status = _passing_status()
+    status["repos"]["zppy"]["environment_type"] = "unified"
     status["pin_dependencies"] = ["nco<5.4.0", "e3sm_diags:xarray==2025.1.0"]
     status["applied_pins"] = {"e3sm_diags": ["nco<5.4.0"]}
     status["unified_load_script"] = "/opt/e3sm/load-unified.sh"
