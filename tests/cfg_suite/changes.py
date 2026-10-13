@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Tuple
 from urllib.parse import urlparse
 
 from tests.cfg_suite.envdiff import parse_package_list
-from tests.cfg_suite.params import REPO_SPECS_BY_NAME, repo_for_task
+from tests.cfg_suite.params import repo_for_task
 from tests.cfg_suite.provenance import read_generated_date
 
 _PR_NUMBER = re.compile(r"\(#(\d+)\)")
@@ -107,7 +107,6 @@ def collect_changes(
 
 def _collect_repository_log(group: Dict[str, Any]) -> Dict[str, Any]:
     """Fetch and list first-parent commits for one repository baseline."""
-    repo = str(group["repo"])
     source_repo = str(group["source_repo"])
     baseline = _mapping(group.get("baseline"))
     tested = _mapping(group.get("tested"))

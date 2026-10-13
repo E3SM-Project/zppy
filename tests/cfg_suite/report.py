@@ -355,90 +355,71 @@ def _repos_section(report: Dict[str, Any]) -> List[str]:
     return lines
 
 
-def _environment_section(report: Dict[str, Any]) -> List[str]:
-    """Render how this run's dependencies differed from the baseline's.
-
-    Placed before the results, because it decides how to read them: an image
-    that changed because a dependency moved is a different finding from one
-    that changed because zppy did.
-    """
-    diff: Dict[str, Any] = _mapping(report.get("environment_diff"))
-    drift: Dict[str, Any] = _mapping(report.get("environment_drift"))
-    note: str = str(report.get("environment_note") or "")
-    pins: List[Any] = list(report.get("pins") or [])
-    applied_pins: Dict[str, Any] = _mapping(report.get("applied_pins"))
-    load_script: str = str(report.get("unified_load_script") or "")
-    if (
-        not diff
-        and not drift
-        and not note
-        and not pins
-        and not applied_pins
-        and not load_script
-    ):
-        return []
-
-    changed_during_run: List[str] = list(drift.get("changed_environments") or [])
+def _environment_heading(
+    diff: Dict[str, Any], drift: Dict[str, Any], note: str
+) -> str:
+    """Summarize environment drift and baseline differences."""
     drift_count: int = int(drift.get("change_count", 0) or 0)
     diff_count: int = int(diff.get("change_count", 0) or 0)
     unavailable_count: int = len(list(diff.get("unavailable") or []))
     if "meant to reproduce" in note and "does not." in note:
-        heading: str = (
+        return (
             f"Environment: WARNING reproduction failed, {diff_count} package"
             f"{'s' if diff_count != 1 else ''} "
             f"{'differs' if diff_count == 1 else 'differ'}"
         )
-    elif diff_count:
-        heading = (
+    if diff_count:
+        return (
             f"Environment: WARNING {diff_count} dependenc"
             f"{'y' if diff_count == 1 else 'ies'} differ"
             f"{'s' if diff_count == 1 else ''} from baseline"
         )
-    elif drift_count:
-        heading = (
+    if drift_count:
+        return (
             f"Environment: WARNING {drift_count} package"
             f"{'s' if drift_count != 1 else ''} changed during this run"
         )
-    elif unavailable_count:
-        heading = (
+    if unavailable_count:
+        return (
             f"Environment: WARNING {unavailable_count} environments not compared"
         )
-    elif drift:
-        heading = "Environment: no package changed during this run"
-    elif diff.get("compared"):
-        heading = "Environment: no dependency changed"
-    else:
-        heading = "Environment: not compared"
+    if drift:
+        return "Environment: no package changed during this run"
+    if diff.get("compared"):
+        return "Environment: no dependency changed"
+    return "Environment: not compared"
 
-    lines: List[str] = [
-        "## Environment",
-        "",
-        "<details>",
-        f"<summary>{html.escape(heading)}</summary>",
-        "",
-    ]
-    if note:
-        lines.extend([note, ""])
-    if changed_during_run:
-        lines.extend(["Environment changed during run:", ""])
-        drift_environments = _mapping(drift.get("environments"))
-        for environment in changed_during_run:
-            lines.append(f"* `{html.escape(str(environment))}`:")
-            for change in _sequence(drift_environments.get(environment)):
-                lines.append(
-                    f"  * `{html.escape(str(change.get('name', '')))}`: "
-                    f"`{html.escape(str(change.get('prepared') or '—'))}` → "
-                    f"`{html.escape(str(change.get('final') or '—'))}`"
-                )
-        lines.append("")
+
+def _environment_change_lines(drift: Dict[str, Any]) -> List[str]:
+    """Render environment package changes observed during the run."""
+    changed: List[str] = list(drift.get("changed_environments") or [])
+    if not changed:
+        return []
+    environments = _mapping(drift.get("environments"))
+    lines = ["Environment changed during run:", ""]
+    for environment in changed:
+        lines.append(f"* `{html.escape(str(environment))}`:")
+        for change in _sequence(environments.get(environment)):
+            lines.append(
+                f"  * `{html.escape(str(change.get('name', '')))}`: "
+                f"`{html.escape(str(change.get('prepared') or '—'))}` → "
+                f"`{html.escape(str(change.get('final') or '—'))}`"
+            )
+    return lines + [""]
+
+
+def _environment_pin_lines(
+    pins: List[Any], applied_pins: Dict[str, Any], load_script: str
+) -> List[str]:
+    """Render environment setup notes and requested/applied dependency pins."""
+    lines: List[str] = []
     if load_script:
         lines.extend(
             [f"E3SM-Unified load script: `{html.escape(load_script)}`", ""]
         )
     if pins:
         lines.extend(["Requested dependency pins:", ""])
-        for spec in pins:
-            lines.append(f"* `{html.escape(str(spec))}`")
+        lines.extend(f"* `{html.escape(str(spec))}`" for spec in pins)
         lines.append("")
     if applied_pins:
         lines.extend(["Applied dependency pins:", ""])
@@ -449,9 +430,14 @@ def _environment_section(report: Dict[str, Any]) -> List[str]:
                 + ", ".join(f"`{html.escape(str(spec))}`" for spec in values)
             )
         lines.append("")
+    return lines
 
+
+def _environment_comparison_lines(diff: Dict[str, Any]) -> List[str]:
+    """Render unavailable comparisons and changed package versions."""
     unavailable: List[Any] = list(diff.get("unavailable") or [])
     repos: List[Dict[str, Any]] = _sequence(diff.get("repos"))
+    lines: List[str] = []
     if unavailable:
         details_by_repo: Dict[str, str] = {
             str(entry.get("repo", "")): str(entry.get("detail") or "")
@@ -480,7 +466,6 @@ def _environment_section(report: Dict[str, Any]) -> List[str]:
                     "",
                 ]
             )
-        lines.extend(["</details>", ""])
         return lines
 
     lines.extend(
@@ -497,6 +482,37 @@ def _environment_section(report: Dict[str, Any]) -> List[str]:
                 f"`{html.escape(str(change.get('candidate') or '—'))}` |"
             )
     lines.extend(["", "\\* Packages that most often move results.", ""])
+    return lines
+
+
+def _environment_section(report: Dict[str, Any]) -> List[str]:
+    """Render how this run's dependencies differed from the baseline's.
+
+    Placed before the results, because it decides how to read them: an image
+    that changed because a dependency moved is a different finding from one
+    that changed because zppy did.
+    """
+    diff: Dict[str, Any] = _mapping(report.get("environment_diff"))
+    drift: Dict[str, Any] = _mapping(report.get("environment_drift"))
+    note: str = str(report.get("environment_note") or "")
+    pins: List[Any] = list(report.get("pins") or [])
+    applied_pins: Dict[str, Any] = _mapping(report.get("applied_pins"))
+    load_script: str = str(report.get("unified_load_script") or "")
+    if not any((diff, drift, note, pins, applied_pins, load_script)):
+        return []
+
+    lines: List[str] = [
+        "## Environment",
+        "",
+        "<details>",
+        f"<summary>{html.escape(_environment_heading(diff, drift, note))}</summary>",
+        "",
+    ]
+    if note:
+        lines.extend([note, ""])
+    lines.extend(_environment_change_lines(drift))
+    lines.extend(_environment_pin_lines(pins, applied_pins, load_script))
+    lines.extend(_environment_comparison_lines(diff))
     lines.extend(["</details>", ""])
     return lines
 

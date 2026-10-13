@@ -96,7 +96,6 @@ def test_task_selection_enables_dependencies_and_logs_them(
 def test_cfg_generation_resolves_a_cfg_task_baseline_override(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
-    from tests.cfg_suite import layout
     from tests.integration import utils
 
     class Config:

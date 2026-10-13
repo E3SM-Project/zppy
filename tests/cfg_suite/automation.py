@@ -56,7 +56,6 @@ from tests.cfg_suite.layout import (
     baseline_run_for,
     parse_baseline_selections,
     read_json_object,
-    resolve_baseline,
     run_layout,
     shared_root,
     write_json,
@@ -1378,6 +1377,13 @@ def _mapping(value: object) -> Dict[str, object]:
     return value if isinstance(value, dict) else {}
 
 
+def _sequence(value: object) -> List[Dict[str, object]]:
+    """Return a list of dictionaries from a status field of unknown shape."""
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, dict)]
+
+
 def _string_list(value: object) -> List[str]:
     """Return a list of strings from a status field of unknown shape."""
     if not isinstance(value, list):
@@ -1515,52 +1521,61 @@ def _read_config(path: str) -> Dict[str, object]:
         if key not in _CONFIG_DESTINATIONS:
             raise ValueError(f"Unknown configuration key: {key}")
 
-    values: Dict[str, object] = {}
-    for key, raw in section.items():
-        value: str = raw.strip()
-        destination: str = _CONFIG_DESTINATIONS[key]
-        if key in _CONFIG_LIST_KEYS:
-            values[destination] = [item.strip() for item in value.split(",") if item.strip()]
-        elif key in _CONFIG_MAPPING_KEYS:
-            mapping: Dict[str, str] = {}
-            if not value:
-                values[destination] = mapping
-                continue
-            for item in value.split(","):
-                repo, separator, selected = item.partition("=")
-                repo, selected = repo.strip(), selected.strip()
-                if not separator or repo not in REPO_SPECS_BY_NAME or not selected:
-                    raise ValueError(
-                        f"Invalid {key} entry {item.strip()!r}; expected repo=value"
-                    )
-                if key == "env_type" and selected not in ENV_TYPES:
-                    raise ValueError(
-                        f"Invalid env_type {selected!r}; expected one of "
-                        f"{', '.join(ENV_TYPES)}"
-                    )
-                mapping[repo] = selected
-            values[destination] = mapping
-        elif key in _CONFIG_BOOLEAN_KEYS:
-            normalized: str = value.lower()
-            if normalized not in {"true", "false", "yes", "no", "1", "0"}:
-                raise ValueError(f"Invalid boolean for {key}: {value!r}")
-            values[destination] = normalized in {"true", "yes", "1"}
-        elif key in _CONFIG_INTEGER_KEYS:
-            try:
-                values[destination] = int(value)
-            except ValueError as error:
-                raise ValueError(f"Invalid integer for {key}: {value!r}") from error
-        else:
-            if key in _CONFIG_PATH_KEYS:
-                value = os.path.expanduser(value)
-            if key == "solver" and value not in SOLVERS:
-                raise ValueError(f"Invalid solver for {key}: {value!r}")
-            if key == "start_stage" and value not in STAGES:
-                raise ValueError(f"Invalid stage for {key}: {value!r}")
-            if key == "stop_after" and value and value not in STAGES:
-                raise ValueError(f"Invalid stage for {key}: {value!r}")
-            values[destination] = value or (None if key == "stop_after" else value)
-    return values
+    return {
+        _CONFIG_DESTINATIONS[key]: _parse_config_value(key, raw.strip())
+        for key, raw in section.items()
+    }
+
+
+def _parse_config_mapping(key: str, value: str) -> Dict[str, str]:
+    """Parse a comma-separated repository mapping from the config."""
+    mapping: Dict[str, str] = {}
+    for item in value.split(",") if value else []:
+        repo, separator, selected = item.partition("=")
+        repo, selected = repo.strip(), selected.strip()
+        if not separator or repo not in REPO_SPECS_BY_NAME or not selected:
+            raise ValueError(
+                f"Invalid {key} entry {item.strip()!r}; expected repo=value"
+            )
+        if key == "env_type" and selected not in ENV_TYPES:
+            raise ValueError(
+                f"Invalid env_type {selected!r}; expected one of "
+                f"{', '.join(ENV_TYPES)}"
+            )
+        mapping[repo] = selected
+    return mapping
+
+
+def _parse_config_value(key: str, value: str) -> object:
+    """Convert one validated config value to its CLI representation."""
+    if key in _CONFIG_LIST_KEYS:
+        return [item.strip() for item in value.split(",") if item.strip()]
+    if key in _CONFIG_MAPPING_KEYS:
+        return _parse_config_mapping(key, value)
+    if key in _CONFIG_BOOLEAN_KEYS:
+        normalized = value.lower()
+        if normalized not in {"true", "false", "yes", "no", "1", "0"}:
+            raise ValueError(f"Invalid boolean for {key}: {value!r}")
+        return normalized in {"true", "yes", "1"}
+    if key in _CONFIG_INTEGER_KEYS:
+        try:
+            return int(value)
+        except ValueError as error:
+            raise ValueError(f"Invalid integer for {key}: {value!r}") from error
+    return _parse_config_scalar(key, value)
+
+
+def _parse_config_scalar(key: str, value: str) -> str | None:
+    """Validate and normalize a scalar config value."""
+    if key in _CONFIG_PATH_KEYS:
+        value = os.path.expanduser(value)
+    if key == "solver" and value not in SOLVERS:
+        raise ValueError(f"Invalid solver for {key}: {value!r}")
+    if key == "start_stage" and value not in STAGES:
+        raise ValueError(f"Invalid stage for {key}: {value!r}")
+    if key == "stop_after" and value and value not in STAGES:
+        raise ValueError(f"Invalid stage for {key}: {value!r}")
+    return value or (None if key == "stop_after" else value)
 
 
 def _effective_configuration(
