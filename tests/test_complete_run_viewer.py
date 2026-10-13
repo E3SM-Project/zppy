@@ -416,6 +416,25 @@ def test_summary_renders_changes_since_baseline() -> None:
     assert "https://github.com/E3SM-Project/zppy/pull/42" in page
 
 
+def test_summary_marks_new_cfg_as_not_compared() -> None:
+    rows = [
+        _row(
+            "e3sm_diags",
+            "e3sm_diags",
+            "weekly_legacy_3.2.0_comprehensive_v3",
+            {},
+            baseline="new cfg: no baseline",
+            comparison_state="not-compared",
+        )
+    ]
+
+    page = viewer.render_summary(rows, "tag")
+    check_table = page[page.index("By check") :]
+
+    assert "new cfg: no baseline" in check_table
+    assert "not compared" in check_table
+
+
 def test_notable_marker_reaches_the_css_as_an_escape() -> None:
     # A bare "\2022" in the Python source is an octal escape: the page got an
     # invisible control character and a stray "2" after each notable package.

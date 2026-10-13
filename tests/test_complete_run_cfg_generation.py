@@ -138,6 +138,48 @@ def test_cfg_generation_resolves_a_cfg_task_baseline_override(
     ]["tag"] == "cfg"
 
 
+def test_cfg_generation_preserves_new_cfg_as_not_compared(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    from tests.integration import utils
+
+    class Config:
+        def get(self, section: str, key: str) -> str:
+            return {
+                ("web_portal", "username"): "tester",
+                ("web_portal", "base_path"): "/www",
+                ("diagnostics", "base_path"): "/diagnostics",
+            }[(section, key)]
+
+    class Machine:
+        config = Config()
+        machine = "chrysalis"
+
+    root = tmp_path / "shared"
+    (root / "runs" / "baseline").mkdir(parents=True)
+    (root / "baselines").mkdir()
+    (root / "baselines" / "latest-main").symlink_to("../runs/baseline")
+    monkeypatch.setattr(utils, "MachineInfo", Machine)
+    monkeypatch.setattr(utils, "_load_run_settings", lambda: {})
+    cfg = "weekly_legacy_3.2.0_comprehensive_v3"
+    specifics = build_specifics(
+        cfgs_to_run=[cfg],
+        tasks_to_run=["global_time_series"],
+        baseline_not_compared=[f"{cfg}:global_time_series"],
+    )
+
+    expansions = utils.get_expansions(
+        specifics=specifics,
+        run_dir=str(root / "runs" / "current"),
+        output_dir="/scratch/output",
+    )
+
+    assert expansions["baseline_by_cfg_task"][f"{cfg}:global_time_series"] == {
+        "state": "not-compared",
+        "reason": "new cfg",
+    }
+
+
 def test_cfg_generation_rejects_a_missing_explicit_baseline(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:

@@ -255,12 +255,12 @@ def test_partial_promotion_checks_only_the_selected_entry(tmp_path) -> None:
         promote.promote(str(tmp_path), "20260908_run1", tasks=("e3sm_to_cmip",))
 
 
-def test_partial_promotion_does_not_require_images_for_unchecked_plot_tasks(
+def test_first_promotion_of_new_cfg_does_not_require_image_comparison(
     tmp_path,
 ) -> None:
     layout = _make_run(tmp_path, "20260908_run1")
     manifest = json.loads(open(layout.manifest).read())
-    manifest["cfgs"] = ["weekly_legacy_3.0.0_comprehensive_v3"]
+    manifest["cfgs"] = ["weekly_legacy_3.2.0_comprehensive_v3"]
     manifest["tasks"] = ["global_time_series"]
     with open(layout.manifest, "w") as stream:
         json.dump(manifest, stream)
@@ -268,10 +268,16 @@ def test_partial_promotion_does_not_require_images_for_unchecked_plot_tasks(
         json.dump(
             {
                 "task_status_by_cfg": {
-                    "weekly_legacy_3.0.0_comprehensive_v3": {
+                    "weekly_legacy_3.2.0_comprehensive_v3": {
                         "global_time_series": "OK"
                     }
-                }
+                },
+                "baseline_by_cfg_task": {
+                    "weekly_legacy_3.2.0_comprehensive_v3:global_time_series": {
+                        "state": "not-compared",
+                        "reason": "new cfg",
+                    }
+                },
             },
             stream,
         )
@@ -279,7 +285,7 @@ def test_partial_promotion_does_not_require_images_for_unchecked_plot_tasks(
     promote.promote(
         str(tmp_path),
         "20260908_run1",
-        cfgs=("weekly_legacy_3.0.0_comprehensive_v3",),
+        cfgs=("weekly_legacy_3.2.0_comprehensive_v3",),
         tasks=("global_time_series",),
     )
 

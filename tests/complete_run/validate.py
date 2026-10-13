@@ -595,6 +595,10 @@ def write_viewers(
         for task in cfg_tasks:
             diff_subdir: str = diff_subdirs.get(task, "")
             image_applicable: bool = task in PLOTTING_TASKS
+            baseline_entry = (baselines_by_cfg_task or {}).get(f"{cfg}:{task}", {})
+            baseline_entry = (
+                baseline_entry if isinstance(baseline_entry, dict) else {}
+            )
             scores = load_scores(diff_subdir) if diff_subdir and image_applicable else None
             viewer_href: str = ""
             if scores is not None:
@@ -619,9 +623,8 @@ def write_viewers(
                     tested_at=_tested_at(task, repos or {}),
                     image_applicable=image_applicable,
                     task_status=(task_status_by_cfg or {}).get(cfg, {}).get(task, "not run"),
-                    baseline=_baseline_label(
-                        (baselines_by_cfg_task or {}).get(f"{cfg}:{task}", {})
-                    ),
+                    baseline=_baseline_label(baseline_entry),
+                    comparison_state=str(baseline_entry.get("state") or ""),
                 )
             )
 
@@ -646,6 +649,8 @@ def write_viewers(
 def _baseline_label(value: object) -> str:
     """Compactly identify a check's baseline and the commits it contains."""
     entry = value if isinstance(value, dict) else {}
+    if entry.get("state") == "not-compared":
+        return "new cfg: no baseline"
     tag = str(entry.get("tag") or "")
     if not tag:
         return ""

@@ -218,6 +218,14 @@ def _baseline_selection_section(report: Dict[str, Any]) -> List[str]:
             continue
         entry = _mapping(value)
         repos = _mapping(entry.get("repos"))
+        if entry.get("state") == "not-compared":
+            run = "new cfg: no baseline (not compared)"
+            produced = "—"
+            commits = "—"
+            lines.append(
+                f"| `{cfg}` | `{task}` | {run} | {produced} | {commits} |"
+            )
+            continue
         commits = ", ".join(
             f"`{name}` {str(_mapping(repo).get('sha') or 'n/a')[:12]}"
             for name, repo in sorted(repos.items())

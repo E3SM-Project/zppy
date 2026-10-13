@@ -408,6 +408,7 @@ class SummaryRow:
     image_applicable: bool = True
     task_status: str = ""
     baseline: str = ""
+    comparison_state: str = ""
 
     @property
     def checked(self) -> bool:
@@ -509,9 +510,14 @@ def _render_package_table(rows: Sequence[SummaryRow]) -> str:
         counts = _sum_counts(checked)
         tested_at = sorted({row.tested_at for row in group if row.tested_at})
         if image_rows:
-            result: str = _result_badge(
-                _worst(counts), bool(checked), len(checked) < len(image_rows)
-            )
+            if not checked and all(
+                row.comparison_state == "not-compared" for row in image_rows
+            ):
+                result = _not_compared_badge()
+            else:
+                result = _result_badge(
+                    _worst(counts), bool(checked), len(checked) < len(image_rows)
+                )
             image_cells: str = (
                 _num(sum(1 for row in checked if row.reviewable))
                 + _num(len(image_rows))
@@ -585,9 +591,13 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
             else "".join("<td class='num zero'>n/a</td>" for _ in severities)
         )
         result: str = (
-            _result_badge(row.worst, row.checked)
-            if row.image_applicable
-            else _task_result_badge([row.task_status])
+            _not_compared_badge()
+            if row.image_applicable and row.comparison_state == "not-compared"
+            else (
+                _result_badge(row.worst, row.checked)
+                if row.image_applicable
+                else _task_result_badge([row.task_status])
+            )
         )
         attention_cells = (
             _num(row.missing)
@@ -649,6 +659,10 @@ def _image_review_legend() -> str:
         "Needs review excludes missing images. Total needing attention includes "
         "both missing images and other reviewable differences.</p>"
     )
+
+
+def _not_compared_badge() -> str:
+    return "<span class='result result-unchecked'>not compared</span>"
 
 
 def _package_anchor(package: str) -> str:

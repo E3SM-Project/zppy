@@ -129,6 +129,10 @@ def set_up_and_run_image_checker(
         )
     for task in task_list:
         baseline = baseline_by_cfg_task.get(f"{cfg_name}:{task}", {})
+        if baseline.get("state") == "not-compared":
+            reason = baseline.get("reason", "no baseline")
+            print(f"Not comparing {cfg_name}/{task}: {reason}")
+            continue
         baseline_www = baseline.get("www") or expansions.get("baseline_www")
         baseline_image_lists = baseline.get("image_lists") or expansions.get(
             "baseline_image_lists"

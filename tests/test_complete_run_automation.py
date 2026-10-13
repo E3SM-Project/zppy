@@ -97,6 +97,34 @@ def test_default_tag_includes_the_run_number() -> None:
     assert len(tag.split("_")[0]) == 8
 
 
+def test_missing_cfg_baselines_are_recorded_as_not_compared(tmp_path) -> None:
+    cfg = "weekly_legacy_3.2.0_comprehensive_v3"
+    run = _make_run(tmp_path, ["--cfg", cfg, "--task", "global_time_series"])
+    baseline_root = tmp_path / "shared"
+    previous_run = baseline_root / "runs" / "previous"
+    previous_run.mkdir(parents=True)
+    with open(previous_run / "manifest.json", "w") as stream:
+        json.dump(
+            {"tag": "previous", "cfgs": ["weekly_legacy_3.1.0_comprehensive_v3"]},
+            stream,
+        )
+    (baseline_root / "baselines").mkdir()
+    (baseline_root / "baselines" / "latest-main").symlink_to("../runs/previous")
+
+    assert automation._record_baseline(run) is not None
+
+    entries = run.status["baseline_by_cfg_task"]
+    assert entries[f"{cfg}:global_time_series"] == {
+        "state": "not-compared",
+        "reason": "new cfg",
+        "tag": "",
+        "run_dir": "",
+        "generated": "",
+        "repos": {},
+    }
+    assert run.status["baseline"]["tag"] == "previous"
+
+
 def test_repo_path_uses_the_real_directory_names() -> None:
     args = argparse.Namespace(repo_root="/home/me/ez", repo_paths={})
     # The config keys are not the directory names on disk.

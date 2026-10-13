@@ -1,7 +1,7 @@
 """The weekly cfg table must agree with the templates it describes.
 
 A task that a cfg runs but the table omits is silently never image-checked;
-that is how livvkit and legacy 3.1.0's pcmdi_diags went unchecked.
+that is how livvkit and pcmdi_diags went unchecked.
 """
 
 import glob

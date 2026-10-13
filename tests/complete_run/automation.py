@@ -609,8 +609,27 @@ def _record_baseline(run: _Run) -> RunLayout | None:
                         f"{cfg}/{task}: {error}",
                     ) from error
                 logger.info("No baseline for %s/%s: %s", cfg, task, error)
+                baseline_by_cfg_task[f"{cfg}:{task}"] = {
+                    "state": "not-compared",
+                    "reason": "new cfg",
+                    "tag": "",
+                    "run_dir": "",
+                    "generated": "",
+                    "repos": {},
+                }
                 continue
             manifest = read_json_object(selected.manifest)
+            if cfg not in _string_list(manifest.get("cfgs")):
+                logger.info("No baseline for new cfg %s in %s", cfg, selected.root)
+                baseline_by_cfg_task[f"{cfg}:{task}"] = {
+                    "state": "not-compared",
+                    "reason": "new cfg",
+                    "tag": "",
+                    "run_dir": "",
+                    "generated": "",
+                    "repos": {},
+                }
+                continue
             baseline_by_cfg_task[f"{cfg}:{task}"] = {
                 "tag": str(manifest.get("tag") or os.path.basename(selected.root)),
                 "run_dir": selected.root,
@@ -818,6 +837,8 @@ def _stage_generate(run: _Run) -> None:
     for key, entry in _mapping(run.status.get("baseline_by_cfg_task")).items():
         if isinstance(entry, dict) and entry.get("tag"):
             command.extend(["--baseline", f"{key}={entry['tag']}"])
+        elif isinstance(entry, dict) and entry.get("state") == "not-compared":
+            command.extend(["--not-compared-baseline", key])
     for task, environment in sorted(
         environments_by_task(run.environments, run.machine).items()
     ):

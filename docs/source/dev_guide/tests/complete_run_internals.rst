@@ -170,7 +170,7 @@ which tasks' plots the image checker compared were three separate things
 that had to be kept in sync by hand across cfg generation, the test driver,
 and ``test_images.py``. A task a cfg ran but nobody added to an image-check
 list was silently never compared -- which is exactly how ``livvkit``'s
-``weekly_comprehensive_v3`` plots and ``pcmdi_diags``'s legacy 3.1.0 plots
+``weekly_comprehensive_v3`` plots and ``pcmdi_diags``'s legacy 3.2.0 plots
 went unchecked before this change (see the note in
 :ref:`automated-testing-zppy`).
 

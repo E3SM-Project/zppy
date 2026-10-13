@@ -145,14 +145,16 @@ WEEKLY_CFGS: Tuple[WeeklyCfg, ...] = (
         ),
     ),
     WeeklyCfg(
-        "weekly_legacy_3.1.0_comprehensive_v3",
+        "weekly_legacy_3.2.0_comprehensive_v3",
         V3_CASE_NAME,
-        ("e3sm_diags", "mpas_analysis", "global_time_series", "ilamb", "pcmdi_diags"),
-    ),
-    WeeklyCfg(
-        "weekly_legacy_3.0.0_comprehensive_v3",
-        V3_CASE_NAME,
-        ("e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"),
+        (
+            "e3sm_diags",
+            "mpas_analysis",
+            "global_time_series",
+            "ilamb",
+            "livvkit",
+            "pcmdi_diags",
+        ),
     ),
 )
 

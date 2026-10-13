@@ -199,10 +199,9 @@ Copy and edit the INI template, then run from the ``zppy`` repository:
 Which cfgs run
 --------------
 
-By default the run submits five weekly cfgs: ``weekly_bundles``,
+By default the run submits four weekly cfgs: ``weekly_bundles``,
 ``weekly_comprehensive_v2``, ``weekly_comprehensive_v3``,
-``weekly_legacy_3.1.0_comprehensive_v3`` and
-``weekly_legacy_3.0.0_comprehensive_v3``. They are defined, together with the
+and ``weekly_legacy_3.2.0_comprehensive_v3``. They are defined, together with the
 case each runs against and the tasks whose plots are image-checked, in
 ``tests/integration/weekly_cfgs.py``.
 
@@ -215,20 +214,20 @@ case each runs against and the tasks whose plots are image-checked, in
    syntax over time. They ended up identical to ``weekly_bundles`` and
    ``weekly_comprehensive_v2`` except for their output paths, so they reran
    the same jobs on the same data and doubled the image checks for those cases
-   without testing any older syntax. The two legacy ``comprehensive_v3`` cfgs
-   do still differ, in both syntax and tasks, and are kept.
+   without testing any older syntax. The legacy
+   ``weekly_legacy_3.2.0_comprehensive_v3`` cfg still differs in syntax and task
+   coverage, and is kept.
 
    If a legacy bundles or v2 cfg is wanted again, restore it from git history
    and make it differ from the current cfg in the syntax it is meant to cover.
    Then add it to ``WEEKLY_CFGS``. ``tests/test_weekly_cfgs.py`` fails until
    the table and the templates agree.
 
-   Two image-check gaps were closed at the same time. ``livvkit`` plots from
-   ``weekly_comprehensive_v3`` and ``pcmdi_diags`` plots from
-   ``weekly_legacy_3.1.0_comprehensive_v3`` were produced but never compared.
-   The existing expected results already include those plots, so they are
-   compared from the next run. A difference there is new coverage, not a new
-   regression.
+   ``livvkit`` plots from ``weekly_comprehensive_v3`` and ``pcmdi_diags`` plots
+   from ``weekly_legacy_3.2.0_comprehensive_v3`` are now image-checked. The
+   existing baseline contains ``livvkit`` outputs, so that check starts with
+   the next run. The replacement 3.2.0 cfg has no matching baseline and is
+   marked ``not compared`` until its first run is promoted.
 
 Choosing what to hold fixed
 ---------------------------
@@ -595,6 +594,12 @@ promoted even when another task in that run failed; ``--allow-failed`` and
 ``--allow-non-main`` remain available after review. Promote the older run with
 the same selectors to roll back. Promoting without selectors moves the channel
 default and clears its overrides. No files are copied into a baseline.
+
+A newly added cfg/task pair with no baseline is recorded as ``not compared``;
+it does not produce an image-comparison result until a baseline is available.
+After reviewing the run, its first expected results can be promoted normally.
+The manual-test guide documents how to generate the machine-specific cfg output
+for the new template before running it.
 
 Comparing against a specific baseline
 -------------------------------------

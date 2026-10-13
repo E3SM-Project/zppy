@@ -40,6 +40,40 @@ def test_compare(tmp_path):
     assert mismatched_images == ["CRU-TREFHT-ANN-land_60S90N"]
 
 
+def test_new_cfg_without_baseline_is_not_image_compared(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    def fail_comparison(*args: object, **kwargs: object) -> None:
+        raise AssertionError("unexpected image comparison")
+
+    monkeypatch.setattr(
+        image_checker,
+        "check_images",
+        fail_comparison,
+    )
+    results = {}
+
+    image_checker.set_up_and_run_image_checker(
+        "legacy_3.2.0_comprehensive_v3",
+        "v3.LR.historical_0051",
+        {
+            "user_www": f"{tmp_path}/",
+            "unique_id": "run",
+            "baseline_by_cfg_task": {
+                "weekly_legacy_3.2.0_comprehensive_v3:e3sm_diags": {
+                    "state": "not-compared",
+                    "reason": "new cfg",
+                }
+            },
+        },
+        "",
+        ["e3sm_diags"],
+        results,
+    )
+
+    assert results == {}
+
+
 def test_markdown_and_html_attention_counts_match(
     tmp_path: Path, monkeypatch: Any
 ) -> None:

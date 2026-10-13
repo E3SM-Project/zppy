@@ -213,6 +213,31 @@ def test_changes_since_baseline_are_in_json_and_markdown(paths) -> None:
     )
 
 
+def test_new_cfg_baseline_is_reported_as_not_compared(paths) -> None:
+    status = _passing_status()
+    status["baseline_by_cfg_task"] = {
+        "weekly_legacy_3.2.0_comprehensive_v3:e3sm_diags": {
+            "state": "not-compared",
+            "reason": "new cfg",
+            "tag": "",
+            "run_dir": "",
+            "generated": "",
+            "repos": {},
+        }
+    }
+
+    report = report_module.render_report(status, paths)
+    markdown = report_module.render_markdown(report)
+
+    assert (
+        report["baseline_by_cfg_task"][
+            "weekly_legacy_3.2.0_comprehensive_v3:e3sm_diags"
+        ]["state"]
+        == "not-compared"
+    )
+    assert "new cfg: no baseline (not compared)" in markdown
+
+
 def test_environment_section_records_pins_and_unified_script(paths) -> None:
     status = _passing_status()
     status["pin_dependencies"] = ["nco<5.4.0", "e3sm_diags:xarray==2025.1.0"]

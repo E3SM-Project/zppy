@@ -30,6 +30,8 @@ def collect_changes(
         if not separator:
             continue
         selected = _mapping(raw_selection)
+        if selected.get("state") == "not-compared":
+            continue
         baseline_repos = _mapping(selected.get("repos"))
 
         if task in _UNIFIED_TASK_PACKAGES:

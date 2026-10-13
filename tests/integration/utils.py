@@ -53,8 +53,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
         "weekly_bundles",
         "weekly_comprehensive_v2",
         "weekly_comprehensive_v3",
-        "weekly_legacy_3.1.0_comprehensive_v3",
-        # "weekly_legacy_3.0.0_comprehensive_v3",
+        "weekly_legacy_3.2.0_comprehensive_v3",
     ],
     "tasks_to_run": [
         "e3sm_diags",
@@ -65,6 +64,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
         "pcmdi_diags",
     ],
     "baseline_overrides": {},
+    "baseline_not_compared": [],
     "unique_id": "unique_id",
 }
 
@@ -384,6 +384,9 @@ def _apply_run_locations(
         expansions["baseline_image_lists"] = ""
 
     by_cfg_task: Dict[str, Dict[str, str]] = {}
+    not_compared = set(
+        (specifics or TEST_SPECIFICS).get("baseline_not_compared", [])
+    )
     if run_root:
         selected_tasks, _ = expand_task_selection(
             (specifics or TEST_SPECIFICS).get("tasks_to_run", TASK_NAMES)
@@ -391,6 +394,13 @@ def _apply_run_locations(
         cfgs = (specifics or TEST_SPECIFICS).get("cfgs_to_run", [])
         for cfg in cfgs:
             for task in selected_tasks:
+                key = f"{cfg}:{task}"
+                if key in not_compared:
+                    by_cfg_task[key] = {
+                        "state": "not-compared",
+                        "reason": "new cfg",
+                    }
+                    continue
                 try:
                     selected = layout.baseline_run_for(
                         run_root, cfg, task, requested=requested
@@ -404,6 +414,7 @@ def _apply_run_locations(
                     "run_dir": selected.root,
                     "www": f"{selected.www}/",
                     "image_lists": f"{selected.image_lists}/",
+                    "state": "compared",
                 }
     expansions["baseline_by_cfg_task"] = by_cfg_task
 
@@ -594,6 +605,7 @@ def build_specifics(
     nco_path: Optional[str] = None,
     environment_commands: Optional[str] = None,
     baseline_overrides: Optional[Dict[str, str]] = None,
+    baseline_not_compared: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """Build a TEST_SPECIFICS mapping from explicit values.
 
@@ -613,6 +625,8 @@ def build_specifics(
         specifics["environment_commands"] = environment_commands
     if baseline_overrides is not None:
         specifics["baseline_overrides"] = dict(baseline_overrides)
+    if baseline_not_compared is not None:
+        specifics["baseline_not_compared"] = list(baseline_not_compared)
 
     for task, command in (env_commands or {}).items():
         try:
@@ -672,6 +686,12 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--nco-path", default=None)
     parser.add_argument("--baseline", dest="baselines", action="append", default=[])
     parser.add_argument(
+        "--not-compared-baseline",
+        dest="baseline_not_compared",
+        action="append",
+        default=[],
+    )
+    parser.add_argument(
         "--run-dir",
         default=None,
         help="Run directory to write output into, instead of a personal one.",
@@ -710,6 +730,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         baseline_overrides=(
             parse_baseline_selections(args.baselines) if args.baselines else None
         ),
+        baseline_not_compared=args.baseline_not_compared,
     )
     generate_cfgs(
         dry_run=args.dry_run,

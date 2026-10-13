@@ -171,6 +171,10 @@ def _check_selected_entries(
     status = read_json_object(layout.status)
     task_status = status.get("task_status_by_cfg", {})
     task_status = task_status if isinstance(task_status, dict) else {}
+    baseline_by_cfg_task = status.get("baseline_by_cfg_task", {})
+    baseline_by_cfg_task = (
+        baseline_by_cfg_task if isinstance(baseline_by_cfg_task, dict) else {}
+    )
     manifest = read_json_object(layout.manifest)
     repositories = manifest.get("repos", {})
     repositories = repositories if isinstance(repositories, dict) else {}
@@ -191,7 +195,15 @@ def _check_selected_entries(
         if task in PLOTTING_TASKS and image_checked:
             scores = _latest_diff_subdirs(layout, cfg).get(task)
             entries_for_task = load_scores(scores) if scores else None
-            if entries_for_task is None and not allow_failed:
+            baseline_entry = baseline_by_cfg_task.get(f"{cfg}:{task}", {})
+            baseline_entry = (
+                baseline_entry if isinstance(baseline_entry, dict) else {}
+            )
+            first_comparison = (
+                baseline_entry.get("state") == "not-compared"
+                and baseline_entry.get("reason") == "new cfg"
+            )
+            if entries_for_task is None and not allow_failed and not first_comparison:
                 raise PromotionError(
                     f"Refusing to promote {cfg}/{task}: no image comparison was recorded."
                 )

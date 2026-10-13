@@ -349,8 +349,7 @@ Be sure to set the ``unique_id``; this allows us to avoid path name collisions.
             "weekly_bundles", # Typically, we run on Chrysalis, Compy
             "weekly_comprehensive_v2", # Typically, we run on Chrysalis, Compy
             "weekly_comprehensive_v3", # Typically, we run on all 3 machines
-            "weekly_legacy_3.1.0_comprehensive_v3", # Typically, we run on Chrysalis
-            "weekly_legacy_3.0.0_comprehensive_v3", # Typically, we run on Chrysalis
+            "weekly_legacy_3.2.0_comprehensive_v3", # Typically, we run on Chrysalis
         ],
         "tasks_to_run": [
             "e3sm_diags",
@@ -368,6 +367,10 @@ Be sure to set the ``unique_id``; this allows us to avoid path name collisions.
     git diff # Check that the diff looks as you expect
     python tests/integration/utils.py
     # This will generate the actual test cfgs based off the templates.
+    # To regenerate only the 3.2.0 legacy cfg on this machine:
+    python -m tests.integration.utils \
+        --cfg weekly_legacy_3.2.0_comprehensive_v3 \
+        --unique-id test_zppy_yyyymmdd
 
     # Set up an alias for checking jobs:
     alias sqa='squeue -o "%8u %.7a %.4D %.9P %7i %.2t %.10r %.10M %.10l %.8Q %j" --sort=P,-t,-p'
@@ -385,8 +388,7 @@ Be sure to set the ``unique_id``; this allows us to avoid path name collisions.
     zppy -c tests/integration/generated/test_weekly_comprehensive_v2_chrysalis.cfg
 
     # Typically run on Chrysalis:
-    zppy -c tests/integration/generated/test_weekly_legacy_3.1.0_comprehensive_v3_chrysalis.cfg
-    zppy -c tests/integration/generated/test_weekly_legacy_3.0.0_comprehensive_v3_chrysalis.cfg
+    zppy -c tests/integration/generated/test_weekly_legacy_3.2.0_comprehensive_v3_chrysalis.cfg
 
 
     sq | wc -l # This includes the header row, so subtract 1 to get the number of jobs you have running
@@ -431,10 +433,7 @@ Only run the lines relevant to the jobs you launched in steps 5/6.
     cd ${output_dir}/zppy_weekly_comprehensive_v3_output/${unique_id}/v3.LR.historical_0051/post/scripts
     grep -v "OK" *status # Confirm no non-OK statuses appear
 
-    cd ${output_dir}/zppy_weekly_legacy_3.0.0_comprehensive_v3_output/${unique_id}/v3.LR.historical_0051/post/scripts
-    grep -v "OK" *status # Confirm no non-OK statuses appear
-
-    cd ${output_dir}/zppy_weekly_legacy_3.1.0_comprehensive_v3_output/${unique_id}/v3.LR.historical_0051/post/scripts
+    cd ${output_dir}/zppy_weekly_legacy_3.2.0_comprehensive_v3_output/${unique_id}/v3.LR.historical_0051/post/scripts
     grep -v "OK" *status # Confirm no non-OK statuses appear
 
     ### bundles ###
