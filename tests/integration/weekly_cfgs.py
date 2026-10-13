@@ -7,10 +7,98 @@ never checked, or checked against the wrong case.
 """
 
 from dataclasses import dataclass
-from typing import Dict, Tuple
+import os
+import re
+from typing import Dict, List, Sequence, Tuple
 
 V2_CASE_NAME: str = "v2.LR.historical_0201"
 V3_CASE_NAME: str = "v3.LR.historical_0051"
+
+TASK_NAMES: Tuple[str, ...] = (
+    "climo",
+    "ts",
+    "e3sm_to_cmip",
+    "tc_analysis",
+    "e3sm_diags",
+    "mpas_analysis",
+    "global_time_series",
+    "ilamb",
+    "livvkit",
+    "pcmdi_diags",
+)
+
+PLOTTING_TASKS: Tuple[str, ...] = (
+    "e3sm_diags",
+    "mpas_analysis",
+    "global_time_series",
+    "ilamb",
+    "livvkit",
+    "pcmdi_diags",
+)
+
+# Task -> tasks that must also run to produce its inputs.
+TASK_DEPENDENCIES: Dict[str, Tuple[str, ...]] = {
+    "climo": (),
+    "ts": (),
+    "e3sm_to_cmip": (),
+    "tc_analysis": (),
+    "e3sm_diags": ("climo", "ts", "tc_analysis"),
+    "mpas_analysis": (),
+    "global_time_series": ("ts", "mpas_analysis"),
+    "ilamb": ("ts", "e3sm_to_cmip"),
+    "livvkit": ("climo", "ts"),
+    "pcmdi_diags": ("ts", "e3sm_to_cmip"),
+}
+
+
+def expand_task_selection(tasks: Sequence[str]) -> Tuple[List[str], Dict[str, List[str]]]:
+    """Return requested tasks and their dependencies in dependency-first order."""
+    unknown: List[str] = sorted(set(tasks) - set(TASK_NAMES))
+    if unknown:
+        raise ValueError(
+            f"Unknown task(s): {', '.join(unknown)}; expected one of "
+            f"{', '.join(TASK_NAMES)}"
+        )
+
+    expanded: List[str] = []
+    required_by: Dict[str, List[str]] = {}
+
+    def add(task: str, parent: str = "") -> None:
+        if parent:
+            parents = required_by.setdefault(task, [])
+            if parent not in parents:
+                parents.append(parent)
+        if task in expanded:
+            return
+        for dependency in TASK_DEPENDENCIES[task]:
+            add(dependency, task)
+        expanded.append(task)
+
+    for task in tasks:
+        add(task)
+    return expanded, required_by
+
+
+def task_sections_for_cfg(cfg: str) -> Tuple[str, ...]:
+    """Return the supported task sections in a cfg template."""
+    path: str = os.path.join(os.path.dirname(__file__), f"template_{cfg}.cfg")
+    try:
+        with open(path) as stream:
+            sections = re.findall(r"^\[([a-z0-9_]+)\]\s*$", stream.read(), re.M)
+    except OSError:
+        return ()
+    return tuple(task for task in TASK_NAMES if task in sections)
+
+
+def task_for_status_file(filename: str) -> str | None:
+    """Return the task owning a generated status filename."""
+    stem: str = os.path.basename(filename)
+    if stem.startswith("bundle") and stem.endswith(".status"):
+        return "bundle"
+    for task in sorted((*TASK_NAMES, "bundle"), key=len, reverse=True):
+        if stem == f"{task}.status" or stem.startswith(f"{task}_"):
+            return task
+    return None
 
 
 @dataclass(frozen=True)

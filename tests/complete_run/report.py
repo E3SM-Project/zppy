@@ -355,6 +355,13 @@ def _pytest_section(report: Dict[str, Any]) -> List[str]:
 def _image_section(report: Dict[str, Any]) -> List[str]:
     """Render the image checker outcome and its severity breakdown."""
     image: Dict[str, Any] = _mapping(report.get("image_check"))
+    if image.get("state") == "NOT_APPLICABLE":
+        return [
+            "## Image checker",
+            "",
+            "Image check not applicable: no plotting tasks selected.",
+            "",
+        ]
     lines: List[str] = [
         "## Image checker",
         "",
@@ -411,6 +418,8 @@ def _report_status(
         return "tests_failed"
 
     state: str = str(image_check.get("state", "NOT_RUN"))
+    if state == "NOT_APPLICABLE":
+        return _PASSED
     if state == "NOT_RUN":
         return "incomplete"
     if not job_passed(state, str(image_check.get("exit_code", "N/A"))):

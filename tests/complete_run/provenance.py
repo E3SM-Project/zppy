@@ -59,6 +59,8 @@ UNIFIED_KEY_PACKAGES: tuple = (
     "livvkit",
     "ilamb",
     "nco",
+    "pcmdi_metrics",
+    "pcmdi-metrics",
     "python",
     "numpy",
     "xarray",

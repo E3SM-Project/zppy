@@ -302,6 +302,8 @@ def environments_by_task(
     """
     by_task: Dict[str, Environment] = {}
     for spec in REPO_SPECS:
+        if spec.name == "zppy":
+            continue
         environment = environments.get(spec.name)
         if environment is None:
             continue

@@ -36,6 +36,8 @@ _IDENTITY_KEYS: Tuple[str, ...] = ("name:", "prefix:")
 # Reported first, because these move results most often. Anything else that
 # changed is still reported, just after these.
 NOTABLE_PACKAGES: Tuple[str, ...] = (
+    "pcmdi_metrics",
+    "pcmdi-metrics",
     "python",
     "numpy",
     "scipy",
@@ -216,7 +218,15 @@ def _diff_packages(
             changes.append(PackageChange(name=name, baseline=before, candidate=after))
 
     # Notable packages first; the rest alphabetically after them.
-    changes.sort(key=lambda change: (not change.notable, change.name))
+    changes.sort(
+        key=lambda change: (
+            not change.notable,
+            0
+            if change.name.lower() in {"pcmdi_metrics", "pcmdi-metrics"}
+            else 1,
+            change.name,
+        )
+    )
     return changes
 
 

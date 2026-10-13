@@ -60,16 +60,28 @@ from tests.complete_run.layout import (
 from tests.complete_run.params import (
     DEFAULT_CFGS_TO_RUN,
     DEFAULT_TASKS_TO_RUN,
+    INTEGRATION_TEST_FILES,
     IMAGE_HELPER_TEST_FILES,
     REPO_SPECS,
     REPO_SPECS_BY_NAME,
+    ZPPY_INTERFACES_UNIT_TESTS,
+    ZPPY_TASK_UNIT_TESTS,
+    ZPPY_UNIT_TESTS,
     MachineProfile,
     RepoSpec,
     generated_cfg_path,
     is_bundles_cfg,
+    repo_for_task,
     resolve_machine,
 )
 from tests.complete_run.slurm import queued_job_ids, wait_for_user_jobs
+from tests.integration.weekly_cfgs import (
+    PLOTTING_TASKS,
+    TASK_NAMES,
+    expand_task_selection,
+    task_for_status_file,
+    task_sections_for_cfg,
+)
 from tests.complete_run.worktrees import Checkout, create_checkout, remove_checkouts
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -103,18 +115,6 @@ _FAILURE_FOR_STAGE: Dict[str, str] = {
     "validate": "validation_failed",
 }
 
-# Unit tests that gate a run, as (repository, path or glob in its worktree). A
-# failure means the run would be testing known-broken code.
-UNIT_TEST_TARGETS: Tuple[Tuple[str, str], ...] = (
-    ("zppy_interfaces", "tests/unit/global_time_series"),
-    ("zppy_interfaces", "tests/unit/pcmdi_diags"),
-    ("zppy", "tests/test_*.py"),
-    # The tests of the image checker itself; a regression there would make the
-    # run's own verdict untrustworthy.
-    *(("zppy", path) for path in IMAGE_HELPER_TEST_FILES),
-)
-
-
 class StageError(RuntimeError):
     """A stage failed in a way that ends the run."""
 
@@ -137,6 +137,7 @@ class _Run:
     tag: str
     username: str
     cfgs: List[str]
+    selected_tasks: List[str]
     tasks: List[str]
     status: Dict[str, object]
     checkouts: List[Checkout] = field(default_factory=list)
@@ -270,6 +271,13 @@ def _start_run(args: argparse.Namespace) -> _Run:
         machine = replace(
             machine, unified_env_cmd=f"source {shlex.quote(recorded_load_script)}"
         )
+    selected_tasks: List[str] = list(
+        args.tasks
+        or _string_list(status.get("selected_tasks"))
+        or _string_list(status.get("tasks"))
+        or DEFAULT_TASKS_TO_RUN
+    )
+    tasks, _ = expand_task_selection(selected_tasks)
     run = _Run(
         args=args,
         machine=machine,
@@ -280,9 +288,8 @@ def _start_run(args: argparse.Namespace) -> _Run:
         username=username,
         # A resumed run keeps the selections it started with unless overridden.
         cfgs=list(args.cfgs or _string_list(status.get("cfgs")) or DEFAULT_CFGS_TO_RUN),
-        tasks=list(
-            args.tasks or _string_list(status.get("tasks")) or DEFAULT_TASKS_TO_RUN
-        ),
+        selected_tasks=selected_tasks,
+        tasks=tasks,
         status=status,
     )
     status.update(
@@ -290,6 +297,7 @@ def _start_run(args: argparse.Namespace) -> _Run:
             "tag": tag,
             "machine": machine.name,
             "cfgs": run.cfgs,
+            "selected_tasks": run.selected_tasks,
             "tasks": run.tasks,
             "run_dir": layout.root,
             "shared_root": root,
@@ -359,7 +367,12 @@ def run_complete_test(run: _Run) -> int:
 
 def _stage_prepare(run: _Run) -> None:
     """Create worktrees and environments, then run the gating unit tests."""
-    env_types: Dict[str, str] = run.args.env_types
+    selected_repos: Set[str] = _repos_for_tasks(run.tasks)
+    env_types: Dict[str, str] = {
+        name: value
+        for name, value in run.args.env_types.items()
+        if name in selected_repos
+    }
 
     baseline: RunLayout | None = _record_baseline(run)
     if ENV_TYPE_BASELINE in env_types.values() and baseline is None:
@@ -379,6 +392,8 @@ def _stage_prepare(run: _Run) -> None:
     repos: Dict[str, object] = {}
     to_build: List[Tuple[RepoSpec, Checkout, str]] = []
     for spec in REPO_SPECS:
+        if spec.name not in selected_repos:
+            continue
         env_type: str = env_types.get(spec.name, ENV_TYPE_DEV)
         if env_type == ENV_TYPE_UNIFIED:
             run.environments[spec.name] = unified_environment(spec.name, run.machine)
@@ -587,23 +602,33 @@ def _run_unit_tests(run: _Run) -> None:
         logger.warning("Skipping unit tests at the caller's request")
         return
 
-    by_name: Dict[str, Checkout] = {
-        checkout.name: checkout for checkout in run.checkouts
-    }
-    for repo_name, pattern in UNIT_TEST_TARGETS:
+    by_name: Dict[str, Checkout] = {checkout.name: checkout for checkout in run.checkouts}
+    targets_by_repo: Dict[str, Set[str]] = {"zppy": set(ZPPY_UNIT_TESTS)}
+    for task in run.tasks:
+        targets_by_repo["zppy"].update(ZPPY_TASK_UNIT_TESTS.get(task, ()))
+        spec = repo_for_task(task)
+        if spec is not None:
+            targets_by_repo.setdefault(spec.name, set()).update(
+                ZPPY_INTERFACES_UNIT_TESTS.get(task, ())
+            )
+    if set(run.tasks) & set(PLOTTING_TASKS):
+        targets_by_repo["zppy"].update(IMAGE_HELPER_TEST_FILES)
+
+    for repo_name, repo_targets in targets_by_repo.items():
         checkout = by_name.get(repo_name)
         if checkout is None:
             continue  # Running from E3SM-Unified; there is no worktree to test.
         # No shell runs these commands, so globs are expanded here.
         targets: List[str] = sorted(
             os.path.relpath(path, checkout.path)
-            for path in glob.glob(os.path.join(checkout.path, pattern))
+            for target in repo_targets
+            for path in glob.glob(os.path.join(checkout.path, target))
         )
         if not targets:
-            logger.warning("%s: nothing matches %s; skipping", repo_name, pattern)
+            logger.warning("%s: no selected unit tests were found; skipping", repo_name)
             continue
 
-        logger.info("Running %s unit tests: %s", repo_name, pattern)
+        logger.info("Running %s unit tests: %s", repo_name, ", ".join(targets))
         returncode, output = run_command_status(
             run.environment(repo_name).run_args(["python", "-m", "pytest", *targets]),
             cwd=checkout.path,
@@ -611,7 +636,7 @@ def _run_unit_tests(run: _Run) -> None:
         if returncode != 0:
             raise StageError(
                 "prepare_failed",
-                f"{repo_name} unit tests failed ({pattern}):\n{output[-2000:]}",
+                f"{repo_name} unit tests failed:\n{output[-2000:]}",
             )
 
 
@@ -707,7 +732,7 @@ def _stage_generate(run: _Run) -> None:
     ]
     for cfg in run.cfgs:
         command.extend(["--cfg", cfg])
-    for task in run.tasks:
+    for task in run.selected_tasks:
         command.extend(["--task", task])
     for task, environment in sorted(
         environments_by_task(run.environments, run.machine).items()
@@ -756,10 +781,13 @@ def _clear_stale_status_files(run: _Run, cfgs: Sequence[str]) -> int:
         )
         return 0
     cleared: int = 0
+    tasks_by_cfg: Dict[str, Set[str]] = _tasks_by_cfg(run, cfgs)
     for cfg in cfgs:
         for status_file in sorted(
             glob.glob(os.path.join(run.layout.status_dir(cfg), "*status"))
         ):
+            if task_for_status_file(status_file) not in tasks_by_cfg[cfg]:
+                continue
             try:
                 with open(status_file) as stream:
                     fields: List[str] = stream.read().split()
@@ -810,10 +838,14 @@ def _submit_cfgs(run: _Run, cfgs: Sequence[str], max_wait: int) -> None:
 def _wait(run: _Run, max_wait: int, cfgs: Sequence[str] | None = None) -> None:
     """Wait for the queue to drain, mapping the outcome onto a terminal stage."""
     job_ids: Set[str] = set()
-    for cfg in cfgs if cfgs is not None else run.cfgs:
+    selected_cfgs: Sequence[str] = cfgs if cfgs is not None else run.cfgs
+    tasks_by_cfg: Dict[str, Set[str]] = _tasks_by_cfg(run, selected_cfgs)
+    for cfg in selected_cfgs:
         for status_file in glob.glob(
             os.path.join(run.layout.status_dir(cfg), "*status")
         ):
+            if task_for_status_file(status_file) not in tasks_by_cfg[cfg]:
+                continue
             try:
                 with open(status_file) as stream:
                     fields: List[str] = stream.read().split()
@@ -847,13 +879,18 @@ def _stage_validate(run: _Run) -> None:
     worktree: str = run.zppy_worktree
     zppy_env: Environment = run.environment("zppy")
 
-    sweep = validate.sweep_status_files(layout, run.cfgs)
+    tasks_by_cfg: Dict[str, Set[str]] = _tasks_by_cfg(run)
+    sweep = validate.sweep_status_files(layout, run.cfgs, tasks_by_cfg)
+    task_status_by_cfg = validate.task_statuses_by_cfg(sweep, tasks_by_cfg)
     status["status_sweep"] = {
         "passed": sweep.passed,
         "failure_count": sweep.failure_count,
         "failures_by_cfg": sweep.failures_by_cfg,
         "missing_dirs": sweep.missing_dirs,
+        "job_counts_by_cfg_task": sweep.job_counts_by_cfg_task,
+        "failed_jobs_by_cfg_task": sweep.failed_jobs_by_cfg_task,
     }
+    status["task_status_by_cfg"] = task_status_by_cfg
 
     status["www_root_by_cfg"] = provenance.distribute_env_descriptions(
         layout.env_descriptions,
@@ -863,25 +900,37 @@ def _stage_validate(run: _Run) -> None:
         run.machine.cfg_suffix,
     )
 
-    pytest_results = validate.run_pytest_files(worktree, zppy_env)
+    plotting_selected: bool = bool(set(run.tasks) & set(PLOTTING_TASKS))
+    integration_tests: Sequence[str] = (
+        INTEGRATION_TEST_FILES if plotting_selected else ()
+    )
+    pytest_results = validate.run_pytest_files(
+        worktree, zppy_env, test_files=integration_tests
+    )
     status["pytest_results"] = [asdict(result) for result in pytest_results]
 
-    image_result = validate.run_image_checker(
-        worktree,
-        layout.root,
-        run.tag,
-        run.machine,
-        zppy_env.name,
-        run.args.conda_profile,
-        account=run.args.account,
-        max_wait=run.args.max_wait_images,
-        environment=zppy_env,
-    )
+    if plotting_selected:
+        image_result = validate.run_image_checker(
+            worktree,
+            layout.root,
+            run.tag,
+            run.machine,
+            zppy_env.name,
+            run.args.conda_profile,
+            account=run.args.account,
+            max_wait=run.args.max_wait_images,
+            environment=zppy_env,
+        )
+    else:
+        image_result = validate.ImageCheckResult(state="NOT_APPLICABLE")
+        logger.info("Image check not applicable: no plotting tasks selected")
     status["image_check"] = asdict(image_result)
 
     # A run is only promotable if it describes itself: the images it produced,
     # and the small settings baselines the cheaper tests compare against.
-    status["image_counts"] = validate.write_image_lists(layout, run.cfgs)
+    status["image_counts"] = (
+        validate.write_image_lists(layout, run.cfgs) if plotting_selected else {}
+    )
     validate.capture_settings_baselines(worktree, layout, run.cfgs, zppy_env)
 
     # An image difference is only interpretable alongside what changed in the
@@ -898,6 +947,7 @@ def _stage_validate(run: _Run) -> None:
         environment_note=note,
         repos=_mapping(status.get("repos")),
         baseline=str(_mapping(status.get("baseline")).get("tag", "")),
+        task_status_by_cfg=task_status_by_cfg,
     )
     status["viewers"] = viewers
     # The summary is written last; it is the page a reviewer starts from.
@@ -910,7 +960,7 @@ def _stage_validate(run: _Run) -> None:
             "validation_failed",
             "Validation found failures; see the report for details.",
         )
-    if not image_result.passed:
+    if plotting_selected and not image_result.passed:
         raise StageError(
             "validation_failed",
             f"The image checker did not pass (state {image_result.state}).",
@@ -975,6 +1025,28 @@ def _repo_path(args: argparse.Namespace, spec: RepoSpec) -> str:
     return args.repo_paths.get(spec.name) or os.path.join(
         args.repo_root, spec.clone_dirname
     )
+
+
+def _repos_for_tasks(tasks: Sequence[str]) -> Set[str]:
+    """Return repositories needed by these tasks, always including zppy."""
+    repos: Set[str] = {"zppy"}
+    for task in tasks:
+        spec = repo_for_task(task)
+        if spec is not None:
+            repos.add(spec.name)
+    return repos
+
+
+def _tasks_by_cfg(run: _Run, cfgs: Sequence[str] | None = None) -> Dict[str, Set[str]]:
+    """Return the selected task sections available in each generated cfg."""
+    selected_cfgs: Sequence[str] = cfgs if cfgs is not None else run.cfgs
+    tasks_by_cfg: Dict[str, Set[str]] = {}
+    for cfg in selected_cfgs:
+        tasks = set(task_sections_for_cfg(cfg)) & set(run.tasks)
+        if is_bundles_cfg(cfg):
+            tasks.add("bundle")
+        tasks_by_cfg[cfg] = tasks
+    return tasks_by_cfg
 
 
 def _default_tag(run_number: int) -> str:
@@ -1296,7 +1368,13 @@ def _build_parser(
         help="Conda profile sourced by generated task scripts.",
     )
     parser.add_argument("--cfg", dest="cfgs", action=_ListAction, help="Repeatable.")
-    parser.add_argument("--task", dest="tasks", action=_ListAction, help="Repeatable.")
+    parser.add_argument(
+        "--task",
+        dest="tasks",
+        action=_ListAction,
+        choices=TASK_NAMES,
+        help="Task to run; repeatable.",
+    )
     parser.add_argument("--nco-path", default="", help="Development-version NCO path.")
     parser.add_argument(
         "--pin",

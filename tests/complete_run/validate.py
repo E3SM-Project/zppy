@@ -14,7 +14,7 @@ import os
 import shutil
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 from tests.complete_run.commands import run_command_status
 from tests.complete_run.envdiff import EnvironmentDiff
@@ -43,7 +43,13 @@ from tests.complete_run.viewer import (
     write_viewer,
 )
 from tests.integration.image_severity import REVIEWABLE_SEVERITIES, SEVERITY_ORDER
-from tests.integration.weekly_cfgs import WEEKLY_CFGS_BY_NAME, checker_name
+from tests.integration.weekly_cfgs import (
+    PLOTTING_TASKS,
+    TASK_NAMES,
+    checker_name,
+    task_for_status_file,
+    task_sections_for_cfg,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -72,6 +78,8 @@ class StatusSweep:
     failures_by_cfg: Dict[str, List[str]] = field(default_factory=dict)
     # cfgs whose status directory did not exist at all.
     missing_dirs: List[str] = field(default_factory=list)
+    job_counts_by_cfg_task: Dict[str, Dict[str, int]] = field(default_factory=dict)
+    failed_jobs_by_cfg_task: Dict[str, Dict[str, int]] = field(default_factory=dict)
 
     @property
     def passed(self) -> bool:
@@ -130,13 +138,27 @@ def reviewable_count(severity_counts: Dict[str, int]) -> int:
     )
 
 
-def sweep_status_files(layout: RunLayout, cfgs: Sequence[str]) -> StatusSweep:
+def sweep_status_files(
+    layout: RunLayout,
+    cfgs: Sequence[str],
+    tasks_by_cfg: Optional[Dict[str, Set[str]]] = None,
+) -> StatusSweep:
     """Check every cfg's status files for entries that are not OK.
 
     This is the Python form of the documented ``grep -v "OK" *status`` sweep.
     """
     sweep = StatusSweep()
     for cfg in cfgs:
+        selected_tasks: Optional[Set[str]] = (
+            tasks_by_cfg.get(cfg, set()) if tasks_by_cfg is not None else None
+        )
+        if selected_tasks is not None:
+            sweep.job_counts_by_cfg_task[cfg] = {
+                task: 0 for task in selected_tasks
+            }
+            sweep.failed_jobs_by_cfg_task[cfg] = {
+                task: 0 for task in selected_tasks
+            }
         status_dir: str = layout.status_dir(cfg)
         if not os.path.isdir(status_dir):
             logger.warning("Status directory not found for %s: %s", cfg, status_dir)
@@ -145,18 +167,29 @@ def sweep_status_files(layout: RunLayout, cfgs: Sequence[str]) -> StatusSweep:
 
         failures: List[str] = []
         for status_file in sorted(glob.glob(os.path.join(status_dir, "*status"))):
+            task = task_for_status_file(status_file)
+            if selected_tasks is not None and task not in selected_tasks:
+                continue
+            if task is not None and selected_tasks is not None:
+                sweep.job_counts_by_cfg_task[cfg][task] += 1
             try:
                 with open(status_file) as stream:
-                    for line in stream:
+                    lines = stream.readlines()
+                    failed = False
+                    for line in lines:
                         stripped: str = line.strip()
                         if stripped and stripped != "OK":
+                            failed = True
                             failures.append(
                                 f"{os.path.basename(status_file)}: {stripped}"
                             )
             except OSError as error:
+                failed = True
                 failures.append(
                     f"{os.path.basename(status_file)}: unreadable ({error})"
                 )
+            if failed and task is not None and selected_tasks is not None:
+                sweep.failed_jobs_by_cfg_task[cfg][task] += 1
 
         if failures:
             logger.error("%s: %s non-OK status entries", cfg, len(failures))
@@ -165,6 +198,25 @@ def sweep_status_files(layout: RunLayout, cfgs: Sequence[str]) -> StatusSweep:
             logger.info("%s: all status files OK", cfg)
 
     return sweep
+
+
+def task_statuses_by_cfg(
+    sweep: StatusSweep, tasks_by_cfg: Dict[str, Set[str]]
+) -> Dict[str, Dict[str, str]]:
+    """Return selected task outcomes for the run-level package table."""
+    statuses: Dict[str, Dict[str, str]] = {}
+    for cfg, tasks in tasks_by_cfg.items():
+        statuses[cfg] = {}
+        for task in tasks & set(TASK_NAMES):
+            total: int = sweep.job_counts_by_cfg_task.get(cfg, {}).get(task, 0)
+            failed: int = sweep.failed_jobs_by_cfg_task.get(cfg, {}).get(task, 0)
+            if cfg in sweep.missing_dirs or not total:
+                statuses[cfg][task] = "not run"
+            elif failed:
+                statuses[cfg][task] = f"{failed} failed jobs"
+            else:
+                statuses[cfg][task] = "OK"
+    return statuses
 
 
 def run_pytest_files(
@@ -508,6 +560,7 @@ def write_viewers(
     environment_note: str = "",
     repos: Optional[Dict[str, object]] = None,
     baseline: str = "",
+    task_status_by_cfg: Optional[Dict[str, Dict[str, str]]] = None,
 ) -> List[str]:
     """Write a review page for every checked task, and a summary above them.
 
@@ -528,15 +581,15 @@ def write_viewers(
 
     for cfg in cfgs:
         diff_subdirs: Dict[str, str] = _latest_diff_subdirs(layout, cfg)
-        weekly = WEEKLY_CFGS_BY_NAME.get(cfg)
-        expected: List[str] = [
+        cfg_tasks: List[str] = [
             task
-            for task in (weekly.image_tasks if weekly else ())
+            for task in task_sections_for_cfg(cfg)
             if tasks is None or task in tasks
         ]
-        for task in expected + sorted(set(diff_subdirs) - set(expected)):
+        for task in cfg_tasks:
             diff_subdir: str = diff_subdirs.get(task, "")
-            scores = load_scores(diff_subdir) if diff_subdir else None
+            image_applicable: bool = task in PLOTTING_TASKS
+            scores = load_scores(diff_subdir) if diff_subdir and image_applicable else None
             viewer_href: str = ""
             if scores is not None:
                 path: str = write_viewer(
@@ -558,6 +611,8 @@ def write_viewers(
                     counts=count_severities(scores) if scores is not None else {},
                     viewer_href=viewer_href,
                     tested_at=_tested_at(task, repos or {}),
+                    image_applicable=image_applicable,
+                    task_status=(task_status_by_cfg or {}).get(cfg, {}).get(task, "not run"),
                 )
             )
 
@@ -611,8 +666,12 @@ def _tested_at(task: str, repos: Dict[str, object]) -> str:
     """Say what a task's package was tested at, from the run's recorded repos."""
     spec = repo_for_task(task)
     entry = repos.get(spec.name) if spec is not None else None
-    if not isinstance(entry, dict) or entry.get("environment_type") == "unified":
+    if not isinstance(entry, dict):
         return "E3SM-Unified"
     sha: str = str(entry.get("sha") or "")
     branch: str = str(entry.get("branch") or "")
+    if entry.get("environment_type") == "unified" and spec is not None:
+        if spec.name == "zppy" and sha:
+            return f"{branch} @ {sha[:8]} (E3SM-Unified)"
+        return "E3SM-Unified"
     return f"{branch} @ {sha[:8]}" if sha else branch or "unknown"

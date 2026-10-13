@@ -239,15 +239,34 @@ def test_wait_returns_quietly_when_the_queue_drains(
 def test_wait_tracks_only_job_ids_from_submitted_cfgs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    run = _make_run(tmp_path, ["--scratch-root", str(tmp_path / "scratch")])
-    submitted_status = os.path.join(run.layout.status_dir("cfg"), "task.status")
-    unrelated_status = os.path.join(run.layout.status_dir("other"), "task.status")
+    run = _make_run(
+        tmp_path,
+        [
+            "--task",
+            "e3sm_to_cmip",
+            "--cfg",
+            "weekly_comprehensive_v3",
+            "--scratch-root",
+            str(tmp_path / "scratch"),
+        ],
+    )
+    submitted_status = os.path.join(
+        run.layout.status_dir("weekly_comprehensive_v3"), "e3sm_to_cmip_atm.status"
+    )
+    unrelated_status = os.path.join(
+        run.layout.status_dir("weekly_comprehensive_v3"), "e3sm_diags.status"
+    )
+    other_cfg_status = os.path.join(
+        run.layout.status_dir("weekly_bundles"), "e3sm_to_cmip_atm.status"
+    )
     os.makedirs(os.path.dirname(submitted_status), exist_ok=True)
-    os.makedirs(os.path.dirname(unrelated_status), exist_ok=True)
     with open(submitted_status, "w") as stream:
         stream.write("WAITING 111\n")
     with open(unrelated_status, "w") as stream:
         stream.write("WAITING 999\n")
+    os.makedirs(os.path.dirname(other_cfg_status), exist_ok=True)
+    with open(other_cfg_status, "w") as stream:
+        stream.write("WAITING 888\n")
 
     seen: dict[str, object] = {}
 
@@ -256,7 +275,7 @@ def test_wait_tracks_only_job_ids_from_submitted_cfgs(
         return "drained"
 
     monkeypatch.setattr(automation, "wait_for_user_jobs", wait_for_jobs)
-    automation._wait(run, 10, ["cfg"])
+    automation._wait(run, 10, ["weekly_comprehensive_v3"])
 
     assert seen["job_ids"] == {"111"}
 
@@ -394,7 +413,14 @@ def fake_prepare(tmp_path, monkeypatch: pytest.MonkeyPatch):
     def fake_checkout(name, repo, branch, worktree_root):
         path = os.path.join(str(tmp_path / "wt"), name)
         os.makedirs(os.path.join(path, "tests"), exist_ok=True)
-        Path(path, "tests", "test_smoke.py").touch()
+        for test_file in (
+            *automation.ZPPY_UNIT_TESTS,
+            *(test for tests in automation.ZPPY_TASK_UNIT_TESTS.values() for test in tests),
+            *automation.IMAGE_HELPER_TEST_FILES,
+        ):
+            target = Path(path, test_file)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.touch()
         return worktrees.Checkout(
             name=name,
             source_repo=repo,
@@ -492,7 +518,8 @@ def test_configuration_file_values_and_cli_overrides_are_recorded(
     )
     assert status["configuration"]["account"] == "config-account"
     assert status["cfgs"] == ["weekly_comprehensive_v3"]
-    assert status["tasks"] == ["e3sm_diags"]
+    assert status["selected_tasks"] == ["e3sm_diags"]
+    assert status["tasks"] == ["climo", "ts", "tc_analysis", "e3sm_diags"]
 
 
 def test_cli_can_override_true_config_boolean(tmp_path) -> None:
@@ -654,20 +681,19 @@ def test_unified_zppy_requires_importable_pytest(
     assert "must provide importable pytest" in status["error"]
 
 
-def test_unit_test_globs_are_expanded(tmp_path, fake_prepare) -> None:
-    # No shell runs these commands, so pytest would be handed "tests/test_*.py"
-    # literally and find nothing.
-    zppy_tests = tmp_path / "wt" / "zppy" / "tests"
-    zppy_tests.mkdir(parents=True)
-    (zppy_tests / "test_one.py").write_text("")
-    (zppy_tests / "test_two.py").write_text("")
-
-    assert _cli(tmp_path, "--stop-after", "prepare") == 0
-
+def test_prepare_builds_and_tests_only_task_repositories(tmp_path, fake_prepare) -> None:
+    assert _cli(
+        tmp_path, "--task", "e3sm_to_cmip", "--stop-after", "prepare"
+    ) == 0
+    status = json.loads(
+        (tmp_path / "shared" / "runs" / "tag" / "status.json").read_text()
+    )
+    assert set(status["repos"]) == {"zppy", "e3sm_to_cmip"}
     pytest_runs = [args for args in fake_prepare if "pytest" in args]
-    zppy_run = next(args for args in pytest_runs if "tests/test_one.py" in args)
-    assert "tests/test_two.py" in zppy_run
-    assert not any("*" in arg for args in pytest_runs for arg in args)
+    zppy_run = next(args for args in pytest_runs if "tests/test_zppy_main.py" in args)
+    assert "tests/test_zppy_e3sm_to_cmip.py" in zppy_run
+    assert "tests/test_zppy_e3sm_diags.py" not in zppy_run
+    assert not any("tests/unit" in arg for args in pytest_runs for arg in args)
     # And it runs in zppy's own environment.
     assert zppy_run[:5] == [
         "conda",

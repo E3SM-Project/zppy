@@ -38,6 +38,30 @@ DEFAULT_TASKS_TO_RUN: Tuple[str, ...] = (
     "pcmdi_diags",
 )
 
+# The harness always exercises zppy's CLI and config utilities. Task-specific
+# tests are added only for requested tasks and their dependencies.
+ZPPY_UNIT_TESTS: Tuple[str, ...] = (
+    "tests/test_zppy_main.py",
+    "tests/test_zppy_provenance.py",
+    "tests/test_zppy_utils.py",
+)
+ZPPY_TASK_UNIT_TESTS: Dict[str, Tuple[str, ...]] = {
+    "climo": (),
+    "ts": (),
+    "e3sm_to_cmip": ("tests/test_zppy_e3sm_to_cmip.py",),
+    "tc_analysis": (),
+    "e3sm_diags": ("tests/test_zppy_e3sm_diags.py",),
+    "mpas_analysis": (),
+    "global_time_series": ("tests/test_zppy_global_time_series.py",),
+    "ilamb": ("tests/test_zppy_ilamb.py",),
+    "livvkit": ("tests/test_zppy_livvkit.py",),
+    "pcmdi_diags": ("tests/test_zppy_pcmdi_diags.py",),
+}
+ZPPY_INTERFACES_UNIT_TESTS: Dict[str, Tuple[str, ...]] = {
+    "global_time_series": ("tests/unit/global_time_series",),
+    "pcmdi_diags": ("tests/unit/pcmdi_diags",),
+}
+
 
 @dataclass(frozen=True)
 class MachineProfile:
@@ -176,6 +200,7 @@ REPO_SPECS: Tuple[RepoSpec, ...] = (
         name="zppy",
         default_branch="main",
         conda_dir="conda",
+        tasks=("climo", "ts", "tc_analysis"),
     ),
 )
 

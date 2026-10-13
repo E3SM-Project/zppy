@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 import re
 import subprocess
@@ -7,7 +8,13 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from mache import MachineInfo
 
-from tests.integration.weekly_cfgs import WEEKLY_CFGS
+from tests.integration.weekly_cfgs import (
+    TASK_NAMES,
+    WEEKLY_CFGS,
+    expand_task_selection,
+)
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 # To run:
 # `python -m pip install .` latest code into conda env
@@ -263,84 +270,48 @@ def get_expansions(
     ]
     expansions["environment_commands"] = specifics["environment_commands"]
 
-    # Activate requested tests
+    task_activations: Dict[str, List[str]] = {
+        "climo": [
+            "active_climo_month_atm",
+            "active_climo_month_lnd",
+            "active_climo_month_lnd_for_livvkit",
+            "active_climo_diurnal_atm",
+        ],
+        "ts": [
+            "active_ts_daily_atm",
+            "active_ts_month_atm",
+            "active_ts_month_atm_glb",
+            "active_ts_month_lnd",
+            "active_ts_month_lnd_for_livvkit",
+            "active_ts_month_lnd_glb",
+            "active_ts_month_rof",
+        ],
+        "e3sm_to_cmip": [
+            "active_e3sm_to_cmip_month_atm",
+            "active_e3sm_to_cmip_month_lnd",
+        ],
+        "tc_analysis": ["active_tc_analysis"],
+        "e3sm_diags": ["active_e3sm_diags"],
+        "mpas_analysis": ["active_mpas_analysis"],
+        "global_time_series": ["active_global_time_series"],
+        "ilamb": ["active_ilamb"],
+        "livvkit": ["active_livvkit"],
+        "pcmdi_diags": ["active_pcmdi_diags"],
+    }
+    for activation in {
+        name for names in task_activations.values() for name in names
+    }:
+        expansions[activation] = "False"
 
-    # Dependencies
-    expansions["active_climo_month_atm"] = "False"  # For e3sm_diags
-    expansions["active_climo_month_lnd"] = "False"  # For e3sm_diags
-    expansions["active_climo_month_lnd_for_livvkit"] = "False"  # For livvkit
-    expansions["active_climo_diurnal_atm"] = "False"  # For e3sm_diags
-
-    expansions["active_ts_daily_atm"] = "False"  # For e3sm_diags
-    expansions["active_ts_month_atm"] = "False"  # For e3sm_diags, ilamb, pcmdi_diags
-    expansions["active_ts_month_atm_glb"] = "False"  # For global_time_series
-    expansions["active_ts_month_lnd"] = "False"  # For ilamb
-    expansions["active_ts_month_lnd_for_livvkit"] = "False"  # For livvkit
-    expansions["active_ts_month_lnd_glb"] = "False"  # For global_time_series
-    expansions["active_ts_month_rof"] = "False"  # For e3sm_diags
-
-    expansions["active_e3sm_to_cmip_month_atm"] = "False"  # For ilamb, pcmdi_diags
-    expansions["active_e3sm_to_cmip_month_lnd"] = "False"  # For ilamb
-
-    expansions["active_tc_analysis"] = "False"  # For e3sm_diags
-
-    # Plotting packages
-    expansions["active_e3sm_diags"] = "False"
-    expansions["active_mpas_analysis"] = "False"  # Also used for global_time_series
-    expansions["active_global_time_series"] = "False"
-    expansions["active_ilamb"] = "False"
-    expansions["active_livvkit"] = "False"
-    expansions["active_pcmdi_diags"] = "False"
-
-    if "e3sm_diags" in specifics["tasks_to_run"]:
-        expansions["active_e3sm_diags"] = "True"
-
-        expansions["active_climo_month_atm"] = "True"
-        expansions["active_climo_month_lnd"] = "True"
-        expansions["active_climo_diurnal_atm"] = "True"
-
-        expansions["active_ts_month_atm"] = "True"
-        expansions["active_ts_month_rof"] = "True"
-        expansions["active_ts_daily_atm"] = "True"
-
-        expansions["active_tc_analysis"] = "True"
-
-    if "mpas_analysis" in specifics["tasks_to_run"]:
-        expansions["active_mpas_analysis"] = "True"
-
-    if "global_time_series" in specifics["tasks_to_run"]:
-        expansions["active_global_time_series"] = "True"
-
-        expansions["active_ts_month_atm_glb"] = "True"
-        expansions["active_ts_month_lnd_glb"] = "True"
-
-        expansions["active_mpas_analysis"] = "True"
-
-    if "ilamb" in specifics["tasks_to_run"]:
-        expansions["active_ilamb"] = "True"
-
-        expansions["active_ts_month_atm"] = "True"
-        expansions["active_ts_month_lnd"] = "True"
-
-        expansions["active_e3sm_to_cmip_month_atm"] = "True"
-        expansions["active_e3sm_to_cmip_month_lnd"] = "True"
-
-    if "livvkit" in specifics["tasks_to_run"]:
-        expansions["active_livvkit"] = "True"
-
-        expansions["active_climo_month_lnd_for_livvkit"] = "True"
-
-        expansions["active_ts_month_lnd_for_livvkit"] = "True"
-
-    if "pcmdi_diags" in specifics["tasks_to_run"]:
-        expansions["active_pcmdi_diags"] = "True"
-
-        expansions["active_ts_month_atm"] = "True"
-
-        expansions["active_e3sm_to_cmip_month_atm"] = "True"
+    selected_tasks, required_by = expand_task_selection(specifics["tasks_to_run"])
+    for task, dependents in required_by.items():
+        logger.info("also running %s (required by %s)", task, ", ".join(dependents))
+    for task in selected_tasks:
+        for activation in task_activations[task]:
+            expansions[activation] = "True"
 
     expansions["cfgs_to_run"] = specifics["cfgs_to_run"]
-    expansions["tasks_to_run"] = specifics["tasks_to_run"]
+    expansions["tasks_to_run"] = selected_tasks
 
     expansions["diagnostics_base_path"] = config.get("diagnostics", "base_path")
     expansions["machine"] = machine
@@ -635,7 +606,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="A cfg to generate; repeatable. Omit for the TEST_SPECIFICS list.",
     )
     parser.add_argument(
-        "--task", dest="tasks", action="append", help="A task to enable; repeatable."
+        "--task",
+        dest="tasks",
+        action="append",
+        choices=TASK_NAMES,
+        help="A task to enable; repeatable.",
     )
     parser.add_argument(
         "--env-cmd",

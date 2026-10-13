@@ -12,6 +12,8 @@ from typing import Set
 import pytest
 
 from tests.integration.weekly_cfgs import (
+    TASK_DEPENDENCIES,
+    TASK_NAMES,
     V2_CASE_NAME,
     V3_CASE_NAME,
     WEEKLY_CFGS,
@@ -55,6 +57,26 @@ def test_the_case_matches_the_template(cfg) -> None:
     template = _template(cfg.name)
     expected = "case_name_v2" if cfg.case == V2_CASE_NAME else "case_name#"
     assert expected in template
+
+
+def test_task_dependencies_match_weekly_template_sections() -> None:
+    sections_by_cfg = {}
+    for cfg in WEEKLY_CFGS:
+        sections = set(re.findall(r"^\[([a-z0-9_]+)\]", _template(cfg.name), re.M))
+        sections_by_cfg[cfg.name] = sections & set(TASK_NAMES)
+
+    assert set(TASK_DEPENDENCIES) == set(TASK_NAMES)
+    assert all(
+        dependency in TASK_NAMES
+        for dependencies in TASK_DEPENDENCIES.values()
+        for dependency in dependencies
+    )
+    for task, dependencies in TASK_DEPENDENCIES.items():
+        for dependency in dependencies:
+            assert any(
+                task in sections and dependency in sections
+                for sections in sections_by_cfg.values()
+            )
 
 
 def test_non_weekly_cfgs_fall_back_to_their_name() -> None:

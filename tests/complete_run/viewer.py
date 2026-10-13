@@ -112,6 +112,7 @@ table.summary tfoot td { font-weight: 600; background: var(--card); }
 .result { font-size: 11px; letter-spacing: .04em; text-transform: uppercase;
   border-radius: 4px; padding: 2px 6px; border: 1px solid var(--line); }
 .result-clean { background: #1e7a3d; color: #fff; border-color: #1e7a3d; }
+.result-failed { background: #b3261e; color: #fff; border-color: #b3261e; }
 .result-unchecked { color: var(--muted); }
 """
 
@@ -397,10 +398,12 @@ class SummaryRow:
     viewer_href: str = ""
     # What the package was tested at: "main @ 1a2b3c4d", "E3SM-Unified".
     tested_at: str = ""
+    image_applicable: bool = True
+    task_status: str = ""
 
     @property
     def checked(self) -> bool:
-        return bool(self.counts)
+        return self.image_applicable and bool(self.counts)
 
     @property
     def total(self) -> int:
@@ -427,16 +430,20 @@ def render_summary(
     environment_note: str = "",
 ) -> str:
     """Render the run-level summary: every package, then every check."""
-    checked: List[SummaryRow] = [row for row in rows if row.checked]
+    image_rows: List[SummaryRow] = [row for row in rows if row.image_applicable]
+    checked: List[SummaryRow] = [row for row in image_rows if row.checked]
     needing_review: List[SummaryRow] = [row for row in checked if row.reviewable]
-    unchecked: List[SummaryRow] = [row for row in rows if not row.checked]
+    unchecked: List[SummaryRow] = [row for row in image_rows if not row.checked]
 
-    headline: str = (
-        f"{len(needing_review)} of {len(rows)} checks need review"
-        f" ({sum(row.reviewable for row in checked)} images)."
-    )
-    if unchecked:
-        headline += f" {len(unchecked)} recorded no comparison."
+    if image_rows:
+        headline: str = (
+            f"{len(needing_review)} of {len(image_rows)} checks need review"
+            f" ({sum(row.reviewable for row in checked)} images)."
+        )
+        if unchecked:
+            headline += f" {len(unchecked)} recorded no comparison."
+    else:
+        headline = "Image check not applicable: no plotting tasks selected."
     baseline_text: str = (
         f"Compared against baseline <b>{html.escape(baseline)}</b>."
         if baseline
@@ -472,20 +479,31 @@ def _render_package_table(rows: Sequence[SummaryRow]) -> str:
 
     body: List[str] = []
     for package, group in packages.items():
-        checked = [row for row in group if row.checked]
+        image_rows = [row for row in group if row.image_applicable]
+        checked = [row for row in image_rows if row.checked]
         counts = _sum_counts(checked)
         tested_at = sorted({row.tested_at for row in group if row.tested_at})
+        if image_rows:
+            result: str = _result_badge(
+                _worst(counts), bool(checked), len(checked) < len(image_rows)
+            )
+            image_cells: str = (
+                _num(sum(1 for row in checked if row.reviewable))
+                + _num(len(image_rows))
+                + _num(sum(counts.get(s, 0) for s in REVIEWABLE_SEVERITIES))
+                + _num(sum(counts.values()))
+            )
+        else:
+            result = _task_result_badge([row.task_status for row in group])
+            image_cells = "".join("<td class='num zero'>n/a</td>" for _ in range(4))
         body.append(
             "<tr>"
             f"<td><b><a href='#{_package_anchor(package)}'>"
             f"{html.escape(package)}</a></b></td>"
             f"<td>{html.escape(', '.join(tested_at)) or '—'}</td>"
             f"<td>{html.escape(', '.join(sorted({row.task for row in group})))}</td>"
-            f"<td>{_result_badge(_worst(counts), bool(checked), len(checked) < len(group))}</td>"
-            + _num(sum(1 for row in checked if row.reviewable))
-            + _num(len(group))
-            + _num(sum(counts.get(s, 0) for s in REVIEWABLE_SEVERITIES))
-            + _num(sum(counts.values()))
+            f"<td>{result}</td>"
+            + image_cells
             + "</tr>"
         )
 
@@ -524,22 +542,36 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
             if row.viewer_href
             else html.escape(row.task)
         )
-        cells: str = "".join(
-            _num(row.counts.get(s, 0)) if row.checked else "<td class='num zero'>—</td>"
-            for s in severities
+        cells: str = (
+            "".join(
+                _num(row.counts.get(s, 0))
+                if row.checked
+                else "<td class='num zero'>—</td>"
+                for s in severities
+            )
+            if row.image_applicable
+            else "".join("<td class='num zero'>n/a</td>" for _ in severities)
         )
-        cosmetic: int = row.total - row.reviewable
+        result: str = (
+            _result_badge(row.worst, row.checked)
+            if row.image_applicable
+            else _task_result_badge([row.task_status])
+        )
         body.append(
             f"<tr{row_id}>"
             f"<td>{html.escape(row.package)}</td>"
             f"<td>{task}</td>"
             f"<td>{html.escape(row.cfg)}</td>"
-            f"<td>{_result_badge(row.worst, row.checked)}</td>"
+            f"<td>{result}</td>"
             + cells
             + (
-                _num(cosmetic) + _num(row.total)
-                if row.checked
-                else "<td></td><td></td>"
+                _num(row.total - row.reviewable) + _num(row.total)
+                if row.image_applicable and row.checked
+                else (
+                    "<td class='num zero'>—</td><td class='num zero'>—</td>"
+                    if row.image_applicable
+                    else "<td class='num zero'>n/a</td><td class='num zero'>n/a</td>"
+                )
             )
             + "</tr>"
         )
@@ -591,6 +623,19 @@ def _result_badge(worst: str, checked: bool, partly_unchecked: bool = False) -> 
         return f"<span class='sev sev-{html.escape(worst)}'>{html.escape(worst)}</span>{suffix}"
     return f"<span class='result result-clean'>clean</span>{suffix}"
 
+
+def _task_result_badge(statuses: Sequence[str]) -> str:
+    """Display the job-status result for non-plotting tasks."""
+    failed: int = sum(
+        int(match.group(1))
+        for status in statuses
+        if (match := re.match(r"(\d+) failed jobs$", status))
+    )
+    if failed:
+        return f"<span class='result result-failed'>{failed} failed jobs</span>"
+    if statuses and all(status == "OK" for status in statuses):
+        return "<span class='result result-clean'>OK</span>"
+    return "<span class='result result-unchecked'>not run</span>"
 
 def _num(value: int) -> str:
     css: str = "num zero" if value == 0 else "num"
