@@ -51,7 +51,7 @@ def test_new_cfg_without_baseline_is_not_image_compared(
         "check_images",
         fail_comparison,
     )
-    results = {}
+    results: dict[str, Results] = {}
 
     image_checker.set_up_and_run_image_checker(
         "legacy_3.2.0_comprehensive_v3",

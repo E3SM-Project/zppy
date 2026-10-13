@@ -458,7 +458,7 @@ def build_manifest(
     E3SM-Unified, which record the Unified version and their package version
     instead of a commit.
     """
-    repos: Dict[str, Dict[str, str]] = {}
+    repos: Dict[str, Dict[str, object]] = {}
     unified_packages = (unified or {}).get("packages")
     unified_packages = unified_packages if isinstance(unified_packages, dict) else {}
     for name, released in environments.items():

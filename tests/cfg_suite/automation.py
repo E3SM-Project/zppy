@@ -29,7 +29,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
-from typing import Callable, Dict, List, Sequence, Set, Tuple
+from typing import Any, Callable, Dict, List, Sequence, Set, Tuple
 
 from tests.cfg_suite import changes as changes_module
 from tests.cfg_suite import envdiff
@@ -430,17 +430,17 @@ def _stage_prepare(run: _Run) -> None:
         if env_type == ENV_TYPE_UNIFIED:
             run.environments[spec.name] = unified_environment(spec.name, run.machine)
             if spec.name == "zppy":
-                checkout = create_checkout(
+                zppy_checkout = create_checkout(
                     spec.name,
                     _repo_path(run.args, spec),
                     run.args.branches.get(spec.name, spec.default_branch),
                     run.worktree_root,
                 )
-                run.checkouts.append(checkout)
+                run.checkouts.append(zppy_checkout)
                 repos[spec.name] = {
-                    "sha": checkout.sha,
-                    "branch": checkout.branch,
-                    "worktree": checkout.path,
+                    "sha": zppy_checkout.sha,
+                    "branch": zppy_checkout.branch,
+                    "worktree": zppy_checkout.path,
                     "environment_type": ENV_TYPE_UNIFIED,
                 }
             else:
@@ -782,13 +782,19 @@ def _write_env_descriptions(run: _Run) -> None:
     ):
         if task not in run.tasks:
             continue
-        key: str = environment.name or environment.activation_command
-        if key not in package_lists:
-            package_lists[key] = provenance.conda_package_list(environment)
-            snapshots[task] = envdiff.parse_package_list_details(package_lists[key])
+        task_environment_key: str = (
+            environment.name or environment.activation_command
+        )
+        if task_environment_key not in package_lists:
+            package_lists[task_environment_key] = provenance.conda_package_list(
+                environment
+            )
+            snapshots[task] = envdiff.parse_package_list_details(
+                package_lists[task_environment_key]
+            )
         if environment.env_type == ENV_TYPE_UNIFIED:
             run.status["unified"] = provenance.describe_unified(
-                package_lists[key],
+                package_lists[task_environment_key],
                 run.args.unified_load_script or _unified_load_script(run.machine),
             )
         provenance.write_env_description(
@@ -796,7 +802,7 @@ def _write_env_descriptions(run: _Run) -> None:
             task,
             by_name.get(environment.repo_name),
             environment,
-            package_list=package_lists[key],
+            package_list=package_lists[task_environment_key],
             pinned=environment.pinned,
             unified_load_script=(
                 run.args.unified_load_script or _unified_load_script(run.machine)
@@ -1175,7 +1181,7 @@ def _refresh_environment_snapshots(run: _Run) -> None:
             logger.warning(
                 "Could not refresh environment export for %s: %s", name, error
             )
-        before: Dict[str, object] = _mapping(prepared.get(name))
+        before: Dict[str, str] = _string_mapping(prepared.get(name))
         changes: List[envdiff.PackageChange] = (
             envdiff.diff_package_maps(before, final_snapshots[name])
             if before and final_snapshots[name]
@@ -1205,31 +1211,36 @@ def _refresh_environment_snapshots(run: _Run) -> None:
     ).items():
         if task not in run.tasks:
             continue
-        key: str = environment.name or environment.activation_command
-        if key not in package_lists:
-            package_lists[key] = provenance.conda_package_list(environment)
-        package_list: str = package_lists[key]
+        final_task_environment_key: str = (
+            environment.name or environment.activation_command
+        )
+        if final_task_environment_key not in package_lists:
+            package_lists[final_task_environment_key] = provenance.conda_package_list(
+                environment
+            )
+        task_package_list: str = package_lists[final_task_environment_key]
         if environment.env_type == ENV_TYPE_UNIFIED:
             run.status["unified"] = provenance.describe_unified(
-                package_list,
+                task_package_list,
                 run.args.unified_load_script or _unified_load_script(run.machine),
             )
         if environment.repo_name not in final_snapshots:
-            final_snapshots[task] = envdiff.parse_package_list_details(package_list)
-            before: Dict[str, object] = _mapping(prepared.get(task))
-            changes: List[envdiff.PackageChange] = (
-                envdiff.diff_package_maps(before, final_snapshots[task])
-                if before and final_snapshots[task]
+            task_snapshot = envdiff.parse_package_list_details(task_package_list)
+            final_snapshots[task] = task_snapshot
+            task_before = _string_mapping(prepared.get(task))
+            task_changes: List[envdiff.PackageChange] = (
+                envdiff.diff_package_maps(task_before, task_snapshot)
+                if task_before and task_snapshot
                 else []
             )
-            if changes:
+            if task_changes:
                 drift[task] = [
                     {
                         "name": change.name,
                         "prepared": change.baseline,
                         "final": change.candidate,
                     }
-                    for change in changes
+                    for change in task_changes
                 ]
                 logger.warning(
                     "Environment changed during run for %s: %s",
@@ -1237,11 +1248,11 @@ def _refresh_environment_snapshots(run: _Run) -> None:
                     ", ".join(
                         f"{change.name} ({change.baseline or '—'} -> "
                         f"{change.candidate or '—'})"
-                        for change in changes
+                        for change in task_changes
                     ),
                 )
         path = os.path.join(run.layout.env_descriptions, f"{task}.txt")
-        if not provenance.refresh_env_description_packages(path, package_list):
+        if not provenance.refresh_env_description_packages(path, task_package_list):
             logger.warning("Could not refresh environment description for %s", task)
 
     run.status["environment_snapshots_final"] = final_snapshots
@@ -1253,7 +1264,7 @@ def _refresh_environment_snapshots(run: _Run) -> None:
 
     provenance.refresh_distributed_env_descriptions(
         run.layout.env_descriptions,
-        _mapping(run.status.get("www_root_by_cfg")),
+        _string_mapping(run.status.get("www_root_by_cfg")),
         run.cfgs,
         run.tasks,
     )
@@ -1287,8 +1298,10 @@ def _write_environment_viewers(
             environment_note=note,
             repos=_mapping(run.status.get("repos")),
             baseline=summary_baseline,
-            task_status_by_cfg=_mapping(run.status.get("task_status_by_cfg")),
-            baselines_by_cfg_task=baseline_entries,
+            task_status_by_cfg=_nested_string_mapping(
+                run.status.get("task_status_by_cfg")
+            ),
+            baselines_by_cfg_task=_nested_object_mapping(baseline_entries),
             changes_since_baseline=_sequence(run.status.get("changes_since_baseline")),
             changes_note=str(run.status.get("changes_since_baseline_note") or ""),
         )
@@ -1373,6 +1386,40 @@ def _mapping(value: object) -> Dict[str, object]:
     return value if isinstance(value, dict) else {}
 
 
+def _string_mapping(value: object) -> Dict[str, str]:
+    """Return string values from an untyped status mapping."""
+    if not isinstance(value, dict):
+        return {}
+    return {
+        str(key): item
+        for key, item in value.items()
+        if isinstance(key, str) and isinstance(item, str)
+    }
+
+
+def _nested_string_mapping(value: object) -> Dict[str, Dict[str, str]]:
+    """Return nested string mappings from an untyped status field."""
+    if not isinstance(value, dict):
+        return {}
+    return {
+        key: mapping
+        for key, item in value.items()
+        if isinstance(key, str)
+        and (mapping := _string_mapping(item))
+    }
+
+
+def _nested_object_mapping(value: object) -> Dict[str, Dict[str, object]]:
+    """Return nested object mappings from an untyped status field."""
+    if not isinstance(value, dict):
+        return {}
+    return {
+        key: mapping
+        for key, item in value.items()
+        if isinstance(key, str) and (mapping := _mapping(item))
+    }
+
+
 def _sequence(value: object) -> List[Dict[str, object]]:
     """Return a list of dictionaries from a status field of unknown shape."""
     if not isinstance(value, list):
@@ -1394,7 +1441,7 @@ class _KeyValueAction(argparse.Action):
         self,
         parser: argparse.ArgumentParser,
         namespace: argparse.Namespace,
-        values: str,
+        values: str | Sequence[Any] | None,
         option_string: str | None = None,
     ) -> None:
         mapping: Dict[str, str] = dict(getattr(namespace, self.dest, None) or {})
@@ -1424,7 +1471,7 @@ class _ListAction(argparse.Action):
         self,
         parser: argparse.ArgumentParser,
         namespace: argparse.Namespace,
-        values: str,
+        values: str | Sequence[Any] | None,
         option_string: str | None = None,
     ) -> None:
         seen: Set[str] = set(getattr(namespace, "_cli_list_dest_seen", set()))

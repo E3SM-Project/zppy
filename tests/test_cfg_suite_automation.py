@@ -168,8 +168,9 @@ def test_missing_cfg_baselines_are_recorded_as_not_compared(tmp_path) -> None:
 
     assert automation._record_baseline(run) is not None
 
-    entries = run.status["baseline_by_cfg_task"]
-    assert entries[f"{cfg}:global_time_series"] == {
+    entries = automation._mapping(run.status.get("baseline_by_cfg_task"))
+    entry = automation._mapping(entries.get(f"{cfg}:global_time_series"))
+    assert entry == {
         "state": "not-compared",
         "reason": "new cfg",
         "tag": "",
@@ -177,7 +178,7 @@ def test_missing_cfg_baselines_are_recorded_as_not_compared(tmp_path) -> None:
         "generated": "",
         "repos": {},
     }
-    assert run.status["baseline"]["tag"] == "previous"
+    assert automation._mapping(run.status.get("baseline"))["tag"] == "previous"
 
 
 def test_repo_path_uses_the_real_directory_names() -> None:
@@ -514,6 +515,11 @@ def test_report_refreshes_package_snapshot_and_environment_export(
         "métrique 1.0.0 build-é dépôt\n"
     )
     exports: List[Tuple[str, str]] = []
+
+    def record_export(environment: Environment, path: str) -> str:
+        exports.append((environment.repo_name, path))
+        return path
+
     monkeypatch.setattr(
         automation.provenance,
         "conda_package_list",
@@ -522,17 +528,20 @@ def test_report_refreshes_package_snapshot_and_environment_export(
     monkeypatch.setattr(
         automation.provenance,
         "export_environment_file",
-        lambda environment, path: (
-            exports.append((environment.repo_name, path)) or path
-        ),
+        record_export,
     )
 
     automation._refresh_environment_snapshots(run)
 
-    assert run.status["environment_snapshots_final"]["e3sm_to_cmip"]["numpy"] == (
+    snapshots = automation._mapping(run.status.get("environment_snapshots_final"))
+    e3sm_snapshot = automation._mapping(snapshots.get("e3sm_to_cmip"))
+    assert e3sm_snapshot["numpy"] == (
         "2.2.0 py313_0 conda-forge"
     )
-    assert run.status["environment_drift"]["changed_environments"] == ["e3sm_to_cmip"]
+    drift = automation._mapping(run.status.get("environment_drift"))
+    assert automation._string_list(drift.get("changed_environments")) == [
+        "e3sm_to_cmip"
+    ]
     assert exports == [("e3sm_to_cmip", run.layout.environment_file("e3sm_to_cmip"))]
     refreshed = description.read_text(encoding="utf-8")
     assert "Generated: 2026-10-01 12:00:00" in refreshed

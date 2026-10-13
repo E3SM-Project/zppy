@@ -199,8 +199,8 @@ def _baseline_line(
         return f"* Baseline: `{tag}` (produced {produced})"
     if not baseline.get("tag"):
         return "* Baseline: _none promoted_"
-    produced: str = str(baseline.get("generated") or "unknown")[:10]
-    return f"* Baseline: `{baseline['tag']}` (produced {produced})"
+    baseline_produced: str = str(baseline.get("generated") or "unknown")[:10]
+    return f"* Baseline: `{baseline['tag']}` (produced {baseline_produced})"
 
 
 def _baseline_selection_section(report: Dict[str, Any]) -> List[str]:

@@ -226,10 +226,15 @@ def test_apply_dependency_pins_uses_the_selected_environment(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     calls: List[List[str]] = []
+
+    def record_call(args: Sequence[str], **kwargs: object) -> str:
+        calls.append(list(args))
+        return ""
+
     monkeypatch.setattr(
         environments,
         "run_command",
-        lambda args, **kwargs: calls.append(list(args)) or "",
+        record_call,
     )
     environment = Environment("e3sm_diags", ENV_TYPE_DEV, "diags-env", "activate")
 

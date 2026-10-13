@@ -362,6 +362,7 @@ def compare_run_environments(
             detail = "Compared by package version using " + " and ".join(sources) + "."
         if baseline_is_unified:
             unified_only = len(set(baseline_packages) - set(candidate_packages))
+            assert baseline_description is not None
             detail = (
                 f"The baseline ran {repo} from E3SM-Unified, compared by version "
                 f"against env_descriptions/{baseline_description[0]}.txt. "
