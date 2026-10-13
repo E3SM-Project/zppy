@@ -9,8 +9,10 @@ import pytest
 from PIL import Image
 
 from tests.integration.image_severity import (
+    IMAGE_REVIEW_COLUMNS,
     IDENTICAL,
     MAJOR,
+    MISSING,
     MINOR,
     NEGLIGIBLE,
     STRUCTURAL,
@@ -18,11 +20,27 @@ from tests.integration.image_severity import (
     compare,
     group_by_cause,
     localized_change_pixels,
+    missing_image_count,
+    needs_review_count,
     tolerant_difference,
+    total_needing_attention_count,
     trim_background,
 )
 
 WHITE = 255
+
+
+def test_image_review_counts_separate_missing_from_other_reviews() -> None:
+    counts = {MISSING: 2, MINOR: 3, MAJOR: 4, IDENTICAL: 10}
+
+    assert IMAGE_REVIEW_COLUMNS == (
+        "Missing",
+        "Needs review (excluding missing)",
+        "Total needing attention",
+    )
+    assert missing_image_count(counts) == 2
+    assert needs_review_count(counts) == 7
+    assert total_needing_attention_count(counts) == 9
 
 
 def blank(height=80, width=80):

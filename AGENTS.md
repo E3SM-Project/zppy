@@ -246,6 +246,11 @@ file sweeps are limited to the selected tasks and their dependencies. The
 complete-run report includes a row for every task package, including the
 non-plotting `zppy` and `e3sm_to_cmip` tasks.
 
+Reports also list repository commits or E3SM-Unified package-version changes
+since each selected cfg/task baseline in JSON, Markdown, and `index.html`.
+Image summaries share the `Missing`, `Needs review (excluding missing)`, and
+`Total needing attention` counts; total attention includes missing images.
+
 Adding a plotting task to a weekly cfg means adding it to `image_tasks` there.
 Legacy cfgs exist only to exercise older cfg syntax; one that has become a copy
 of a current cfg apart from its paths should be removed, not kept.

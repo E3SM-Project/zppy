@@ -13,7 +13,7 @@ from tests.complete_run.params import REPO_SPECS_BY_NAME, repo_for_task
 from tests.complete_run.provenance import read_generated_date
 
 _PR_NUMBER = re.compile(r"\(#(\d+)\)")
-_UNIFIED_TASK_PACKAGES = {"ilamb": "ILAMB", "livvkit": "livvkit"}
+_UNIFIED_TASK_PACKAGES = {"ilamb": "ILAMB", "livvkit": "LIVVkit"}
 
 
 def collect_changes(

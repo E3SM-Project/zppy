@@ -175,6 +175,44 @@ def test_markdown_lists_the_tested_commits(paths) -> None:
     assert "test-zppy-main-20260804_run1" in markdown
 
 
+def test_changes_since_baseline_are_in_json_and_markdown(paths) -> None:
+    status = _passing_status()
+    status["changes_since_baseline"] = [
+        {
+            "repo": "zppy",
+            "tasks": ["climo"],
+            "baseline": {
+                "tag": "20260701_run1",
+                "generated": "2026-07-01T00:00:00Z",
+                "commit": "b" * 40,
+            },
+            "tested": {"branch": "feature", "commit": "c" * 40},
+            "range_type": "commit",
+            "count": 1,
+            "commits": [
+                {
+                    "sha": "c" * 40,
+                    "date": "2026-07-02",
+                    "subject": "Fix issue (#42)",
+                    "url": "https://github.com/E3SM-Project/zppy/pull/42",
+                }
+            ],
+        }
+    ]
+    status["changes_since_baseline_note"] = "Worktree caveat."
+
+    report = report_module.render_report(status, paths)
+    markdown = report_module.render_markdown(report)
+
+    assert report["changes_since_baseline"][0]["count"] == 1
+    assert "## Changes since the baseline" in markdown
+    assert "Worktree caveat." in markdown
+    assert (
+        "[Fix issue (#42)](https://github.com/E3SM-Project/zppy/pull/42)"
+        in markdown
+    )
+
+
 def test_environment_section_records_pins_and_unified_script(paths) -> None:
     status = _passing_status()
     status["pin_dependencies"] = ["nco<5.4.0", "e3sm_diags:xarray==2025.1.0"]

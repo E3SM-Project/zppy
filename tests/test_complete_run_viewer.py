@@ -383,6 +383,39 @@ def test_summary_escapes_and_stays_self_contained() -> None:
     assert "http://" not in page and "https://" not in page
 
 
+def test_summary_renders_changes_since_baseline() -> None:
+    changes = [
+        {
+            "repo": "zppy",
+            "tasks": ["climo"],
+            "baseline": {"tag": "baseline-run", "commit": "a" * 40},
+            "tested": {"branch": "feature", "commit": "b" * 40},
+            "range_type": "commit",
+            "count": 1,
+            "commits": [
+                {
+                    "sha": "b" * 40,
+                    "subject": "Fix issue (#42)",
+                    "url": "https://github.com/E3SM-Project/zppy/pull/42",
+                }
+            ],
+        }
+    ]
+
+    page = viewer.render_summary(
+        [_row("zppy", "climo", "cfg", {})],
+        "tag",
+        changes_since_baseline=changes,
+        changes_note="Worktree caveat.",
+    )
+
+    assert "Changes since the baseline" in page
+    assert "baseline-run" in page
+    assert "Worktree caveat." in page
+    assert "Fix issue (#42)" in page
+    assert "https://github.com/E3SM-Project/zppy/pull/42" in page
+
+
 def test_notable_marker_reaches_the_css_as_an_escape() -> None:
     # A bare "\2022" in the Python source is an octal escape: the page got an
     # invisible control character and a stray "2" after each notable package.

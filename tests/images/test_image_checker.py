@@ -1,6 +1,10 @@
-from typing import List
+from pathlib import Path
+from typing import Any, List
 
-from tests.integration.image_checker import _compare_actual_and_expected
+from tests.complete_run import viewer
+from tests.integration import image_checker
+from tests.integration.image_checker import Results, _compare_actual_and_expected
+from tests.integration.image_severity import MISSING, MINOR, Comparison
 
 
 # Run this test with:
@@ -34,3 +38,68 @@ def test_compare(tmp_path):
     )
     assert missing_images == []
     assert mismatched_images == ["CRU-TREFHT-ANN-land_60S90N"]
+
+
+def test_markdown_and_html_attention_counts_match(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    class Config:
+        def get(self, section: str, key: str) -> str:
+            return (
+                "/unrelated"
+                if key == "base_path"
+                else "https://example.invalid"
+            )
+
+    class FakeMachineInfo:
+        config = Config()
+
+    monkeypatch.setattr(image_checker, "MachineInfo", FakeMachineInfo)
+    comparisons = [
+        Comparison("missing.png", MISSING, 1.0, 1.0, None, None, "missing"),
+        Comparison("changed.png", MINOR, 0.01, 0.0, (1, 1), (1, 1), "changed"),
+    ]
+    result = Results(
+        str(tmp_path / "diff"),
+        "task",
+        2,
+        ["missing.png"],
+        ["changed.png"],
+        comparisons,
+    )
+    summary_path = tmp_path / "summary.md"
+
+    image_checker.construct_markdown_summary_table(
+        {"cfg": result}, str(summary_path)
+    )
+    markdown = summary_path.read_text()
+    markdown_row = next(
+        line for line in markdown.splitlines() if line.startswith("| cfg |")
+    )
+    markdown_cells = [cell.strip() for cell in markdown_row.strip("|").split("|")]
+    html_page = viewer.render_summary(
+        [
+            viewer.SummaryRow(
+                "package",
+                "task",
+                "cfg",
+                {"MISSING": 1, "MINOR": 1},
+            )
+        ],
+        "tag",
+    )
+    check_table = html_page[html_page.index("By check") :]
+
+    expected_headers = (
+        "Missing",
+        "Needs review (excluding missing)",
+        "Total needing attention",
+    )
+    assert all(
+        header in markdown and header in html_page for header in expected_headers
+    )
+    assert markdown_cells[5:8] == ["1", "1", "2"]
+    assert (
+        "<td class='num'>1</td><td class='num'>1</td><td class='num'>2</td>"
+        in check_table
+    )
