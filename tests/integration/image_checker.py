@@ -334,7 +334,7 @@ def construct_markdown_summary_table(
             f"{image_severity.IMAGE_REVIEW_COLUMNS[1]} | "
             f"{image_severity.IMAGE_REVIEW_COLUMNS[2]} | Severity | \n"
         )
-        f.write("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | \n")
+        f.write("| --- | --- | --- | --- | --- | --- | --- | --- | --- | \n")
         for test_name, test_results in test_results_dict.items():
             counts = test_results.severity_counts
             missing = image_severity.missing_image_count(counts)
@@ -357,9 +357,7 @@ def construct_markdown_summary_table(
                     if os.path.exists(f"{diff_subdir}/missing_images.txt"):
                         missing_str = f"{missing} ([list]({web_link}/missing_images.txt))"
                     else:
-                        missing_str = (
-                            f"{test_results.image_count_missing} (no list created)"
-                        )
+                        missing_str = f"{missing} (no list created)"
                 has_mismatched: bool = needs_review > 0
                 if has_mismatched:
                     mismatched_list_exists = os.path.exists(

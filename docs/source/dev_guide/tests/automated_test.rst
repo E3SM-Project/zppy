@@ -55,6 +55,13 @@ start the run from only needs Python and ``mache``.
 
 ``report``
     Writes ``complete-run-report.json`` and ``complete-run-report.md``.
+    These include the repository commits or E3SM-Unified package-version
+    changes since each selected cfg/task baseline. The ``index.html`` summary
+    carries the same change list and the image-attention counts.
+
+The Markdown image summary and the ``index.html`` tables use the same
+attention columns: ``Missing``, ``Needs review (excluding missing)``, and
+``Total needing attention``. The last count includes missing images.
 
 Where a run lives
 -----------------

@@ -1069,6 +1069,9 @@ def _stage_report(run: _Run, stages_run: Sequence[str] = ()) -> None:
     with ``--stop-after`` leaves the stage as it was, so a partial run is never
     mistaken for a clean one.
     """
+    if run.environments:
+        _refresh_environment_snapshots(run)
+
     repo_paths = {
         spec.name: _repo_path(run.args, spec)
         for spec in REPO_SPECS
@@ -1081,7 +1084,6 @@ def _stage_report(run: _Run, stages_run: Sequence[str] = ()) -> None:
     )
 
     if run.environments:
-        _refresh_environment_snapshots(run)
         diffs, note = _compare_environments(run)
         run.status["environment_diff"] = envdiff.summarize(diffs)
         run.status["environment_note"] = note
