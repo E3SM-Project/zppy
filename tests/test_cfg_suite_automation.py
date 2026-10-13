@@ -593,9 +593,19 @@ def test_a_failed_stage_is_never_overwritten_with_passed(tmp_path) -> None:
         assert run.status["stage"] == stage
 
 
-def test_baseline_env_requires_a_promoted_baseline(tmp_path) -> None:
+def test_baseline_env_requires_a_promoted_baseline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     # Reproducing a baseline's dependencies is meaningless with no baseline.
-    run = _make_run(tmp_path, ["--env-type", "e3sm_diags=baseline"])
+    run = _make_run(
+        tmp_path,
+        ["--task", "e3sm_diags", "--env-type", "e3sm_diags=baseline"],
+    )
+    monkeypatch.setattr(
+        automation,
+        "create_checkout",
+        lambda *args, **kwargs: pytest.fail("checkout reached without a baseline"),
+    )
     with pytest.raises(automation.StageError, match="No baseline is promoted"):
         automation._stage_prepare(run)
 
