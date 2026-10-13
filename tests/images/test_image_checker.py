@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any, List
 
-from tests.complete_run import viewer
+from tests.cfg_suite import viewer
 from tests.integration import image_checker
 from tests.integration.image_checker import Results, _compare_actual_and_expected
 from tests.integration.image_severity import MISSING, MINOR, Comparison

@@ -56,12 +56,12 @@ These tests are ideally run weekly on the `main` branch.
 ## Commands to promote a baseline
 
 Expected results are no longer produced by copying a run over the previous
-baseline. Each complete run writes into its own immutable directory, and
+baseline. Each cfg-suite run writes into its own immutable directory, and
 promotion points `latest-main` at one:
 
 ```
-$ python -m tests.complete_run.promote --machine pm-cpu show
-$ python -m tests.complete_run.promote --machine pm-cpu run <tag>
+$ python -m tests.cfg_suite.promote --machine pm-cpu show
+$ python -m tests.cfg_suite.promote --machine pm-cpu run <tag>
 # Add --allow-failed once you have reviewed the differences and decided the
 # new results are correct.
 ```

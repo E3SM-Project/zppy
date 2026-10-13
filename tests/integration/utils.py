@@ -166,14 +166,14 @@ def get_perlmutter_expansions(config):
     return d
 
 
-# Written by generate_cfgs when it targets a complete-run directory, so the
+# Written by generate_cfgs when it targets a cfg-suite directory, so the
 # integration tests -- which call get_expansions() with no arguments -- check the
 # run that was generated rather than TEST_SPECIFICS' defaults. It lives beside
 # the generated cfgs, in the run's own throwaway worktree.
 RUN_SETTINGS_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "generated",
-    "complete_run_settings.json",
+    "cfg_suite_settings.json",
 )
 
 
@@ -218,7 +218,7 @@ def get_expansions(
     specifics : Optional[Dict[str, Any]]
         Test-run settings. Defaults to the module-level ``TEST_SPECIFICS``, so
         editing that dict by hand still works for one-off developer runs; the
-        complete run test passes its own instead of rewriting this file.
+        cfg suite test passes its own instead of rewriting this file.
     run_dir : Optional[str]
         The run directory this run writes into. When given, `user_output` and
         `user_www` point inside it rather than at a personal directory, so any
@@ -228,10 +228,10 @@ def get_expansions(
         paths resolve inside it. Defaults to whatever `latest-main` points at.
     output_dir : Optional[str]
         Where `user_output` points, overriding the run directory's own
-        ``output/``. The complete run test puts this intermediate data on
+        ``output/``. The cfg suite test puts this intermediate data on
         scratch.
 
-    Any argument left as None comes from the settings a complete run saved
+    Any argument left as None comes from the settings a cfg suite saved
     beside its generated cfgs, if there are any; otherwise from the defaults.
     """
     specifics, run_dir, baseline_dir, output_dir = _resolve_settings(
@@ -332,12 +332,12 @@ def _apply_run_locations(
 ):
     """Point the run and baseline paths at shared run directories.
 
-    A complete run writes into its own directory under a shared root, and
+    A cfg suite writes into its own directory under a shared root, and
     compares against whichever run is currently promoted. Both are resolved
     lazily so that importing this module never requires the shared root to
     exist -- a developer generating one cfg by hand does not need it.
     """
-    from tests.complete_run import layout
+    from tests.cfg_suite import layout
 
     if run_dir:
         expansions["run_dir"] = run_dir
@@ -467,7 +467,7 @@ def generate_cfgs(
     machine = expansions["machine"]
     if run_dir:
         _save_run_settings(
-            f"{git_top_level}/tests/integration/generated/complete_run_settings.json",
+            f"{git_top_level}/tests/integration/generated/cfg_suite_settings.json",
             {
                 "specifics": specifics,
                 "run_dir": run_dir,
@@ -556,7 +556,7 @@ def generate_cfgs(
 
     # The update_*_expected_files scripts are gone: baselines are no longer
     # produced by copying a run's output over the previous baseline. A run is
-    # its own baseline material, and `python -m tests.complete_run.promote`
+    # its own baseline material, and `python -m tests.cfg_suite.promote`
     # points latest-main at it.
     print("CFG FILES HAVE BEEN GENERATED FROM TEMPLATES WITH THESE SETTINGS:")
     print(f"UNIQUE_ID={specifics['unique_id']}")
@@ -583,7 +583,7 @@ def generate_cfgs(
 
 
 # Command-line interface ######################################################
-# The complete run test drives cfg generation through these flags rather than
+# The cfg suite test drives cfg generation through these flags rather than
 # rewriting TEST_SPECIFICS in place, so this file is never modified by a run.
 
 # zppy task name -> the TEST_SPECIFICS key holding its environment_commands.
@@ -718,7 +718,7 @@ def _build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     """Generate cfgs from command-line settings."""
     args = _build_parser().parse_args(argv)
-    from tests.complete_run.layout import parse_baseline_selections
+    from tests.cfg_suite.layout import parse_baseline_selections
 
     specifics = build_specifics(
         unique_id=args.unique_id,

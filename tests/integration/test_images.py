@@ -123,16 +123,16 @@ def run_test(
 def test_images():
     """Compare a run's plots against the promoted baseline.
 
-    The run and the baseline are both read from the shared complete-run root:
-    `ZPPY_COMPLETE_RUN_DIR` names the run under test, defaulting to whatever
+    The run and the baseline are both read from the shared cfg-suite root:
+    `ZPPY_CFG_SUITE_DIR` names the run under test, defaulting to whatever
     `get_expansions` resolves, and the baseline is whichever run `latest-main`
-    points at. Set `ZPPY_COMPLETE_RUN_BASELINE` to compare against a different
+    points at. Set `ZPPY_CFG_SUITE_BASELINE` to compare against a different
     promoted run, and `ZPPY_IMAGE_DIFF_SUFFIX` to keep a previous attempt's
     diffs.
     """
     expansions = get_expansions(
-        run_dir=os.environ.get("ZPPY_COMPLETE_RUN_DIR") or None,
-        baseline_dir=os.environ.get("ZPPY_COMPLETE_RUN_BASELINE") or None,
+        run_dir=os.environ.get("ZPPY_CFG_SUITE_DIR") or None,
+        baseline_dir=os.environ.get("ZPPY_CFG_SUITE_BASELINE") or None,
     )
     diff_dir_suffix = os.environ.get("ZPPY_IMAGE_DIFF_SUFFIX", "")
 

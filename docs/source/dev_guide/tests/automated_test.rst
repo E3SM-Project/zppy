@@ -4,16 +4,16 @@
 Automated testing of zppy
 *************************
 
-The complete run test builds development environments for ``zppy`` and the four
-packages whose tasks it launches, submits the weekly test configurations,
+The cfg suite builds development environments for ``zppy`` and the four
+packages whose tasks it launches, submits selected test configurations,
 validates the results, and writes a report.
 
 The automation accepts either command-line options or an INI configuration:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation \
-        --config tests/complete_run/complete-run.example.cfg
+    python -m tests.cfg_suite.automation \
+        --config tests/cfg_suite/cfg-suite.example.cfg
 
 The rest of this page covers what that command does, how to configure it, how to
 read its report, and how to run it on a schedule.
@@ -54,7 +54,7 @@ start the run from only needs Python and ``mache``.
     integration tests, and submits the image checker as its own batch job.
 
 ``report``
-    Writes ``complete-run-report.json`` and ``complete-run-report.md``.
+    Writes ``cfg-suite-report.json`` and ``cfg-suite-report.md``.
     These include the repository commits or E3SM-Unified package-version
     changes since each selected cfg/task baseline. The ``index.html`` summary
     carries the same change list and the image-attention counts.
@@ -74,7 +74,7 @@ directory under a shared, group-writable root that the web portal serves:
     /lcrc/group/e3sm/public_html/zppy_complete_run/
       runs/<tag>/
         manifest.json  status.json
-        complete-run-report.{json,md}
+        cfg-suite-report.{json,md}
         env_descriptions/          one per task
         www/                       zppy plots -- also the image baseline
         image_lists/               image_list_<cfg>.txt
@@ -86,6 +86,13 @@ directory under a shared, group-writable root that the web portal serves:
 
 Any maintainer can read, compare against, or promote any run. Nothing encodes
 whose account produced it.
+
+New tags use local time in ``YYYYMMDD_HHMMSS`` format. ``--label NAME`` (or
+``label`` in the INI file) appends ``_NAME``. An existing tag cannot be reused
+for a new run; pass ``--tag`` only to resume a run that already has
+``status.json``. The manifest records the submitting username and the stable
+creation time. Pruning orders runs by that manifest time, so older tags remain
+compatible with timestamped tags.
 
 Intermediate data stays out of this tree. zppy's post-processing output
 (climatologies, time series, job scripts and logs) and the worktrees are large,
@@ -135,7 +142,7 @@ Step 1: Determine what the current baseline is
 
 .. code-block:: bash
 
-    python -m tests.complete_run.promote --machine chrysalis show
+    python -m tests.cfg_suite.promote --machine chrysalis show
 
 That prints the channel's default run, any cfg/task overrides, and each run's
 repository SHAs, commit dates, and ages. Because baselines point to immutable
@@ -146,7 +153,7 @@ descriptions:
 
 .. code-block:: bash
 
-    baseline=$(python -m tests.complete_run.promote --machine chrysalis show \
+    baseline=$(python -m tests.cfg_suite.promote --machine chrysalis show \
         | python -c 'import json,sys; print(json.load(sys.stdin)["run"])')
     head -2 ${baseline}/env_descriptions/e3sm_diags.txt
 
@@ -187,13 +194,13 @@ Copy and edit the INI template, then run from the ``zppy`` repository:
 
 .. code-block:: bash
 
-    cp tests/complete_run/complete-run.example.cfg ~/.zppy-complete-run.cfg
-    $EDITOR ~/.zppy-complete-run.cfg
+    cp tests/cfg_suite/cfg-suite.example.cfg ~/.zppy-cfg-suite.cfg
+    $EDITOR ~/.zppy-cfg-suite.cfg
     screen  # So the run survives a dropped connection.
     ulimit -s unlimited  # Required for MPAS-Analysis to work inside `screen`.
 
-    python -m tests.complete_run.automation --config ~/.zppy-complete-run.cfg \
-        2>&1 | tee complete_run.log
+    python -m tests.cfg_suite.automation --config ~/.zppy-cfg-suite.cfg \
+        2>&1 | tee cfg_suite.log
     # Ctrl-A D to detach from screen.
 
 Which cfgs run
@@ -241,7 +248,7 @@ review:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis \
+    python -m tests.cfg_suite.automation --machine chrysalis \
         --branch e3sm_diags=my-feature-branch \
         --env-type e3sm_diags=baseline
 
@@ -256,7 +263,7 @@ and it is what the weekly scheduled run does:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis
+    python -m tests.cfg_suite.automation --machine chrysalis
 
 ``dev.yml`` carries floating constraints that only a fresh solve exercises, so
 this is the mode that catches a dependency regression.
@@ -266,7 +273,7 @@ environment and use the released one:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis \
+    python -m tests.cfg_suite.automation --machine chrysalis \
         --env-type mpas_analysis=unified --env-type e3sm_to_cmip=unified
 
 This is much faster when you only care about one package. ``livvkit`` always
@@ -275,7 +282,7 @@ runs from E3SM-Unified, as do ``climo``, ``ts``, ``tc_analysis``, and ``ilamb``.
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis \
+    python -m tests.cfg_suite.automation --machine chrysalis \
         --env-type zppy=unified --cfg weekly_comprehensive_v3 --task e3sm_diags
 
 The zppy worktree is still checked out and supplies the tested source; nothing is
@@ -290,7 +297,7 @@ command:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis \
+    python -m tests.cfg_suite.automation --machine chrysalis \
         --branch e3sm_diags=my-feature-branch \
         --env-type e3sm_diags=baseline \
         --env-type mpas_analysis=unified \
@@ -319,7 +326,7 @@ manifest, the report, and a final ``Pinned:`` line in each relevant environment
 description. This is for isolating a known dependency issue, not frozen-
 environment testing.
 
-The ``--config`` INI has a single ``[complete_run]`` section. Its keys are the
+The ``--config`` INI has a single ``[cfg_suite]`` section. Its keys are the
 long option names with underscores (for example, ``env_type`` and
 ``pin_dependencies``); list values are comma-separated and repo-keyed values use
 ``repo=value``. Explicit CLI options override the INI, which overrides defaults.
@@ -333,7 +340,7 @@ Run a subset of cfgs or tasks:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis \
+    python -m tests.cfg_suite.automation --machine chrysalis \
         --cfg weekly_comprehensive_v3 --cfg weekly_bundles \
         --task e3sm_diags --task global_time_series
 
@@ -352,7 +359,7 @@ For example, to exercise only CMIP conversion without running the image checker:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis \
+    python -m tests.cfg_suite.automation --machine chrysalis \
         --cfg weekly_comprehensive_v3 --task e3sm_to_cmip
 
 When no plotting task is selected, the report states that image checking is not
@@ -362,8 +369,8 @@ Reuse environments from an earlier run today:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis \
-        --existing-env zppy=test-zppy-main-20260918_run1
+    python -m tests.cfg_suite.automation --machine chrysalis \
+        --existing-env zppy=test-zppy-main-20260918_000001
 
 Resume an interrupted run. Pass the same ``--tag``, so it finds the worktrees
 and environments the first attempt created. The cfgs, tasks, environments, and
@@ -372,14 +379,14 @@ only to change them:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis \
-        --tag 20260918_run1 --start-stage validate
+    python -m tests.cfg_suite.automation --machine chrysalis \
+        --tag 20260918_000001 --start-stage validate
 
 Stop early, to check the setup before committing to a full run:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis \
+    python -m tests.cfg_suite.automation --machine chrysalis \
         --stop-after prepare
 
 Build the environments concurrently, which shortens ``prepare`` considerably.
@@ -387,7 +394,7 @@ It is off by default because parallel solves load a shared login node:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis --parallel-envs 5
+    python -m tests.cfg_suite.automation --machine chrysalis --parallel-envs 5
 
 ``--help`` lists every option, including the polling intervals and timeouts.
 
@@ -399,8 +406,8 @@ Both reports land in the run directory under the shared root:
 .. code-block:: text
 
     <shared root>/runs/<tag>/
-        complete-run-report.json   Machine-readable.
-        complete-run-report.md     For the weekly testing log.
+        cfg-suite-report.json   Machine-readable.
+        cfg-suite-report.md     For the weekly testing log.
         manifest.json              Commits, environments, and selections.
         status.json                Stage-by-stage state.
         env_descriptions/          One per task.
@@ -461,7 +468,7 @@ Because the run directory is served by the portal, that page has a URL. The
 report links to one per task, so reviewing a run means opening a page rather
 than browsing thousands of files over SSH.
 
-Failures are for human review. **A complete run never promotes a baseline on its
+Failures are for human review. **A cfg suite never promotes a baseline on its
 own**; promotion is always a separate, explicit command.
 
 If a run does not pass
@@ -492,13 +499,16 @@ with them:
 Running it on a schedule
 ========================
 
-``tests/complete_run/`` carries a controller and a crontab template. Keep the
+``tests/cfg_suite/`` carries a controller and a crontab template. Keep the
 automation INI and controller environment file outside the repository. The
 controller environment file contains controller-only settings and the path to
 the INI; machine, account, paths, selections, and environment settings belong in
 the INI. The controller holds a lock (``LOCK_FILE``,
-``~/.zppy_complete_run.lock`` by default) for the length of a run, so a second
+``~/.zppy_cfg_suite.lock`` by default) for the length of a run, so a second
 firing exits instead of overlapping.
+
+The weekly scheduled main-branch run is one use of the cfg suite; operators can
+also select configurations and tasks from the same framework.
 
 Chrysalis has no ``scrontab`` -- that is NERSC-specific -- so this is an
 ordinary login-node crontab.
@@ -508,24 +518,24 @@ ordinary login-node crontab.
 
    .. code-block:: bash
 
-       cp tests/complete_run/complete-run.example.cfg ~/.zppy-complete-run.cfg
-       cp tests/complete_run/complete-run.config.env.template ~/.zppy-complete-run.env
-       $EDITOR ~/.zppy-complete-run.cfg
-       $EDITOR ~/.zppy-complete-run.env
+       cp tests/cfg_suite/cfg-suite.example.cfg ~/.zppy-cfg-suite.cfg
+       cp tests/cfg_suite/cfg-suite.config.env.template ~/.zppy-cfg-suite.env
+       $EDITOR ~/.zppy-cfg-suite.cfg
+       $EDITOR ~/.zppy-cfg-suite.env
 
 2. Fill in the crontab template's placeholders and install it:
 
    .. code-block:: bash
 
-       $EDITOR tests/complete_run/complete-run.crontab.template
-       crontab tests/complete_run/complete-run.crontab.template
+       $EDITOR tests/cfg_suite/cfg-suite.crontab.template
+       crontab tests/cfg_suite/cfg-suite.crontab.template
        crontab -l
 
 3. Check on it:
 
    .. code-block:: bash
 
-       tail -f <LOG_DIR>/complete-run-controller.log
+       tail -f <LOG_DIR>/cfg-suite-controller.log
 
 .. warning::
 
@@ -546,7 +556,7 @@ is copied at promotion time; ``baselines/latest-main`` is pointed at the run:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.promote --machine chrysalis run 20260918_run1
+    python -m tests.cfg_suite.promote --machine chrysalis run 20260918_000001
 
 That is atomic, takes no time regardless of how many images the run produced,
 and leaves the previous baseline exactly where it was. Rolling back is promoting
@@ -554,8 +564,8 @@ the old run again:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.promote --machine chrysalis show
-    python -m tests.complete_run.promote --machine chrysalis run 20260911_run1
+    python -m tests.cfg_suite.promote --machine chrysalis show
+    python -m tests.cfg_suite.promote --machine chrysalis run 20260911_000001
 
 Promotion reads the run's own report and manifest, and refuses a run that did
 not pass or that was built from a feature branch:
@@ -563,7 +573,7 @@ not pass or that was built from a feature branch:
 .. code-block:: bash
 
     # After reviewing the differences and deciding the new results are correct:
-    python -m tests.complete_run.promote --machine chrysalis run 20260918_run1 \
+    python -m tests.cfg_suite.promote --machine chrysalis run 20260918_000001 \
         --allow-failed
 
 Expected results legitimately change when a dependency improves a plot, so
@@ -574,7 +584,7 @@ Release snapshots are another channel rather than another copy:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.promote --machine chrysalis run 20260918_run1 \
+    python -m tests.cfg_suite.promote --machine chrysalis run 20260918_000001 \
         --channel unified_1.13.0
 
 Partial updates
@@ -586,7 +596,7 @@ leaving the default and other entries unchanged:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.promote --machine chrysalis run 20260918_run1 \
+    python -m tests.cfg_suite.promote --machine chrysalis run 20260918_000001 \
         --cfg weekly_comprehensive_v3 --task pcmdi_diags
 
 Partial promotion checks only the selected entries. A passing task can be
@@ -604,7 +614,7 @@ for the new template before running it.
 Comparing against a specific baseline
 -------------------------------------
 
-``--baseline-dir`` on cfg generation, or ``ZPPY_COMPLETE_RUN_BASELINE`` when
+``--baseline-dir`` on cfg generation, or ``ZPPY_CFG_SUITE_BASELINE`` when
 running the image checker directly, compares against a run other than
 ``latest-main``.
 
@@ -614,9 +624,9 @@ selection; otherwise the channel's resolved default or override is used:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis \
-        --baseline pcmdi_diags=20260911_run1 \
-        --baseline weekly_comprehensive_v3:pcmdi_diags=20260918_run1
+    python -m tests.cfg_suite.automation --machine chrysalis \
+        --baseline pcmdi_diags=20260911_000001 \
+        --baseline weekly_comprehensive_v3:pcmdi_diags=20260918_000001
 
 For ``--env-type <repo>=baseline``, all selected tasks using that repository's
 environment must resolve to the same run; different selected runs cause a
@@ -626,17 +636,18 @@ override, and ``--older-than DAYS`` further limits pruning to old candidates.
 Deleting old runs
 -----------------
 
-Runs a channel points at are kept forever. The rest are pruned:
+Runs a channel points at are kept forever. Other runs are ordered by their
+manifest creation time, oldest first, before applying ``--keep``:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.promote --machine chrysalis prune --keep 8
+    python -m tests.cfg_suite.promote --machine chrysalis prune --keep 8
     # Reports what it would delete; add --delete to do it.
 
 Generating cfgs by hand
 =======================
 
-The complete run generates cfgs through a command-line interface, so it never
+The cfg suite generates cfgs through a command-line interface, so it never
 edits ``tests/integration/utils.py``. The same interface is available directly:
 
 .. code-block:: bash

@@ -109,7 +109,7 @@ jobs:
 
       # Does not run the integration tests, which require server access.
       # tests/images holds the unit tests for the image checker itself, which
-      # the complete run test relies on to produce a trustworthy verdict.
+      # the cfg suite test relies on to produce a trustworthy verdict.
       - name: Run Unit Tests
         run: |
           pytest tests/test_*.py tests/images

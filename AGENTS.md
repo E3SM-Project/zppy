@@ -138,17 +138,17 @@ There are two tiers:
 
 1. **Unit tests** — `pytest tests/test_*.py`. No HPC access needed; this is what
    CI runs on every pull request.
-2. **The complete run test** — the weekly integration test on the `main` branch.
-   It builds development environments for `zppy` and the four packages whose
+2. **The weekly main-branch run** — one scheduled use of the cfg suite. It
+   builds development environments for `zppy` and the four packages whose
    tasks it launches (`e3sm_diags`, `e3sm_to_cmip`, `MPAS-Analysis`,
    `zppy-interfaces`), submits the weekly cfgs to SLURM, and checks the
    resulting plots against expected results.
 
-The complete run test is driven by `tests/complete_run/`, orchestrated from
-`tests/complete_run/automation.py`. A human runs it with a single command:
+The cfg suite test is driven by `tests/cfg_suite/`, orchestrated from
+`tests/cfg_suite/automation.py`. A human runs it with a single command:
 
 ```bash
-python -m tests.complete_run.automation --machine chrysalis --account e3sm
+python -m tests.cfg_suite.automation --machine chrysalis --account e3sm
 ```
 
 Key properties to keep in mind when changing this code:
@@ -162,7 +162,7 @@ Key properties to keep in mind when changing this code:
   `python -m tests.integration.utils` flags; it does not edit `TEST_SPECIFICS`
   in `tests/integration/utils.py`.
 - **`env_description.txt` has a fixed format** (see
-  `tests/complete_run/provenance.py`). Every task's plots carry one, including
+  `tests/cfg_suite/provenance.py`). Every task's plots carry one, including
   in promoted baselines and older expected-results directories, and
   maintainers and tools read the `Generated:` line to date them per task.
   Changing the format silently breaks that. (The report dates the baseline as
@@ -191,7 +191,7 @@ Key properties to keep in mind when changing this code:
   Apply configured pins to mutable environments before exporting or describing
   them; never install into E3SM-Unified.
 - **Every image viewer and report states how the environment differed from the
-  baseline's** (`tests/complete_run/envdiff.py`). This is not decoration: in a
+  baseline's** (`tests/cfg_suite/envdiff.py`). This is not decoration: in a
   fresh-solve run the dependency list *is* the finding, and in a
   `--env-type <repo>=baseline` run a non-empty diff means the reproduction
   failed and the image differences are not attributable to code. The comparison
@@ -202,15 +202,15 @@ Key properties to keep in mind when changing this code:
 - **A run is its own baseline material.** Expected results are not a copy of a
   run; `baselines/latest-main` is the channel's default run and optional
   `baselines/main.overrides.json` maps cfg/task entries to other run tags.
-  Promotion (`python -m tests.complete_run.promote`) changes the default link
+  Promotion (`python -m tests.cfg_suite.promote`) changes the default link
   or writes per-entry overrides atomically; it never copies or destroys run
   material. A whole-run promotion clears that channel's overrides. Pruning must
   protect every run referenced by any channel default or override.
-- **A complete run never promotes on its own.** Promotion is always a separate,
+- **A cfg suite never promotes on its own.** Promotion is always a separate,
   explicit command, and it refuses a run that did not pass or came from a
   feature branch unless overridden.
 
-Layout (see `tests/complete_run/layout.py`, the single source of truth):
+Layout (see `tests/cfg_suite/layout.py`, the single source of truth):
 
 ```
 <shared root>/runs/<tag>/     one immutable run: www/, image_lists/, settings/,
@@ -220,15 +220,18 @@ Layout (see `tests/complete_run/layout.py`, the single source of truth):
                               output, job logs) and worktrees/
 ```
 
+`SUITE_ROOT_DIRNAME` in `tests/cfg_suite/params.py` keeps the existing
+`zppy_complete_run` shared and scratch root names stable for prior runs.
+
 Intermediate data goes to per-user scratch (`/lcrc/globalscratch/$USER` on
 Chrysalis) because it is large and worthless after validation. Anything a
 baseline needs from it must be copied into the run directory during
 `validate`; never make a baseline or a later run read from scratch, which is
 purged. The integration tests find a run's locations through
-`tests/integration/generated/complete_run_settings.json`, which cfg generation
+`tests/integration/generated/cfg_suite_settings.json`, which cfg generation
 writes into the run's worktree.
 
-Note two naming conventions for the same cfgs: the complete run uses the full
+Note two naming conventions for the same cfgs: the cfg suite uses the full
 template name (`weekly_comprehensive_v3`), while `tests/integration/image_checker.py`
 uses it without the `weekly_` prefix (`comprehensive_v3`). Doubling the prefix
 is an easy mistake; `RunLayout.www_case_dir` takes the full name.
@@ -243,7 +246,7 @@ selectable task and its input-task dependencies. `--task` accepts `climo`, `ts`,
 `global_time_series`, `ilamb`, `livvkit`, and `pcmdi_diags`; required tasks are
 included automatically. Environments, task-specific unit tests, and status
 file sweeps are limited to the selected tasks and their dependencies. The
-complete-run report includes a row for every task package, including the
+cfg-suite report includes a row for every task package, including the
 non-plotting `zppy` and `e3sm_to_cmip` tasks.
 
 Reports also list repository commits or E3SM-Unified package-version changes
@@ -254,13 +257,13 @@ Image summaries share the `Missing`, `Needs review (excluding missing)`, and
 Adding a plotting task to a weekly cfg means adding it to `image_tasks` there.
 Legacy cfgs exist only to exercise older cfg syntax; one that has become a copy
 of a current cfg apart from its paths should be removed, not kept.
-`DEFAULT_TASKS_TO_RUN` is in `tests/complete_run/params.py`. When testing a pull
+`DEFAULT_TASKS_TO_RUN` is in `tests/cfg_suite/params.py`. When testing a pull
 request, a human typically reduces these to the minimum relevant set with
 `--cfg` and `--task`.
 
 Each task's `.bash` file begins with `{{ environment_commands }}`, which
 specifies the environment that task runs in. That environment is usually
-distinct from the one `zppy` itself runs in, which is why the complete run test
+distinct from the one `zppy` itself runs in, which is why the cfg suite test
 builds several.
 
 For the full procedure, including the manual fallback, see

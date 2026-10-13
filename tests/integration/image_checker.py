@@ -11,7 +11,7 @@ from mache import MachineInfo
 from matplotlib import pyplot as plt
 from PIL import Image, ImageChops, ImageDraw
 
-from tests.complete_run.layout import RUN_SEGMENT as BASELINE_RUN_SEGMENT
+from tests.cfg_suite.layout import RUN_SEGMENT as BASELINE_RUN_SEGMENT
 from tests.integration import image_severity
 from tests.integration.image_severity import Comparison
 

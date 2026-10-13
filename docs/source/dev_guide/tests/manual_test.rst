@@ -22,7 +22,7 @@ Follow the steps below to test ``zppy``. As you do so, please produce a Markdown
 
    .. code-block:: bash
 
-       python -m tests.complete_run.automation --machine chrysalis --account e3sm
+       python -m tests.cfg_suite.automation --machine chrysalis --account e3sm
 
    This page remains the reference for what each step does, and is worth
    following when debugging a stage that keeps failing.

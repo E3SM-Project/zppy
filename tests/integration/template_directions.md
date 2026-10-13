@@ -57,18 +57,18 @@ then you should run the relevant ones to make sure they still work.
 These do not have automatic Python testing.
 The comprehensive and bundles tests do have this, however.
 These tests are ideally run weekly on the `main` branch, via
-`python -m tests.complete_run.automation` -- see
+`python -m tests.cfg_suite.automation` -- see
 `docs/source/dev_guide/tests/automated_test.rst`.
 
 ## Commands to promote a baseline
 
 Expected results are no longer produced by copying a run over the previous
-baseline. Each complete run writes into its own immutable directory, and
+baseline. Each cfg suite writes into its own immutable directory, and
 promotion points `latest-main` at one:
 
 ```
-$ python -m tests.complete_run.promote --machine #expand machine# show
-$ python -m tests.complete_run.promote --machine #expand machine# run <tag>
+$ python -m tests.cfg_suite.promote --machine #expand machine# show
+$ python -m tests.cfg_suite.promote --machine #expand machine# run <tag>
 # Add --allow-failed once you have reviewed the differences and decided the
 # new results are correct.
 ```

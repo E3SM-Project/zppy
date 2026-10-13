@@ -4,7 +4,7 @@
 Updating expected results
 *************************
 
-Expected results are not a copy of a run. They *are* a run: the complete run
+Expected results are not a copy of a run. They *are* a run: the cfg suite
 test writes each run into its own immutable directory, and promotion points
 ``baselines/latest-main`` at one of them.
 
@@ -22,7 +22,7 @@ List what is promoted now, and what the run you are considering contains:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.promote --machine chrysalis show
+    python -m tests.cfg_suite.promote --machine chrysalis show
     ls /lcrc/group/e3sm/public_html/zppy_complete_run/runs
 
 Read the run's report before promoting it. If images changed, open the diff
@@ -34,7 +34,7 @@ Promoting
 
 .. code-block:: bash
 
-    python -m tests.complete_run.promote --machine chrysalis run 20260918_run1
+    python -m tests.cfg_suite.promote --machine chrysalis run 20260918_000001
 
 Promotion reads the run's own report and manifest rather than trusting the
 command line, and refuses a run that did not pass or that was built from a
@@ -45,7 +45,7 @@ that is the normal case for updating expected results. Promote it deliberately:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.promote --machine chrysalis run 20260918_run1 \
+    python -m tests.cfg_suite.promote --machine chrysalis run 20260918_000001 \
         --allow-failed
 
 Use ``--allow-failed`` after reviewing the differences, not instead of it.
@@ -55,7 +55,7 @@ Rolling back
 
 .. code-block:: bash
 
-    python -m tests.complete_run.promote --machine chrysalis run 20260911_run1
+    python -m tests.cfg_suite.promote --machine chrysalis run 20260911_000001
 
 Release snapshots
 =================
@@ -65,7 +65,7 @@ another copy of the images:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.promote --machine chrysalis run 20260918_run1 \
+    python -m tests.cfg_suite.promote --machine chrysalis run 20260918_000001 \
         --channel unified_1.13.0
 
 Partial updates
@@ -78,9 +78,9 @@ other tasks:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.promote --machine chrysalis run 20260918_run1 \
+    python -m tests.cfg_suite.promote --machine chrysalis run 20260918_000001 \
         --cfg weekly_comprehensive_v3 --task pcmdi_diags
-    python -m tests.complete_run.promote --machine chrysalis show
+    python -m tests.cfg_suite.promote --machine chrysalis show
 
 The selected entries must have passed their job-status checks and, for plotting
 tasks, have a clean image comparison. A failure elsewhere in the run does not
@@ -95,9 +95,9 @@ cfg/task-specific runs; exact cfg/task selections take precedence:
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis \
-        --baseline pcmdi_diags=20260911_run1 \
-        --baseline weekly_comprehensive_v3:pcmdi_diags=20260918_run1
+    python -m tests.cfg_suite.automation --machine chrysalis \
+        --baseline pcmdi_diags=20260911_000001 \
+        --baseline weekly_comprehensive_v3:pcmdi_diags=20260918_000001
 
 For ``--env-type <repo>=baseline``, all selected tasks using the same repository
 environment must resolve to one baseline run. Automation stops with an error if
@@ -107,27 +107,27 @@ Deleting old runs
 =================
 
 Runs referenced by any channel's default or overrides are kept indefinitely.
-Other runs are subject to pruning:
+Other runs are ordered by manifest creation time and subject to pruning:
 
 .. code-block:: bash
 
     # Reports what it would delete.
-    python -m tests.complete_run.promote --machine chrysalis prune --keep 8
+    python -m tests.cfg_suite.promote --machine chrysalis prune --keep 8
     # Also restrict candidates to runs older than 60 days.
-    python -m tests.complete_run.promote --machine chrysalis prune --keep 8 \
+    python -m tests.cfg_suite.promote --machine chrysalis prune --keep 8 \
         --older-than 60
     # Actually delete.
-    python -m tests.complete_run.promote --machine chrysalis prune --keep 8 --delete
+    python -m tests.cfg_suite.promote --machine chrysalis prune --keep 8 --delete
 
 Comparing against something other than latest-main
 ==================================================
 
 .. code-block:: bash
 
-    python -m tests.complete_run.automation --machine chrysalis \
-        --baseline pcmdi_diags=20260901_run1
+    python -m tests.cfg_suite.automation --machine chrysalis \
+        --baseline pcmdi_diags=20260901_000001
 
 For cfg generation, ``--baseline-dir`` still selects a run directory directly.
-When running the image checker directly, set ``ZPPY_COMPLETE_RUN_BASELINE``.
+When running the image checker directly, set ``ZPPY_CFG_SUITE_BASELINE``.
 Both mechanisms use that run for every task unless a more specific cfg/task
 selection is provided.
