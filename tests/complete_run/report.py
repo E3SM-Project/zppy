@@ -59,6 +59,7 @@ def render_report(status: Dict[str, Any], layout: RunLayout) -> Dict[str, Any]:
         "tag": status.get("tag"),
         "machine": status.get("machine"),
         "baseline": _mapping(status.get("baseline")),
+        "baseline_by_cfg_task": _mapping(status.get("baseline_by_cfg_task")),
         "error": status.get("error"),
         "cfgs": list(status.get("cfgs") or []),
         "tasks": list(status.get("tasks") or []),
@@ -133,7 +134,10 @@ def render_markdown(report: Dict[str, Any]) -> str:
         f"* Status: **{report.get('status') or 'unknown'}**",
         f"* Terminal stage: `{report.get('stage') or 'unknown'}`",
         f"* Machine: `{report.get('machine') or 'unknown'}`",
-        _baseline_line(_mapping(report.get("baseline"))),
+        _baseline_line(
+            _mapping(report.get("baseline")),
+            _mapping(report.get("baseline_by_cfg_task")),
+        ),
         *filter(None, [_unified_line(_mapping(report.get("unified")))]),
         "",
     ]
@@ -142,6 +146,7 @@ def render_markdown(report: Dict[str, Any]) -> str:
         lines.extend(["> " + str(report["error"]), ""])
 
     lines.extend(_repos_section(report))
+    lines.extend(_baseline_selection_section(report))
     lines.extend(_environment_section(report))
     lines.extend(_status_section(report))
     lines.extend(_pytest_section(report))
@@ -159,16 +164,64 @@ def render_markdown(report: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _baseline_line(baseline: Dict[str, Any]) -> str:
+def _baseline_line(
+    baseline: Dict[str, Any], selected: Dict[str, Any] | None = None
+) -> str:
     """Say which promoted run this one was compared against, and its age.
 
     The baseline's production date, not its promotion date, is what matters:
     results normally sit under review before promotion.
     """
+    tags = {
+        str(_mapping(entry).get("tag") or "")
+        for entry in (selected or {}).values()
+        if _mapping(entry).get("tag")
+    }
+    if len(tags) > 1:
+        return f"* Baseline: mixed per cfg/task ({len(tags)} runs; see selections below)"
+    if tags:
+        tag = next(iter(tags))
+        produced_values = {
+            str(_mapping(entry).get("generated") or "")[:10]
+            for entry in (selected or {}).values()
+            if str(_mapping(entry).get("tag") or "") == tag
+        }
+        produced = next(iter(produced_values)) if len(produced_values) == 1 else "varies"
+        return f"* Baseline: `{tag}` (produced {produced})"
     if not baseline.get("tag"):
         return "* Baseline: _none promoted_"
     produced: str = str(baseline.get("generated") or "unknown")[:10]
     return f"* Baseline: `{baseline['tag']}` (produced {produced})"
+
+
+def _baseline_selection_section(report: Dict[str, Any]) -> List[str]:
+    """List the baseline run and package commits selected for each cfg/task."""
+    selected: Dict[str, Any] = _mapping(report.get("baseline_by_cfg_task"))
+    if not selected:
+        return []
+    lines: List[str] = [
+        "## Baseline by cfg/task",
+        "",
+        "| Cfg | Task | Run | Produced | Repository commits |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for key, value in sorted(selected.items()):
+        cfg, separator, task = key.partition(":")
+        if not separator:
+            continue
+        entry = _mapping(value)
+        repos = _mapping(entry.get("repos"))
+        commits = ", ".join(
+            f"`{name}` {str(_mapping(repo).get('sha') or 'n/a')[:12]}"
+            for name, repo in sorted(repos.items())
+            if _mapping(repo).get("sha")
+        ) or "—"
+        lines.append(
+            f"| `{cfg}` | `{task}` | `{entry.get('tag') or 'unknown'}` | "
+            f"{str(entry.get('generated') or 'unknown')[:10]} | {commits} |"
+        )
+    lines.append("")
+    return lines
 
 
 def _unified_line(unified: Dict[str, Any]) -> str:

@@ -51,6 +51,8 @@ from tests.complete_run.environments import (
 from tests.complete_run.layout import (
     RUN_SEGMENT,
     RunLayout,
+    baseline_run_for,
+    parse_baseline_selections,
     read_json_object,
     resolve_baseline,
     run_layout,
@@ -277,6 +279,16 @@ def _start_run(args: argparse.Namespace) -> _Run:
         or _string_list(status.get("tasks"))
         or DEFAULT_TASKS_TO_RUN
     )
+    baseline_overrides: Dict[str, str] = (
+        parse_baseline_selections(args.baseline)
+        if args.baseline
+        else {
+            str(key): str(tag)
+            for key, tag in _mapping(status.get("baseline_overrides")).items()
+            if isinstance(tag, str)
+        }
+    )
+    args.baseline_overrides = baseline_overrides
     tasks, _ = expand_task_selection(selected_tasks)
     run = _Run(
         args=args,
@@ -307,6 +319,7 @@ def _start_run(args: argparse.Namespace) -> _Run:
             "configuration": _effective_configuration(args, run.cfgs, run.tasks),
             "pin_dependencies": list(args.pin_dependencies),
             "unified_load_script": args.unified_load_script,
+            "baseline_overrides": baseline_overrides,
         }
     )
     status.setdefault("repos", {})
@@ -375,12 +388,6 @@ def _stage_prepare(run: _Run) -> None:
     }
 
     baseline: RunLayout | None = _record_baseline(run)
-    if ENV_TYPE_BASELINE in env_types.values() and baseline is None:
-        raise StageError(
-            "prepare_failed",
-            "No baseline is promoted to rebuild environments from. Promote a run "
-            "with `python -m tests.complete_run.promote`, or use --env-type dev.",
-        )
     if env_types.get("zppy") == ENV_TYPE_UNIFIED:
         run.environments["zppy"] = unified_environment("zppy", run.machine)
         _record_unified_zppy(run)
@@ -424,8 +431,16 @@ def _stage_prepare(run: _Run) -> None:
         )
         run.checkouts.append(checkout)
         environment_file: str = ""
-        if env_type == ENV_TYPE_BASELINE and baseline is not None:
-            environment_file = baseline.environment_file(spec.name)
+        if env_type == ENV_TYPE_BASELINE:
+            repo_baseline = _baseline_for_repo(run, spec, baseline)
+            if repo_baseline is None:
+                raise StageError(
+                    "prepare_failed",
+                    "No baseline is available to rebuild environments from. Promote "
+                    "a run with `python -m tests.complete_run.promote`, or use "
+                    "--env-type dev.",
+                )
+            environment_file = repo_baseline.environment_file(spec.name)
         to_build.append((spec, checkout, environment_file))
 
     for (spec, checkout, environment_file), environment in zip(
@@ -567,29 +582,82 @@ def _record_unified_zppy(run: _Run) -> None:
 
 
 def _record_baseline(run: _Run) -> RunLayout | None:
-    """Record which promoted run this one is compared against, if any."""
-    if run.args.baseline:
-        baseline_path = os.path.abspath(os.path.expanduser(run.args.baseline))
-        if not os.path.isdir(baseline_path):
-            raise StageError(
-                "prepare_failed", f"Configured baseline does not exist: {baseline_path}"
-            )
-        baseline: RunLayout = RunLayout(baseline_path)
-    else:
-        try:
-            baseline = resolve_baseline(run.root)
-        except FileNotFoundError as error:
-            logger.info("No baseline to compare against: %s", error)
-            run.status["baseline"] = {}
-            return None
+    """Record the channel default and the resolved run for every cfg/task."""
+    try:
+        default = baseline_run_for(run.root, "", "")
+    except FileNotFoundError as error:
+        logger.info("No default baseline to compare against: %s", error)
+        default = None
 
-    manifest = read_json_object(baseline.manifest)
-    run.status["baseline"] = {
-        "tag": str(manifest.get("tag") or os.path.basename(baseline.root)),
-        "run_dir": baseline.root,
+    baseline_by_cfg_task: Dict[str, Dict[str, object]] = {}
+    for cfg, tasks in _tasks_by_cfg(run).items():
+        for task in tasks & set(TASK_NAMES):
+            try:
+                selected = baseline_run_for(
+                    run.root,
+                    cfg,
+                    task,
+                    requested=run.args.baseline_overrides,
+                )
+            except FileNotFoundError as error:
+                logger.info("No baseline for %s/%s: %s", cfg, task, error)
+                continue
+            manifest = read_json_object(selected.manifest)
+            baseline_by_cfg_task[f"{cfg}:{task}"] = {
+                "tag": str(manifest.get("tag") or os.path.basename(selected.root)),
+                "run_dir": selected.root,
+                "generated": manifest.get("generated", ""),
+                "repos": manifest.get("repos", {}),
+            }
+
+    run.status["baseline_by_cfg_task"] = baseline_by_cfg_task
+    if default is None:
+        run.status["baseline"] = {}
+        return None
+
+    manifest = read_json_object(default.manifest)
+    baseline_info = {
+        "tag": str(manifest.get("tag") or os.path.basename(default.root)),
+        "run_dir": default.root,
         "generated": manifest.get("generated", ""),
+        "repos": manifest.get("repos", {}),
     }
-    return baseline
+    run.status["baseline"] = baseline_info
+    return default
+
+
+def _baseline_for_repo(
+    run: _Run, spec: RepoSpec, default: RunLayout | None
+) -> RunLayout | None:
+    """Resolve one baseline environment source for all selected repo tasks."""
+    matching: Set[str] = set()
+    missing: List[str] = []
+    for cfg, tasks in _tasks_by_cfg(run).items():
+        for task in tasks & set(spec.tasks) & set(run.tasks):
+            entry = _mapping(
+                _mapping(run.status.get("baseline_by_cfg_task")).get(f"{cfg}:{task}")
+            )
+            selected = str(entry.get("run_dir") or "")
+            if selected:
+                matching.add(selected)
+            elif default is None:
+                missing.append(f"{cfg}/{task}")
+    if missing:
+        raise StageError(
+            "prepare_failed",
+            f"No baseline run resolves for {spec.name} task(s): "
+            f"{', '.join(sorted(missing))}.",
+        )
+    if len(matching) > 1:
+        raise StageError(
+            "prepare_failed",
+            f"Repository {spec.name} has selected tasks resolving to different "
+            f"baseline runs: {', '.join(sorted(matching))}. Use one baseline for "
+            "all tasks sharing this environment.",
+        )
+    if matching:
+        return RunLayout(next(iter(matching)))
+    return default
 
 
 def _run_unit_tests(run: _Run) -> None:
@@ -710,7 +778,6 @@ def _unified_load_script(machine: MachineProfile) -> str:
 
 def _stage_generate(run: _Run) -> None:
     """Generate the machine-specific cfgs from their templates."""
-    baseline_dir: str = str(_mapping(run.status.get("baseline")).get("run_dir", ""))
     command: List[str] = [
         "python",
         "-m",
@@ -723,10 +790,6 @@ def _stage_generate(run: _Run) -> None:
         run.layout.root,
         "--output-dir",
         run.layout.output,
-        # Pinned to what prepare recorded, so the cfgs compare against the
-        # baseline the report names -- empty meaning none.
-        "--baseline-dir",
-        baseline_dir,
         "--environment-commands",
         run.machine.unified_env_cmd,
     ]
@@ -734,6 +797,9 @@ def _stage_generate(run: _Run) -> None:
         command.extend(["--cfg", cfg])
     for task in run.selected_tasks:
         command.extend(["--task", task])
+    for key, entry in _mapping(run.status.get("baseline_by_cfg_task")).items():
+        if isinstance(entry, dict) and entry.get("tag"):
+            command.extend(["--baseline", f"{key}={entry['tag']}"])
     for task, environment in sorted(
         environments_by_task(run.environments, run.machine).items()
     ):
@@ -937,6 +1003,21 @@ def _stage_validate(run: _Run) -> None:
     diffs, note = _compare_environments(run)
     status["environment_diff"] = envdiff.summarize(diffs)
     status["environment_note"] = note
+    baseline_entries = _mapping(status.get("baseline_by_cfg_task"))
+    baseline_tags = {
+        str(_mapping(value).get("tag") or "")
+        for value in baseline_entries.values()
+        if _mapping(value).get("tag")
+    }
+    summary_baseline = (
+        "mixed per cfg/task"
+        if len(baseline_tags) > 1
+        else (
+            next(iter(baseline_tags))
+            if baseline_tags
+            else str(_mapping(status.get("baseline")).get("tag", ""))
+        )
+    )
     viewers: List[str] = validate.write_viewers(
         layout,
         run.cfgs,
@@ -944,8 +1025,9 @@ def _stage_validate(run: _Run) -> None:
         environment_diffs=diffs,
         environment_note=note,
         repos=_mapping(status.get("repos")),
-        baseline=str(_mapping(status.get("baseline")).get("tag", "")),
+        baseline=summary_baseline,
         task_status_by_cfg=task_status_by_cfg,
+        baselines_by_cfg_task=_mapping(status.get("baseline_by_cfg_task")),
     )
     status["viewers"] = viewers
     # The summary is written last; it is the page a reviewer starts from.
@@ -967,19 +1049,35 @@ def _stage_validate(run: _Run) -> None:
 
 def _compare_environments(run: _Run) -> Tuple[List[envdiff.EnvironmentDiff], str]:
     """Compare this run's environments against the promoted baseline's."""
-    repos: List[str] = sorted(
-        name
-        for name, entry in _mapping(run.status.get("repos")).items()
-        if isinstance(entry, dict) and entry.get("environment_type") == ENV_TYPE_DEV
-    )
-    baseline_dir: str = str(_mapping(run.status.get("baseline")).get("run_dir", ""))
-    if not repos or not baseline_dir:
+    diffs: List[envdiff.EnvironmentDiff] = []
+    modes: Dict[str, str] = {}
+    baselines: Dict[str, object] = _mapping(run.status.get("baseline_by_cfg_task"))
+    for key, entry in baselines.items():
+        cfg, separator, task = key.partition(":")
+        if not separator or task not in run.tasks:
+            continue
+        spec = repo_for_task(task)
+        if spec is None or spec.name not in run.environments:
+            continue
+        selected = _mapping(entry)
+        baseline_dir = str(selected.get("run_dir") or "")
+        if not baseline_dir:
+            continue
+        repo_entry = _mapping(_mapping(run.status.get("repos")).get(spec.name))
+        if repo_entry.get("environment_type") != ENV_TYPE_DEV:
+            continue
+        diffs.extend(
+            envdiff.compare_run_environments(
+                run.layout,
+                RunLayout(baseline_dir),
+                [spec.name],
+                cfg=cfg,
+                task=task,
+            )
+        )
+        modes[spec.name] = str(run.args.env_types.get(spec.name, ENV_TYPE_DEV))
+    if not diffs:
         return [], ""
-
-    diffs = envdiff.compare_run_environments(run.layout, RunLayout(baseline_dir), repos)
-    modes: Dict[str, str] = {
-        name: str(run.args.env_types.get(name, ENV_TYPE_DEV)) for name in repos
-    }
     note: str = envdiff.interpretation(diffs, modes)
     logger.info("%s", note)
     return diffs, note
@@ -1158,7 +1256,7 @@ _CONFIG_DESTINATIONS: Dict[str, str] = {
     "keep_worktrees": "keep_worktrees",
     "verbose": "verbose",
 }
-_CONFIG_LIST_KEYS: Set[str] = {"cfg", "task", "pin_dependencies"}
+_CONFIG_LIST_KEYS: Set[str] = {"cfg", "task", "pin_dependencies", "baseline"}
 _CONFIG_MAPPING_KEYS: Set[str] = {
     "repo_path",
     "branch",
@@ -1186,7 +1284,6 @@ _CONFIG_PATH_KEYS: Set[str] = {
     "repo_path",
     "conda_profile",
     "unified_load_script",
-    "baseline",
 }
 
 
@@ -1389,8 +1486,10 @@ def _build_parser(
     )
     parser.add_argument(
         "--baseline",
-        default="",
-        help="Use this run directory instead of the promoted latest-main baseline.",
+        action=_ListAction,
+        default=[],
+        metavar="TASK=TAG|CFG:TASK=TAG",
+        help="Use a selected baseline run; repeatable.",
     )
     parser.add_argument("--start-stage", choices=STAGES, default="prepare")
     parser.add_argument("--stop-after", choices=STAGES, default=None)

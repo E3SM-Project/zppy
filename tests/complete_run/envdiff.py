@@ -86,6 +86,8 @@ class EnvironmentDiff:
     """How one repository's environment differs from the baseline's."""
 
     repo: str
+    cfg: str = ""
+    task: str = ""
     # False when either side has no export to compare.
     available: bool = True
     detail: str = ""
@@ -102,6 +104,8 @@ class EnvironmentDiff:
     def as_dict(self) -> Dict[str, object]:
         return {
             "repo": self.repo,
+            "cfg": self.cfg,
+            "task": self.task,
             "available": self.available,
             "detail": self.detail,
             "change_count": len(self.changes),
@@ -231,7 +235,12 @@ def _diff_packages(
 
 
 def compare_run_environments(
-    candidate: RunLayout, baseline: RunLayout, repos: List[str]
+    candidate: RunLayout,
+    baseline: RunLayout,
+    repos: List[str],
+    *,
+    cfg: str = "",
+    task: str = "",
 ) -> List[EnvironmentDiff]:
     """Compare every repository's environment against the baseline's."""
     results: List[EnvironmentDiff] = []
@@ -268,6 +277,8 @@ def compare_run_environments(
                 results.append(
                     EnvironmentDiff(
                         repo=repo,
+                        cfg=cfg,
+                        task=task,
                         detail=(
                             f"The baseline ran {repo} from E3SM-Unified, compared"
                             f" by version against env_descriptions/{task}.txt."
@@ -294,6 +305,8 @@ def compare_run_environments(
             results.append(
                 EnvironmentDiff(
                     repo=repo,
+                    cfg=cfg,
+                    task=task,
                     available=False,
                     detail=(
                         f"No environment export for {' and '.join(missing)}; "
@@ -305,7 +318,10 @@ def compare_run_environments(
 
         results.append(
             EnvironmentDiff(
-                repo=repo, changes=diff_environments(baseline_text, candidate_text)
+                repo=repo,
+                cfg=cfg,
+                task=task,
+                changes=diff_environments(baseline_text, candidate_text),
             )
         )
 

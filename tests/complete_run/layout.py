@@ -37,10 +37,12 @@ from __future__ import annotations
 
 import json
 import os
+import uuid
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Mapping, Optional
 
 from tests.complete_run.params import case_name_for_cfg
+from tests.integration.weekly_cfgs import TASK_NAMES
 
 # Runs write their zppy output under a fixed segment rather than a per-run
 # unique_id: the run directory already carries the tag, so repeating it in the
@@ -121,6 +123,104 @@ def baselines_root(root: str) -> str:
 def baseline_link(root: str, channel: str = DEFAULT_CHANNEL) -> str:
     """Return the path of one channel's baseline link."""
     return os.path.join(baselines_root(root), f"latest-{channel}")
+
+
+def baseline_overrides_path(root: str, channel: str = DEFAULT_CHANNEL) -> str:
+    """Return the per-cfg/task override file for a baseline channel."""
+    return os.path.join(baselines_root(root), f"latest-{channel}.overrides.json")
+
+
+def baseline_overrides(root: str, channel: str = DEFAULT_CHANNEL) -> Dict[str, str]:
+    """Read a channel's task overrides, ignoring malformed entries."""
+    recorded: Dict[str, Any] = read_json_object(
+        baseline_overrides_path(root, channel)
+    )
+    return {
+        str(key): str(tag)
+        for key, tag in recorded.items()
+        if isinstance(key, str) and isinstance(tag, str) and tag
+    }
+
+
+def write_baseline_overrides(
+    root: str, overrides: Mapping[str, str], channel: str = DEFAULT_CHANNEL
+) -> str:
+    """Atomically replace one channel's per-cfg/task overrides."""
+    path: str = baseline_overrides_path(root, channel)
+    os.makedirs(baselines_root(root), exist_ok=True)
+    temporary: str = f"{path}.{os.getpid()}.{uuid.uuid4().hex}.tmp"
+    try:
+        write_json(temporary, dict(overrides))
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.remove(temporary)
+    return path
+
+
+def baseline_run_for(
+    root: str,
+    cfg: str,
+    task: str,
+    channel: str = DEFAULT_CHANNEL,
+    requested: Mapping[str, str] | None = None,
+) -> "RunLayout":
+    """Resolve the baseline run for one cfg/task from overrides or channel default.
+
+    ``requested`` accepts task-wide keys and exact ``cfg:task`` keys. Requested
+    selectors take precedence over channel overrides; within each layer an exact
+    cfg/task selection takes precedence over a task-wide selection.
+    """
+    requested = requested or {}
+    stored: Dict[str, str] = baseline_overrides(root, channel)
+    exact: str = f"{cfg}:{task}"
+    tag: str = (
+        requested.get(exact)
+        or requested.get(task)
+        or stored.get(exact)
+        or stored.get(task)
+        or ""
+    )
+    if not tag:
+        return resolve_baseline(root, channel)
+
+    if os.path.isabs(tag):
+        if not os.path.isdir(tag):
+            raise FileNotFoundError(f"Baseline run directory does not exist: {tag}")
+        return RunLayout(os.path.realpath(tag))
+    if os.path.basename(tag) != tag or tag in {".", ".."}:
+        raise ValueError(f"Baseline override must be a run tag, got {tag!r}")
+    selected: RunLayout = run_layout(root, tag)
+    if not os.path.isdir(selected.root):
+        raise FileNotFoundError(
+            f"Baseline run {tag!r} for {cfg}/{task} does not exist: {selected.root}"
+        )
+    return selected
+
+
+def parse_baseline_selections(values: list[str]) -> Dict[str, str]:
+    """Parse ``TASK=TAG`` and ``CFG:TASK=TAG`` baseline selections."""
+    selections: Dict[str, str] = {}
+    for value in values:
+        selector, separator, tag = value.partition("=")
+        selector, tag = selector.strip(), tag.strip()
+        if not separator or not selector or not tag:
+            raise ValueError(
+                f"Invalid baseline selection {value!r}; expected TASK=TAG or CFG:TASK=TAG"
+            )
+        if ":" in selector:
+            cfg, task = selector.split(":", 1)
+            if not cfg or task not in TASK_NAMES:
+                raise ValueError(f"Invalid baseline selector {selector!r}")
+            key = f"{cfg}:{task}"
+        else:
+            if selector not in TASK_NAMES:
+                raise ValueError(f"Unknown baseline task {selector!r}")
+            key = selector
+        if key in selections:
+            raise ValueError(f"Baseline selector specified more than once: {key}")
+        selections[key] = tag
+    return selections
 
 
 @dataclass(frozen=True)

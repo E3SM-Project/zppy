@@ -18,19 +18,27 @@ import logging
 import os
 import shutil
 import uuid
-from typing import Any, Dict, List, Sequence
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Sequence, Set, Tuple
 
 from tests.complete_run.layout import (
     DEFAULT_CHANNEL,
     RunLayout,
     baseline_link,
+    baseline_overrides,
     baselines_root,
     read_json_object,
     run_layout,
     runs_root,
     shared_root,
+    write_baseline_overrides,
 )
 from tests.complete_run.report import JSON_FILENAME
+from tests.complete_run.params import repo_for_task
+from tests.complete_run.validate import _latest_diff_subdirs, load_scores
+from tests.complete_run.validate import reviewable_count
+from tests.complete_run.viewer import count_severities
+from tests.integration.weekly_cfgs import PLOTTING_TASKS, TASK_NAMES, task_sections_for_cfg
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -50,6 +58,8 @@ def promote(
     channel: str = DEFAULT_CHANNEL,
     allow_failed: bool = False,
     allow_non_main: bool = False,
+    cfgs: Sequence[str] = (),
+    tasks: Sequence[str] = (),
 ) -> str:
     """Point a channel's baseline link at one run.
 
@@ -70,11 +80,31 @@ def promote(
     if not os.path.isdir(layout.root):
         raise PromotionError(f"No such run: {layout.root}")
 
-    _check_promotable(layout, allow_failed=allow_failed, allow_non_main=allow_non_main)
-
     link: str = baseline_link(root, channel)
     os.makedirs(baselines_root(root), exist_ok=True)
     previous: str = _current_target(link)
+    partial: bool = bool(cfgs or tasks)
+    if partial:
+        entries = _selected_entries(layout, cfgs, tasks)
+        _check_selected_entries(
+            layout,
+            entries,
+            allow_failed=allow_failed,
+            allow_non_main=allow_non_main,
+        )
+        overrides = baseline_overrides(root, channel)
+        default_tag = os.path.basename(previous) if previous else ""
+        for cfg, task in entries:
+            key = f"{cfg}:{task}"
+            if tag == default_tag:
+                overrides.pop(key, None)
+            else:
+                overrides[key] = tag
+        write_baseline_overrides(root, overrides, channel)
+        logger.info("Promoted %s for %s cfg/task entries", tag, len(entries))
+        return baseline_link(root, channel)
+
+    _check_promotable(layout, allow_failed=allow_failed, allow_non_main=allow_non_main)
 
     # Build the new link beside the old one and rename over it: os.replace is
     # atomic, so a reader never sees a missing or half-written baseline.
@@ -89,6 +119,7 @@ def promote(
         if os.path.islink(temporary):
             os.unlink(temporary)
 
+    write_baseline_overrides(root, {}, channel)
     if previous:
         logger.info("Promoted %s to latest-%s (was %s)", tag, channel, previous)
     else:
@@ -96,26 +127,144 @@ def promote(
     return link
 
 
-def show(root: str, channel: str = DEFAULT_CHANNEL) -> Dict[str, Any]:
-    """Describe the run currently promoted to a channel."""
-    link: str = baseline_link(root, channel)
-    if not os.path.islink(link):
-        raise PromotionError(f"No baseline is promoted for channel {channel!r}.")
+def _selected_entries(
+    layout: RunLayout, cfgs: Sequence[str], tasks: Sequence[str]
+) -> List[Tuple[str, str]]:
+    """Select only cfg/task pairs this run actually contains."""
+    manifest = read_json_object(layout.manifest)
+    run_cfgs: List[str] = [str(cfg) for cfg in manifest.get("cfgs", [])]
+    run_tasks: Set[str] = {str(task) for task in manifest.get("tasks", [])}
+    selected_cfgs: List[str] = list(cfgs) if cfgs else run_cfgs
+    selected_tasks: Set[str] = set(tasks) if tasks else run_tasks
+    unknown: Set[str] = selected_tasks - set(TASK_NAMES)
+    if unknown:
+        raise PromotionError(f"Unknown task(s): {', '.join(sorted(unknown))}")
+    missing_cfgs: Set[str] = set(selected_cfgs) - set(run_cfgs)
+    if missing_cfgs:
+        raise PromotionError(
+            f"Run {os.path.basename(layout.root)} did not include cfg(s): "
+            f"{', '.join(sorted(missing_cfgs))}"
+        )
 
-    target: str = os.path.realpath(link)
-    layout = RunLayout(target)
-    manifest: Dict[str, Any] = read_json_object(layout.manifest)
+    entries: List[Tuple[str, str]] = []
+    for cfg in selected_cfgs:
+        available = set(task_sections_for_cfg(cfg)) & run_tasks
+        entries.extend((cfg, task) for task in sorted(available & selected_tasks))
+    if not entries:
+        raise PromotionError("The selected run contains no matching cfg/task entries.")
+    return entries
+
+
+def _check_selected_entries(
+    layout: RunLayout,
+    entries: Sequence[Tuple[str, str]],
+    *,
+    allow_failed: bool,
+    allow_non_main: bool,
+) -> None:
+    """Apply promotion safety checks only to the cfg/task entries selected."""
+    status = read_json_object(layout.status)
+    task_status = status.get("task_status_by_cfg", {})
+    task_status = task_status if isinstance(task_status, dict) else {}
+    manifest = read_json_object(layout.manifest)
+    repositories = manifest.get("repos", {})
+    repositories = repositories if isinstance(repositories, dict) else {}
+
+    for cfg, task in entries:
+        selected_status = task_status.get(cfg, {})
+        selected_status = selected_status if isinstance(selected_status, dict) else {}
+        result = str(selected_status.get(task, "not run"))
+        if result != "OK" and not allow_failed:
+            raise PromotionError(
+                f"Refusing to promote {cfg}/{task}: job status is {result!r}."
+            )
+
+        if task in PLOTTING_TASKS:
+            scores = _latest_diff_subdirs(layout, cfg).get(task)
+            entries_for_task = load_scores(scores) if scores else None
+            if entries_for_task is None and not allow_failed:
+                raise PromotionError(
+                    f"Refusing to promote {cfg}/{task}: no image comparison was recorded."
+                )
+            if (
+                entries_for_task is not None
+                and reviewable_count(count_severities(entries_for_task))
+                and not allow_failed
+            ):
+                raise PromotionError(
+                    f"Refusing to promote {cfg}/{task}: images need review."
+                )
+
+        spec = repo_for_task(task)
+        repo_entry = repositories.get(spec.name, {}) if spec else {}
+        if isinstance(repo_entry, dict):
+            branch = str(repo_entry.get("branch") or "")
+            if branch and branch not in ("main", "master", "develop") and not allow_non_main:
+                raise PromotionError(
+                    f"Refusing to promote {cfg}/{task} from feature branch "
+                    f"{branch!r}; pass --allow-non-main after review."
+                )
+
+
+def show(root: str, channel: str = DEFAULT_CHANNEL) -> Dict[str, Any]:
+    """Describe the channel default and every cfg/task override."""
+    try:
+        default = baseline_run_for(root, "", "", channel)
+    except FileNotFoundError as error:
+        raise PromotionError(str(error)) from error
+    overrides = baseline_overrides(root, channel)
+    tags: Set[str] = {os.path.basename(default.root), *overrides.values()}
+    described = {tag: _describe_run(root, tag) for tag in sorted(tags)}
+    manifest = read_json_object(default.manifest)
     return {
         "channel": channel,
-        "link": link,
-        "run": target,
-        "tag": os.path.basename(target),
-        "exists": os.path.isdir(target),
+        "link": baseline_link(root, channel),
+        "run": default.root,
+        "tag": os.path.basename(default.root),
+        "exists": os.path.isdir(default.root),
         "machine": manifest.get("machine"),
         "generated": manifest.get("generated"),
         "repos": manifest.get("repos", {}),
         "unified": manifest.get("unified", {}),
+        "default_run": described[os.path.basename(default.root)],
+        "overrides": {
+            key: described[tag] for key, tag in sorted(overrides.items())
+        },
+        "runs": described,
     }
+
+
+def _describe_run(root: str, tag: str) -> Dict[str, Any]:
+    """Describe a referenced run, including commit dates and age."""
+    path = os.path.join(runs_root(root), tag)
+    manifest = read_json_object(RunLayout(path).manifest)
+    repos: Dict[str, Any] = {}
+    for name, entry in manifest.get("repos", {}).items():
+        if not isinstance(entry, dict):
+            continue
+        recorded = dict(entry)
+        sha_date = str(recorded.get("sha_date") or "")
+        recorded["age_days"] = _age_days(sha_date)
+        repos[str(name)] = recorded
+    return {
+        "tag": tag,
+        "run": path,
+        "exists": os.path.isdir(path),
+        "generated": manifest.get("generated", ""),
+        "repos": repos,
+    }
+
+
+def _age_days(iso_date: str) -> int | None:
+    if not iso_date:
+        return None
+    try:
+        parsed = datetime.fromisoformat(iso_date.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return max((datetime.now(timezone.utc) - parsed).days, 0)
 
 
 def promoted_tags(root: str) -> List[str]:
@@ -129,10 +278,20 @@ def promoted_tags(root: str) -> List[str]:
         link: str = os.path.join(baselines, name)
         if os.path.islink(link):
             tags.append(os.path.basename(os.path.realpath(link)))
-    return tags
+        elif name.startswith("latest-") and name.endswith(".overrides.json"):
+            channel = name[len("latest-") : -len(".overrides.json")]
+            tags.extend(baseline_overrides(root, channel).values())
+
+    return sorted(set(tags))
 
 
-def prune(root: str, *, keep: int = DEFAULT_KEEP, dry_run: bool = True) -> List[str]:
+def prune(
+    root: str,
+    *,
+    keep: int = DEFAULT_KEEP,
+    dry_run: bool = True,
+    older_than: int | None = None,
+) -> List[str]:
     """Delete old runs, never one a channel points at.
 
     Parameters
@@ -161,6 +320,9 @@ def prune(root: str, *, keep: int = DEFAULT_KEEP, dry_run: bool = True) -> List[
     # Tags lead with a date stamp, so newest last by name.
     candidates.sort()
     doomed: List[str] = candidates[: max(len(candidates) - keep, 0)]
+    if older_than is not None:
+        threshold = datetime.now(timezone.utc).timestamp() - older_than * 86400
+        doomed = [tag for tag in doomed if _run_timestamp(root, tag) <= threshold]
 
     for tag in doomed:
         path: str = os.path.join(runs, tag)
@@ -171,6 +333,26 @@ def prune(root: str, *, keep: int = DEFAULT_KEEP, dry_run: bool = True) -> List[
         shutil.rmtree(path, ignore_errors=True)
 
     return doomed
+
+
+def _run_timestamp(root: str, tag: str) -> float:
+    """Return the production timestamp of a run, falling back to its tag."""
+    manifest = read_json_object(RunLayout(os.path.join(runs_root(root), tag)).manifest)
+    generated = str(manifest.get("generated") or "")
+    if generated:
+        try:
+            parsed = datetime.fromisoformat(generated.replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return parsed.timestamp()
+        except ValueError:
+            pass
+    try:
+        return datetime.strptime(tag[:8], "%Y%m%d").replace(
+            tzinfo=timezone.utc
+        ).timestamp()
+    except ValueError:
+        return os.path.getmtime(os.path.join(runs_root(root), tag))
 
 
 def _check_promotable(
@@ -227,7 +409,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.command == "show":
             print(json.dumps(show(root, args.channel), indent=2, sort_keys=True))
         elif args.command == "prune":
-            doomed = prune(root, keep=args.keep, dry_run=not args.delete)
+            doomed = prune(
+                root,
+                keep=args.keep,
+                dry_run=not args.delete,
+                older_than=args.older_than,
+            )
             if not doomed:
                 print("Nothing to prune.")
             elif args.delete:
@@ -244,6 +431,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 channel=args.channel,
                 allow_failed=args.allow_failed,
                 allow_non_main=args.allow_non_main,
+                cfgs=args.cfgs,
+                tasks=args.tasks,
             )
             print(f"{link} -> {args.tag}")
     except PromotionError as error:
@@ -264,6 +453,17 @@ def _build_parser() -> argparse.ArgumentParser:
     promote_parser.add_argument("tag", help="The run to promote.")
     promote_parser.add_argument("--channel", default=DEFAULT_CHANNEL)
     promote_parser.add_argument(
+        "--cfg", dest="cfgs", action="append", default=[], help="Promote only this cfg."
+    )
+    promote_parser.add_argument(
+        "--task",
+        dest="tasks",
+        action="append",
+        choices=TASK_NAMES,
+        default=[],
+        help="Promote only this task.",
+    )
+    promote_parser.add_argument(
         "--allow-failed",
         action="store_true",
         help="Promote a run that did not pass, after reviewing its differences.",
@@ -279,6 +479,13 @@ def _build_parser() -> argparse.ArgumentParser:
 
     prune_parser = subparsers.add_parser("prune", help="Delete old runs.")
     prune_parser.add_argument("--keep", type=int, default=DEFAULT_KEEP)
+    prune_parser.add_argument(
+        "--older-than",
+        type=int,
+        default=None,
+        metavar="DAYS",
+        help="Among runs beyond --keep, prune only those older than this many days.",
+    )
     prune_parser.add_argument(
         "--delete", action="store_true", help="Actually delete; otherwise dry run."
     )

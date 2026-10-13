@@ -64,6 +64,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
         "livvkit",
         "pcmdi_diags",
     ],
+    "baseline_overrides": {},
     "unique_id": "unique_id",
 }
 
@@ -248,7 +249,9 @@ def get_expansions(
     else:
         raise ValueError(f"Unsupported machine={machine}")
 
-    _apply_run_locations(expansions, machine, run_dir, baseline_dir, output_dir)
+    _apply_run_locations(
+        expansions, machine, run_dir, baseline_dir, output_dir, specifics
+    )
 
     # Set up environments
     expansions["nco_path"] = specifics["nco_path"]
@@ -320,7 +323,12 @@ def get_expansions(
 
 
 def _apply_run_locations(
-    expansions, machine, run_dir=None, baseline_dir=None, output_dir=None
+    expansions,
+    machine,
+    run_dir=None,
+    baseline_dir=None,
+    output_dir=None,
+    specifics=None,
 ):
     """Point the run and baseline paths at shared run directories.
 
@@ -338,12 +346,25 @@ def _apply_run_locations(
     if output_dir:
         expansions["user_output"] = f"{output_dir.rstrip('/')}/"
 
+    run_root = ""
+    if run_dir:
+        run_root = os.path.dirname(os.path.dirname(os.path.abspath(run_dir)))
+    else:
+        try:
+            run_root = layout.shared_root(machine)
+        except ValueError:
+            pass
+
+    requested: Dict[str, str] = dict((specifics or {}).get("baseline_overrides", {}))
+    if baseline_dir:
+        # Keep the direct-run image-check interface while resolving through the
+        # same per-task baseline function used by channel overrides.
+        requested.update({task: baseline_dir for task in TASK_NAMES})
+
     resolved_baseline = baseline_dir
     if resolved_baseline is None:
         try:
-            resolved_baseline = layout.resolve_baseline(
-                layout.shared_root(machine)
-            ).root
+            resolved_baseline = layout.baseline_run_for(run_root, "", "").root
         except (FileNotFoundError, ValueError):
             # No baseline promoted yet, or no shared root on this machine. The
             # legacy expected_dir stays in place so existing tests still run.
@@ -361,6 +382,28 @@ def _apply_run_locations(
         expansions["baseline_dir"] = ""
         expansions["baseline_www"] = ""
         expansions["baseline_image_lists"] = ""
+
+    by_cfg_task: Dict[str, Dict[str, str]] = {}
+    if run_root:
+        selected_tasks, _ = expand_task_selection(
+            (specifics or TEST_SPECIFICS).get("tasks_to_run", TASK_NAMES)
+        )
+        cfgs = (specifics or TEST_SPECIFICS).get("cfgs_to_run", [])
+        for cfg in cfgs:
+            for task in selected_tasks:
+                try:
+                    selected = layout.baseline_run_for(
+                        run_root, cfg, task, requested=requested
+                    )
+                except FileNotFoundError:
+                    continue
+                by_cfg_task[f"{cfg}:{task}"] = {
+                    "tag": os.path.basename(selected.root),
+                    "run_dir": selected.root,
+                    "www": f"{selected.www}/",
+                    "image_lists": f"{selected.image_lists}/",
+                }
+    expansions["baseline_by_cfg_task"] = by_cfg_task
 
 
 def _save_run_settings(path: str, settings: Dict[str, Any]) -> None:
@@ -418,6 +461,7 @@ def generate_cfgs(
                 # "" (no baseline) must survive the round trip; None would
                 # mean "resolve latest-main" when the tests run.
                 "baseline_dir": expansions["baseline_dir"],
+                "baseline_overrides": specifics.get("baseline_overrides", {}),
                 "output_dir": output_dir or "",
             },
         )
@@ -547,6 +591,7 @@ def build_specifics(
     env_commands: Optional[Dict[str, str]] = None,
     nco_path: Optional[str] = None,
     environment_commands: Optional[str] = None,
+    baseline_overrides: Optional[Dict[str, str]] = None,
 ) -> Dict[str, Any]:
     """Build a TEST_SPECIFICS mapping from explicit values.
 
@@ -564,6 +609,8 @@ def build_specifics(
         specifics["nco_path"] = nco_path
     if environment_commands is not None:
         specifics["environment_commands"] = environment_commands
+    if baseline_overrides is not None:
+        specifics["baseline_overrides"] = dict(baseline_overrides)
 
     for task, command in (env_commands or {}).items():
         try:
@@ -621,6 +668,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="environment_commands for one task; repeatable.",
     )
     parser.add_argument("--nco-path", default=None)
+    parser.add_argument("--baseline", dest="baselines", action="append", default=[])
     parser.add_argument(
         "--run-dir",
         default=None,
@@ -648,6 +696,8 @@ def _build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     """Generate cfgs from command-line settings."""
     args = _build_parser().parse_args(argv)
+    from tests.complete_run.layout import parse_baseline_selections
+
     specifics = build_specifics(
         unique_id=args.unique_id,
         cfgs_to_run=args.cfgs,
@@ -655,6 +705,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         env_commands=dict(args.env_cmds or []),
         nco_path=args.nco_path,
         environment_commands=args.environment_commands,
+        baseline_overrides=(
+            parse_baseline_selections(args.baselines) if args.baselines else None
+        ),
     )
     generate_cfgs(
         dry_run=args.dry_run,

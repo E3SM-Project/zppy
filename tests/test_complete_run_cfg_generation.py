@@ -93,6 +93,51 @@ def test_task_selection_enables_dependencies_and_logs_them(
     assert "also running e3sm_to_cmip (required by pcmdi_diags)" in caplog.text
 
 
+def test_cfg_generation_resolves_a_cfg_task_baseline_override(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    from tests.complete_run import layout
+    from tests.integration import utils
+
+    class Config:
+        def get(self, section: str, key: str) -> str:
+            return {
+                ("web_portal", "username"): "tester",
+                ("web_portal", "base_path"): "/www",
+                ("diagnostics", "base_path"): "/diagnostics",
+            }[(section, key)]
+
+    class Machine:
+        config = Config()
+        machine = "chrysalis"
+
+    root = tmp_path / "shared"
+    for tag in ("default", "task", "cfg", "current"):
+        (root / "runs" / tag).mkdir(parents=True)
+    (root / "baselines").mkdir()
+    (root / "baselines" / "latest-main").symlink_to("../runs/default")
+    monkeypatch.setattr(utils, "MachineInfo", Machine)
+    monkeypatch.setattr(utils, "_load_run_settings", lambda: {})
+    specifics = build_specifics(
+        cfgs_to_run=["weekly_comprehensive_v3"],
+        tasks_to_run=["pcmdi_diags"],
+        baseline_overrides={
+            "pcmdi_diags": "task",
+            "weekly_comprehensive_v3:pcmdi_diags": "cfg",
+        },
+    )
+
+    expansions = utils.get_expansions(
+        specifics=specifics,
+        run_dir=str(root / "runs" / "current"),
+        output_dir="/scratch/output",
+    )
+
+    assert expansions["baseline_by_cfg_task"][
+        "weekly_comprehensive_v3:pcmdi_diags"
+    ]["tag"] == "cfg"
+
+
 def test_unknown_task_is_rejected() -> None:
     with pytest.raises(ValueError, match="Unknown task"):
         build_specifics(env_commands={"not_a_task": "source conda.sh"})

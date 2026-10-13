@@ -10,7 +10,7 @@ import os
 import pytest
 
 from tests.complete_run import promote
-from tests.complete_run.layout import run_layout
+from tests.complete_run.layout import baseline_run_for, run_layout
 
 
 def _make_run(root, tag, *, status="passed", branches=("main",), images=1):
@@ -25,11 +25,22 @@ def _make_run(root, tag, *, status="passed", branches=("main",), images=1):
                 "tag": tag,
                 "machine": "chrysalis",
                 "generated": "2026-09-18T00:00:00+00:00",
+                "cfgs": ["weekly_comprehensive_v3"],
+                "tasks": ["climo"],
                 "repos": {
-                    f"repo{index}": {"branch": branch, "sha": "a" * 40}
+                    f"repo{index}": {
+                        "branch": branch,
+                        "sha": "a" * 40,
+                        "sha_date": "2026-09-17T12:00:00+00:00",
+                    }
                     for index, branch in enumerate(branches)
                 },
             },
+            stream,
+        )
+    with open(layout.status, "w") as stream:
+        json.dump(
+            {"task_status_by_cfg": {"weekly_comprehensive_v3": {"climo": "OK"}}},
             stream,
         )
     for index in range(images):
@@ -135,6 +146,8 @@ def test_show_reports_what_is_promoted(tmp_path) -> None:
     assert described["machine"] == "chrysalis"
     assert described["exists"] is True
     assert "repo0" in described["repos"]
+    assert described["default_run"]["repos"]["repo0"]["sha_date"]
+    assert described["default_run"]["repos"]["repo0"]["age_days"] >= 0
 
 
 def test_show_raises_when_nothing_is_promoted(tmp_path) -> None:
@@ -183,3 +196,56 @@ def test_promoted_tags_lists_every_channel(tmp_path) -> None:
         "20260901_run1",
         "20260908_run1",
     ]
+
+
+def test_partial_promotion_adds_an_override_without_moving_default(tmp_path) -> None:
+    _make_run(tmp_path, "20260901_run1")
+    _make_run(tmp_path, "20260908_run1", status="jobs_failed")
+    promote.promote(str(tmp_path), "20260901_run1")
+
+    promote.promote(
+        str(tmp_path), "20260908_run1", tasks=("climo",)
+    )
+
+    assert promote.show(str(tmp_path))["tag"] == "20260901_run1"
+    assert baseline_run_for(
+        str(tmp_path), "weekly_comprehensive_v3", "climo"
+    ).root.endswith("20260908_run1")
+    assert "20260908_run1" in promote.promoted_tags(str(tmp_path))
+
+
+def test_partial_promotion_checks_only_the_selected_entry(tmp_path) -> None:
+    layout = _make_run(tmp_path, "20260908_run1", status="jobs_failed")
+    with open(layout.status, "w") as stream:
+        json.dump(
+            {
+                "task_status_by_cfg": {
+                    "weekly_comprehensive_v3": {
+                        "climo": "OK",
+                        "e3sm_to_cmip": "1 failed jobs",
+                    }
+                }
+            },
+            stream,
+        )
+    manifest = json.loads(open(layout.manifest).read())
+    manifest["tasks"] = ["climo", "e3sm_to_cmip"]
+    with open(layout.manifest, "w") as stream:
+        json.dump(manifest, stream)
+
+    promote.promote(str(tmp_path), "20260908_run1", tasks=("climo",))
+
+    with pytest.raises(promote.PromotionError, match="e3sm_to_cmip"):
+        promote.promote(str(tmp_path), "20260908_run1", tasks=("e3sm_to_cmip",))
+
+
+def test_prune_protects_runs_referenced_only_by_overrides(tmp_path) -> None:
+    _make_run(tmp_path, "20260901_run1")
+    _make_run(tmp_path, "20260908_run1")
+    promote.promote(str(tmp_path), "20260901_run1")
+    promote.promote(str(tmp_path), "20260908_run1", tasks=("climo",))
+
+    doomed = promote.prune(str(tmp_path), keep=0, dry_run=False)
+
+    assert "20260908_run1" not in doomed
+    assert os.path.isdir(run_layout(str(tmp_path), "20260908_run1").root)

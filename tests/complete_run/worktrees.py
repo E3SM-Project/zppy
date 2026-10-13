@@ -31,6 +31,7 @@ class Checkout:
     short_sha: str
     branch: str
     remote: str
+    sha_date: str = ""
 
 
 def preferred_remote(repo: str) -> str:
@@ -135,6 +136,9 @@ def create_checkout(name: str, repo: str, branch: str, worktree_root: str) -> Ch
     short_sha: str = sha[:8]
     path: str = os.path.join(worktree_root, name)
     add_worktree(repo, path, sha)
+    sha_date: str = run_command(
+        ["git", "-C", repo, "show", "-s", "--format=%cI", sha], check=False
+    )
     return Checkout(
         name=name,
         source_repo=repo,
@@ -143,6 +147,7 @@ def create_checkout(name: str, repo: str, branch: str, worktree_root: str) -> Ch
         short_sha=short_sha,
         branch=branch,
         remote=remote,
+        sha_date=sha_date,
     )
 
 

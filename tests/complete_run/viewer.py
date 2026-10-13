@@ -400,6 +400,7 @@ class SummaryRow:
     tested_at: str = ""
     image_applicable: bool = True
     task_status: str = ""
+    baseline: str = ""
 
     @property
     def checked(self) -> bool:
@@ -520,7 +521,7 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
     """One row per cfg and task, with its full severity breakdown."""
     severities: List[str] = list(reversed(REVIEWABLE_SEVERITIES))
     header: str = (
-        "<tr><th>Package</th><th>Task</th><th>Cfg</th><th>Result</th>"
+        "<tr><th>Package</th><th>Task</th><th>Cfg</th><th>Baseline</th><th>Result</th>"
         + "".join(f"<th class='num'>{html.escape(s)}</th>" for s in severities)
         + "<th class='num'>Cosmetic</th><th class='num'>Total</th></tr>"
     )
@@ -562,6 +563,7 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
             f"<td>{html.escape(row.package)}</td>"
             f"<td>{task}</td>"
             f"<td>{html.escape(row.cfg)}</td>"
+            f"<td>{html.escape(row.baseline) or '—'}</td>"
             f"<td>{result}</td>"
             + cells
             + (
@@ -579,7 +581,7 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
     totals = _sum_counts([row for row in rows if row.checked])
     reviewable_total: int = sum(totals.get(s, 0) for s in REVIEWABLE_SEVERITIES)
     footer: str = (
-        "<tr><td colspan='4'>All checks</td>"
+        "<tr><td colspan='5'>All checks</td>"
         + "".join(_num(totals.get(s, 0)) for s in severities)
         + _num(sum(totals.values()) - reviewable_total)
         + _num(sum(totals.values()))

@@ -123,3 +123,54 @@ def test_resolve_baseline_raises_on_a_dangling_link(tmp_path) -> None:
     os.symlink("../runs/deleted", layout.baseline_link(root))
     with pytest.raises(FileNotFoundError, match="broken"):
         layout.resolve_baseline(root)
+
+
+def test_baseline_run_for_uses_task_override_then_channel_default(tmp_path) -> None:
+    root = str(tmp_path)
+    default = tmp_path / "runs" / "default"
+    task_run = tmp_path / "runs" / "task-run"
+    cfg_run = tmp_path / "runs" / "cfg-run"
+    for run in (default, task_run, cfg_run):
+        run.mkdir(parents=True)
+    (tmp_path / "baselines").mkdir()
+    os.symlink("../runs/default", layout.baseline_link(root))
+    layout.write_baseline_overrides(root, {"weekly_bundles:pcmdi_diags": "cfg-run"})
+
+    assert layout.baseline_run_for(root, "weekly_bundles", "pcmdi_diags").root == str(
+        cfg_run
+    )
+    assert layout.baseline_run_for(
+        root, "weekly_comprehensive_v3", "pcmdi_diags"
+    ).root == str(default)
+    assert layout.baseline_run_for(
+        root,
+        "weekly_comprehensive_v3",
+        "pcmdi_diags",
+        requested={"pcmdi_diags": "task-run"},
+    ).root == str(task_run)
+
+
+def test_baseline_run_for_prefers_exact_requested_override(tmp_path) -> None:
+    root = str(tmp_path)
+    (tmp_path / "runs" / "task-run").mkdir(parents=True)
+    (tmp_path / "runs" / "cfg-run").mkdir()
+
+    resolved = layout.baseline_run_for(
+        root,
+        "weekly_bundles",
+        "pcmdi_diags",
+        requested={"pcmdi_diags": "task-run", "weekly_bundles:pcmdi_diags": "cfg-run"},
+    )
+
+    assert resolved.root == str(tmp_path / "runs" / "cfg-run")
+
+
+def test_baseline_overrides_are_atomically_written(tmp_path) -> None:
+    root = str(tmp_path)
+    path = layout.write_baseline_overrides(
+        root, {"weekly_bundles:pcmdi_diags": "tag"}
+    )
+
+    assert layout.baseline_overrides(root) == {"weekly_bundles:pcmdi_diags": "tag"}
+    assert os.listdir(tmp_path / "baselines") == ["latest-main.overrides.json"]
+    assert path.endswith("latest-main.overrides.json")

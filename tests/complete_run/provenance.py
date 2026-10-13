@@ -384,6 +384,7 @@ def build_manifest(
         repos[checkout.name] = {
             "sha": checkout.sha,
             "short_sha": checkout.short_sha,
+            "sha_date": checkout.sha_date,
             "branch": checkout.branch,
             "remote": checkout.remote,
             "source_repo": checkout.source_repo,

@@ -71,27 +71,51 @@ another copy of the images:
 Partial updates
 ===============
 
-A baseline is one whole run, so a promotion updates every cfg and task at once.
-This is deliberate: a baseline assembled from several runs is hard to reason
-about when a difference later appears, because the results were produced by
-different code and different dependencies.
+A channel's baseline is its default run plus optional per-cfg/task overrides.
+Overrides point at whole immutable runs; no images or other results are copied.
+This lets a reviewed task be updated without changing the baseline used by
+other tasks:
 
-There is no way to accept a change in one task only. Do not promote a run made
-with a reduced ``--cfg`` or ``--task`` selection: a run's expected image lists
-are built by walking its own ``www`` tree, so such a run becomes a baseline
-that holds only the tasks it ran, and every other task then records no
-comparison against it. Promote a run that covered everything.
+.. code-block:: bash
+
+    python -m tests.complete_run.promote --machine chrysalis run 20260918_run1 \
+        --cfg weekly_comprehensive_v3 --task pcmdi_diags
+    python -m tests.complete_run.promote --machine chrysalis show
+
+The selected entries must have passed their job-status checks and, for plotting
+tasks, have a clean image comparison. A failure elsewhere in the run does not
+prevent promoting a passing entry. ``--allow-failed`` and ``--allow-non-main``
+remain available after review. To roll an entry back, promote its previous run
+for the same ``--cfg``/``--task`` selection. Promoting a whole run without
+selectors updates the channel default and clears its overrides.
+
+To compare against a different run without changing channel defaults, select it
+when launching automation. Repeat ``--baseline`` to select task-wide or
+cfg/task-specific runs; exact cfg/task selections take precedence:
+
+.. code-block:: bash
+
+    python -m tests.complete_run.automation --machine chrysalis \
+        --baseline pcmdi_diags=20260911_run1 \
+        --baseline weekly_comprehensive_v3:pcmdi_diags=20260918_run1
+
+For ``--env-type <repo>=baseline``, all selected tasks using the same repository
+environment must resolve to one baseline run. Automation stops with an error if
+they resolve to different runs.
 
 Deleting old runs
 =================
 
-Runs that a channel points at are kept indefinitely. Everything else is subject
-to pruning:
+Runs referenced by any channel's default or overrides are kept indefinitely.
+Other runs are subject to pruning:
 
 .. code-block:: bash
 
     # Reports what it would delete.
     python -m tests.complete_run.promote --machine chrysalis prune --keep 8
+    # Also restrict candidates to runs older than 60 days.
+    python -m tests.complete_run.promote --machine chrysalis prune --keep 8 \
+        --older-than 60
     # Actually delete.
     python -m tests.complete_run.promote --machine chrysalis prune --keep 8 --delete
 
@@ -101,7 +125,9 @@ Comparing against something other than latest-main
 .. code-block:: bash
 
     python -m tests.complete_run.automation --machine chrysalis \
-        --baseline-dir /lcrc/group/e3sm/public_html/zppy_complete_run/runs/20260901_run1
+        --baseline pcmdi_diags=20260901_run1
 
-When running the image checker directly, set ``ZPPY_COMPLETE_RUN_BASELINE``
-instead.
+For cfg generation, ``--baseline-dir`` still selects a run directory directly.
+When running the image checker directly, set ``ZPPY_COMPLETE_RUN_BASELINE``.
+Both mechanisms use that run for every task unless a more specific cfg/task
+selection is provided.

@@ -119,40 +119,46 @@ def set_up_and_run_image_checker(
     base_diff_dir = (
         f"{actual_images_dir}image_check_failures_{cfg_specifier}{diff_dir_suffix}"
     )
-    # The baseline is the www output of the promoted run, not a copy of it, so
-    # the expected images live under the same layout as the actual ones.
-    if expansions.get("baseline_www"):
-        # The complete run names cfgs by their full template name, which begins
-        # with "weekly_"; this module names the same cfgs without it.
-        cfg_name = f"weekly_{cfg_specifier}"
-        expected_images_dir = (
-            f"{expansions['baseline_www']}zppy_{cfg_name}_www/"
-            f"{BASELINE_RUN_SEGMENT}/{case_name}"
-        )
-        expected_images_list = (
-            f"{expansions['baseline_image_lists']}image_list_{cfg_name}.txt"
-        )
-    else:
-        # A machine with no promoted baseline yet.
-        expected_images_dir = f"{expansions['expected_dir']}expected_{cfg_specifier}"
-        expected_images_list = (
-            f"{expansions['expected_dir']}image_list_expected_{cfg_specifier}.txt"
-        )
-    d: Dict[str, str] = {
-        "actual_images_dir": actual_images_dir,
-        "expected_images_dir": expected_images_dir,
-        "diff_dir": _get_unused_diff_dir(base_diff_dir),
-        "expected_images_list": expected_images_list,
-    }
-    if d["diff_dir"] != base_diff_dir:
+    # The baseline is the www output of the promoted run, not a copy of it.
+    cfg_name = f"weekly_{cfg_specifier}"
+    baseline_by_cfg_task = expansions.get("baseline_by_cfg_task", {})
+    diff_dir = _get_unused_diff_dir(base_diff_dir)
+    if diff_dir != base_diff_dir:
         print(
-            f"diff_dir={base_diff_dir} already exists; using {d['diff_dir']} instead to avoid overwriting previous results"
+            f"diff_dir={base_diff_dir} already exists; using {diff_dir} instead to avoid overwriting previous results"
         )
-    print("Image checking dict:")
-    for key in d:
-        print(f"{key}: {d[key]}")
-    parameters: Parameters = Parameters(d)
     for task in task_list:
+        baseline = baseline_by_cfg_task.get(f"{cfg_name}:{task}", {})
+        baseline_www = baseline.get("www") or expansions.get("baseline_www")
+        baseline_image_lists = baseline.get("image_lists") or expansions.get(
+            "baseline_image_lists"
+        )
+        if baseline_www:
+            expected_images_dir = (
+                f"{baseline_www}zppy_{cfg_name}_www/"
+                f"{BASELINE_RUN_SEGMENT}/{case_name}"
+            )
+            expected_images_list = (
+                f"{baseline_image_lists}image_list_{cfg_name}.txt"
+            )
+        else:
+            # A machine with no promoted baseline yet.
+            expected_images_dir = (
+                f"{expansions['expected_dir']}expected_{cfg_specifier}"
+            )
+            expected_images_list = (
+                f"{expansions['expected_dir']}image_list_expected_{cfg_specifier}.txt"
+            )
+        d: Dict[str, str] = {
+            "actual_images_dir": actual_images_dir,
+            "expected_images_dir": expected_images_dir,
+            "diff_dir": diff_dir,
+            "expected_images_list": expected_images_list,
+        }
+        print(f"Image checking dict for {task}:")
+        for key in d:
+            print(f"{key}: {d[key]}")
+        parameters = Parameters(d)
         test_results = check_images(parameters, task)
         test_results_dict[f"{cfg_specifier}_{task}"] = test_results
 

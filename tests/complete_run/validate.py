@@ -564,6 +564,7 @@ def write_viewers(
     repos: Optional[Dict[str, object]] = None,
     baseline: str = "",
     task_status_by_cfg: Optional[Dict[str, Dict[str, str]]] = None,
+    baselines_by_cfg_task: Optional[Dict[str, Dict[str, object]]] = None,
 ) -> List[str]:
     """Write a review page for every checked task, and a summary above them.
 
@@ -616,6 +617,9 @@ def write_viewers(
                     tested_at=_tested_at(task, repos or {}),
                     image_applicable=image_applicable,
                     task_status=(task_status_by_cfg or {}).get(cfg, {}).get(task, "not run"),
+                    baseline=_baseline_label(
+                        (baselines_by_cfg_task or {}).get(f"{cfg}:{task}", {})
+                    ),
                 )
             )
 
@@ -633,6 +637,23 @@ def write_viewers(
         )
     )
     return written
+
+
+def _baseline_label(value: object) -> str:
+    """Compactly identify a check's baseline and the commits it contains."""
+    entry = value if isinstance(value, dict) else {}
+    tag = str(entry.get("tag") or "")
+    if not tag:
+        return ""
+    produced = str(entry.get("generated") or "")[:10] or "unknown date"
+    repos = entry.get("repos", {})
+    repos = repos if isinstance(repos, dict) else {}
+    commits = [
+        f"{name}@{str(repo.get('sha') or '')[:8]}"
+        for name, repo in sorted(repos.items())
+        if isinstance(repo, dict) and repo.get("sha")
+    ]
+    return f"{tag} ({produced})" + (f"; {', '.join(commits)}" if commits else "")
 
 
 def _latest_diff_subdirs(layout: RunLayout, cfg: str) -> Dict[str, str]:
