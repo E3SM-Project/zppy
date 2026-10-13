@@ -91,6 +91,35 @@ def test_render_appends_pin_and_unified_provenance(checkout: Checkout) -> None:
     assert unified.endswith("E3SM-Unified load script: /opt/e3sm/load-unified.sh\n")
 
 
+def test_refresh_changes_only_the_package_listing(tmp_path) -> None:
+    path = tmp_path / "env_description.txt"
+    path.write_text(
+        PROMOTED_EXAMPLE + "\nPinned: xarray==2025.1.0\n", encoding="utf-8"
+    )
+
+    assert provenance.refresh_env_description_packages(
+        str(path),
+        "# packages in environment at /home/user/envs/test:\n"
+        "café                      2.0.0             build-é    répo",
+    )
+
+    refreshed = path.read_text(encoding="utf-8")
+    assert "Generated: 2026-08-04 11:22:33" in refreshed
+    assert "Commit: 1234567890abcdef" in refreshed
+    assert "café                      2.0.0             build-é    répo" in refreshed
+    assert "Pinned: xarray==2025.1.0" in refreshed
+
+
+def test_package_listing_logs_replacement_characters(
+    monkeypatch, caplog
+) -> None:
+    monkeypatch.setattr(provenance, "run_command", lambda *args, **kwargs: "name �\n")
+    environment = Environment("e3sm_diags", ENV_TYPE_DEV, "env", "activate")
+
+    assert "\ufffd" in provenance.conda_package_list(environment)
+    assert "undecodable bytes" in caplog.text
+
+
 def test_generated_date_round_trips(
     tmp_path, checkout: Checkout, dev_environment: Environment
 ) -> None:

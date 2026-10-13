@@ -13,9 +13,9 @@ Package lists are parsed out of ``conda env export`` output. ``name:`` and
 ``prefix:`` are ignored: every run builds its own environment, so those always
 differ and would bury the changes worth seeing.
 
-A baseline whose repository ran from E3SM-Unified has no export for it. Its
-``env_descriptions/<task>.txt`` still carries that environment's ``conda list``,
-so the comparison falls back to that, by version only.
+When either run has no environment export, its
+``env_descriptions/<task>.txt`` can supply a package list instead, compared by
+version.
 """
 
 from __future__ import annotations
@@ -88,7 +88,7 @@ class EnvironmentDiff:
     repo: str
     cfg: str = ""
     task: str = ""
-    # False when either side has no export to compare.
+    # False when neither side has an export or package listing to compare.
     available: bool = True
     detail: str = ""
     changes: List[PackageChange] = field(default_factory=list)
@@ -202,12 +202,47 @@ def parse_package_list(text: str) -> Dict[str, str]:
     return packages
 
 
+def parse_package_list_details(text: str) -> Dict[str, str]:
+    """Parse package version, build, and channel from ``conda list`` output."""
+    packages: Dict[str, str] = {}
+    in_list: bool = False
+    for line in text.splitlines():
+        if line.startswith("# Name"):
+            in_list = True
+            continue
+        fields: List[str] = line.split()
+        if not in_list or len(fields) < 2 or fields[0].startswith("#"):
+            continue
+        name: str = fields[0]
+        if len(fields) >= 4 and fields[3] == "pypi":
+            name = f"pip:{name}"
+        packages[name] = " ".join(fields[1:])
+    return packages
+
+
 def diff_environments(baseline_text: str, candidate_text: str) -> List[PackageChange]:
     """Return every package that differs between two exports."""
     return _diff_packages(
         parse_environment_export(baseline_text),
         parse_environment_export(candidate_text),
     )
+
+
+def diff_package_lists(
+    baseline_text: str, candidate_text: str
+) -> List[PackageChange]:
+    """Return package changes between two ``conda list`` snapshots."""
+    return _diff_packages(
+        parse_package_list_details(baseline_text),
+        parse_package_list_details(candidate_text),
+    )
+
+
+def diff_package_maps(
+    baseline: Dict[str, str], candidate: Dict[str, str]
+) -> List[PackageChange]:
+    """Return package changes between parsed package snapshots."""
+    return _diff_packages(baseline, candidate)
 
 
 def _diff_packages(
@@ -249,58 +284,28 @@ def compare_run_environments(
         baseline_path: str = baseline.environment_file(repo)
         candidate_text: str = _read(candidate_path)
         baseline_text: str = _read(baseline_path)
+        candidate_description: Tuple[str, Dict[str, str], str] | None = (
+            _description_package_list(candidate, repo, task)
+        )
+        baseline_description: Tuple[str, Dict[str, str], str] | None = (
+            _description_package_list(baseline, repo, task)
+        )
+        candidate_packages: Dict[str, str] = (
+            parse_environment_export(candidate_text)
+            if candidate_text
+            else candidate_description[1] if candidate_description else {}
+        )
+        baseline_packages: Dict[str, str] = (
+            parse_environment_export(baseline_text)
+            if baseline_text
+            else baseline_description[1] if baseline_description else {}
+        )
 
-        if candidate_text and not baseline_text:
-            fallback: Tuple[str, Dict[str, str]] | None = _baseline_package_list(
-                baseline, repo
-            )
-            if fallback is not None:
-                fallback_task, baseline_packages = fallback
-                # conda list has no build strings, so compare versions only.
-                candidate_packages: Dict[str, str] = {
-                    name: version.split("=")[0]
-                    for name, version in parse_environment_export(
-                        candidate_text
-                    ).items()
-                }
-                # A dev environment pip-installs the package under test, which
-                # E3SM-Unified has from conda-forge: pip:e3sm-diags there is
-                # e3sm_diags here. Match by package, not by how it was installed.
-                baseline_packages = _by_package(baseline_packages)
-                candidate_packages = _by_package(candidate_packages)
-                # E3SM-Unified bundles every tool, so most of its packages are
-                # not in this repository's environment at all. Listing them as
-                # removed would bury the dependencies that actually differ.
-                unified_only: int = len(
-                    set(baseline_packages) - set(candidate_packages)
-                )
-                results.append(
-                    EnvironmentDiff(
-                        repo=repo,
-                        cfg=cfg,
-                        task=task,
-                        detail=(
-                            f"The baseline ran {repo} from E3SM-Unified, compared"
-                            f" by version against env_descriptions/{fallback_task}.txt."
-                            " Only packages in this run's environment are listed;"
-                            f" {unified_only} more in E3SM-Unified are not."
-                        ),
-                        changes=[
-                            change
-                            for change in _diff_packages(
-                                baseline_packages, candidate_packages
-                            )
-                            if change.candidate
-                        ],
-                    )
-                )
-                continue
-
-        if not candidate_text or not baseline_text:
+        if not candidate_packages or not baseline_packages:
             missing: List[str] = []
-            if not baseline_text:
+            if not baseline_packages:
                 missing.append("the baseline")
-            if not candidate_text:
+            if not candidate_packages:
                 missing.append("this run")
             results.append(
                 EnvironmentDiff(
@@ -309,19 +314,71 @@ def compare_run_environments(
                     task=task,
                     available=False,
                     detail=(
-                        f"No environment export for {' and '.join(missing)}; "
-                        "dependency changes could not be compared."
+                        f"No environment export or package listing for "
+                        f"{' and '.join(missing)}; dependency changes could not "
+                        "be compared."
                     ),
                 )
             )
             continue
 
+        if not candidate_text or not baseline_text:
+            candidate_packages = {
+                name: version.split("=")[0]
+                for name, version in candidate_packages.items()
+            }
+            baseline_packages = {
+                name: version.split("=")[0]
+                for name, version in baseline_packages.items()
+            }
+
+        # A dev environment pip-installs the package under test, while Unified
+        # has it from conda-forge. Match by package, not installation method.
+        candidate_packages = _by_package(candidate_packages)
+        baseline_packages = _by_package(baseline_packages)
+        candidate_is_unified = bool(
+            candidate_description
+            and "Conda environment: E3SM-Unified" in candidate_description[2]
+        )
+        baseline_is_unified = bool(
+            baseline_description
+            and "Conda environment: E3SM-Unified" in baseline_description[2]
+        )
+        changes = _diff_packages(baseline_packages, candidate_packages)
+        if baseline_is_unified:
+            # Unified bundles every tool; only packages in this run's
+            # repository environment are relevant.
+            changes = [change for change in changes if change.candidate]
+        elif candidate_is_unified:
+            changes = [change for change in changes if change.baseline]
+
+        detail: str = ""
+        if not candidate_text or not baseline_text:
+            sources: List[str] = []
+            if candidate_description and not candidate_text:
+                sources.append(
+                    f"this run env_descriptions/{candidate_description[0]}.txt"
+                )
+            if baseline_description and not baseline_text:
+                sources.append(
+                    f"the baseline env_descriptions/{baseline_description[0]}.txt"
+                )
+            detail = "Compared by package version using " + " and ".join(sources) + "."
+        if baseline_is_unified:
+            unified_only = len(set(baseline_packages) - set(candidate_packages))
+            detail = (
+                f"The baseline ran {repo} from E3SM-Unified, compared by version "
+                f"against env_descriptions/{baseline_description[0]}.txt. "
+                "Only packages in this run's environment are listed; "
+                f"{unified_only} more in E3SM-Unified are not."
+            )
         results.append(
             EnvironmentDiff(
                 repo=repo,
                 cfg=cfg,
                 task=task,
-                changes=diff_environments(baseline_text, candidate_text),
+                detail=detail,
+                changes=changes,
             )
         )
 
@@ -340,20 +397,20 @@ def _by_package(packages: Dict[str, str]) -> Dict[str, str]:
     return normalized
 
 
-def _baseline_package_list(
-    baseline: RunLayout, repo: str
-) -> Tuple[str, Dict[str, str]] | None:
-    """Return a task and the packages its baseline env_description lists.
-
-    Any of the repository's tasks will do: they all ran in its environment.
-    """
+def _description_package_list(
+    layout: RunLayout, repo: str, task: str
+) -> Tuple[str, Dict[str, str], str] | None:
+    """Find package listings for a task, falling back to sibling repository tasks."""
     spec = REPO_SPECS_BY_NAME.get(repo)
-    for task in spec.tasks if spec else ():
-        packages = parse_package_list(
-            _read(os.path.join(baseline.env_descriptions, f"{task}.txt"))
+    tasks: List[str] = [task] if task else []
+    tasks.extend(name for name in (spec.tasks if spec else ()) if name not in tasks)
+    for description_task in tasks:
+        text: str = _read(
+            os.path.join(layout.env_descriptions, f"{description_task}.txt")
         )
+        packages = parse_package_list(text)
         if packages:
-            return task, packages
+            return description_task, packages, text
     return None
 
 
@@ -423,7 +480,7 @@ def _read(path: str) -> str:
     if not os.path.isfile(path):
         return ""
     try:
-        with open(path) as stream:
+        with open(path, encoding="utf-8") as stream:
             return stream.read()
     except OSError as error:
         logger.warning("Could not read %s: %s", path, error)

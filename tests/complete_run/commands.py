@@ -87,5 +87,11 @@ def _run(
 ) -> "subprocess.CompletedProcess[str]":
     logger.debug("Running: %s", " ".join(args))
     return subprocess.run(
-        list(args), cwd=cwd, capture_output=True, text=True, timeout=timeout
+        list(args),
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=timeout,
     )

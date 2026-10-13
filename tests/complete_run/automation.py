@@ -720,8 +720,17 @@ def _write_env_descriptions(run: _Run) -> None:
     by_name: Dict[str, Checkout] = {
         checkout.name: checkout for checkout in run.checkouts
     }
-    # Several tasks can share one environment; list its packages once.
+    # Several tasks can share one environment; list its packages once. Snapshot
+    # every environment, including zppy's controller environment.
     package_lists: Dict[str, str] = {}
+    snapshots: Dict[str, Dict[str, str]] = {}
+    for name, environment in sorted(run.environments.items()):
+        key: str = environment.name or environment.activation_command
+        if key not in package_lists:
+            package_lists[key] = provenance.conda_package_list(environment)
+        snapshots[name] = envdiff.parse_package_list_details(package_lists[key])
+    run.status["environment_snapshots_prepare"] = snapshots
+
     for task, environment in sorted(
         environments_by_task(run.environments, run.machine).items()
     ):
@@ -730,11 +739,12 @@ def _write_env_descriptions(run: _Run) -> None:
         key: str = environment.name or environment.activation_command
         if key not in package_lists:
             package_lists[key] = provenance.conda_package_list(environment)
-            if environment.env_type == ENV_TYPE_UNIFIED:
-                run.status["unified"] = provenance.describe_unified(
-                    package_lists[key],
-                    run.args.unified_load_script or _unified_load_script(run.machine),
-                )
+            snapshots[task] = envdiff.parse_package_list_details(package_lists[key])
+        if environment.env_type == ENV_TYPE_UNIFIED:
+            run.status["unified"] = provenance.describe_unified(
+                package_lists[key],
+                run.args.unified_load_script or _unified_load_script(run.machine),
+            )
         provenance.write_env_description(
             run.layout.env_descriptions,
             task,
@@ -862,7 +872,7 @@ def _clear_stale_status_files(run: _Run, cfgs: Sequence[str]) -> int:
             if task_for_status_file(status_file) not in tasks_by_cfg[cfg]:
                 continue
             try:
-                with open(status_file) as stream:
+                with open(status_file, encoding="utf-8") as stream:
                     fields: List[str] = stream.read().split()
             except OSError as error:
                 logger.warning("Could not read %s: %s", status_file, error)
@@ -920,7 +930,7 @@ def _wait(run: _Run, max_wait: int, cfgs: Sequence[str] | None = None) -> None:
             if task_for_status_file(status_file) not in tasks_by_cfg[cfg]:
                 continue
             try:
-                with open(status_file) as stream:
+                with open(status_file, encoding="utf-8") as stream:
                     fields: List[str] = stream.read().split()
             except OSError as error:
                 logger.warning("Could not read %s: %s", status_file, error)
@@ -1004,42 +1014,6 @@ def _stage_validate(run: _Run) -> None:
     )
     validate.capture_settings_baselines(worktree, layout, run.cfgs, zppy_env)
 
-    # An image difference is only interpretable alongside what changed in the
-    # environment, so the comparison goes on every viewer page and in the
-    # report rather than being left for a reader to work out.
-    diffs, note = _compare_environments(run)
-    status["environment_diff"] = envdiff.summarize(diffs)
-    status["environment_note"] = note
-    baseline_entries = _mapping(status.get("baseline_by_cfg_task"))
-    baseline_tags = {
-        str(_mapping(value).get("tag") or "")
-        for value in baseline_entries.values()
-        if _mapping(value).get("tag")
-    }
-    summary_baseline = (
-        "mixed per cfg/task"
-        if len(baseline_tags) > 1
-        else (
-            next(iter(baseline_tags))
-            if baseline_tags
-            else str(_mapping(status.get("baseline")).get("tag", ""))
-        )
-    )
-    viewers: List[str] = validate.write_viewers(
-        layout,
-        run.cfgs,
-        tasks=run.tasks,
-        environment_diffs=diffs,
-        environment_note=note,
-        repos=_mapping(status.get("repos")),
-        baseline=summary_baseline,
-        task_status_by_cfg=task_status_by_cfg,
-        baselines_by_cfg_task=_mapping(status.get("baseline_by_cfg_task")),
-    )
-    status["viewers"] = viewers
-    # The summary is written last; it is the page a reviewer starts from.
-    status["image_review"] = viewers[-1]
-
     validate.collect_artifacts(worktree, layout.root)
 
     if not sweep.passed or not all(result.passed for result in pytest_results):
@@ -1070,9 +1044,6 @@ def _compare_environments(run: _Run) -> Tuple[List[envdiff.EnvironmentDiff], str
         baseline_dir = str(selected.get("run_dir") or "")
         if not baseline_dir:
             continue
-        repo_entry = _mapping(_mapping(run.status.get("repos")).get(spec.name))
-        if repo_entry.get("environment_type") != ENV_TYPE_DEV:
-            continue
         diffs.extend(
             envdiff.compare_run_environments(
                 run.layout,
@@ -1097,12 +1068,171 @@ def _stage_report(run: _Run, stages_run: Sequence[str] = ()) -> None:
     with ``--stop-after`` leaves the stage as it was, so a partial run is never
     mistaken for a clean one.
     """
+    if run.environments:
+        _refresh_environment_snapshots(run)
+        diffs, note = _compare_environments(run)
+        run.status["environment_diff"] = envdiff.summarize(diffs)
+        run.status["environment_note"] = note
+        if run.status.get("status_sweep"):
+            _write_environment_viewers(run, diffs, note)
+
     if "validate" in stages_run and str(run.status.get("stage")) not in FAILURE_STAGES:
         run.status["stage"] = "passed"
     report = report_module.render_report(run.status, run.layout)
     json_path, markdown_path = report_module.write_report(report, run.layout.root)
     logger.info("Run reports: %s and %s", json_path, markdown_path)
     logger.info("Job scripts and logs: %s", run.layout.output)
+
+
+def _refresh_environment_snapshots(run: _Run) -> None:
+    """Capture the environments as used and update all recorded package lists."""
+    package_lists: Dict[str, str] = {}
+    final_snapshots: Dict[str, Dict[str, str]] = {}
+    prepared: Dict[str, object] = _mapping(
+        run.status.get("environment_snapshots_prepare")
+    )
+    drift: Dict[str, List[Dict[str, object]]] = {}
+
+    for name, environment in sorted(run.environments.items()):
+        key: str = environment.name or environment.activation_command
+        if key not in package_lists:
+            package_lists[key] = provenance.conda_package_list(environment)
+        package_list: str = package_lists[key]
+        if environment.env_type == ENV_TYPE_UNIFIED:
+            run.status["unified"] = provenance.describe_unified(
+                package_list,
+                run.args.unified_load_script or _unified_load_script(run.machine),
+            )
+        final_snapshots[name] = envdiff.parse_package_list_details(package_list)
+        try:
+            provenance.export_environment_file(
+                environment, run.layout.environment_file(name)
+            )
+        except OSError as error:
+            logger.warning(
+                "Could not refresh environment export for %s: %s", name, error
+            )
+        before: Dict[str, object] = _mapping(prepared.get(name))
+        changes: List[envdiff.PackageChange] = (
+            envdiff.diff_package_maps(before, final_snapshots[name])
+            if before and final_snapshots[name]
+            else []
+        )
+        if changes:
+            drift[name] = [
+                {
+                    "name": change.name,
+                    "prepared": change.baseline,
+                    "final": change.candidate,
+                }
+                for change in changes
+            ]
+            logger.warning(
+                "Environment changed during run for %s: %s",
+                name,
+                ", ".join(
+                    f"{change.name} ({change.baseline or '—'} -> "
+                    f"{change.candidate or '—'})"
+                    for change in changes
+                ),
+            )
+
+    for task, environment in environments_by_task(
+        run.environments, run.machine
+    ).items():
+        if task not in run.tasks:
+            continue
+        key: str = environment.name or environment.activation_command
+        if key not in package_lists:
+            package_lists[key] = provenance.conda_package_list(environment)
+        package_list: str = package_lists[key]
+        if environment.env_type == ENV_TYPE_UNIFIED:
+            run.status["unified"] = provenance.describe_unified(
+                package_list,
+                run.args.unified_load_script or _unified_load_script(run.machine),
+            )
+        if environment.repo_name not in final_snapshots:
+            final_snapshots[task] = envdiff.parse_package_list_details(package_list)
+            before: Dict[str, object] = _mapping(prepared.get(task))
+            changes: List[envdiff.PackageChange] = (
+                envdiff.diff_package_maps(before, final_snapshots[task])
+                if before and final_snapshots[task]
+                else []
+            )
+            if changes:
+                drift[task] = [
+                    {
+                        "name": change.name,
+                        "prepared": change.baseline,
+                        "final": change.candidate,
+                    }
+                    for change in changes
+                ]
+                logger.warning(
+                    "Environment changed during run for %s: %s",
+                    task,
+                    ", ".join(
+                        f"{change.name} ({change.baseline or '—'} -> "
+                        f"{change.candidate or '—'})"
+                        for change in changes
+                    ),
+                )
+        path = os.path.join(run.layout.env_descriptions, f"{task}.txt")
+        if not provenance.refresh_env_description_packages(path, package_list):
+            logger.warning("Could not refresh environment description for %s", task)
+
+    run.status["environment_snapshots_final"] = final_snapshots
+    run.status["environment_drift"] = {
+        "changed_environments": sorted(drift),
+        "change_count": sum(len(changes) for changes in drift.values()),
+        "environments": drift,
+    }
+
+    provenance.refresh_distributed_env_descriptions(
+        run.layout.env_descriptions,
+        _mapping(run.status.get("www_root_by_cfg")),
+        run.cfgs,
+        run.tasks,
+    )
+
+
+def _write_environment_viewers(
+    run: _Run, diffs: List[envdiff.EnvironmentDiff], note: str
+) -> None:
+    """Write the viewer pages after report-time environment refresh."""
+    baseline_entries = _mapping(run.status.get("baseline_by_cfg_task"))
+    baseline_tags = {
+        str(_mapping(value).get("tag") or "")
+        for value in baseline_entries.values()
+        if _mapping(value).get("tag")
+    }
+    summary_baseline = (
+        "mixed per cfg/task"
+        if len(baseline_tags) > 1
+        else (
+            next(iter(baseline_tags))
+            if baseline_tags
+            else str(_mapping(run.status.get("baseline")).get("tag", ""))
+        )
+    )
+    try:
+        viewers = validate.write_viewers(
+            run.layout,
+            run.cfgs,
+            tasks=run.tasks,
+            environment_diffs=diffs,
+            environment_note=note,
+            repos=_mapping(run.status.get("repos")),
+            baseline=summary_baseline,
+            task_status_by_cfg=_mapping(run.status.get("task_status_by_cfg")),
+            baselines_by_cfg_task=baseline_entries,
+        )
+    except OSError as error:
+        logger.warning("Could not refresh environment viewers: %s", error)
+        return
+    run.status["viewers"] = viewers
+    if viewers:
+        run.status["image_review"] = viewers[-1]
 
 
 _STAGE_FUNCTIONS: Dict[str, Callable[[_Run], None]] = {
@@ -1300,7 +1430,7 @@ def _read_config(path: str) -> Dict[str, object]:
         return {}
     config = configparser.ConfigParser(interpolation=None)
     try:
-        with open(os.path.expanduser(path)) as stream:
+        with open(os.path.expanduser(path), encoding="utf-8") as stream:
             config.read_file(stream)
     except (OSError, configparser.Error) as error:
         raise ValueError(f"Could not read config {path}: {error}") from error

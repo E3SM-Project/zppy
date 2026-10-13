@@ -178,13 +178,13 @@ def check_images(parameters: Parameters, prefix: str):
     if os.path.exists(missing_images_file):
         os.remove(missing_images_file)
     for missing_image in test_results.file_list_missing:
-        with open(missing_images_file, "a") as f:
+        with open(missing_images_file, "a", encoding="utf-8") as f:
             f.write(f"{missing_image}\n")
     mismatched_images_file = f"{diff_subdir}/mismatched_images.txt"
     if os.path.exists(mismatched_images_file):
         os.remove(mismatched_images_file)
     for mismatched_image in test_results.file_list_mismatched:
-        with open(mismatched_images_file, "a") as f:
+        with open(mismatched_images_file, "a", encoding="utf-8") as f:
             f.write(f"{mismatched_image}\n")
     # Rank and group the failures so a reviewer knows where to start
     _write_severity_report(diff_subdir, test_results)
@@ -254,7 +254,7 @@ def _write_severity_report(diff_subdir: str, test_results: Results) -> None:
     comparisons = sorted(test_results.comparisons, key=Comparison.sort_key)
     needing_review = [c for c in comparisons if c.needs_review]
 
-    with open(f"{diff_subdir}/severity_report.txt", "w") as f:
+    with open(f"{diff_subdir}/severity_report.txt", "w", encoding="utf-8") as f:
         f.write(f"Image check for {test_results.prefix}\n")
         f.write(f"{test_results.image_count_total} images compared\n")
         f.write(f"{test_results.image_count_identical} identical\n")
@@ -296,7 +296,7 @@ def _write_severity_report(diff_subdir: str, test_results: Results) -> None:
                     f"  {c.image_name}\n"
                 )
 
-    with open(f"{diff_subdir}/image_scores.json", "w") as f:
+    with open(f"{diff_subdir}/image_scores.json", "w", encoding="utf-8") as f:
         json.dump(
             [
                 {
@@ -326,7 +326,7 @@ def construct_markdown_summary_table(
     web_portal_base_url = config.get(
         "web_portal", "base_url"
     )  # Does NOT include trailing "/"
-    with open(output_file_path, "w") as f:
+    with open(output_file_path, "w", encoding="utf-8") as f:
         f.write("# Summary of test results\n\n")
         f.write(
             "| Test name | Total images | Correct images | Identical |"
@@ -416,7 +416,7 @@ def _check_mismatched_images(
 
     counter = 0
     print(f"Opening expected images file {parameters.expected_images_list}")
-    with open(parameters.expected_images_list) as f:
+    with open(parameters.expected_images_list, encoding="utf-8") as f:
         print(f"Reading expected images file {parameters.expected_images_list}")
         for line in f:
             image_name = line.strip("./").strip("\n")

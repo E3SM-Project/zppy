@@ -361,7 +361,7 @@ def read_json_object(path: str) -> Dict[str, Any]:
     treats that as "nothing recorded" rather than an error.
     """
     try:
-        with open(path) as stream:
+        with open(path, encoding="utf-8") as stream:
             loaded = json.load(stream)
     except (OSError, json.JSONDecodeError):
         return {}
@@ -371,7 +371,7 @@ def read_json_object(path: str) -> Dict[str, Any]:
 def write_json(path: str, data: Any) -> str:
     """Write sorted, indented JSON, creating the directory if needed."""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    with open(path, "w") as stream:
+    with open(path, "w", encoding="utf-8") as stream:
         json.dump(data, stream, indent=2, sort_keys=True, default=str)
         stream.write("\n")
     return path

@@ -198,7 +198,7 @@ def test_environment_panel_states_when_nothing_changed() -> None:
     assert "Environment: no dependency changed" in page
 
 
-def test_a_failed_reproduction_is_opened_and_marked() -> None:
+def test_a_failed_reproduction_is_closed_and_marked() -> None:
     from tests.complete_run.envdiff import interpretation
 
     diffs = [_env(changes=[_change("numpy", "1", "2")])]
@@ -211,12 +211,13 @@ def test_a_failed_reproduction_is_opened_and_marked() -> None:
         environment_note=note,
     )
 
-    # A reviewer must not scroll past this one.
-    assert "<details class='env warn' open>" in page
+    assert "<details class='env warn'>" in page
+    assert "Environment: WARNING reproduction failed, 1 package differs" in page
+    assert "<details class='env warn' open>" not in page
     assert "<strong>not</strong>" in page
 
 
-def test_a_fresh_solve_difference_is_not_marked_as_a_warning() -> None:
+def test_a_fresh_solve_difference_is_closed_and_marked() -> None:
     from tests.complete_run.envdiff import interpretation
 
     diffs = [_env(changes=[_change("numpy", "1", "2")])]
@@ -268,7 +269,31 @@ def test_environment_panel_appears_on_a_clean_image_page() -> None:
         "task",
         environment_diffs=[_env(changes=[_change("numpy", "1", "2")])],
     )
-    assert "Environment: 1 dependency change" in page
+    assert "Environment: WARNING 1 dependency change" in page
+    assert "<details class='env'>" in page
+    assert " open>" not in page
+
+
+def test_environment_package_names_are_html_escaped() -> None:
+    page = viewer.render_viewer(
+        [_score("a", "MAJOR")],
+        "cfg",
+        "task",
+        environment_diffs=[
+            _env(
+                changes=[
+                    _change(
+                        "métrique<script>alert(1)</script>",
+                        "1 build-é dépôt",
+                        "2 build-é dépôt",
+                    )
+                ]
+            )
+        ],
+    )
+    assert "métrique&lt;script&gt;alert(1)&lt;/script&gt;" in page
+    assert "build-é dépôt" in page
+    assert "<script>alert(1)</script>" not in page
     assert "No image needs review" in page
 
 

@@ -23,7 +23,7 @@ import shutil
 from datetime import datetime, timezone
 from typing import Dict, List, Sequence
 
-from tests.complete_run.commands import run_command
+from tests.complete_run.commands import CommandError, run_command
 from tests.complete_run.environments import ENV_TYPE_DEV, Environment
 from tests.complete_run.layout import write_json
 from tests.complete_run.params import case_name_for_cfg, generated_cfg_path
@@ -148,9 +148,19 @@ def conda_package_list(environment: Environment) -> str:
         ]
         label = "the unified environment"
 
-    output: str = run_command(args, check=False)
+    try:
+        output: str = run_command(args, check=False)
+    except CommandError as error:
+        logger.warning("Could not list packages for %s: %s", label, error)
+        return f"(unable to list packages for {label})"
     if not output:
         return f"(unable to list packages for {label})"
+    if "\ufffd" in output:
+        logger.warning(
+            "Environment package listing for %s contained undecodable bytes; "
+            "they were replaced with U+FFFD.",
+            label,
+        )
     return output
 
 
@@ -207,19 +217,35 @@ def export_environment_file(environment: Environment, destination: str) -> str:
         # would record a snapshot nothing rebuilds from.
         return ""
 
-    exported: str = run_command(
-        ["conda", "env", "export", "-n", environment.name], check=False
-    )
+    try:
+        exported: str = run_command(
+            ["conda", "env", "export", "-n", environment.name], check=False
+        )
+    except CommandError as error:
+        logger.warning(
+            "Could not export environment %s: %s", environment.name, error
+        )
+        exported = ""
     if not exported or "dependencies:" not in exported:
         logger.warning(
             "Could not export environment %s; this run will not be exactly "
             "reproducible.",
             environment.name,
         )
+        try:
+            os.remove(destination)
+        except FileNotFoundError:
+            pass
+        except OSError as error:
+            logger.warning(
+                "Could not remove stale environment export %s: %s",
+                destination,
+                error,
+            )
         return ""
 
     os.makedirs(os.path.dirname(destination), exist_ok=True)
-    with open(destination, "w") as stream:
+    with open(destination, "w", encoding="utf-8") as stream:
         stream.write(exported)
         if not exported.endswith("\n"):
             stream.write("\n")
@@ -255,10 +281,50 @@ def write_env_description(
         pinned,
         unified_load_script,
     )
-    with open(path, "w") as stream:
+    with open(path, "w", encoding="utf-8") as stream:
         stream.write(content)
     logger.info("Wrote environment description for task %s -> %s", task, path)
     return path
+
+
+def refresh_env_description_packages(path: str, package_list: str) -> bool:
+    """Replace only the package listing, preserving the original provenance."""
+    try:
+        with open(path, encoding="utf-8") as stream:
+            content: str = stream.read()
+    except OSError:
+        return False
+
+    lines: List[str] = content.splitlines(keepends=True)
+    try:
+        header: int = next(
+            index
+            for index, line in enumerate(lines)
+            if line.rstrip("\r\n") == "Package versions:"
+        )
+    except StopIteration:
+        return False
+
+    start: int = header + 2
+    suffix: int = len(lines)
+    for index in range(start, len(lines)):
+        if lines[index].startswith(
+            ("E3SM-Unified load script:", "Pinned:")
+        ):
+            suffix = index
+            while suffix > start and not lines[suffix - 1].strip():
+                suffix -= 1
+            break
+
+    updated: str = "".join(lines[:start]) + package_list.rstrip("\n") + "\n"
+    if suffix < len(lines):
+        updated += "\n" + "".join(lines[suffix:])
+    try:
+        with open(path, "w", encoding="utf-8") as stream:
+            stream.write(updated)
+    except OSError:
+        return False
+    return True
 
 
 def read_generated_date(path: str) -> str | None:
@@ -269,7 +335,7 @@ def read_generated_date(path: str) -> str | None:
     as an error: baselines promoted before this file existed are still valid.
     """
     try:
-        with open(path) as stream:
+        with open(path, encoding="utf-8") as stream:
             for line in stream:
                 match = _GENERATED_PATTERN.match(line.strip())
                 if match:
@@ -288,7 +354,7 @@ def www_root_from_cfg(cfg_path: str) -> str | None:
     expected-results updater never picks up.
     """
     try:
-        with open(cfg_path) as stream:
+        with open(cfg_path, encoding="utf-8") as stream:
             for line in stream:
                 stripped: str = line.strip()
                 if not stripped.startswith("www"):
@@ -344,6 +410,34 @@ def distribute_env_descriptions(
                 )
 
     return www_root_by_cfg
+
+
+def refresh_distributed_env_descriptions(
+    env_description_dir: str,
+    www_root_by_cfg: Dict[str, str],
+    cfgs: Sequence[str],
+    tasks: Sequence[str],
+) -> None:
+    """Copy refreshed descriptions beside the task outputs."""
+    for cfg in cfgs:
+        www_root: str | None = www_root_by_cfg.get(cfg)
+        if not www_root:
+            continue
+        case: str = case_name_for_cfg(cfg)
+        for task in tasks:
+            source: str = os.path.join(env_description_dir, f"{task}.txt")
+            if not os.path.isfile(source):
+                continue
+            target_dir: str = os.path.join(www_root.rstrip("/"), case, task)
+            try:
+                os.makedirs(target_dir, exist_ok=True)
+                shutil.copy(source, os.path.join(target_dir, ENV_DESCRIPTION_FILENAME))
+            except OSError as error:
+                logger.warning(
+                    "Could not refresh environment description in %s: %s",
+                    target_dir,
+                    error,
+                )
 
 
 def build_manifest(

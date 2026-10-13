@@ -176,7 +176,7 @@ def sweep_status_files(
             if task is not None and selected_tasks is not None:
                 sweep.job_counts_by_cfg_task[cfg][task] += 1
             try:
-                with open(status_file) as stream:
+                with open(status_file, encoding="utf-8") as stream:
                     lines = stream.readlines()
                     failed = False
                     for line in lines:
@@ -258,7 +258,7 @@ def summarize_severities(results_dir: str) -> "OrderedDict[str, int]":
     pattern: str = os.path.join(results_dir, "**", "image_scores.json")
     for scores_file in sorted(glob.glob(pattern, recursive=True)):
         try:
-            with open(scores_file) as stream:
+            with open(scores_file, encoding="utf-8") as stream:
                 entries = json.load(stream)
         except (OSError, json.JSONDecodeError) as error:
             logger.warning("Could not read %s: %s", scores_file, error)
@@ -315,7 +315,7 @@ def run_image_checker(
         body="python -m pytest tests/integration/test_images.py",
         environment=environment,
     )
-    with open(script_path, "w") as stream:
+    with open(script_path, "w", encoding="utf-8") as stream:
         stream.write(script)
 
     result = ImageCheckResult()
@@ -461,7 +461,7 @@ def write_image_lists(layout: RunLayout, cfgs: Sequence[str]) -> Dict[str, int]:
                     images.append(f"./{relative}")
 
         images.sort()
-        with open(layout.image_list(cfg), "w") as stream:
+        with open(layout.image_list(cfg), "w", encoding="utf-8") as stream:
             stream.write("\n".join(images))
             if images:
                 stream.write("\n")

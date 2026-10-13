@@ -403,6 +403,99 @@ def test_stopping_early_does_not_report_passed(tmp_path) -> None:
     assert run.status["stage"] == "prepare"
 
 
+def test_report_refreshes_package_snapshot_and_environment_export(
+    tmp_path, monkeypatch
+) -> None:
+    run = _make_run(tmp_path)
+    run.tasks = ["e3sm_to_cmip"]
+    run.environments = {
+        "e3sm_to_cmip": Environment(
+            "e3sm_to_cmip", "dev", "test-e3sm_to_cmip", "activate"
+        )
+    }
+    run.status["environment_snapshots_prepare"] = {
+        "e3sm_to_cmip": {"numpy": "2.1.0 py313_0 conda-forge"}
+    }
+    description = Path(run.layout.env_descriptions) / "e3sm_to_cmip.txt"
+    description.parent.mkdir(parents=True, exist_ok=True)
+    description.write_text(
+        "Task: e3sm_to_cmip\nGenerated: 2026-10-01 12:00:00\n\n"
+        "Package versions:\n-----------------\n"
+        "# Name Version Build Channel\n"
+        "numpy 2.1.0 py313_0 conda-forge\n",
+        encoding="utf-8",
+    )
+    package_list = (
+        "# Name Version Build Channel\n"
+        "numpy 2.2.0 py313_0 conda-forge\n"
+        "métrique 1.0.0 build-é dépôt\n"
+    )
+    exports: List[Tuple[str, str]] = []
+    monkeypatch.setattr(
+        automation.provenance,
+        "conda_package_list",
+        lambda environment: package_list,
+    )
+    monkeypatch.setattr(
+        automation.provenance,
+        "export_environment_file",
+        lambda environment, path: (
+            exports.append((environment.repo_name, path)) or path
+        ),
+    )
+
+    automation._refresh_environment_snapshots(run)
+
+    assert run.status["environment_snapshots_final"]["e3sm_to_cmip"]["numpy"] == (
+        "2.2.0 py313_0 conda-forge"
+    )
+    assert run.status["environment_drift"]["changed_environments"] == [
+        "e3sm_to_cmip"
+    ]
+    assert exports == [
+        ("e3sm_to_cmip", run.layout.environment_file("e3sm_to_cmip"))
+    ]
+    refreshed = description.read_text(encoding="utf-8")
+    assert "Generated: 2026-10-01 12:00:00" in refreshed
+    assert "métrique 1.0.0 build-é dépôt" in refreshed
+    report = automation.report_module.render_report(run.status, run.layout)
+    markdown = automation.report_module.render_markdown(report)
+    assert "métrique" in markdown
+    assert "2.2.0 py313_0 conda-forge" in markdown
+
+
+def test_unified_e3sm_to_cmip_environment_is_compared(tmp_path) -> None:
+    run = _make_run(tmp_path)
+    run.environments = {
+        "e3sm_to_cmip": Environment(
+            "e3sm_to_cmip", "unified", "", "source unified.sh"
+        )
+    }
+    cfg = run.cfgs[0]
+    baseline_dir = tmp_path / "baseline"
+    baseline = automation.RunLayout(str(baseline_dir))
+    Path(baseline.env_descriptions).mkdir(parents=True)
+    Path(baseline.env_descriptions, "e3sm_to_cmip.txt").write_text(
+        "Task: e3sm_to_cmip\nPackage versions:\n-----------------\n"
+        "# Name Version Build Channel\nnumpy 2.1.0 py313_0 conda-forge\n",
+        encoding="utf-8",
+    )
+    Path(run.layout.environments).mkdir(parents=True)
+    Path(run.layout.environment_file("e3sm_to_cmip")).write_text(
+        "name: env\ndependencies:\n  - numpy=2.2.0=py313_0\n",
+        encoding="utf-8",
+    )
+    run.status["baseline_by_cfg_task"] = {
+        f"{cfg}:e3sm_to_cmip": {"run_dir": str(baseline_dir), "tag": "baseline"}
+    }
+
+    diffs, _ = automation._compare_environments(run)
+
+    assert len(diffs) == 1
+    assert diffs[0].repo == "e3sm_to_cmip"
+    assert diffs[0].differs
+
+
 def test_a_validated_run_reports_passed(tmp_path) -> None:
     run = _make_run(tmp_path, status={"stage": "validate"})
     automation._stage_report(run, stages_run=["validate", "report"])

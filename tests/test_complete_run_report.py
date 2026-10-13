@@ -324,11 +324,31 @@ def test_environment_section_precedes_the_results(paths) -> None:
         ],
     }
     status["environment_note"] = "Dependencies changed in `e3sm_diags`."
+    status["environment_drift"] = {
+        "changed_environments": ["e3sm_diags"],
+        "change_count": 1,
+        "environments": {
+            "e3sm_diags": [
+                {
+                    "name": "métrique",
+                    "prepared": "1.0 build-é conda-forge",
+                    "final": "2.0 build-é dépôt",
+                }
+            ]
+        },
+    }
     markdown = report_module.render_markdown(report_module.render_report(status, paths))
 
     # It decides how to read everything below it.
     assert markdown.index("## Environment") < markdown.index("## Job status files")
-    assert "numpy" in markdown
+    assert (
+        "<summary>Environment: WARNING 1 dependency differs from baseline</summary>"
+        in markdown
+    )
+    assert "<details>" in markdown and "<details open>" not in markdown
+    assert "Environment changed during run:" in markdown
+    assert "métrique" in markdown
+    assert "build-é dépôt" in markdown
     assert "2.1.3" in markdown
 
 
@@ -337,6 +357,29 @@ def test_environment_section_is_absent_when_not_compared(paths) -> None:
         report_module.render_report(_passing_status(), paths)
     )
     assert "## Environment" not in markdown
+
+
+def test_unavailable_environment_explains_why_in_report(paths) -> None:
+    status = _passing_status()
+    status["environment_diff"] = {
+        "compared": 0,
+        "unavailable": ["e3sm_to_cmip"],
+        "repos": [
+            {
+                "repo": "e3sm_to_cmip",
+                "available": False,
+                "detail": "No environment export or package listing for this run.",
+                "changes": [],
+            }
+        ],
+    }
+
+    markdown = report_module.render_markdown(
+        report_module.render_report(status, paths)
+    )
+
+    assert "Not compared for:" in markdown
+    assert "No environment export or package listing for this run." in markdown
 
 
 def test_environment_note_survives_into_json(paths) -> None:

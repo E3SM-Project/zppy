@@ -11,6 +11,7 @@ artifact is exactly the run whose report a maintainer most needs.
 from __future__ import annotations
 
 import argparse
+import html
 import logging
 import os
 from collections import OrderedDict
@@ -97,6 +98,7 @@ def render_report(status: Dict[str, Any], layout: RunLayout) -> Dict[str, Any]:
         },
         "environment_diff": _mapping(status.get("environment_diff")),
         "environment_note": status.get("environment_note", ""),
+        "environment_drift": _mapping(status.get("environment_drift")),
         "paths": {
             "results_dir": layout.root,
             "output": status.get("output_dir", ""),
@@ -114,7 +116,7 @@ def write_report(report: Dict[str, Any], output_dir: str) -> tuple[str, str]:
     json_path: str = write_json(os.path.join(output_dir, JSON_FILENAME), report)
     markdown_path: str = os.path.join(output_dir, MARKDOWN_FILENAME)
 
-    with open(markdown_path, "w") as stream:
+    with open(markdown_path, "w", encoding="utf-8") as stream:
         stream.write(render_markdown(report))
 
     for path in (json_path, markdown_path):
@@ -285,41 +287,110 @@ def _environment_section(report: Dict[str, Any]) -> List[str]:
     that changed because zppy did.
     """
     diff: Dict[str, Any] = _mapping(report.get("environment_diff"))
+    drift: Dict[str, Any] = _mapping(report.get("environment_drift"))
     note: str = str(report.get("environment_note") or "")
     pins: List[Any] = list(report.get("pins") or [])
     applied_pins: Dict[str, Any] = _mapping(report.get("applied_pins"))
     load_script: str = str(report.get("unified_load_script") or "")
-    if not diff and not note and not pins and not applied_pins and not load_script:
+    if (
+        not diff
+        and not drift
+        and not note
+        and not pins
+        and not applied_pins
+        and not load_script
+    ):
         return []
 
-    lines: List[str] = ["## Environment", ""]
+    changed_during_run: List[str] = list(drift.get("changed_environments") or [])
+    drift_count: int = int(drift.get("change_count", 0) or 0)
+    diff_count: int = int(diff.get("change_count", 0) or 0)
+    unavailable_count: int = len(list(diff.get("unavailable") or []))
+    if "meant to reproduce" in note and "does not." in note:
+        heading: str = (
+            f"Environment: WARNING reproduction failed, {diff_count} package"
+            f"{'s' if diff_count != 1 else ''} "
+            f"{'differs' if diff_count == 1 else 'differ'}"
+        )
+    elif diff_count:
+        heading = (
+            f"Environment: WARNING {diff_count} dependenc"
+            f"{'y' if diff_count == 1 else 'ies'} differ"
+            f"{'s' if diff_count == 1 else ''} from baseline"
+        )
+    elif drift_count:
+        heading = (
+            f"Environment: WARNING {drift_count} package"
+            f"{'s' if drift_count != 1 else ''} changed during this run"
+        )
+    elif unavailable_count:
+        heading = (
+            f"Environment: WARNING {unavailable_count} environments not compared"
+        )
+    elif drift:
+        heading = "Environment: no package changed during this run"
+    elif diff.get("compared"):
+        heading = "Environment: no dependency changed"
+    else:
+        heading = "Environment: not compared"
+
+    lines: List[str] = [
+        "## Environment",
+        "",
+        "<details>",
+        f"<summary>{html.escape(heading)}</summary>",
+        "",
+    ]
     if note:
         lines.extend([note, ""])
+    if changed_during_run:
+        lines.extend(["Environment changed during run:", ""])
+        drift_environments = _mapping(drift.get("environments"))
+        for environment in changed_during_run:
+            lines.append(f"* `{html.escape(str(environment))}`:")
+            for change in _sequence(drift_environments.get(environment)):
+                lines.append(
+                    f"  * `{html.escape(str(change.get('name', '')))}`: "
+                    f"`{html.escape(str(change.get('prepared') or '—'))}` → "
+                    f"`{html.escape(str(change.get('final') or '—'))}`"
+                )
+        lines.append("")
     if load_script:
-        lines.extend([f"E3SM-Unified load script: `{load_script}`", ""])
+        lines.extend(
+            [f"E3SM-Unified load script: `{html.escape(load_script)}`", ""]
+        )
     if pins:
         lines.extend(["Requested dependency pins:", ""])
         for spec in pins:
-            lines.append(f"* `{spec}`")
+            lines.append(f"* `{html.escape(str(spec))}`")
         lines.append("")
     if applied_pins:
         lines.extend(["Applied dependency pins:", ""])
         for repo, specs in sorted(applied_pins.items()):
             values: List[Any] = specs if isinstance(specs, list) else [specs]
-            lines.append(f"* `{repo}`: " + ", ".join(f"`{spec}`" for spec in values))
+            lines.append(
+                f"* `{html.escape(str(repo))}`: "
+                + ", ".join(f"`{html.escape(str(spec))}`" for spec in values)
+            )
         lines.append("")
 
     unavailable: List[Any] = list(diff.get("unavailable") or [])
-    if unavailable:
-        lines.extend(
-            [
-                "Not compared for: "
-                + ", ".join(f"`{repo}`" for repo in sorted(unavailable)),
-                "",
-            ]
-        )
-
     repos: List[Dict[str, Any]] = _sequence(diff.get("repos"))
+    if unavailable:
+        details_by_repo: Dict[str, str] = {
+            str(entry.get("repo", "")): str(entry.get("detail") or "")
+            for entry in repos
+            if not entry.get("available")
+        }
+        lines.extend(["Not compared for:", ""])
+        for repo in sorted(unavailable):
+            detail = details_by_repo.get(str(repo), "")
+            lines.append(
+                f"* `{html.escape(str(repo))}`"
+                + (f": {html.escape(detail)}" if detail else "")
+            )
+        lines.append("")
+
     changed = [entry for entry in repos if entry.get("change_count")]
     if not changed:
         if diff.get("compared"):
@@ -333,6 +404,7 @@ def _environment_section(report: Dict[str, Any]) -> List[str]:
                     "",
                 ]
             )
+        lines.extend(["</details>", ""])
         return lines
 
     lines.extend(
@@ -343,11 +415,13 @@ def _environment_section(report: Dict[str, Any]) -> List[str]:
         for change in _sequence(entry.get("changes")):
             marker = " *" if change.get("notable") else ""
             lines.append(
-                f"| `{repo}` | `{change.get('name')}`{marker} | "
-                f"`{change.get('baseline') or '—'}` | "
-                f"`{change.get('candidate') or '—'}` |"
+                f"| `{html.escape(repo)}` | "
+                f"`{html.escape(str(change.get('name', '')))}`{marker} | "
+                f"`{html.escape(str(change.get('baseline') or '—'))}` | "
+                f"`{html.escape(str(change.get('candidate') or '—'))}` |"
             )
     lines.extend(["", "\\* Packages that most often move results.", ""])
+    lines.extend(["</details>", ""])
     return lines
 
 

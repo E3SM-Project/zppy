@@ -229,6 +229,14 @@ def test_package_list_is_parsed_below_the_description_header() -> None:
     assert len(packages) == 5
 
 
+def test_package_list_details_preserve_unicode_build_and_channel() -> None:
+    packages = envdiff.parse_package_list_details(
+        "# Name Version Build Channel\n"
+        "métrique 2.0.0 build-é dépôt\n"
+    )
+    assert packages == {"métrique": "2.0.0 build-é dépôt"}
+
+
 def test_a_unified_baseline_is_compared_through_its_package_list(tmp_path) -> None:
     # The baseline ran e3sm_diags from E3SM-Unified, so it exported no
     # environment for it; this run solved a dev environment.
@@ -303,6 +311,36 @@ def test_any_of_a_repositorys_tasks_supplies_the_package_list(tmp_path) -> None:
     diff = envdiff.compare_run_environments(candidate, baseline, ["zppy_interfaces"])[0]
     assert diff.available and diff.differs
     assert "pcmdi_diags.txt" in diff.detail
+
+
+def test_e3sm_to_cmip_compares_descriptions_when_both_exports_are_missing(
+    tmp_path,
+) -> None:
+    candidate = run_layout(str(tmp_path), "candidate")
+    baseline = run_layout(str(tmp_path), "baseline")
+    listing = (
+        "Task: e3sm_to_cmip\n"
+        "Generated: 2026-10-01 12:00:00\n"
+        "\nConda environment (dev): test\n\n"
+        "Package versions:\n-----------------\n"
+        "# Name Version Build Channel\n"
+        "numpy 2.2.0 py313_0 conda-forge\n"
+    )
+    _write_description(candidate, "e3sm_to_cmip", listing)
+    _write_description(
+        baseline,
+        "e3sm_to_cmip",
+        listing.replace("2.2.0", "2.1.0"),
+    )
+
+    diff = envdiff.compare_run_environments(
+        candidate, baseline, ["e3sm_to_cmip"], task="e3sm_to_cmip"
+    )[0]
+
+    assert diff.available and diff.differs
+    assert diff.changes[0].name == "numpy"
+    assert "this run env_descriptions/e3sm_to_cmip.txt" in diff.detail
+    assert "the baseline env_descriptions/e3sm_to_cmip.txt" in diff.detail
 
 
 def test_interpretation_does_not_call_an_uncompared_run_clean() -> None:

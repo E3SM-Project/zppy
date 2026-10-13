@@ -358,7 +358,7 @@ def load_scores(diff_subdir: str) -> Optional[List[Dict[str, Any]]]:
     """Read a task's ``image_scores.json``, or None if it is absent or malformed."""
     scores_path: str = os.path.join(diff_subdir, "image_scores.json")
     try:
-        with open(scores_path) as stream:
+        with open(scores_path, encoding="utf-8") as stream:
             scores = json.load(stream)
     except (OSError, json.JSONDecodeError) as error:
         logger.warning("Could not read %s: %s", scores_path, error)
@@ -371,7 +371,7 @@ def load_scores(diff_subdir: str) -> Optional[List[Dict[str, Any]]]:
 
 def _write_page(path: str, content: str) -> None:
     """Write a page the web portal can serve."""
-    with open(path, "w") as stream:
+    with open(path, "w", encoding="utf-8") as stream:
         stream.write(content)
     try:
         os.chmod(path, 0o644)
@@ -680,15 +680,21 @@ def _render_environment(diffs: List[EnvironmentDiff], note: str) -> str:
     # A run that meant to reproduce the baseline but did not is the case a
     # reviewer must not miss.
     warn = "not** attributable" in note or "not attributable" in note
-    if differing:
+    if warn:
         heading = (
-            f"Environment: {total} dependency change"
+            f"Environment: WARNING reproduction failed, {total} "
+            f"package{'s' if total != 1 else ''} "
+            f"{'differs' if total == 1 else 'differ'}"
+        )
+    elif differing:
+        heading = (
+            f"Environment: WARNING {total} dependency change"
             f"{'s' if total != 1 else ''} in "
             + ", ".join(diff.repo for diff in differing)
         )
     elif comparable and unavailable:
         heading = (
-            "Environment: no dependency changed in those compared"
+            "Environment: WARNING no dependency changed in those compared"
             f" ({len(unavailable)} not compared)"
         )
     elif comparable:
@@ -724,11 +730,9 @@ def _render_environment(diffs: List[EnvironmentDiff], note: str) -> str:
             "</details>"
         )
 
-    # Open by default when something needs attention.
-    open_attribute = " open" if warn or differing else ""
     css = "env warn" if warn else "env"
     return (
-        f"<details class='{css}'{open_attribute}>"
+        f"<details class='{css}'>"
         f"<summary>{html.escape(heading)}</summary>"
         f"<div class='body'>{''.join(body)}</div></details>"
     )
