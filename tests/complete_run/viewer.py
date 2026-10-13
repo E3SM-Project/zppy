@@ -21,7 +21,14 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence
 
 from tests.complete_run.envdiff import EnvironmentDiff
-from tests.integration.image_severity import REVIEWABLE_SEVERITIES, SEVERITY_ORDER
+from tests.integration.image_severity import (
+    IMAGE_REVIEW_COLUMNS,
+    REVIEWABLE_SEVERITIES,
+    SEVERITY_ORDER,
+    missing_image_count,
+    needs_review_count,
+    total_needing_attention_count,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -415,6 +422,18 @@ class SummaryRow:
         return sum(self.counts.get(severity, 0) for severity in REVIEWABLE_SEVERITIES)
 
     @property
+    def missing(self) -> int:
+        return missing_image_count(self.counts)
+
+    @property
+    def needs_review(self) -> int:
+        return needs_review_count(self.counts)
+
+    @property
+    def total_needing_attention(self) -> int:
+        return total_needing_attention_count(self.counts)
+
+    @property
     def worst(self) -> str:
         """The most severe reviewable severity present, or ""."""
         for severity in reversed(SEVERITY_ORDER):
@@ -429,6 +448,8 @@ def render_summary(
     baseline: str = "",
     environment_diffs: List[EnvironmentDiff] | None = None,
     environment_note: str = "",
+    changes_since_baseline: Sequence[Dict[str, Any]] | None = None,
+    changes_note: str = "",
 ) -> str:
     """Render the run-level summary: every package, then every check."""
     image_rows: List[SummaryRow] = [row for row in rows if row.image_applicable]
@@ -463,6 +484,9 @@ def render_summary(
         " See also <a href='complete-run-report.md'>the run report</a>.</div>",
         "</header>",
         _render_environment(environment_diffs or [], environment_note),
+        _render_changes_since_baseline(
+            changes_since_baseline or [], changes_note
+        ),
         "<h2>By package</h2>",
         _render_package_table(rows),
         "<h2>By check</h2>",
@@ -491,12 +515,14 @@ def _render_package_table(rows: Sequence[SummaryRow]) -> str:
             image_cells: str = (
                 _num(sum(1 for row in checked if row.reviewable))
                 + _num(len(image_rows))
-                + _num(sum(counts.get(s, 0) for s in REVIEWABLE_SEVERITIES))
+                + _num(missing_image_count(counts))
+                + _num(needs_review_count(counts))
+                + _num(total_needing_attention_count(counts))
                 + _num(sum(counts.values()))
             )
         else:
             result = _task_result_badge([row.task_status for row in group])
-            image_cells = "".join("<td class='num zero'>n/a</td>" for _ in range(4))
+            image_cells = "".join("<td class='num zero'>n/a</td>" for _ in range(6))
         body.append(
             "<tr>"
             f"<td><b><a href='#{_package_anchor(package)}'>"
@@ -512,8 +538,12 @@ def _render_package_table(rows: Sequence[SummaryRow]) -> str:
         "<div class='table-wrap'><table class='summary'><thead><tr>"
         "<th>Package</th><th>Tested at</th><th>Tasks</th><th>Result</th>"
         "<th class='num'>Checks needing review</th><th class='num'>Checks</th>"
-        "<th class='num'>Images needing review</th><th class='num'>Images</th>"
-        "</tr></thead><tbody>" + "".join(body) + "</tbody></table></div>"
+        + "".join(f"<th class='num'>{html.escape(name)}</th>" for name in IMAGE_REVIEW_COLUMNS)
+        + "<th class='num'>Images</th>"
+        + "</tr></thead><tbody>"
+        + "".join(body)
+        + "</tbody></table></div>"
+        + _image_review_legend()
     )
 
 
@@ -522,6 +552,7 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
     severities: List[str] = list(reversed(REVIEWABLE_SEVERITIES))
     header: str = (
         "<tr><th>Package</th><th>Task</th><th>Cfg</th><th>Baseline</th><th>Result</th>"
+        + "".join(f"<th class='num'>{html.escape(name)}</th>" for name in IMAGE_REVIEW_COLUMNS)
         + "".join(f"<th class='num'>{html.escape(s)}</th>" for s in severities)
         + "<th class='num'>Cosmetic</th><th class='num'>Total</th></tr>"
     )
@@ -558,6 +589,19 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
             if row.image_applicable
             else _task_result_badge([row.task_status])
         )
+        attention_cells = (
+            _num(row.missing)
+            + _num(row.needs_review)
+            + _num(row.total_needing_attention)
+            if row.checked
+            else (
+                "".join("<td class='num zero'>—</td>" for _ in IMAGE_REVIEW_COLUMNS)
+                if row.image_applicable
+                else "".join(
+                    "<td class='num zero'>n/a</td>" for _ in IMAGE_REVIEW_COLUMNS
+                )
+            )
+        )
         body.append(
             f"<tr{row_id}>"
             f"<td>{html.escape(row.package)}</td>"
@@ -565,6 +609,7 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
             f"<td>{html.escape(row.cfg)}</td>"
             f"<td>{html.escape(row.baseline) or '—'}</td>"
             f"<td>{result}</td>"
+            + attention_cells
             + cells
             + (
                 _num(row.total - row.reviewable) + _num(row.total)
@@ -582,6 +627,9 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
     reviewable_total: int = sum(totals.get(s, 0) for s in REVIEWABLE_SEVERITIES)
     footer: str = (
         "<tr><td colspan='5'>All checks</td>"
+        + _num(missing_image_count(totals))
+        + _num(needs_review_count(totals))
+        + _num(total_needing_attention_count(totals))
         + "".join(_num(totals.get(s, 0)) for s in severities)
         + _num(sum(totals.values()) - reviewable_total)
         + _num(sum(totals.values()))
@@ -591,6 +639,15 @@ def _render_check_table(rows: Sequence[SummaryRow]) -> str:
         "<div class='table-wrap'><table class='summary'>"
         f"<thead>{header}</thead><tbody>{''.join(body)}</tbody>"
         f"<tfoot>{footer}</tfoot></table></div>"
+        + _image_review_legend()
+    )
+
+
+def _image_review_legend() -> str:
+    return (
+        "<p class='sub legend'>Missing: expected image was not produced. "
+        "Needs review excludes missing images. Total needing attention includes "
+        "both missing images and other reviewable differences.</p>"
     )
 
 
@@ -651,15 +708,106 @@ def write_summary(
     baseline: str = "",
     environment_diffs: List[EnvironmentDiff] | None = None,
     environment_note: str = "",
+    changes_since_baseline: Sequence[Dict[str, Any]] | None = None,
+    changes_note: str = "",
 ) -> str:
     """Write the run-level summary page and return its path."""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     _write_page(
         path,
-        render_summary(rows, tag, baseline, environment_diffs, environment_note),
+        render_summary(
+            rows,
+            tag,
+            baseline,
+            environment_diffs,
+            environment_note,
+            changes_since_baseline,
+            changes_note,
+        ),
     )
     logger.info("Wrote image review summary: %s", path)
     return path
+
+
+def _render_changes_since_baseline(
+    changes: Sequence[Dict[str, Any]], note: str
+) -> str:
+    """Render commit and Unified package changes on the run index page."""
+    if not changes:
+        return ""
+    body: List[str] = ["<section class='changes'><h2>Changes since the baseline</h2>"]
+    if note:
+        body.append(f"<p>{html.escape(note)}</p>")
+    for entry in changes:
+        baseline = entry.get("baseline", {})
+        baseline = baseline if isinstance(baseline, dict) else {}
+        tested = entry.get("tested", {})
+        tested = tested if isinstance(tested, dict) else {}
+        repo = str(entry.get("repo") or "unknown")
+        tasks = entry.get("tasks", [])
+        task_label = str(entry.get("task") or ", ".join(map(str, tasks)))
+        label = f"{repo} ({task_label})" if task_label else repo
+        baseline_tag = html.escape(str(baseline.get("tag") or "unknown"))
+        baseline_date = html.escape(str(baseline.get("generated") or "unknown")[:10])
+        baseline_commit = html.escape(
+            str(baseline.get("commit") or "date-based")[:12]
+        )
+        branch = html.escape(str(tested.get("branch") or "unknown"))
+        tested_commit = html.escape(
+            str(tested.get("commit") or "E3SM-Unified")[:12]
+        )
+        body.append(
+            f"<h3>{html.escape(label)}</h3><p>Baseline: {baseline_tag} "
+            f"(produced {baseline_date}; {baseline_commit}); tested: {branch} "
+            f"@ {tested_commit}; {int(entry.get('count', 0) or 0)} "
+            f"{html.escape(str(entry.get('range_type') or 'changes'))} change(s).</p>"
+        )
+        if entry.get("note"):
+            body.append(f"<p>{html.escape(str(entry['note']))}</p>")
+        if entry.get("warning"):
+            body.append(f"<p>Warning: {html.escape(str(entry['warning']))}</p>")
+        if entry.get("error"):
+            body.append(
+                f"<p>Could not list changes: {html.escape(str(entry['error']))}</p>"
+            )
+        commits = entry.get("commits", [])
+        if isinstance(commits, list) and commits:
+            body.append("<ul>")
+            for commit in commits:
+                if not isinstance(commit, dict):
+                    continue
+                subject = html.escape(str(commit.get("subject") or ""))
+                url = str(commit.get("url") or "")
+                if url:
+                    subject = (
+                        f"<a href='{html.escape(url, quote=True)}'>{subject}</a>"
+                    )
+                body.append(
+                    f"<li><code>{html.escape(str(commit.get('sha') or '')[:12])}</code> "
+                    f"({html.escape(str(commit.get('date') or 'date unknown'))}): "
+                    f"{subject}</li>"
+                )
+            body.append("</ul>")
+        package_changes = entry.get("changes", [])
+        if isinstance(package_changes, list) and package_changes:
+            body.append(
+                "<table><tr><th>Package</th><th>Baseline</th><th>This run</th></tr>"
+            )
+            for change in package_changes:
+                if not isinstance(change, dict):
+                    continue
+                body.append(
+                    "<tr>"
+                    f"<td>{html.escape(str(change.get('name') or ''))}</td>"
+                    f"<td>{html.escape(str(change.get('baseline') or 'unknown'))}</td>"
+                    f"<td>{html.escape(str(change.get('tested') or 'unknown'))}</td>"
+                    "</tr>"
+                )
+            body.append("</table>")
+        if not commits and not package_changes and not entry.get("error"):
+            body.append("<p>No changes since the baseline.</p>")
+    body.append("</section>")
+    return "".join(body)
 
 
 def _render_environment(diffs: List[EnvironmentDiff], note: str) -> str:

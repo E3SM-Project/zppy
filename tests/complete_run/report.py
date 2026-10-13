@@ -99,6 +99,10 @@ def render_report(status: Dict[str, Any], layout: RunLayout) -> Dict[str, Any]:
         "environment_diff": _mapping(status.get("environment_diff")),
         "environment_note": status.get("environment_note", ""),
         "environment_drift": _mapping(status.get("environment_drift")),
+        "changes_since_baseline": list(status.get("changes_since_baseline") or []),
+        "changes_since_baseline_note": status.get(
+            "changes_since_baseline_note", ""
+        ),
         "paths": {
             "results_dir": layout.root,
             "output": status.get("output_dir", ""),
@@ -149,6 +153,7 @@ def render_markdown(report: Dict[str, Any]) -> str:
 
     lines.extend(_repos_section(report))
     lines.extend(_baseline_selection_section(report))
+    lines.extend(_changes_since_baseline_section(report))
     lines.extend(_environment_section(report))
     lines.extend(_status_section(report))
     lines.extend(_pytest_section(report))
@@ -223,6 +228,68 @@ def _baseline_selection_section(report: Dict[str, Any]) -> List[str]:
             f"{str(entry.get('generated') or 'unknown')[:10]} | {commits} |"
         )
     lines.append("")
+    return lines
+
+
+def _changes_since_baseline_section(report: Dict[str, Any]) -> List[str]:
+    """List first-parent commits or Unified package changes since each baseline."""
+    changes: List[Dict[str, Any]] = _sequence(
+        report.get("changes_since_baseline")
+    )
+    if not changes:
+        return []
+
+    lines: List[str] = ["## Changes since the baseline", ""]
+    note = str(report.get("changes_since_baseline_note") or "")
+    if note:
+        lines.extend([note, ""])
+
+    for entry in changes:
+        baseline = _mapping(entry.get("baseline"))
+        tested = _mapping(entry.get("tested"))
+        repo = str(entry.get("repo") or "unknown")
+        tasks = ", ".join(str(task) for task in entry.get("tasks", []))
+        if entry.get("task"):
+            tasks = str(entry["task"])
+        lines.extend(
+            [
+                f"### `{repo}`" + (f" ({tasks})" if tasks else ""),
+                "",
+                f"* Baseline: `{baseline.get('tag') or 'unknown'}` "
+                f"(produced {str(baseline.get('generated') or 'unknown')[:10]}); "
+                f"commit `{str(baseline.get('commit') or 'date-based')[:12]}`",
+                f"* Tested: `{tested.get('branch') or 'unknown'}` "
+                f"@ `{str(tested.get('commit') or 'E3SM-Unified')[:12]}`",
+                f"* Changes: {int(entry.get('count', 0) or 0)} "
+                f"({entry.get('range_type') or 'unknown'})",
+                "",
+            ]
+        )
+        if entry.get("note"):
+            lines.extend([str(entry["note"]), ""])
+        if entry.get("warning"):
+            lines.extend([f"Warning: {entry['warning']}", ""])
+        if entry.get("error"):
+            lines.extend([f"Could not list changes: {entry['error']}", ""])
+
+        for change in _sequence(entry.get("commits")):
+            subject = str(change.get("subject") or "")
+            subject = subject.replace("|", "\\|").replace("[", "\\[").replace("]", "\\]")
+            url = str(change.get("url") or "")
+            linked = f"[{subject}]({url})" if url else subject
+            lines.append(
+                f"* `{str(change.get('sha') or '')[:12]}` "
+                f"({change.get('date') or 'date unknown'}): {linked}"
+            )
+        for change in _sequence(entry.get("changes")):
+            lines.append(
+                f"* `{change.get('name')}`: "
+                f"`{change.get('baseline') or 'unknown'}` → "
+                f"`{change.get('tested') or 'unknown'}`"
+            )
+        if not entry.get("commits") and not entry.get("changes") and not entry.get("error"):
+            lines.append("_No changes since the baseline._")
+        lines.append("")
     return lines
 
 

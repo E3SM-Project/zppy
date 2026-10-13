@@ -565,6 +565,8 @@ def write_viewers(
     baseline: str = "",
     task_status_by_cfg: Optional[Dict[str, Dict[str, str]]] = None,
     baselines_by_cfg_task: Optional[Dict[str, Dict[str, object]]] = None,
+    changes_since_baseline: Optional[List[Dict[str, object]]] = None,
+    changes_note: str = "",
 ) -> List[str]:
     """Write a review page for every checked task, and a summary above them.
 
@@ -634,6 +636,8 @@ def write_viewers(
             baseline=baseline,
             environment_diffs=environment_diffs,
             environment_note=environment_note,
+            changes_since_baseline=changes_since_baseline,
+            changes_note=changes_note,
         )
     )
     return written

@@ -30,6 +30,7 @@ from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 from typing import Callable, Dict, List, Sequence, Set, Tuple
 
+from tests.complete_run import changes as changes_module
 from tests.complete_run import environments as environments_module
 from tests.complete_run import envdiff, provenance
 from tests.complete_run import report as report_module
@@ -1068,6 +1069,17 @@ def _stage_report(run: _Run, stages_run: Sequence[str] = ()) -> None:
     with ``--stop-after`` leaves the stage as it was, so a partial run is never
     mistaken for a clean one.
     """
+    repo_paths = {
+        spec.name: _repo_path(run.args, spec)
+        for spec in REPO_SPECS
+        if spec.name in _mapping(run.status.get("repos"))
+    }
+    run.status["changes_since_baseline"] = changes_module.collect_changes(
+        run.status,
+        repo_paths,
+        run.layout.env_descriptions,
+    )
+
     if run.environments:
         _refresh_environment_snapshots(run)
         diffs, note = _compare_environments(run)
@@ -1226,6 +1238,10 @@ def _write_environment_viewers(
             baseline=summary_baseline,
             task_status_by_cfg=_mapping(run.status.get("task_status_by_cfg")),
             baselines_by_cfg_task=baseline_entries,
+            changes_since_baseline=_sequence(
+                run.status.get("changes_since_baseline")
+            ),
+            changes_note=str(run.status.get("changes_since_baseline_note") or ""),
         )
     except OSError as error:
         logger.warning("Could not refresh environment viewers: %s", error)

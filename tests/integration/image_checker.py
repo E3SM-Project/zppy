@@ -330,12 +330,18 @@ def construct_markdown_summary_table(
         f.write("# Summary of test results\n\n")
         f.write(
             "| Test name | Total images | Correct images | Identical |"
-            " Cosmetic only | Missing images | Needs review | Severity | \n"
+            f" Cosmetic only | {image_severity.IMAGE_REVIEW_COLUMNS[0]} | "
+            f"{image_severity.IMAGE_REVIEW_COLUMNS[1]} | "
+            f"{image_severity.IMAGE_REVIEW_COLUMNS[2]} | Severity | \n"
         )
-        f.write("| --- | --- | --- | --- | --- | --- | --- | --- | \n")
+        f.write("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | \n")
         for test_name, test_results in test_results_dict.items():
-            missing_str = f"{test_results.image_count_missing}"
-            mismatched_str = f"{test_results.image_count_mismatched}"
+            counts = test_results.severity_counts
+            missing = image_severity.missing_image_count(counts)
+            needs_review = image_severity.needs_review_count(counts)
+            total_attention = image_severity.total_needing_attention_count(counts)
+            missing_str = f"{missing}"
+            mismatched_str = f"{needs_review}"
 
             # test_results.diff_dir starts with the file path that is displayed on the web server.
             # That is, it starts with the web_portal_base_path
@@ -346,15 +352,15 @@ def construct_markdown_summary_table(
                 web_subdir = test_results.diff_dir.removeprefix(web_portal_base_path)
                 web_link = f"{web_portal_base_url}/{web_subdir}/{test_results.prefix}"
             if web_link:
-                has_missing: bool = test_results.image_count_missing > 0
+                has_missing: bool = missing > 0
                 if has_missing:
                     if os.path.exists(f"{diff_subdir}/missing_images.txt"):
-                        missing_str = f"{test_results.image_count_missing} ([list]({web_link}/missing_images.txt))"
+                        missing_str = f"{missing} ([list]({web_link}/missing_images.txt))"
                     else:
                         missing_str = (
                             f"{test_results.image_count_missing} (no list created)"
                         )
-                has_mismatched: bool = test_results.image_count_mismatched > 0
+                has_mismatched: bool = needs_review > 0
                 if has_mismatched:
                     mismatched_list_exists = os.path.exists(
                         f"{diff_subdir}/mismatched_images.txt"
@@ -363,13 +369,13 @@ def construct_markdown_summary_table(
                         f"{diff_subdir}/image_diff_grid.pdf"
                     )
                     if mismatched_list_exists and image_diff_grid_exists:
-                        mismatched_str = f"{test_results.image_count_mismatched} ([list]({web_link}/mismatched_images.txt), [grid]({web_link}/image_diff_grid.pdf))"
+                        mismatched_str = f"{needs_review} ([list]({web_link}/mismatched_images.txt), [grid]({web_link}/image_diff_grid.pdf))"
                     elif mismatched_list_exists:
-                        mismatched_str = f"{test_results.image_count_mismatched} ([list]({web_link}/mismatched_images.txt), no grid created)"
+                        mismatched_str = f"{needs_review} ([list]({web_link}/mismatched_images.txt), no grid created)"
                     elif image_diff_grid_exists:
-                        mismatched_str = f"{test_results.image_count_mismatched} (no list created, [grid]({web_link}/image_diff_grid.pdf))"
+                        mismatched_str = f"{needs_review} (no list created, [grid]({web_link}/image_diff_grid.pdf))"
                     else:
-                        mismatched_str = f"{test_results.image_count_mismatched} (no list/grid created)"
+                        mismatched_str = f"{needs_review} (no list/grid created)"
                     if os.path.exists(f"{diff_subdir}/severity_report.txt"):
                         mismatched_str += f", [ranked]({web_link}/severity_report.txt)"
 
@@ -393,8 +399,14 @@ def construct_markdown_summary_table(
                 f" | {test_results.image_count_identical}"
                 f" | {cosmetic_str}"
                 f" | {missing_str} | {mismatched_str}"
+                f" | {total_attention}"
                 f" | {test_results.severity_summary()} | \n"
             )
+        f.write(
+            "\nLegend: Missing means an expected image was not produced. "
+            "Needs review excludes missing images. Total needing attention "
+            "includes missing images and other reviewable differences.\n"
+        )
     print(f"Copy the output of {output_file_path} to a Pull Request comment")
 
 
