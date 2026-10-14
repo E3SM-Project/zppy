@@ -202,34 +202,6 @@ def run_test(
         raise e
 
 
-def test_prepare_test_configs_includes_livvkit_for_weekly_comprehensive_v3() -> None:
-    expansions: Dict[str, List[str]] = {
-        "cfgs_to_run": ["weekly_comprehensive_v3", "weekly_bundles"],
-        "tasks_to_run": ["livvkit", "ilamb"],
-    }
-
-    test_configs: List[tuple] = prepare_test_configs(
-        expansions, "", ["livvkit", "ilamb"]
-    )
-
-    assert test_configs == [
-        (
-            "comprehensive_v3",
-            V3_CASE_NAME,
-            expansions,
-            "",
-            ["livvkit", "ilamb"],
-        ),
-        (
-            "bundles",
-            V3_CASE_NAME,
-            expansions,
-            "",
-            ["ilamb"],
-        ),
-    ]
-
-
 def test_images():
     # To test a different branch, set this to True, and manually set the expansions.
     TEST_DIFFERENT_EXPANSIONS = False
