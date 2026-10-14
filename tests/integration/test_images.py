@@ -50,6 +50,7 @@ def prepare_test_configs(
             "mpas_analysis",
             "global_time_series",
             "ilamb",
+            "livvkit",
             "pcmdi_diags",
         ]
         tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
@@ -199,6 +200,32 @@ def run_test(
         with open(log_filename, "w") as f:
             f.write(output)
         raise e
+
+
+def test_prepare_test_configs_includes_livvkit_for_weekly_comprehensive_v3() -> None:
+    expansions: Dict[str, List[str]] = {
+        "cfgs_to_run": ["weekly_comprehensive_v3", "weekly_bundles"],
+        "tasks_to_run": ["livvkit", "ilamb"],
+    }
+
+    test_configs: List[tuple] = prepare_test_configs(expansions, "", ["livvkit", "ilamb"])
+
+    assert test_configs == [
+        (
+            "comprehensive_v3",
+            V3_CASE_NAME,
+            expansions,
+            "",
+            ["livvkit", "ilamb"],
+        ),
+        (
+            "bundles",
+            V3_CASE_NAME,
+            expansions,
+            "",
+            ["ilamb"],
+        ),
+    ]
 
 
 def test_images():
