@@ -87,6 +87,7 @@ def prepare_test_configs(
             "mpas_analysis",
             "global_time_series",
             "ilamb",
+            "livvkit",
             "pcmdi_diags",
         ]
         tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
