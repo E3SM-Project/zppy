@@ -208,7 +208,9 @@ def test_prepare_test_configs_includes_livvkit_for_weekly_comprehensive_v3() -> 
         "tasks_to_run": ["livvkit", "ilamb"],
     }
 
-    test_configs: List[tuple] = prepare_test_configs(expansions, "", ["livvkit", "ilamb"])
+    test_configs: List[tuple] = prepare_test_configs(
+        expansions, "", ["livvkit", "ilamb"]
+    )
 
     assert test_configs == [
         (
