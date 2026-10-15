@@ -13,22 +13,25 @@ BASE_PARAMETERS: Dict[str, Any] = {
     "case": "case_name",
     "climo_jobs": 0,
     "exclude": False,
+    "fml_nm": "eamxx",
     "input": "/path/to/input",
-    "input_files": "eam.h4",
-    "input_subdir": "archive/atm/hist",
+    "input_files": "3ha_ne30pg2.AVERAGE.nhours_x3",
+    "input_subdir": "run",
     "mapping_file": "map.nc",
     "parallel": "mpi",
-    "prc_typ": "eam",
+    "prc_typ": "eamxx",
     "prefix": "climo_atm_1850-1851",
     "scriptDir": "/path/to/scripts",
-    "vars": "PRECT",
+    "vars": "precip_liq_surf_mass_flux,precip_ice_surf_mass_flux",
     "yr_end": 1851,
     "yr_start": 1850,
 }
 
 
-def render(machine: str, frequency: str) -> str:
-    parameters = dict(BASE_PARAMETERS, machine=machine, frequency=frequency)
+def render(machine: str, frequency: str, prc_typ: str = "eamxx") -> str:
+    parameters = dict(
+        BASE_PARAMETERS, machine=machine, frequency=frequency, prc_typ=prc_typ
+    )
     template_env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(searchpath=TEMPLATE_DIR)
     )
@@ -37,7 +40,7 @@ def render(machine: str, frequency: str) -> str:
 
 
 @pytest.mark.parametrize("machine", ["pm-cpu", "pm-gpu"])
-def test_diurnal_climo_uses_small_buffer_on_perlmutter(machine):
+def test_eamxx_diurnal_climo_uses_small_buffer_on_perlmutter(machine):
     assert "--bfr_sz=262144" in render(machine, "diurnal_8xdaily")
 
 
@@ -49,3 +52,8 @@ def test_diurnal_climo_keeps_ncclimo_default_elsewhere(machine):
 @pytest.mark.parametrize("machine", ["pm-cpu", "pm-gpu"])
 def test_monthly_climo_keeps_ncclimo_default(machine):
     assert "--bfr_sz" not in render(machine, "monthly")
+
+
+@pytest.mark.parametrize("machine", ["pm-cpu", "pm-gpu"])
+def test_eam_diurnal_climo_keeps_ncclimo_default(machine):
+    assert "--bfr_sz" not in render(machine, "diurnal_8xdaily", prc_typ="eam")
