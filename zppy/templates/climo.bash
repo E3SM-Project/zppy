@@ -113,6 +113,9 @@ cat input.txt | run_nco ncclimo \
 {%- endif %}
 --yr_srt={{ yr_start }} \
 --yr_end={{ yr_end }} \
+{%- if machine in ['pm-cpu', 'pm-gpu'] %}
+--bfr_sz=262144 \
+{%- endif %}
 {% if mapping_file == '' -%}
 --output=output \
 {%- else -%}
