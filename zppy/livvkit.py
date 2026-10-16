@@ -114,21 +114,27 @@ def determine_and_add_dependencies(
     _c: Dict[str, Any], dependencies: List[str], script_dir: str
 ) -> None:
 
-    set_value_of_parameter_if_undefined(
-        _c,
-        "ts_land_subsection",
-        "land_monthly",
-        ParameterInferenceType.SECTION_INFERENCE,
-    )
-    add_dependencies(
-        dependencies,
-        script_dir,
-        "ts",
-        _c["ts_land_subsection"],
-        _c["year1"],
-        _c["year2"],
-        _c["ts_num_years"],
-    )
+    times_series_subsections = ["land"]
+    if "river" in _c["sets"]:
+        times_series_subsections.append("rof")
+
+    for component in times_series_subsections:
+        subsection = f"ts_{component}_subsection"
+        set_value_of_parameter_if_undefined(
+            _c,
+            subsection,
+            f"{component}_monthly",
+            ParameterInferenceType.SECTION_INFERENCE,
+        )
+        add_dependencies(
+            dependencies,
+            script_dir,
+            "ts",
+            _c[subsection],
+            _c["year1"],
+            _c["year2"],
+            _c["ts_num_years"],
+        )
 
     climo_subsections: List[str] = []
     if ("climo_subsections" in _c.keys()) and _c["climo_subsections"] != [""]:
@@ -148,6 +154,9 @@ def determine_and_add_dependencies(
             grids = list(set(grids))
         for _grid in grids:
             climo_subsections.append(f"land_monthly_climo{_grid}")
+
+        if "river" in _c["sets"]:
+            climo_subsections.append("rof_monthly_climo_native")
     else:
         raise ParameterNotProvidedError(
             f"{climo_subsections} was not provided, and inferring is turned off. Turn on inferring by setting infer_section_parameters to True."
