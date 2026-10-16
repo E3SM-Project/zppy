@@ -1,0 +1,71 @@
+%%{init: {'flowchart': {'htmlLabels': true, 'wrappingWidth': 260, 'nodeSpacing': 60, 'rankSpacing': 80}}}%%
+flowchart LR
+
+    %% Subtasks (vertices)
+    climo_month_lnd["climo: monthly, lnd"]
+    ts_month_atm["ts: monthly, atm"]
+    ts_month_lnd["ts: monthly, lnd"]
+    e3sm_to_cmip_month_atm["e3sm_to_cmip: monthly, atm"]
+    e3sm_to_cmip_month_lnd["e3sm_to_cmip: monthly, lnd"]
+    e3sm_diags_climo_month_lnd["e3sm_diags: lat_lon_land"]
+    e3sm_diags_ts_month_atm["e3sm_diags: enso_diags, qbo,<br/>area_mean_time_series, mp_partition"]
+    ilamb_lnd_atm["ilamb: lnd &amp; atm"]
+    ilamb_lnd_only["ilamb: lnd only"]
+    livvkit["livvkit<br/>NOTE: Specify mapping files"]
+    pcmdi_diags_mean_climate["pcmdi_diags: mean_climate"]
+    pcmdi_diags_variability_modes_atm["pcmdi_diags: variability_modes_atm"]
+    pcmdi_diags_variability_modes_cpl["pcmdi_diags: variability_modes_cpl"]
+    pcmdi_diags_enso["pcmdi_diags: enso"]
+    pcmdi_diags_synthetic_plots["pcmdi_diags: synthetic_plots"]
+
+    %% Defined in e3sm_to_cmip.py:
+    ts_month_atm --> e3sm_to_cmip_month_atm
+    ts_month_lnd --> e3sm_to_cmip_month_lnd
+
+    %% Defined in e3sm_diags.py:
+    climo_month_lnd --> e3sm_diags_climo_month_lnd
+    ts_month_atm --> e3sm_diags_ts_month_atm
+
+    %% Defined in ilamb.py:
+    ts_month_atm --> ilamb_lnd_atm
+    ts_month_lnd --> ilamb_lnd_atm
+    ts_month_lnd --> ilamb_lnd_only
+    e3sm_to_cmip_month_atm --> ilamb_lnd_atm
+    e3sm_to_cmip_month_lnd --> ilamb_lnd_atm
+    e3sm_to_cmip_month_lnd --> ilamb_lnd_only
+
+    %% Defined in livvkit.py:
+    climo_month_lnd -->livvkit
+    ts_month_lnd -->livvkit
+
+    %% Defined in pcmdi_diags.py:
+    ts_month_atm --> pcmdi_diags_mean_climate
+    ts_month_atm --> pcmdi_diags_variability_modes_atm
+    ts_month_atm --> pcmdi_diags_variability_modes_cpl
+    ts_month_atm --> pcmdi_diags_enso
+    e3sm_to_cmip_month_atm --> pcmdi_diags_mean_climate
+    e3sm_to_cmip_month_atm --> pcmdi_diags_variability_modes_atm
+    e3sm_to_cmip_month_atm --> pcmdi_diags_variability_modes_cpl
+    e3sm_to_cmip_month_atm --> pcmdi_diags_enso
+    pcmdi_diags_mean_climate --> pcmdi_diags_synthetic_plots
+    pcmdi_diags_variability_modes_atm --> pcmdi_diags_synthetic_plots
+    pcmdi_diags_variability_modes_cpl --> pcmdi_diags_synthetic_plots
+    pcmdi_diags_enso --> pcmdi_diags_synthetic_plots
+
+    %% Define colors for each task
+    classDef climoStyle fill:#fde68a,stroke:#b45309,color:#000,padding:14px;
+    classDef tsStyle fill:#bfdbfe,stroke:#1d4ed8,color:#000,padding:14px;
+    classDef cmipStyle fill:#99f6e4,stroke:#0f766e,color:#000,padding:14px;
+    classDef e3smdiagsStyle fill:#c7f9cc,stroke:#15803d,color:#000,padding:14px;
+    classDef ilambStyle fill:#fed7aa,stroke:#c2410c,color:#000,padding:14px;
+    classDef livvkitStyle fill:#a5f3fc,stroke:#0e7490,color:#000,padding:14px;
+    classDef pcmdiStyle fill:#fecaca,stroke:#b91c1c,color:#000,padding:14px;
+
+    %% Group each subtask into a task for coloring
+    class climo_month_lnd climoStyle;
+    class ts_month_atm,ts_month_lnd tsStyle;
+    class e3sm_to_cmip_month_atm,e3sm_to_cmip_month_lnd cmipStyle;
+    class e3sm_diags_climo_month_lnd,e3sm_diags_ts_month_atm e3smdiagsStyle;
+    class ilamb_lnd_atm,ilamb_lnd_only ilambStyle;
+    class livvkit livvkitStyle;
+    class pcmdi_diags_mean_climate,pcmdi_diags_variability_modes_atm,pcmdi_diags_variability_modes_cpl,pcmdi_diags_enso,pcmdi_diags_synthetic_plots pcmdiStyle;
