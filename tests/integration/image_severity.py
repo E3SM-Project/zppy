@@ -102,6 +102,31 @@ SEVERITY_ORDER: List[str] = [
 # judgement that somebody may want to check.
 REVIEWABLE_SEVERITIES: List[str] = [MINOR, MODERATE, MAJOR, STRUCTURAL, MISSING]
 
+IMAGE_REVIEW_COLUMNS: Tuple[str, str, str] = (
+    "Missing",
+    "Needs review (excluding missing)",
+    "Total needing attention",
+)
+
+
+def missing_image_count(severity_counts: Dict[str, int]) -> int:
+    """Return missing expected images."""
+    return int(severity_counts.get(MISSING, 0))
+
+
+def needs_review_count(severity_counts: Dict[str, int]) -> int:
+    """Return reviewable image differences other than missing images."""
+    return sum(
+        int(severity_counts.get(severity, 0))
+        for severity in REVIEWABLE_SEVERITIES
+        if severity != MISSING
+    )
+
+
+def total_needing_attention_count(severity_counts: Dict[str, int]) -> int:
+    """Return all missing or otherwise reviewable image differences."""
+    return missing_image_count(severity_counts) + needs_review_count(severity_counts)
+
 
 class Comparison(NamedTuple):
     """The result of comparing one actual image against its expected image."""

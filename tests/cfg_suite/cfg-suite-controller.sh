@@ -1,0 +1,73 @@
+#!/bin/bash
+# Scheduled controller for zppy's cfg suite test.
+#
+# Invoked from cron on a login node. Its configuration file is maintained
+# outside Git, since it names machine accounts and filesystem locations that
+# differ per operator.
+#
+#   cfg-suite-controller.sh /absolute/path/to/config.env
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+    printf '%s\n' 'Usage: cfg-suite-controller.sh /absolute/path/to/config.env' >&2
+    exit 2
+fi
+
+# shellcheck source=/dev/null
+source "$1"
+: "${REPO_ROOT:?}"
+: "${CFG_SUITE_CONFIG:?}"
+: "${CONDA_BASE:?}"
+: "${CONTROLLER_ENV:?}"
+
+# Standard cron cannot express "every second Monday" across month boundaries,
+# so the schedule fires weekly and the controller gates it here.
+WEEK_PARITY="${WEEK_PARITY:-any}"
+if [[ "$WEEK_PARITY" != "any" ]]; then
+    # 10# forces base 10; ISO weeks like "08" are not octal.
+    ISO_WEEK=$((10#$(date +%V)))
+    if [[ "$WEEK_PARITY" == "even" && $((ISO_WEEK % 2)) -ne 0 ]]; then
+        printf '%s\n' 'Skipping odd ISO week.'
+        exit 0
+    fi
+    if [[ "$WEEK_PARITY" == "odd" && $((ISO_WEEK % 2)) -eq 0 ]]; then
+        printf '%s\n' 'Skipping even ISO week.'
+        exit 0
+    fi
+fi
+
+# The cfg suite submits hundreds of jobs and waits for the operator's queue to
+# drain. Two overlapping runs would see each other's jobs and each conclude the
+# other's failures were its own. The lock is per operator, because the queue
+# being drained is per operator; the shared root is group-owned.
+LOCK_FILE="${LOCK_FILE:-$HOME/.zppy_cfg_suite.lock}"
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+    printf '%s\n' 'A cfg suite controller is already active; exiting.'
+    exit 0
+fi
+
+# Inherited SLURM_* settings would be applied to the jobs this controller
+# submits. Clear them before submitting anything.
+unset SLURM_MEM_PER_CPU SLURM_OPEN_MODE
+for variable in "${!SLURM_@}"; do
+    unset "$variable"
+done
+
+# cron does not run a login shell, so conda must be initialized explicitly.
+# shellcheck source=/dev/null
+source "$CONDA_BASE/etc/profile.d/conda.sh"
+conda activate "$CONTROLLER_ENV"
+
+cd "$REPO_ROOT/zppy"
+
+AUTOMATION_EXIT=0
+python -m tests.cfg_suite.automation \
+    --config "$CFG_SUITE_CONFIG" || AUTOMATION_EXIT=$?
+
+if [[ "$AUTOMATION_EXIT" -ne 0 ]]; then
+    printf '%s\n' "Cfg suite finished with exit code ${AUTOMATION_EXIT}." >&2
+    printf '%s\n' "Its report, and its worktrees for review, were retained." >&2
+fi
+
+exit "$AUTOMATION_EXIT"

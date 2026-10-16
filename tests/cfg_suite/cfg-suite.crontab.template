@@ -1,0 +1,16 @@
+# Weekly main-branch run of the cfg suite.
+#
+# Replace every {{PLACEHOLDER}}, then install with `crontab -`:
+#     crontab tests/cfg_suite/cfg-suite.crontab.template
+#
+# Chrysalis has no `scrontab` (that is NERSC-specific), so this is an ordinary
+# login-node crontab. Login-node crontabs are PER NODE: an entry installed on
+# chrlogin1 does not exist on chrlogin2. Install it on one node, record which,
+# and check there when a run does not appear.
+#
+# The controller holds a lock for the length of a run, so a second firing while
+# one is still going exits immediately rather than overlapping.
+SHELL=/bin/bash
+
+# Mondays at 06:00 local time.
+0 6 * * 1 {{REPO_ROOT}}/zppy/tests/cfg_suite/cfg-suite-controller.sh {{CONFIG_FILE}} >> {{LOG_DIR}}/cfg-suite-controller.log 2>&1
