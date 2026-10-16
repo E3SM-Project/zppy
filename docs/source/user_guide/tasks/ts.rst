@@ -35,7 +35,7 @@ Configuration example
 Parameters
 ----------
 
-These 9 parameters are specific to the ``ts`` task.
+These 11 parameters are specific to the ``ts`` task.
 
 .. list-table::
    :header-rows: 1
@@ -70,8 +70,18 @@ These 9 parameters are specific to the ``ts`` task.
      - No
      - ``""``
      - Model component that generated the input files (e.g., ``eam``,
-       ``eamxx``, ``elm``, ``mosart``). Used to set processing type
-       internally.
+       ``eamxx``, ``elm``, ``mosart``, ``mpaso``, ``mpassi``). Used to set
+       processing type internally.
+   * - ``mpas_calendar``
+     - No
+     - ``"noleap"``
+     - Calendar for the CF-style time coordinate constructed from MPAS
+       ``timeMonthly_avg_daysSinceStartOfSim`` metadata.
+   * - ``mpas_start_time``
+     - No
+     - ``"0001-01-01 00:00:00"``
+     - MPAS simulation start time used as the reference date for the
+       constructed time coordinate. This should match ``config_start_time``.
    * - ``vrt_remap_vars``
      - No
      - ``""``
