@@ -37,11 +37,7 @@ TEST_SPECIFICS: Dict[str, Any] = {
         "weekly_bundles",
         "weekly_comprehensive_v2",
         "weekly_comprehensive_v3",
-        "weekly_legacy_3.1.0_bundles",
-        "weekly_legacy_3.1.0_comprehensive_v2",
         "weekly_legacy_3.1.0_comprehensive_v3",
-        # "weekly_legacy_3.0.0_bundles",
-        # "weekly_legacy_3.0.0_comprehensive_v2",
         # "weekly_legacy_3.0.0_comprehensive_v3",
     ],
     "tasks_to_run": [
@@ -353,11 +349,7 @@ def generate_cfgs(dry_run=False):
         "weekly_bundles",
         "weekly_comprehensive_v2",
         "weekly_comprehensive_v3",
-        "weekly_legacy_3.1.0_bundles",
-        "weekly_legacy_3.1.0_comprehensive_v2",
         "weekly_legacy_3.1.0_comprehensive_v3",
-        "weekly_legacy_3.0.0_bundles",
-        "weekly_legacy_3.0.0_comprehensive_v2",
         "weekly_legacy_3.0.0_comprehensive_v3",
     ]
     if TEST_SPECIFICS["cfgs_to_run"] == []:
