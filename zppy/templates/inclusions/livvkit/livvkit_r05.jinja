@@ -787,7 +787,7 @@ Surface_Mass_Balance_GIS:
 
 {% if snow %}
 Snow_Storage_GIS:
-  module: /global/homes/m/mek/livvext/livvext/snow/snow.py
+  module: {{ livvext_root }}/snow/snow.py
   data_vars: *common_snow_storage_vars
   icesheet: gis
   <<: [*common, *common_snow, *common_elm]
@@ -797,7 +797,7 @@ Snow_Storage_GIS:
   desc: "{component} component of snow storage from {data_var_names}"
 
 Snow_Cover_GIS:
-  module: /global/homes/m/mek/livvext/livvext/snow/snow.py
+  module: {{ livvext_root }}/snow/snow.py
   data_vars: *common_snow_cover_vars
   icesheet: gis
   <<: [*common, *common_snow, *common_modis]
@@ -811,7 +811,7 @@ Snow_Cover_GIS:
 
 {% if river %}
 River_Discharge_GIS:
-  module: /global/homes/m/mek/livvext/livvext/river/river.py
+  module: {{ livvext_root }}/river/river.py
   data_vars: *common_river_vars
   icesheet: gis
   <<: [*common, *common_river, *common_mosart]
@@ -885,7 +885,7 @@ Surface_Mass_Balance_AIS:
 
 {% if snow %}
 Snow_Storage_AIS:
-  module: /global/homes/m/mek/livvext/livvext/snow/snow.py
+  module: {{ livvext_root }}/snow/snow.py
   data_vars: *common_snow_storage_vars
   icesheet: ais
   <<: [*common, *common_snow, *common_elm]
@@ -895,7 +895,7 @@ Snow_Storage_AIS:
   desc: "{component} component of snow storage from {data_var_names}"
 
 Snow_Cover_AIS:
-  module: /global/homes/m/mek/livvext/livvext/snow/snow.py
+  module: {{ livvext_root }}/snow/snow.py
   data_vars: *common_snow_cover_vars
   icesheet: gis
   <<: [*common, *common_snow, *common_modis]
@@ -910,7 +910,7 @@ Snow_Cover_AIS:
 
 {% if river %}
 River_Discharge_AIS:
-  module: /global/homes/m/mek/livvext/livvext/river/river.py
+  module: {{ livvext_root }}/river/river.py
   data_vars: *common_river_vars
   icesheet: ais
   <<: [*common, *common_mosart, *common_river,]
