@@ -78,37 +78,22 @@ def prepare_test_configs(
             )
         )
 
-    # Legacy 3.1.0 comprehensive tests
-    print("Preparing legacy 3.1.0 cfg tests")
+    # Legacy 3.2.0 comprehensive tests
+    print("Preparing legacy 3.2.0 cfg tests")
 
-    if "weekly_legacy_3.1.0_comprehensive_v3" in expansions["cfgs_to_run"]:
+    if "weekly_legacy_3.2.0_comprehensive_v3" in expansions["cfgs_to_run"]:
         available_tasks = [
             "e3sm_diags",
             "mpas_analysis",
             "global_time_series",
             "ilamb",
+            "livvkit",
             "pcmdi_diags",
         ]
         tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
         test_configs.append(
             (
-                "legacy_3.1.0_comprehensive_v3",
-                V3_CASE_NAME,
-                expansions,
-                diff_dir_suffix,
-                tasks_to_run,
-            )
-        )
-
-    # Legacy 3.0.0 comprehensive tests
-    print("Preparing legacy 3.0.0 cfg tests")
-
-    if "weekly_legacy_3.0.0_comprehensive_v3" in expansions["cfgs_to_run"]:
-        available_tasks = ["e3sm_diags", "mpas_analysis", "global_time_series", "ilamb"]
-        tasks_to_run = intersect_tasks(available_tasks, requested_tasks)
-        test_configs.append(
-            (
-                "legacy_3.0.0_comprehensive_v3",
+                "legacy_3.2.0_comprehensive_v3",
                 V3_CASE_NAME,
                 expansions,
                 diff_dir_suffix,
@@ -167,6 +152,9 @@ def run_test(
 ) -> tuple[str, Dict[str, Results], str]:
     """Run a single test and return its name, results dict, and captured output."""
     captured_output = StringIO()
+    # Creates directory if it doesn't exist
+    os.makedirs("images_logs", exist_ok=True)
+    log_filename = f"images_logs/test_{test_name}.log"
 
     try:
         test_results_dict: Dict[str, Results] = dict()
@@ -185,10 +173,6 @@ def run_test(
         output = captured_output.getvalue()
 
         # Write to individual log file
-        log_filename = f"images_logs/test_{test_name}.log"
-        os.makedirs(
-            "images_logs", exist_ok=True
-        )  # Creates directory if it doesn't exist
         with open(log_filename, "w") as f:
             f.write(output)
 
@@ -196,7 +180,6 @@ def run_test(
     except Exception as e:
         output = captured_output.getvalue()
         # Still write the partial output
-        log_filename = f"test_{test_name}.log"
         with open(log_filename, "w") as f:
             f.write(output)
         raise e
@@ -219,6 +202,9 @@ def test_images():
         diff_dir_suffix = ""
 
     test_results_dict: Dict[str, Results] = dict()
+    # Tests that raised an unexpected exception. We record these and keep going,
+    # so one broken test doesn't throw away the results of the others.
+    worker_errors: Dict[str, Exception] = dict()
     requested_tasks: List[str] = list(expansions["tasks_to_run"])
 
     # Prepare test configurations
@@ -227,7 +213,9 @@ def test_images():
     try:
         # Run tests in parallel using ProcessPoolExecutor for isolated stdout/stderr
         print(f"Running {len(test_configs)} tests in parallel")
-        print("Individual test logs will be written to test_<name>.log files")
+        print(
+            "Individual test logs will be written to images_logs/test_<name>.log files"
+        )
         with ProcessPoolExecutor(
             max_workers=6, mp_context=get_context("forkserver")
         ) as executor:
@@ -244,17 +232,14 @@ def test_images():
                     # Merge all results from this test into the main dict
                     test_results_dict.update(results_dict)
                     print(
-                        f"✓ Completed: {test_name} ({len(results_dict)} tasks) (log: test_{test_name}.log)"
+                        f"✓ Completed: {test_name} ({len(results_dict)} tasks) (log: images_logs/test_{test_name}.log)"
                     )
                 except Exception as e:
                     print(f"✗ Test {test_name} generated an exception: {e}")
-                    # Still try to write partial results
-                    construct_markdown_summary_table(
-                        test_results_dict, "early_test_images_summary.md"
-                    )
-                    raise e
+                    worker_errors[test_name] = e
 
     except Exception as e:
+        # Executor-level failure (not a single test's exception).
         construct_markdown_summary_table(
             test_results_dict, "early_test_images_summary.md"
         )
@@ -267,26 +252,49 @@ def test_images():
 
     print("\nTest Summary:")
     # Using alignment specifiers:
-    print(f"{'Test':<50} {'Total':>10} {'Correct':>10} {'Status':>10}")
-    print("-" * 82)
+    print(f"{'Test':<50} {'Total':>10} {'Correct':>10} {'Status':>14}")
+    print("-" * 86)
 
-    all_passed = True
+    # By default a missing baseline is a loud warning, not a failure, since adding
+    # a new cfg always needs a baseline-generation step first.
+    # Set ZPPY_REQUIRE_BASELINES=1 to make it a failure (e.g. for CI).
+    require_baselines = os.environ.get("ZPPY_REQUIRE_BASELINES") == "1"
+
+    failed_keys: List[str] = []
+    no_baseline_keys: List[str] = []
     for key, tr in ordered_results_dict.items():
-        status = (
-            "✓ PASS" if tr.image_count_total == tr.image_count_correct else "✗ FAIL"
-        )
-        if tr.image_count_total != tr.image_count_correct:
-            all_passed = False
+        if tr.baseline_missing:
+            status = "⚠ NO BASELINE"
+            no_baseline_keys.append(key)
+        elif tr.image_count_total == tr.image_count_correct:
+            status = "✓ PASS"
+        else:
+            status = "✗ FAIL"
+            failed_keys.append(key)
         print(
-            f"{key:<50} {tr.image_count_total:>10} {tr.image_count_correct:>10} {status:>10}"
+            f"{key:<50} {tr.image_count_total:>10} {tr.image_count_correct:>10} {status:>14}"
         )
 
-    print("-" * 82)
+    print("-" * 86)
 
-    if not all_passed:
+    if failed_keys:
         print(
-            "\n⚠ Some tests had mismatched or missing images. Check individual log files for details."
+            "\n✗ Some tests had mismatched or missing images. Check individual log files for details."
+        )
+    if no_baseline_keys:
+        print(
+            "\n⚠ No expected-results baseline for: "
+            + ", ".join(no_baseline_keys)
+            + "\n  Nothing was compared for these. Run "
+            "tests/integration/template_update_weekly_expected_files.sh to create one."
+        )
+    if worker_errors:
+        print(
+            "\n✗ Some tests raised exceptions: "
+            + ", ".join(f"{name} ({err})" for name, err in worker_errors.items())
         )
 
-    for tr in ordered_results_dict.values():
-        assert tr.image_count_total == tr.image_count_correct
+    assert not worker_errors, f"Tests raised exceptions: {worker_errors}"
+    assert not failed_keys, f"Image check failures: {failed_keys}"
+    if require_baselines:
+        assert not no_baseline_keys, f"Missing baselines: {no_baseline_keys}"
