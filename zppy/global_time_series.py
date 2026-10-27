@@ -154,32 +154,25 @@ def determine_and_add_dependencies(
     mpas_analysis_prefixes: Optional[Dict[str, List[str]]] = None,
 ) -> None:
     if c["use_atm"]:
-        # Iterate from year1 to year2 incrementing by the number of years per time series file.
-        for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
-            start_yr = yr
-            end_yr = yr + c["ts_num_years"] - 1
-            add_dependencies(
-                dependencies,
-                script_dir,
-                "ts",
-                "atm_monthly_glb",
-                start_yr,
-                end_yr,
-                c["ts_num_years"],
-            )
+        add_dependencies(
+            dependencies,
+            script_dir,
+            "ts",
+            "atm_monthly_glb",
+            c["year1"],
+            c["year2"],
+            c["ts_num_years"],
+        )
     if c["use_lnd"]:
-        for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
-            start_yr = yr
-            end_yr = yr + c["ts_num_years"] - 1
-            add_dependencies(
-                dependencies,
-                script_dir,
-                "ts",
-                "lnd_monthly_glb",
-                start_yr,
-                end_yr,
-                c["ts_num_years"],
-            )
+        add_dependencies(
+            dependencies,
+            script_dir,
+            "ts",
+            "lnd_monthly_glb",
+            c["year1"],
+            c["year2"],
+            c["ts_num_years"],
+        )
     if c["use_ocn"]:
         mpas_analysis_prefixes = (
             {} if mpas_analysis_prefixes is None else mpas_analysis_prefixes

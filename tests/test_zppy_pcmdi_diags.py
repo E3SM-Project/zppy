@@ -635,13 +635,14 @@ def test_add_ts_dependencies():
     dependencies: List[str] = []
     c = {
         "current_set": "mean_climate",
+        "year1": 2000,
+        "year2": 2004,
         "ts_num_years": 5,
     }
     script_dir = "/scripts"
-    yr = 2000
 
     with patch("zppy.pcmdi_diags.add_dependencies") as mock_add_dependencies:
-        add_ts_dependencies(c, dependencies, script_dir, yr)
+        add_ts_dependencies(c, dependencies, script_dir)
         mock_add_dependencies.assert_called_once_with(
             dependencies,
             script_dir,
@@ -656,11 +657,13 @@ def test_add_ts_dependencies():
     dependencies = []
     c = {
         "current_set": "synthetic_plots",
+        "year1": 2000,
+        "year2": 2004,
         "ts_num_years": 5,
     }
 
     with patch("zppy.pcmdi_diags.add_dependencies") as mock_add_dependencies:
-        add_ts_dependencies(c, dependencies, script_dir, yr)
+        add_ts_dependencies(c, dependencies, script_dir)
         mock_add_dependencies.assert_not_called()
 
 

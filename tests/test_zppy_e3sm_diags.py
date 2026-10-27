@@ -552,6 +552,8 @@ def test_add_climo_dependencies():
 
 def test_add_ts_dependencies():
     base: Dict[str, Any] = {
+        "year1": 1980,
+        "year2": 1984,
         "ts_num_years": 5,
         "ts_subsection": "sub",
         "ts_daily_subsection": "dsub",
@@ -561,7 +563,7 @@ def test_add_ts_dependencies():
         c: Dict[str, Any] = {"sets": [diags_set]}
         c.update(base)
         dependencies: List[str] = []
-        add_ts_dependencies(c, dependencies, "script_dir", 1980)
+        add_ts_dependencies(c, dependencies, "script_dir")
         assert dependencies == [
             "script_dir/ts_sub_1980-1984-0005.status",
         ]
@@ -569,12 +571,65 @@ def test_add_ts_dependencies():
     c = {"sets": ["streamflow"]}
     c.update(base)
     dependencies = []
-    add_ts_dependencies(c, dependencies, "script_dir", 1980)
+    add_ts_dependencies(c, dependencies, "script_dir")
     assert dependencies == ["script_dir/ts_rof_monthly_1980-1984-0005.status"]
 
     for diags_set in ["tropical_subseasonal", "precip_pdf"]:
         c = {"sets": [diags_set]}
         c.update(base)
         dependencies = []
-        add_ts_dependencies(c, dependencies, "script_dir", 1980)
+        add_ts_dependencies(c, dependencies, "script_dir")
         assert dependencies == ["script_dir/ts_dsub_1980-1984-0005.status"]
+
+
+def test_add_ts_dependencies_resolves_only_needed_subsections():
+    base: Dict[str, Any] = {
+        "year1": 1995,
+        "year2": 1995,
+        "ts_num_years": 1,
+        "infer_section_parameters": False,
+        "ts_subsection": "",
+        "ts_daily_subsection": "",
+    }
+    c: Dict[str, Any] = {"sets": ["lat_lon"]}
+    c.update(base)
+    dependencies: List[str] = []
+    add_ts_dependencies(c, dependencies, "script_dir")
+    assert dependencies == []
+
+    c = {"sets": ["enso_diags"]}
+    c.update(base)
+    c["ts_subsection"] = "sub"
+    dependencies = []
+    add_ts_dependencies(c, dependencies, "script_dir")
+    assert dependencies == ["script_dir/ts_sub_1995-1995-0001.status"]
+
+    c = {"sets": ["precip_pdf"]}
+    c.update(base)
+    with pytest.raises(ParameterNotProvidedError):
+        add_ts_dependencies(c, [], "script_dir")
+
+
+@pytest.mark.parametrize(
+    "year1, year2, ts_num_years, expected_chunks",
+    [
+        (1995, 1995, 1, ["1995-1995-0001"]),
+        (1995, 2004, 1, [f"{y}-{y}-0001" for y in range(1995, 2005)]),
+        (1995, 2004, 5, ["1995-1999-0005", "2000-2004-0005"]),
+        (1995, 2005, 5, ["1995-1999-0005", "2000-2004-0005"]),
+        (1995, 2004, 3, ["1995-1997-0003", "1998-2000-0003", "2001-2003-0003"]),
+        (1995, 2007, 5, ["1995-1999-0005", "2000-2004-0005"]),
+    ],
+)
+def test_add_ts_dependencies_year_ranges(year1, year2, ts_num_years, expected_chunks):
+    c: Dict[str, Any] = {
+        "sets": ["enso_diags"],
+        "year1": year1,
+        "year2": year2,
+        "ts_num_years": ts_num_years,
+        "ts_subsection": "sub",
+        "ts_daily_subsection": "dsub",
+    }
+    dependencies: List[str] = []
+    add_ts_dependencies(c, dependencies, "script_dir")
+    assert dependencies == [f"script_dir/ts_sub_{y}.status" for y in expected_chunks]

@@ -72,10 +72,8 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
             make_executable(bash_file)
             # List of dependencies
             add_climo_dependencies(c, dependencies, script_dir)
-            # Iterate from year1 to year2 incrementing by the number of years per time series file.
             if "ts_num_years" in c.keys():
-                for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
-                    add_ts_dependencies(c, dependencies, script_dir, yr)
+                add_ts_dependencies(c, dependencies, script_dir)
             c["dependencies"] = dependencies
             write_settings_file(settings_file, c, s)
             export = "ALL"
@@ -292,22 +290,17 @@ def add_climo_dependencies(
         dependencies.append(os.path.join(script_dir, f"tc_analysis{status_suffix}"))
 
 
-def add_ts_dependencies(
-    c: Dict[str, Any], dependencies: List[str], script_dir: str, yr: int
-):
-    start_yr = yr
-    end_yr = yr + c["ts_num_years"] - 1
-    ts_sub = get_value_from_parameter(
-        c, "ts_subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
-    )
-    ts_daily_sub = get_value_from_parameter(
-        c, "ts_daily_subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
-    )
+def add_ts_dependencies(c: Dict[str, Any], dependencies: List[str], script_dir: str):
+    start_yr = c["year1"]
+    end_yr = c["year2"]
     depend_on_ts: Set[str] = set(
         ["enso_diags", "qbo", "area_mean_time_series", "mp_partition"]
     )
     if depend_on_ts & set(c["sets"]):
         # ts task
+        ts_sub = get_value_from_parameter(
+            c, "ts_subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
+        )
         add_dependencies(
             dependencies,
             script_dir,
@@ -328,6 +321,9 @@ def add_ts_dependencies(
             c["ts_num_years"],
         )
     if set(["tropical_subseasonal", "precip_pdf"]) & set(c["sets"]):
+        ts_daily_sub = get_value_from_parameter(
+            c, "ts_daily_subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
+        )
         add_dependencies(
             dependencies,
             script_dir,

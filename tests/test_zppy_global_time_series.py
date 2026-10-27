@@ -120,6 +120,18 @@ def test_determine_and_add_dependencies():
     assert dependencies == expected
 
     c = {
+        "use_atm": True,
+        "use_lnd": False,
+        "use_ocn": False,
+        "year1": 1995,
+        "year2": 1995,
+        "ts_num_years": 1,
+    }
+    dependencies = []
+    determine_and_add_dependencies(c, dependencies, "script_dir")
+    assert dependencies == ["script_dir/ts_atm_monthly_glb_1995-1995-0001.status"]
+
+    c = {
         "use_atm": False,
         "use_lnd": False,
         "use_ocn": True,
