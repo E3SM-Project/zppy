@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from zppy.bundle import handle_bundles
 from zppy.logger import _setup_custom_logger
@@ -25,6 +25,7 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
 
     template, template_env = initialize_template(config, "global_time_series.bash")
     mpas_analysis_prefixes = get_mpas_analysis_prefixes(config)
+    ts_chunks = get_ts_year_sets(config)
 
     # --- List of global_time_series tasks ---
     tasks: List[Dict[str, Any]] = get_tasks(config, "global_time_series")
@@ -62,7 +63,7 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
             dependencies: List[str] = []
             # Add Global Time Series dependencies
             determine_and_add_dependencies(
-                c, dependencies, script_dir, mpas_analysis_prefixes
+                c, dependencies, script_dir, mpas_analysis_prefixes, ts_chunks
             )
             c["dependencies"] = dependencies
             write_settings_file(settings_file, c, s)
@@ -147,12 +148,44 @@ def determine_components(c: Dict[str, Any]) -> None:
         c["moc_file"] = "None"
 
 
+def get_ts_year_sets(config) -> Dict[str, List[Tuple[int, int]]]:
+    # Year sets produced by each active [ts] subsection
+    return {
+        c["subsection"]: get_years(c["years"])
+        for c in get_tasks(config, "ts")
+        if c["subsection"]
+    }
+
+
+def add_trailing_ts_dependency(
+    c: Dict[str, Any],
+    dependencies: List[str],
+    script_dir: str,
+    sub: str,
+    ts_chunks: Dict[str, List[Tuple[int, int]]],
+) -> None:
+    # If year2 - year1 + 1 is not a multiple of ts_num_years, depend on the
+    # final, shorter ts chunk, but only if [ts] produces it
+    # (e.g. [ts] years = "1995:2004:5", "2005-2007").
+    num_years: int = c["ts_num_years"]
+    y1: int = c["year1"] + (c["year2"] - c["year1"] + 1) // num_years * num_years
+    y2: int = c["year2"]
+    if y1 <= y2 and (y1, y2) in ts_chunks.get(sub, []):
+        dependencies.append(
+            os.path.join(
+                script_dir, f"ts_{sub}_{y1:04d}-{y2:04d}-{y2 - y1 + 1:04d}.status"
+            )
+        )
+
+
 def determine_and_add_dependencies(
     c: Dict[str, Any],
     dependencies: List[str],
     script_dir: str,
     mpas_analysis_prefixes: Optional[Dict[str, List[str]]] = None,
+    ts_chunks: Optional[Dict[str, List[Tuple[int, int]]]] = None,
 ) -> None:
+    ts_chunks = {} if ts_chunks is None else ts_chunks
     if c["use_atm"]:
         add_dependencies(
             dependencies,
@@ -163,6 +196,9 @@ def determine_and_add_dependencies(
             c["year2"],
             c["ts_num_years"],
         )
+        add_trailing_ts_dependency(
+            c, dependencies, script_dir, "atm_monthly_glb", ts_chunks
+        )
     if c["use_lnd"]:
         add_dependencies(
             dependencies,
@@ -172,6 +208,9 @@ def determine_and_add_dependencies(
             c["year1"],
             c["year2"],
             c["ts_num_years"],
+        )
+        add_trailing_ts_dependency(
+            c, dependencies, script_dir, "lnd_monthly_glb", ts_chunks
         )
     if c["use_ocn"]:
         mpas_analysis_prefixes = (

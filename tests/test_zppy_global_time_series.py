@@ -5,7 +5,11 @@ import pytest
 from configobj import ConfigObj
 from validate import Validator
 
-from zppy.global_time_series import determine_and_add_dependencies, determine_components
+from zppy.global_time_series import (
+    determine_and_add_dependencies,
+    determine_components,
+    get_ts_year_sets,
+)
 from zppy.mpas_analysis import (
     _get_referenced_comparison_type,
     _resolve_mpas_analysis_config_file,
@@ -203,6 +207,80 @@ def test_determine_and_add_dependencies():
                 "reference": ["mpas_analysis_reference_ts_1980-1989_climo_1980-1989"]
             },
         )
+
+
+def test_determine_and_add_dependencies_trailing_ts_chunk():
+    c: Dict[str, Any] = {
+        "use_atm": True,
+        "use_lnd": True,
+        "use_ocn": False,
+        "year1": 1995,
+        "year2": 2007,
+        "ts_num_years": 5,
+    }
+    full_chunks = [
+        "script_dir/ts_atm_monthly_glb_1995-1999-0005.status",
+        "script_dir/ts_atm_monthly_glb_2000-2004-0005.status",
+        "script_dir/ts_lnd_monthly_glb_1995-1999-0005.status",
+        "script_dir/ts_lnd_monthly_glb_2000-2004-0005.status",
+    ]
+
+    # [ts] produces the final, shorter chunk for atm only
+    ts_chunks = {
+        "atm_monthly_glb": [(1995, 1999), (2000, 2004), (2005, 2007)],
+        "lnd_monthly_glb": [(1995, 1999), (2000, 2004)],
+    }
+    dependencies: List[str] = []
+    determine_and_add_dependencies(c, dependencies, "script_dir", ts_chunks=ts_chunks)
+    assert dependencies == [
+        "script_dir/ts_atm_monthly_glb_1995-1999-0005.status",
+        "script_dir/ts_atm_monthly_glb_2000-2004-0005.status",
+        "script_dir/ts_atm_monthly_glb_2005-2007-0003.status",
+        "script_dir/ts_lnd_monthly_glb_1995-1999-0005.status",
+        "script_dir/ts_lnd_monthly_glb_2000-2004-0005.status",
+    ]
+
+    # [ts] doesn't produce it: unchanged behavior
+    dependencies = []
+    determine_and_add_dependencies(c, dependencies, "script_dir")
+    assert dependencies == full_chunks
+
+    # Range is a multiple of ts_num_years: unchanged behavior
+    c["year2"] = 2004
+    dependencies = []
+    determine_and_add_dependencies(c, dependencies, "script_dir", ts_chunks=ts_chunks)
+    assert dependencies == full_chunks
+
+
+def test_get_ts_year_sets(tmp_path):
+    config_path = tmp_path / "ts.cfg"
+    config_path.write_text("""
+[default]
+case = "case_name"
+input = "input_dir"
+output = "output_dir"
+www = "www_dir"
+
+[ts]
+active = True
+years = "1995:2004:5", "2005-2007",
+
+  [[ atm_monthly_glb ]]
+
+  [[ lnd_monthly_glb ]]
+  years = "1995:2004:5",
+
+  [[ rof_monthly ]]
+  active = False
+""".strip())
+    config = ConfigObj(
+        str(config_path), configspec=os.path.join("zppy", "defaults", "default.ini")
+    )
+    assert config.validate(Validator())
+    assert get_ts_year_sets(config) == {
+        "atm_monthly_glb": [(1995, 1999), (2000, 2004), (2005, 2007)],
+        "lnd_monthly_glb": [(1995, 1999), (2000, 2004)],
+    }
 
 
 def test_get_mpas_analysis_prefixes(tmp_path):
