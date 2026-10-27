@@ -208,17 +208,23 @@ def test_check_set_specific_parameter():
 
 
 def test_get_years():
-    assert get_years("1980:1990:05") == [(1980, 1984), (1985, 1989)]
+    assert get_years("1980:1989:05") == [(1980, 1984), (1985, 1989)]
+    assert get_years("1980:1990:05") == [(1980, 1984), (1985, 1989), (1990, 1990)]
+    assert get_years("1995:2007:5") == [(1995, 1999), (2000, 2004), (2005, 2007)]
+    assert get_years("1995:1997:5") == [(1995, 1997)]
+    assert get_years("1995:1995:1") == [(1995, 1995)]
     assert get_years("1980-1990") == [(1980, 1990)]
 
-    assert get_years(["1980:1990:05"]) == [(1980, 1984), (1985, 1989)]
+    assert get_years(["1980:1990:05"]) == [(1980, 1984), (1985, 1989), (1990, 1990)]
     assert get_years(["1980-1990"]) == [(1980, 1990)]
 
     assert get_years(["1980:1990:05", "2000:2010:05"]) == [
         (1980, 1984),
         (1985, 1989),
+        (1990, 1990),
         (2000, 2004),
         (2005, 2009),
+        (2010, 2010),
     ]
     assert get_years(["1980-1990", "2000-2005"]) == [(1980, 1990), (2000, 2005)]
 
@@ -517,7 +523,10 @@ def test_get_file_names():
 def test_add_dependencies():
     dependencies: List[str] = []
     add_dependencies(dependencies, "script_dir", "prefix", "sub", 1980, 1990, 10)
-    assert dependencies == ["script_dir/prefix_sub_1980-1989-0010.status"]
+    assert dependencies == [
+        "script_dir/prefix_sub_1980-1989-0010.status",
+        "script_dir/prefix_sub_1990-1990-0001.status",
+    ]
 
     dependencies = []
     add_dependencies(dependencies, "script_dir", "prefix", "sub", 1980, 1990, 2)
@@ -527,9 +536,18 @@ def test_add_dependencies():
         "script_dir/prefix_sub_1984-1985-0002.status",
         "script_dir/prefix_sub_1986-1987-0002.status",
         "script_dir/prefix_sub_1988-1989-0002.status",
+        "script_dir/prefix_sub_1990-1990-0001.status",
     ]
     assert dependencies == expected
 
     dependencies = []
     add_dependencies(dependencies, "script_dir", "prefix", "sub", 1995, 1995, 1)
     assert dependencies == ["script_dir/prefix_sub_1995-1995-0001.status"]
+
+    dependencies = []
+    add_dependencies(dependencies, "script_dir", "prefix", "sub", 1995, 2007, 5)
+    assert dependencies == [
+        "script_dir/prefix_sub_1995-1999-0005.status",
+        "script_dir/prefix_sub_2000-2004-0005.status",
+        "script_dir/prefix_sub_2005-2007-0003.status",
+    ]

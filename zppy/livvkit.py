@@ -108,6 +108,11 @@ def add_climo_dependency(
         )
         y1 += num_years
         y2 += num_years
+    # Include a final, shorter segment
+    if y1 <= end_yr:
+        dependencies.append(
+            os.path.join(scriptDir, f"{prefix}_{sub}_{y1:04d}-{end_yr:04d}.status")
+        )
 
 
 def determine_and_add_dependencies(

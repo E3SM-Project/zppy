@@ -100,6 +100,7 @@ def test_determine_and_add_dependencies():
     expected = [
         "script_dir/ts_atm_monthly_glb_1980-1984-0005.status",
         "script_dir/ts_atm_monthly_glb_1985-1989-0005.status",
+        "script_dir/ts_atm_monthly_glb_1990-1990-0001.status",
     ]
     assert dependencies == expected
 
@@ -116,6 +117,7 @@ def test_determine_and_add_dependencies():
     expected = [
         "script_dir/ts_lnd_monthly_glb_1980-1984-0005.status",
         "script_dir/ts_lnd_monthly_glb_1985-1989-0005.status",
+        "script_dir/ts_lnd_monthly_glb_1990-1990-0001.status",
     ]
     assert dependencies == expected
 
@@ -140,7 +142,10 @@ def test_determine_and_add_dependencies():
     }
     dependencies = []
     determine_and_add_dependencies(c, dependencies, "script_dir")
-    expected = ["script_dir/mpas_analysis_ts_1980-1989_climo_1980-1989.status"]
+    expected = [
+        "script_dir/mpas_analysis_ts_1980-1989_climo_1980-1989.status",
+        "script_dir/mpas_analysis_ts_1990-1990_climo_1990-1990.status",
+    ]
     assert dependencies == expected
 
     c = {

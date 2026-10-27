@@ -318,7 +318,9 @@ There are 10 task-specific parameters:
      - No
      - ``[""]``
      - Year ranges to process. Format: ``"start:end:increment"`` (e.g.,
-       ``"1:100:20"``).
+       ``"1:100:20"``). If ``end - start + 1`` is not a multiple of
+       ``increment``, the last segment is shorter (e.g., ``"1995:2007:5"``
+       processes 1995-1999, 2000-2004, and 2005-2007).
 
 **Deprecated Parameters**
 

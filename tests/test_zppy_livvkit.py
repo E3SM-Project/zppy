@@ -17,6 +17,7 @@ def test_add_climo_dependency():
     expected_dependencies = [
         "script_dir/climo_pfx_land_monthly_racmo_gis_2020-2034.status",
         "script_dir/climo_pfx_land_monthly_racmo_gis_2035-2049.status",
+        "script_dir/climo_pfx_land_monthly_racmo_gis_2050-2059.status",
     ]
     assert dependencies == expected_dependencies
 
@@ -39,11 +40,15 @@ def test_determine_and_add_dependencies():
     expected = [
         "script_dir/ts_land_monthly_1980-1984-0005.status",
         "script_dir/ts_land_monthly_1985-1989-0005.status",
+        "script_dir/ts_land_monthly_1990-1990-0001.status",
         "script_dir/climo_land_monthly_climo_native_1980-1984.status",
         "script_dir/climo_land_monthly_climo_native_1985-1989.status",
+        "script_dir/climo_land_monthly_climo_native_1990-1990.status",
         "script_dir/climo_land_monthly_climo_era5_1980-1984.status",
         "script_dir/climo_land_monthly_climo_era5_1985-1989.status",
+        "script_dir/climo_land_monthly_climo_era5_1990-1990.status",
         "script_dir/climo_land_monthly_climo_racmo_gis_1980-1984.status",
         "script_dir/climo_land_monthly_climo_racmo_gis_1985-1989.status",
+        "script_dir/climo_land_monthly_climo_racmo_gis_1990-1990.status",
     ]
     assert sorted(dependencies) == sorted(expected)

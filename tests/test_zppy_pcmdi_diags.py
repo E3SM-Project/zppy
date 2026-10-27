@@ -361,7 +361,7 @@ def test_define_year_sets():
         "ts_years": "2000:2010:5",
     }
     actual: List[Tuple[int, int]] = define_year_sets(c)
-    expected = [(2000, 2004), (2005, 2009)]
+    expected = [(2000, 2004), (2005, 2009), (2010, 2010)]
     assert actual == expected
 
     # Should use available year set
@@ -393,7 +393,7 @@ def test_define_year_sets():
         "ts_years": "2000:2010:5",
     }
     actual = define_year_sets(c)
-    expected = [(2000, 2004), (2005, 2009)]
+    expected = [(2000, 2004), (2005, 2009), (2010, 2010)]
     assert actual == expected
 
 

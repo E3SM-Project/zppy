@@ -50,9 +50,13 @@ atm_ts_for_ilamb={{ output }}/post/atm/{{ ts_atm_grid }}/cmip_ts/monthly/
 # using a step size equal to the number of years per time series file
 start_year=$(echo $Y1 | sed 's/^0*//')
 end_year=$(echo $Y2 | sed 's/^0*//')
+final_year=${end_year}
 for year in `seq $start_year {{ ts_num_years }} $end_year`;
 do
   end_year_int=$((${year} + {{ ts_num_years }} - 1))
+  if [ ${end_year_int} -gt ${final_year} ]; then
+    end_year_int=${final_year}
+  fi
   start_year=`printf "%04d" ${year}`
   end_year=`printf "%04d" ${end_year_int}`
   echo "Copying files for ${start_year} to ${end_year}"

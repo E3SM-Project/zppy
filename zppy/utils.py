@@ -293,6 +293,9 @@ def get_years(years_input) -> List[Tuple[int, int]]:
                 year_sets.append((year1, year2))
                 year1 = year2 + 1
                 year2 = year1 + year_freq - 1
+            # Include a final, shorter segment
+            if year1 <= year_end:
+                year_sets.append((year1, year_end))
         elif years.count("-") == 1:
             year1, year2 = tuple(map(lambda y: int(y), years.split("-")))
             year_sets.append((year1, year2))
@@ -406,6 +409,14 @@ def add_dependencies(
         )
         y1 += num_years
         y2 += num_years
+    # Include a final, shorter segment
+    if y1 <= end_yr:
+        dependencies.append(
+            os.path.join(
+                scriptDir,
+                f"{prefix}_{sub}_{y1:04d}-{end_yr:04d}-{end_yr - y1 + 1:04d}.status",
+            )
+        )
 
 
 def write_settings_file(
