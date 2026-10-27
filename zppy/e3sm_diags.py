@@ -293,17 +293,14 @@ def add_climo_dependencies(
 def add_ts_dependencies(c: Dict[str, Any], dependencies: List[str], script_dir: str):
     start_yr = c["year1"]
     end_yr = c["year2"]
-    ts_sub = get_value_from_parameter(
-        c, "ts_subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
-    )
-    ts_daily_sub = get_value_from_parameter(
-        c, "ts_daily_subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
-    )
     depend_on_ts: Set[str] = set(
         ["enso_diags", "qbo", "area_mean_time_series", "mp_partition"]
     )
     if depend_on_ts & set(c["sets"]):
         # ts task
+        ts_sub = get_value_from_parameter(
+            c, "ts_subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
+        )
         add_dependencies(
             dependencies,
             script_dir,
@@ -324,6 +321,9 @@ def add_ts_dependencies(c: Dict[str, Any], dependencies: List[str], script_dir: 
             c["ts_num_years"],
         )
     if set(["tropical_subseasonal", "precip_pdf"]) & set(c["sets"]):
+        ts_daily_sub = get_value_from_parameter(
+            c, "ts_daily_subsection", "sub", ParameterInferenceType.SECTION_INFERENCE
+        )
         add_dependencies(
             dependencies,
             script_dir,

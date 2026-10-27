@@ -582,6 +582,34 @@ def test_add_ts_dependencies():
         assert dependencies == ["script_dir/ts_dsub_1980-1984-0005.status"]
 
 
+def test_add_ts_dependencies_resolves_only_needed_subsections():
+    base: Dict[str, Any] = {
+        "year1": 1995,
+        "year2": 1995,
+        "ts_num_years": 1,
+        "infer_section_parameters": False,
+        "ts_subsection": "",
+        "ts_daily_subsection": "",
+    }
+    c: Dict[str, Any] = {"sets": ["lat_lon"]}
+    c.update(base)
+    dependencies: List[str] = []
+    add_ts_dependencies(c, dependencies, "script_dir")
+    assert dependencies == []
+
+    c = {"sets": ["enso_diags"]}
+    c.update(base)
+    c["ts_subsection"] = "sub"
+    dependencies = []
+    add_ts_dependencies(c, dependencies, "script_dir")
+    assert dependencies == ["script_dir/ts_sub_1995-1995-0001.status"]
+
+    c = {"sets": ["precip_pdf"]}
+    c.update(base)
+    with pytest.raises(ParameterNotProvidedError):
+        add_ts_dependencies(c, [], "script_dir")
+
+
 @pytest.mark.parametrize(
     "year1, year2, ts_num_years, expected_chunks",
     [
