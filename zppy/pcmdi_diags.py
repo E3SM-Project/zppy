@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from zppy.bundle import handle_bundles
 from zppy.logger import _setup_custom_logger
@@ -18,6 +18,7 @@ from zppy.utils import (
     make_executable,
     print_url,
     set_value_of_parameter_if_undefined,
+    skip_trailing_year_set_without_upstream,
     submit_script,
     write_settings_file,
 )
@@ -75,6 +76,10 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
         # Loop over year sets
         year_sets: List[Tuple[int, int]] = define_year_sets(c)
+        full_year_sets = define_year_sets(c, include_trailing=False)
+        trailing: List[Tuple[int, int]] = [
+            s for s in year_sets if s not in full_year_sets
+        ]
 
         ref_year_sets: List[Tuple[int, int]]
         if ("ref_years" in c.keys()) and (c["ref_years"] != [""]):
@@ -120,7 +125,8 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
             # List of dependencies
             if c["current_set"] != "synthetic_plots":
-                add_ts_dependencies(c, dependencies, script_dir)
+                missing: List[str] = []
+                add_ts_dependencies(c, dependencies, script_dir, missing)
                 set_value_of_parameter_if_undefined(
                     c,
                     "e3sm_to_cmip_atm_subsection",
@@ -135,7 +141,12 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
                     c["year1"],
                     c["year2"],
                     c["ts_num_years"],
+                    missing,
                 )
+                if skip_trailing_year_set_without_upstream(
+                    c["prefix"], s, trailing, dependencies, missing, bash_file
+                ):
+                    continue
             else:
                 if i < len(year_sets) - 1:
                     continue
@@ -268,21 +279,23 @@ def check_parameters_for_pcmdi(c: Dict[str, Any]) -> None:
             c["cmip_movs_dir"] = "placeholder_dir"
 
 
-def define_year_sets(c: Dict[str, Any]) -> List[Tuple[int, int]]:
+def define_year_sets(
+    c: Dict[str, Any], include_trailing: bool = True
+) -> List[Tuple[int, int]]:
     # Use ts_years unless we are in synthetic plots, in which case, use the appropriate set if defined
     year_sets: List[Tuple[int, int]]
     if c["current_set"] != "synthetic_plots":
-        year_sets = get_years(c["ts_years"])
+        year_sets = get_years(c["ts_years"], include_trailing)
     elif ("clim_years" in c.keys()) and (c["clim_years"] != ""):
-        year_sets = get_years(c["clim_years"])
+        year_sets = get_years(c["clim_years"], include_trailing)
     elif ("mova_years" in c.keys()) and (c["mova_years"] != ""):
-        year_sets = get_years(c["mova_years"])
+        year_sets = get_years(c["mova_years"], include_trailing)
     elif ("movc_years" in c.keys()) and (c["movc_years"] != ""):
-        year_sets = get_years(c["movc_years"])
+        year_sets = get_years(c["movc_years"], include_trailing)
     elif ("enso_years" in c.keys()) and (c["enso_years"] != ""):
-        year_sets = get_years(c["enso_years"])
+        year_sets = get_years(c["enso_years"], include_trailing)
     else:
-        year_sets = get_years(c["ts_years"])
+        year_sets = get_years(c["ts_years"], include_trailing)
     return year_sets
 
 
@@ -361,7 +374,12 @@ def define_relevant_years_for_synthetic_plots(c: Dict[str, Any]) -> None:
         c["enso_years"] = year_str
 
 
-def add_ts_dependencies(c: Dict[str, Any], dependencies: List[str], script_dir: str):
+def add_ts_dependencies(
+    c: Dict[str, Any],
+    dependencies: List[str],
+    script_dir: str,
+    missing: Optional[List[str]] = None,
+):
     start_yr = c["year1"]
     end_yr = c["year2"]
     if c["current_set"] in BASE_PCMDI_SETS:
@@ -373,6 +391,7 @@ def add_ts_dependencies(c: Dict[str, Any], dependencies: List[str], script_dir: 
             start_yr,
             end_yr,
             c["ts_num_years"],
+            missing,
         )
 
 

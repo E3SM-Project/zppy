@@ -11,13 +11,17 @@ from zppy.utils import (
     get_active_status,
     get_file_names,
     get_inference_type_parameter,
+    get_trailing_year_sets,
     get_url_message,
     get_value_from_parameter,
     get_years,
+    has_input_files,
     set_component_and_prc_typ,
     set_grid,
     set_mapping_file,
     set_value_of_parameter_if_undefined,
+    skip_trailing_year_set_without_input,
+    skip_trailing_year_set_without_upstream,
 )
 
 
@@ -249,6 +253,73 @@ def test_get_years():
     # This one is in fact a value error, but not one we raised directly
     with pytest.raises(ValueError):
         get_years("1980-1990:05:03")
+
+
+def test_get_years_include_trailing():
+    assert get_years("1995:2007:5", include_trailing=False) == [
+        (1995, 1999),
+        (2000, 2004),
+    ]
+    assert get_trailing_year_sets("1995:2007:5") == [(2005, 2007)]
+    assert get_trailing_year_sets("1995:2004:5") == []
+    # Explicit ranges are not trailing segments
+    assert get_trailing_year_sets(["1995:2004:5", "2005-2007"]) == []
+
+
+def test_trailing_year_set_input(tmp_path):
+    hist = tmp_path / "archive" / "atm" / "hist"
+    hist.mkdir(parents=True)
+    for year in (2005, 2006):
+        (hist / f"case.eam.h0.{year}-01.nc").write_text("")
+    c = {
+        "input": str(tmp_path),
+        "input_subdir": "archive/atm/hist",
+        "case": "case",
+        "input_files": "eam.h0",
+    }
+    assert has_input_files(c, 2005, 2006)
+    assert not has_input_files(c, 2005, 2007)
+    trailing = [(2005, 2007)]
+    assert skip_trailing_year_set_without_input(c, (2005, 2007), trailing)
+    # Only the final, shorter segment is checked
+    assert not skip_trailing_year_set_without_input(c, (2000, 2004), trailing)
+    (hist / "case.eam.h0.2007-01.nc").write_text("")
+    assert not skip_trailing_year_set_without_input(c, (2005, 2007), trailing)
+
+
+def test_skip_trailing_year_set_without_upstream(tmp_path):
+    script_dir = str(tmp_path)
+    bash_file = str(tmp_path / "e3sm_diags_2005-2007.bash")
+    dependency = f"{script_dir}/climo_sub_2005-2007.status"
+    trailing = [(2005, 2007)]
+
+    # Upstream job not generated: skip, and remove this job's script
+    (tmp_path / "e3sm_diags_2005-2007.bash").write_text("")
+    assert skip_trailing_year_set_without_upstream(
+        "e3sm_diags_2005-2007", (2005, 2007), trailing, [dependency], [], bash_file
+    )
+    assert not (tmp_path / "e3sm_diags_2005-2007.bash").exists()
+
+    # Not a final, shorter segment: never skipped
+    assert not skip_trailing_year_set_without_upstream(
+        "e3sm_diags_2000-2004", (2000, 2004), trailing, [dependency], [], bash_file
+    )
+
+    # Upstream job generated, but a trailing ts chunk was missing
+    (tmp_path / "climo_sub_2005-2007.bash").write_text("")
+    assert skip_trailing_year_set_without_upstream(
+        "e3sm_diags_2005-2007",
+        (2005, 2007),
+        trailing,
+        [dependency],
+        ["ts_sub_2005-2007-0003.status"],
+        bash_file,
+    )
+
+    # Everything generated: run it
+    assert not skip_trailing_year_set_without_upstream(
+        "e3sm_diags_2005-2007", (2005, 2007), trailing, [dependency], [], bash_file
+    )
 
 
 def test_get_value_from_parameter():
@@ -523,10 +594,7 @@ def test_get_file_names():
 def test_add_dependencies():
     dependencies: List[str] = []
     add_dependencies(dependencies, "script_dir", "prefix", "sub", 1980, 1990, 10)
-    assert dependencies == [
-        "script_dir/prefix_sub_1980-1989-0010.status",
-        "script_dir/prefix_sub_1990-1990-0001.status",
-    ]
+    assert dependencies == ["script_dir/prefix_sub_1980-1989-0010.status"]
 
     dependencies = []
     add_dependencies(dependencies, "script_dir", "prefix", "sub", 1980, 1990, 2)
@@ -536,7 +604,6 @@ def test_add_dependencies():
         "script_dir/prefix_sub_1984-1985-0002.status",
         "script_dir/prefix_sub_1986-1987-0002.status",
         "script_dir/prefix_sub_1988-1989-0002.status",
-        "script_dir/prefix_sub_1990-1990-0001.status",
     ]
     assert dependencies == expected
 
@@ -544,10 +611,27 @@ def test_add_dependencies():
     add_dependencies(dependencies, "script_dir", "prefix", "sub", 1995, 1995, 1)
     assert dependencies == ["script_dir/prefix_sub_1995-1995-0001.status"]
 
-    dependencies = []
-    add_dependencies(dependencies, "script_dir", "prefix", "sub", 1995, 2007, 5)
+
+def test_add_dependencies_trailing_chunk(tmp_path):
+    script_dir = str(tmp_path)
+    # The final, shorter chunk's job was not generated: full chunks only
+    dependencies: List[str] = []
+    missing: List[str] = []
+    add_dependencies(dependencies, script_dir, "ts", "sub", 1995, 2007, 5, missing)
     assert dependencies == [
-        "script_dir/prefix_sub_1995-1999-0005.status",
-        "script_dir/prefix_sub_2000-2004-0005.status",
-        "script_dir/prefix_sub_2005-2007-0003.status",
+        f"{script_dir}/ts_sub_1995-1999-0005.status",
+        f"{script_dir}/ts_sub_2000-2004-0005.status",
     ]
+    assert missing == ["ts_sub_2005-2007-0003.status"]
+
+    # It was generated: also depend on it
+    (tmp_path / "ts_sub_2005-2007-0003.bash").write_text("")
+    dependencies = []
+    missing = []
+    add_dependencies(dependencies, script_dir, "ts", "sub", 1995, 2007, 5, missing)
+    assert dependencies == [
+        f"{script_dir}/ts_sub_1995-1999-0005.status",
+        f"{script_dir}/ts_sub_2000-2004-0005.status",
+        f"{script_dir}/ts_sub_2005-2007-0003.status",
+    ]
+    assert missing == []

@@ -320,7 +320,10 @@ There are 10 task-specific parameters:
      - Year ranges to process. Format: ``"start:end:increment"`` (e.g.,
        ``"1:100:20"``). If ``end - start + 1`` is not a multiple of
        ``increment``, the last segment is shorter (e.g., ``"1995:2007:5"``
-       processes 1995-1999, 2000-2004, and 2005-2007).
+       processes 1995-1999, 2000-2004, and 2005-2007). A shorter last
+       segment is skipped, with a warning, if its input files don't exist or
+       if a job it depends on wasn't generated. Downstream tasks depend on a
+       shorter last chunk only if its job was generated.
 
 **Deprecated Parameters**
 

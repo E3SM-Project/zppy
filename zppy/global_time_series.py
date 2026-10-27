@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from zppy.bundle import handle_bundles
 from zppy.logger import _setup_custom_logger
@@ -9,10 +9,12 @@ from zppy.utils import (
     check_status,
     get_file_names,
     get_tasks,
+    get_trailing_year_sets,
     get_years,
     initialize_template,
     make_executable,
     print_url,
+    skip_trailing_year_set_without_upstream,
     submit_script,
     write_settings_file,
 )
@@ -36,6 +38,7 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
         c["ts_num_years"] = int(c["ts_num_years"])
         # Loop over year sets
         year_sets = get_years(c["years"])
+        trailing: List[Tuple[int, int]] = get_trailing_year_sets(c["years"])
         for s in year_sets:
             c["year1"] = s[0]
             c["year2"] = s[1]
@@ -60,10 +63,15 @@ def global_time_series(config, script_dir, existing_bundles, job_ids_file):
             make_executable(bash_file)
             # List of dependencies
             dependencies: List[str] = []
+            missing: List[str] = []
             # Add Global Time Series dependencies
             determine_and_add_dependencies(
-                c, dependencies, script_dir, mpas_analysis_prefixes
+                c, dependencies, script_dir, mpas_analysis_prefixes, missing
             )
+            if skip_trailing_year_set_without_upstream(
+                prefix, s, trailing, dependencies, missing, bash_file
+            ):
+                continue
             c["dependencies"] = dependencies
             write_settings_file(settings_file, c, s)
             export = "NONE"
@@ -152,6 +160,7 @@ def determine_and_add_dependencies(
     dependencies: List[str],
     script_dir: str,
     mpas_analysis_prefixes: Optional[Dict[str, List[str]]] = None,
+    missing: Optional[List[str]] = None,
 ) -> None:
     if c["use_atm"]:
         add_dependencies(
@@ -162,6 +171,7 @@ def determine_and_add_dependencies(
             c["year1"],
             c["year2"],
             c["ts_num_years"],
+            missing,
         )
     if c["use_lnd"]:
         add_dependencies(
@@ -172,6 +182,7 @@ def determine_and_add_dependencies(
             c["year1"],
             c["year2"],
             c["ts_num_years"],
+            missing,
         )
     if c["use_ocn"]:
         mpas_analysis_prefixes = (
@@ -190,8 +201,8 @@ def determine_and_add_dependencies(
             return
 
         # Add MPAS Analysis dependencies
-        ts_year_sets = get_years(c["ts_years"])
-        climo_year_sets = get_years(c["climo_years"])
+        ts_year_sets = get_years(c["ts_years"], include_trailing=False)
+        climo_year_sets = get_years(c["climo_years"], include_trailing=False)
         if (not ts_year_sets) or (not climo_year_sets):
             raise Exception("ts_years and climo_years must both be set for ocn plots.")
         for ts_year_set, climo_year_set in zip(ts_year_sets, climo_year_sets):

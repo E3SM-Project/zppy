@@ -8,6 +8,7 @@ from zppy.utils import (
     check_status,
     get_file_names,
     get_tasks,
+    get_trailing_year_sets,
     get_value_from_parameter,
     get_years,
     initialize_template,
@@ -16,6 +17,7 @@ from zppy.utils import (
     set_grid,
     set_mapping_file,
     set_value_of_parameter_if_undefined,
+    skip_trailing_year_set_without_input,
     submit_script,
     write_settings_file,
 )
@@ -46,12 +48,15 @@ def ts(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
                 ParameterInferenceType.PATH_INFERENCE,
             )
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
+        trailing: List[Tuple[int, int]] = get_trailing_year_sets(c["years"])
         # Loop over year sets
         for s in year_sets:
             c["yr_start"] = s[0]
             c["yr_end"] = s[1]
             if ("last_year" in c.keys()) and (c["yr_end"] > c["last_year"]):
                 continue  # Skip this year set
+            if skip_trailing_year_set_without_input(c, s, trailing):
+                continue
             c["ypf"] = s[1] - s[0] + 1
             c["scriptDir"] = script_dir
             sub: str = get_value_from_parameter(

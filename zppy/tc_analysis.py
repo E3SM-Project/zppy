@@ -7,9 +7,11 @@ from zppy.utils import (
     check_status,
     get_file_names,
     get_tasks,
+    get_trailing_year_sets,
     get_years,
     initialize_template,
     make_executable,
+    skip_trailing_year_set_without_input,
     submit_script,
     write_settings_file,
 )
@@ -32,11 +34,14 @@ def tc_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fi
 
         # Loop over year sets
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
+        trailing: List[Tuple[int, int]] = get_trailing_year_sets(c["years"])
         for s in year_sets:
             c["year1"] = s[0]
             c["year2"] = s[1]
             if ("last_year" in c.keys()) and (c["year2"] > c["last_year"]):
                 continue  # Skip this year set
+            if skip_trailing_year_set_without_input(c, s, trailing):
+                continue
             c["scriptDir"] = script_dir
             if c["input_files"]:
                 c["atm_name"] = c["input_files"].split(".")[0]

@@ -482,3 +482,12 @@ Dependencies
 **Downstream (what depends on e3sm_diags):**
 
 - None.
+
+Shorter final segment
+---------------------
+
+If ``years`` is not a multiple of its increment (e.g. ``"1995:2007:5"``),
+the final, shorter segment (2005-2007) runs too. Its climatology-based sets
+produce plots. Its time-series-based sets (e.g. ``enso_diags``, ``qbo``,
+``area_mean_time_series``) read ``ts/monthly/{ts_num_years}yr/`` and don't
+see the shorter ts chunk yet, so they produce no plots for that segment.

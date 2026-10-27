@@ -1,3 +1,4 @@
+import glob
 import os
 import os.path
 import pprint
@@ -7,7 +8,7 @@ import stat
 import time
 from enum import Enum
 from subprocess import PIPE, Popen
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import jinja2
 from configobj import ConfigObj
@@ -271,7 +272,7 @@ def check_set_specific_parameter(
 # Return all year sets from a configuration given by a list of strings
 # "year_begin:year_end:year_freq"
 # "year_begin-year_end"
-def get_years(years_input) -> List[Tuple[int, int]]:
+def get_years(years_input, include_trailing: bool = True) -> List[Tuple[int, int]]:
     years_list: List[str]
     if isinstance(years_input, str):
         # This will be the case if years_list is missing a trailing comma
@@ -294,7 +295,7 @@ def get_years(years_input) -> List[Tuple[int, int]]:
                 year1 = year2 + 1
                 year2 = year1 + year_freq - 1
             # Include a final, shorter segment
-            if year1 <= year_end:
+            if include_trailing and (year1 <= year_end):
                 year_sets.append((year1, year_end))
         elif years.count("-") == 1:
             year1, year2 = tuple(map(lambda y: int(y), years.split("-")))
@@ -304,6 +305,59 @@ def get_years(years_input) -> List[Tuple[int, int]]:
             print(error_str)
             raise ValueError(error_str)
     return year_sets
+
+
+def get_trailing_year_sets(years_input) -> List[Tuple[int, int]]:
+    # The final, shorter segments that get_years adds
+    full: List[Tuple[int, int]] = get_years(years_input, include_trailing=False)
+    return [s for s in get_years(years_input) if s not in full]
+
+
+def has_input_files(c: Dict[str, Any], year1: int, year2: int) -> bool:
+    # Same input file pattern as the climo, ts, and tc_analysis templates
+    input_dir: str = os.path.join(c["input"], c["input_subdir"])
+    for year in range(year1, year2 + 1):
+        pattern: str = f"{c['case']}.{c['input_files']}.{year:04d}-*.nc"
+        if not glob.glob(os.path.join(input_dir, pattern)):
+            return False
+    return True
+
+
+def skip_trailing_year_set_without_input(
+    c: Dict[str, Any], s: Tuple[int, int], trailing: List[Tuple[int, int]]
+) -> bool:
+    if (s in trailing) and (not has_input_files(c, s[0], s[1])):
+        logger.warning(
+            f"Skipping the final, shorter segment {s[0]:04d}-{s[1]:04d}: no input files found."
+        )
+        return True
+    return False
+
+
+def skip_trailing_year_set_without_upstream(
+    prefix: str,
+    s: Tuple[int, int],
+    trailing: List[Tuple[int, int]],
+    dependencies: List[str],
+    missing: List[str],
+    bash_file: str,
+) -> bool:
+    # A final, shorter segment runs only if every job it depends on was generated
+    if s not in trailing:
+        return False
+    absent: List[str] = list(missing) + [
+        os.path.basename(d)
+        for d in dependencies
+        if not os.path.exists(re.sub(r"\.status$", ".bash", d))
+    ]
+    if absent:
+        logger.warning(
+            f"Skipping {prefix}: the final, shorter segment depends on jobs that were not generated: {absent}"
+        )
+        if os.path.exists(bash_file):
+            os.remove(bash_file)
+        return True
+    return False
 
 
 # `for s in year_sets` steps ##################################################
@@ -398,6 +452,7 @@ def add_dependencies(
     start_yr: int,
     end_yr: int,
     num_years: int,
+    missing: Optional[List[str]] = None,
 ) -> None:
     y1: int = start_yr
     y2: int = start_yr + num_years - 1
@@ -409,14 +464,26 @@ def add_dependencies(
         )
         y1 += num_years
         y2 += num_years
-    # Include a final, shorter segment
+    # Include a final, shorter chunk, but only if its job was generated
     if y1 <= end_yr:
-        dependencies.append(
-            os.path.join(
-                scriptDir,
-                f"{prefix}_{sub}_{y1:04d}-{end_yr:04d}-{end_yr - y1 + 1:04d}.status",
-            )
+        name: str = f"{prefix}_{sub}_{y1:04d}-{end_yr:04d}-{end_yr - y1 + 1:04d}"
+        add_trailing_dependency(dependencies, scriptDir, name, missing)
+
+
+def add_trailing_dependency(
+    dependencies: List[str],
+    scriptDir: str,
+    name: str,
+    missing: Optional[List[str]] = None,
+) -> None:
+    if os.path.exists(os.path.join(scriptDir, f"{name}.bash")):
+        dependencies.append(os.path.join(scriptDir, f"{name}.status"))
+    else:
+        logger.warning(
+            f"{name} was not generated, so the final, shorter chunk is not a dependency."
         )
+        if missing is not None:
+            missing.append(f"{name}.status")
 
 
 def write_settings_file(

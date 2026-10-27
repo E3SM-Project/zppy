@@ -651,6 +651,7 @@ def test_add_ts_dependencies():
             2000,
             2004,
             5,
+            None,
         )
 
     # Test with non-BASE_PCMDI_SETS (should not call add_dependencies)

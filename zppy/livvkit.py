@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 
 from configobj import ConfigObj
 
@@ -8,14 +8,17 @@ from zppy.utils import (
     ParameterInferenceType,
     ParameterNotProvidedError,
     add_dependencies,
+    add_trailing_dependency,
     check_status,
     get_file_names,
     get_tasks,
+    get_trailing_year_sets,
     get_years,
     initialize_template,
     make_executable,
     print_url,
     set_value_of_parameter_if_undefined,
+    skip_trailing_year_set_without_upstream,
     submit_script,
     write_settings_file,
 )
@@ -40,6 +43,7 @@ def livvkit(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
             c["ts_num_years"] = int(c["ts_num_years"])
         # Loop over year sets
         year_sets = get_years(c["years"])
+        trailing: List[Tuple[int, int]] = get_trailing_year_sets(c["years"])
         for s in year_sets:
             c["year1"] = s[0]
             c["year2"] = s[1]
@@ -47,13 +51,18 @@ def livvkit(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
             c["scriptDir"] = script_dir
 
             # List of dependencies
-            determine_and_add_dependencies(c, dependencies, script_dir)
+            missing: List[str] = []
+            determine_and_add_dependencies(c, dependencies, script_dir, missing)
             prefix: str = f"livvkit_{c['year1']:04d}-{c['year2']:04d}"
             c["prefix"] = prefix
             print(prefix)
             bash_file, settings_file, status_file = get_file_names(script_dir, prefix)
             skip: bool = check_status(status_file)
             if skip:
+                continue
+            if skip_trailing_year_set_without_upstream(
+                prefix, s, trailing, dependencies, missing, bash_file
+            ):
                 continue
             # Create script
             with open(bash_file, "w") as f:
@@ -99,6 +108,7 @@ def add_climo_dependency(
     start_yr: int,
     end_yr: int,
     num_years: int,
+    missing: Optional[List[str]] = None,
 ) -> None:
     y1: int = start_yr
     y2: int = start_yr + num_years - 1
@@ -108,15 +118,18 @@ def add_climo_dependency(
         )
         y1 += num_years
         y2 += num_years
-    # Include a final, shorter segment
+    # Include a final, shorter chunk, but only if its job was generated
     if y1 <= end_yr:
-        dependencies.append(
-            os.path.join(scriptDir, f"{prefix}_{sub}_{y1:04d}-{end_yr:04d}.status")
+        add_trailing_dependency(
+            dependencies, scriptDir, f"{prefix}_{sub}_{y1:04d}-{end_yr:04d}", missing
         )
 
 
 def determine_and_add_dependencies(
-    _c: Dict[str, Any], dependencies: List[str], script_dir: str
+    _c: Dict[str, Any],
+    dependencies: List[str],
+    script_dir: str,
+    missing: Optional[List[str]] = None,
 ) -> None:
 
     times_series_subsections = ["land"]
@@ -139,6 +152,7 @@ def determine_and_add_dependencies(
             _c["year1"],
             _c["year2"],
             _c["ts_num_years"],
+            missing,
         )
 
     climo_subsections: List[str] = []
@@ -176,4 +190,5 @@ def determine_and_add_dependencies(
             _c["year1"],
             _c["year2"],
             _c["ts_num_years"],
+            missing,
         )

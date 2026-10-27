@@ -11,12 +11,14 @@ from zppy.utils import (
     get_file_names,
     get_inference_type_parameter,
     get_tasks,
+    get_trailing_year_sets,
     get_value_from_parameter,
     get_years,
     initialize_template,
     make_executable,
     set_component_and_prc_typ,
     set_value_of_parameter_if_undefined,
+    skip_trailing_year_set_without_upstream,
     submit_script,
     write_settings_file,
 )
@@ -47,6 +49,7 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
                 ParameterInferenceType.PATH_INFERENCE,
             )
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
+        trailing: List[Tuple[int, int]] = get_trailing_year_sets(c["years"])
         # Loop over year sets
         for s in year_sets:
             c["yr_start"] = s[0]
@@ -85,6 +88,7 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
             set_value_of_parameter_if_undefined(
                 c, "ts_subsection", sub, ParameterInferenceType.SECTION_INFERENCE
             )
+            missing: List[str] = []
             add_dependencies(
                 dependencies,
                 script_dir,
@@ -93,7 +97,12 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
                 c["yr_start"],
                 c["yr_end"],
                 c["ts_num_years"],
+                missing,
             )
+            if skip_trailing_year_set_without_upstream(
+                prefix, s, trailing, dependencies, missing, bash_file
+            ):
+                continue
             c["dependencies"] = dependencies
             write_settings_file(settings_file, c, s)
             export = "ALL"
