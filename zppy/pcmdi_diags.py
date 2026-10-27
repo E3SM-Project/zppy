@@ -119,16 +119,14 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
             make_executable(bash_file)
 
             # List of dependencies
-            # Iterate from year1 to year2 incrementing by the number of years per time series file.
             if c["current_set"] != "synthetic_plots":
-                for yr in range(c["year1"], c["year2"], c["ts_num_years"]):
-                    add_ts_dependencies(c, dependencies, script_dir, yr)
-                    set_value_of_parameter_if_undefined(
-                        c,
-                        "e3sm_to_cmip_atm_subsection",
-                        "atm_monthly_180x360_aave",
-                        ParameterInferenceType.SECTION_INFERENCE,
-                    )
+                add_ts_dependencies(c, dependencies, script_dir)
+                set_value_of_parameter_if_undefined(
+                    c,
+                    "e3sm_to_cmip_atm_subsection",
+                    "atm_monthly_180x360_aave",
+                    ParameterInferenceType.SECTION_INFERENCE,
+                )
                 add_dependencies(
                     dependencies,
                     script_dir,
@@ -363,11 +361,9 @@ def define_relevant_years_for_synthetic_plots(c: Dict[str, Any]) -> None:
         c["enso_years"] = year_str
 
 
-def add_ts_dependencies(
-    c: Dict[str, Any], dependencies: List[str], script_dir: str, yr: int
-):
-    start_yr = yr
-    end_yr = yr + c["ts_num_years"] - 1
+def add_ts_dependencies(c: Dict[str, Any], dependencies: List[str], script_dir: str):
+    start_yr = c["year1"]
+    end_yr = c["year2"]
     if c["current_set"] in BASE_PCMDI_SETS:
         add_dependencies(
             dependencies,

@@ -529,3 +529,7 @@ def test_add_dependencies():
         "script_dir/prefix_sub_1988-1989-0002.status",
     ]
     assert dependencies == expected
+
+    dependencies = []
+    add_dependencies(dependencies, "script_dir", "prefix", "sub", 1995, 1995, 1)
+    assert dependencies == ["script_dir/prefix_sub_1995-1995-0001.status"]
