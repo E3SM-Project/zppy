@@ -48,8 +48,9 @@ These 6 parameters are specific to the ``e3sm_to_cmip`` task.
      - ``""``
      - Source vertical coordinate file for ``ncremap``. Needed for EAMxx. When
        left empty, ``zppy`` derives it at run time from the time series files,
-       which must then retain ``hyai,hyam,hybi,hybm`` via the ``[ts]``
-       ``extra_vars``.
+       which must then retain ``hyai,hybi`` and/or ``hyam,hybm`` via the
+       ``[ts]`` ``extra_vars``. Output with only one of the two pairs needs
+       NCO 5.4.2 or later.
 
 Parameters at the top-level
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
