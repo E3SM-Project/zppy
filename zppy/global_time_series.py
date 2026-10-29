@@ -168,7 +168,8 @@ def add_trailing_ts_dependency(
     # final, shorter ts chunk, but only if [ts] produces it
     # (e.g. [ts] years = "1995:2004:5", "2005-2007").
     num_years: int = c["ts_num_years"]
-    y1: int = c["year1"] + (c["year2"] - c["year1"] + 1) // num_years * num_years
+    num_full_chunks: int = (c["year2"] - c["year1"] + 1) // num_years
+    y1: int = c["year1"] + num_full_chunks * num_years
     y2: int = c["year2"]
     if y1 <= y2 and (y1, y2) in ts_chunks.get(sub, []):
         dependencies.append(
