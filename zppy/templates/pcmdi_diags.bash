@@ -167,9 +167,19 @@ create_links_acyc_climo() {
 
     shopt -s nullglob
     for year in $(seq "${begin_year}" "${ts_step}" "${end_year}"); do
-      local YYYY
+      local YYYY EEEE chunk_end
       YYYY=$(printf "%04d" "${year}")
-      for file in ${ts_dir_source}/${v}_*_${YYYY}*.nc; do
+      chunk_end=$(( 10#${year} + ts_step - 1 ))
+      if (( chunk_end > 10#${end_year} )); then
+        chunk_end=$(( 10#${end_year} ))
+      fi
+      EEEE=$(printf "%04d" "${chunk_end}")
+      # Prefer the exact chunk, so an older, shorter chunk with the same start year is not also used
+      local files=( ${ts_dir_source}/${v}_*_${YYYY}??-${EEEE}??.nc )
+      if [[ -z "${files[*]}" ]]; then
+        files=( ${ts_dir_source}/${v}_*_${YYYY}*.nc )
+      fi
+      for file in "${files[@]}"; do
         [[ -f "${file}" ]] && echo "${file}" >> "${v}_files.txt"
       done
     done
@@ -372,7 +382,7 @@ create_links_ts() {
   mkdir -p "${ts_dir_destination}"
   cd "${ts_dir_destination}" || exit
 
-  local v file YYYY combined_name
+  local v file YYYY EEEE chunk_end combined_name files
 
   # Convert comma-separated list to array
   IFS=',' read -ra var_array <<< "${vars}"
@@ -382,7 +392,17 @@ create_links_ts() {
     shopt -s nullglob
     for year in $(seq "${begin_year}" "${ts_step}" "${end_year}"); do
       YYYY=$(printf "%04d" "${year}")
-      for file in ${ts_dir_source}/${v}_*_${YYYY}*.nc; do
+      chunk_end=$(( 10#${year} + ts_step - 1 ))
+      if (( chunk_end > 10#${end_year} )); then
+        chunk_end=$(( 10#${end_year} ))
+      fi
+      EEEE=$(printf "%04d" "${chunk_end}")
+      # Prefer the exact chunk, so an older, shorter chunk with the same start year is not also used
+      files=( ${ts_dir_source}/${v}_*_${YYYY}??-${EEEE}??.nc )
+      if [[ -z "${files[*]}" ]]; then
+        files=( ${ts_dir_source}/${v}_*_${YYYY}*.nc )
+      fi
+      for file in "${files[@]}"; do
         [[ -f "${file}" ]] && echo "${file}" >> "${v}_files.txt"
       done
     done

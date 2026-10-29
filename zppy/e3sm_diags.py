@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from configobj import ConfigObj
 
@@ -12,12 +12,14 @@ from zppy.utils import (
     check_status,
     get_file_names,
     get_tasks,
+    get_trailing_year_sets,
     get_value_from_parameter,
     get_years,
     initialize_template,
     make_executable,
     print_url,
     set_value_of_parameter_if_undefined,
+    skip_trailing_year_set_without_upstream,
     submit_script,
     write_settings_file,
 )
@@ -43,6 +45,7 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
             c["ts_num_years"] = int(c["ts_num_years"])
         # Loop over year sets
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
+        trailing: List[Tuple[int, int]] = get_trailing_year_sets(c["years"])
         ref_year_sets: List[Tuple[int, int]]
         if ("ref_years" in c.keys()) and (c["ref_years"] != [""]):
             ref_year_sets = get_years(c["ref_years"])
@@ -71,9 +74,14 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
                 f.write(template.render(**c))
             make_executable(bash_file)
             # List of dependencies
+            missing: List[str] = []
             add_climo_dependencies(c, dependencies, script_dir)
             if "ts_num_years" in c.keys():
-                add_ts_dependencies(c, dependencies, script_dir)
+                add_ts_dependencies(c, dependencies, script_dir, missing)
+            if skip_trailing_year_set_without_upstream(
+                c["prefix"], s, trailing, dependencies, missing, bash_file
+            ):
+                continue
             c["dependencies"] = dependencies
             write_settings_file(settings_file, c, s)
             export = "ALL"
@@ -290,7 +298,12 @@ def add_climo_dependencies(
         dependencies.append(os.path.join(script_dir, f"tc_analysis{status_suffix}"))
 
 
-def add_ts_dependencies(c: Dict[str, Any], dependencies: List[str], script_dir: str):
+def add_ts_dependencies(
+    c: Dict[str, Any],
+    dependencies: List[str],
+    script_dir: str,
+    missing: Optional[List[str]] = None,
+):
     start_yr = c["year1"]
     end_yr = c["year2"]
     depend_on_ts: Set[str] = set(
@@ -309,6 +322,7 @@ def add_ts_dependencies(c: Dict[str, Any], dependencies: List[str], script_dir: 
             start_yr,
             end_yr,
             c["ts_num_years"],
+            missing,
         )
     if "streamflow" in c["sets"]:
         add_dependencies(
@@ -319,6 +333,7 @@ def add_ts_dependencies(c: Dict[str, Any], dependencies: List[str], script_dir: 
             start_yr,
             end_yr,
             c["ts_num_years"],
+            missing,
         )
     if set(["tropical_subseasonal", "precip_pdf"]) & set(c["sets"]):
         ts_daily_sub = get_value_from_parameter(
@@ -332,4 +347,5 @@ def add_ts_dependencies(c: Dict[str, Any], dependencies: List[str], script_dir: 
             start_yr,
             end_yr,
             c["ts_num_years"],
+            missing,
         )

@@ -311,14 +311,16 @@ def _resolve_test_year_sets(
     prior_subsection_year_sets: Dict[str, Dict[str, List[Tuple[int, int]]]],
 ) -> Tuple[List[Tuple[int, int]], List[Tuple[int, int]], List[Tuple[int, int]]]:
     ts_years_value = c.get("ts_years", [""])
-    ts_year_sets: List[Tuple[int, int]] = get_years(ts_years_value)
+    ts_year_sets: List[Tuple[int, int]] = get_years(
+        ts_years_value, include_trailing=False
+    )
     if (len(ts_year_sets) == 0) and (test_subsection in prior_subsection_year_sets):
         ts_year_sets = prior_subsection_year_sets[test_subsection]["ts"]
 
     climo_years_value = c.get("climo_years", [""])
     climo_fallback = ts_year_sets
     if test_subsection in prior_subsection_year_sets:
-        if len(get_years(climo_years_value)) == 0:
+        if len(get_years(climo_years_value, include_trailing=False)) == 0:
             climo_fallback = prior_subsection_year_sets[test_subsection]["climo"]
 
     climo_year_sets = _resolve_year_sets(
@@ -331,7 +333,7 @@ def _resolve_test_year_sets(
     enso_years_value = c.get("enso_years", [""])
     enso_fallback = ts_year_sets
     if test_subsection in prior_subsection_year_sets:
-        if len(get_years(enso_years_value)) == 0:
+        if len(get_years(enso_years_value, include_trailing=False)) == 0:
             enso_fallback = prior_subsection_year_sets[test_subsection]["enso"]
 
     enso_year_sets = _resolve_year_sets(
@@ -353,7 +355,7 @@ def _resolve_reference_year_sets(
     ref_ts_years_value = c.get("ref_ts_years", [""])
     ref_ts_fallback = ts_year_sets
     if reference_subsection in prior_subsection_year_sets:
-        if len(get_years(ref_ts_years_value)) == 0:
+        if len(get_years(ref_ts_years_value, include_trailing=False)) == 0:
             ref_ts_fallback = prior_subsection_year_sets[reference_subsection]["ts"]
 
     ref_ts_year_sets = _resolve_year_sets(
@@ -366,7 +368,7 @@ def _resolve_reference_year_sets(
     ref_climo_years_value = c.get("ref_climo_years", [""])
     ref_climo_fallback = ref_ts_year_sets
     if reference_subsection in prior_subsection_year_sets:
-        if len(get_years(ref_climo_years_value)) == 0:
+        if len(get_years(ref_climo_years_value, include_trailing=False)) == 0:
             ref_climo_fallback = prior_subsection_year_sets[reference_subsection][
                 "climo"
             ]
@@ -381,7 +383,7 @@ def _resolve_reference_year_sets(
     ref_enso_years_value = c.get("ref_enso_years", [""])
     ref_enso_fallback = ref_ts_year_sets
     if reference_subsection in prior_subsection_year_sets:
-        if len(get_years(ref_enso_years_value)) == 0:
+        if len(get_years(ref_enso_years_value, include_trailing=False)) == 0:
             ref_enso_fallback = prior_subsection_year_sets[reference_subsection]["enso"]
 
     ref_enso_year_sets = _resolve_year_sets(
@@ -620,7 +622,7 @@ def _resolve_year_sets(
     - If the length is neither 1 nor target_len (and non-empty), raise ValueError.
     """
 
-    parsed = get_years(years_value)
+    parsed = get_years(years_value, include_trailing=False)
     if len(parsed) == 0:
         return fallback
     if (len(parsed) == 1) and (target_len > 1):
