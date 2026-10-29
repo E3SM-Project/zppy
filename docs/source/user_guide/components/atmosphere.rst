@@ -83,7 +83,10 @@ when configuring ``zppy`` for EAMxx:
   convention, which older EAMxx output does not. ``zppy`` therefore derives an
   explicit source vertical grid file at run time from the run's own output, so
   any EAMxx vertical grid works; set ``vrt_in_file`` to use a file of your own
-  instead.
+  instead. Newer EAMxx output streams may carry only the interface
+  (``hyai``, ``hybi``) or only the midpoint (``hyam``, ``hybm``) coefficients;
+  ``zppy`` keeps whichever are present, and remapping such output needs
+  NCO 5.4.2 or later.
 - Vertical remapping (``vrt_remap_vars``) is often needed to produce
   pressure-level data for diagnostics.
 

@@ -49,8 +49,10 @@ BASE_PARAMETERS: Dict[str, Any] = {
     "ypf": 2,
 }
 
-DERIVATION = "ncks -O -v hyai,hybi,hyam,hybm"
-DERIVATION_WITH_P0 = "ncks -O -v hyai,hybi,hyam,hybm,P0"
+DERIVATION = "ncks -O -v ${vrt_vars}"
+DERIVATION_WITH_P0 = "ncks -O -v ${vrt_vars},P0"
+INTERFACE_CHECK = "ncks -m -v hyai,hybi"
+MIDPOINT_CHECK = "ncks -m -v hyam,hybm"
 
 
 def render(template_name: str, **overrides: Any) -> str:
@@ -75,11 +77,22 @@ def test_eamxx_derives_the_source_vertical_grid():
         assert '--vrt_in="${vrt_in_file}"' in script
 
 
+def test_eamxx_derivation_keeps_whichever_coefficients_are_present():
+    # Newer EAMxx output may carry only the interface or only the midpoint
+    # coefficients; the derivation keeps whichever pair exists and warns.
+    for template_name in ["ts.bash", "e3sm_to_cmip.bash"]:
+        script = render(template_name)
+        assert INTERFACE_CHECK in script
+        assert MIDPOINT_CHECK in script
+        assert "NCO >= 5.4.2" in script
+
+
 def test_user_supplied_vrt_in_file_takes_precedence():
     for template_name in ["ts.bash", "e3sm_to_cmip.bash"]:
         script = render(template_name, vrt_in_file="/path/to/my_vert_grid.nc")
         assert "vrt_in_file='/path/to/my_vert_grid.nc'" in script
         assert DERIVATION not in script
+        assert INTERFACE_CHECK not in script
         assert '--vrt_in="${vrt_in_file}"' in script
 
 
@@ -88,5 +101,6 @@ def test_non_eamxx_has_no_vertical_grid_file():
     for template_name in ["ts.bash", "e3sm_to_cmip.bash"]:
         script = render(template_name, prc_typ="eam", vars="T", interp_vars="T")
         assert DERIVATION not in script
+        assert INTERFACE_CHECK not in script
         assert "--vrt_in" not in script
         assert "--ps_nm" not in script

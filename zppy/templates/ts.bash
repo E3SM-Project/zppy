@@ -123,16 +123,25 @@ mkdir output_plev
 # ncremap reads the source vertical grid from the input file only when the
 # vertical variables carry it with CF formula_terms. Older EAMxx output does
 # not, so derive an explicit --vrt_in file from this run's own output (any
-# vertical grid works). Use the output's P0 if present, else the reference
-# pressure.
+# vertical grid works). Newer EAMxx output may carry only the interface
+# (hyai,hybi) or only the midpoint (hyam,hybm) coefficients, so keep whichever
+# are present. Use the output's P0 if present, else the reference pressure.
 raw_file=`head -n 1 input.txt`
-run_nco ncks -O -v hyai,hybi,hyam,hybm,P0 ${raw_file} vrt_in.nc 2> /dev/null || \
-  { run_nco ncks -O -v hyai,hybi,hyam,hybm ${raw_file} vrt_in.nc && \
-    run_nco ncap2 -A -s 'P0=100000.0' vrt_in.nc ; }
+vrt_vars=''
+run_nco ncks -m -v hyai,hybi ${raw_file} > /dev/null 2>&1 && vrt_vars=hyai,hybi
+run_nco ncks -m -v hyam,hybm ${raw_file} > /dev/null 2>&1 && vrt_vars=${vrt_vars:+${vrt_vars},}hyam,hybm
+if [[ -n "${vrt_vars}" && "${vrt_vars}" != 'hyai,hybi,hyam,hybm' ]]; then
+  echo 'WARNING: '${raw_file}' has only '${vrt_vars}' for the source vertical grid.'
+  echo 'Vertical remapping then needs NCO >= 5.4.2; otherwise set vrt_in_file.'
+fi
+[[ -n "${vrt_vars}" ]] && \
+  { run_nco ncks -O -v ${vrt_vars},P0 ${raw_file} vrt_in.nc 2> /dev/null || \
+    { run_nco ncks -O -v ${vrt_vars} ${raw_file} vrt_in.nc && \
+      run_nco ncap2 -A -s 'P0=100000.0' vrt_in.nc ; } ; }
 if [ $? != 0 ]; then
   cd {{ scriptDir }}
   echo 'Failed to derive source vertical grid file from '${raw_file}
-  echo 'Set vrt_in_file explicitly to work around this.'
+  echo 'It needs hyai,hybi and/or hyam,hybm. Set vrt_in_file explicitly to work around this.'
   echo 'ERROR (7)' > {{ prefix }}.status
   exit 7
 fi

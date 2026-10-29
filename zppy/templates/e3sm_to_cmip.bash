@@ -75,16 +75,25 @@ EOF
         fi
         {%- if prc_typ == 'eamxx' and vrt_in_file == '' %}
         # Derive the source vertical grid once, from a file we are about to remap.
-        # This needs the [ts] task to have kept hyai,hyam,hybi,hybm via extra_vars.
+        # This needs the [ts] task to have kept hyai,hybi and/or hyam,hybm via
+        # extra_vars; newer EAMxx output may carry only one of the two pairs.
         # Use the file's P0 if present, else the reference pressure.
         if [ ! -f "${vrt_in_file}" ]; then
-          run_nco ncks -O -v hyai,hybi,hyam,hybm,P0 ${file} ${vrt_in_file} 2> /dev/null || \
-            { run_nco ncks -O -v hyai,hybi,hyam,hybm ${file} ${vrt_in_file} && \
-              run_nco ncap2 -A -s 'P0=100000.0' ${vrt_in_file} ; }
+          vrt_vars=''
+          run_nco ncks -m -v hyai,hybi ${file} > /dev/null 2>&1 && vrt_vars=hyai,hybi
+          run_nco ncks -m -v hyam,hybm ${file} > /dev/null 2>&1 && vrt_vars=${vrt_vars:+${vrt_vars},}hyam,hybm
+          if [[ -n "${vrt_vars}" && "${vrt_vars}" != 'hyai,hybi,hyam,hybm' ]]; then
+            echo 'WARNING: '${file}' has only '${vrt_vars}' for the source vertical grid.'
+            echo 'Vertical remapping then needs NCO >= 5.4.2; otherwise set vrt_in_file.'
+          fi
+          [[ -n "${vrt_vars}" ]] && \
+            { run_nco ncks -O -v ${vrt_vars},P0 ${file} ${vrt_in_file} 2> /dev/null || \
+              { run_nco ncks -O -v ${vrt_vars} ${file} ${vrt_in_file} && \
+                run_nco ncap2 -A -s 'P0=100000.0' ${vrt_in_file} ; } ; }
           if [ $? != 0 ]; then
             cd {{ scriptDir }}
             echo 'Failed to derive source vertical grid file from '${file}
-            echo 'Add hyai,hyam,hybi,hybm to the [ts] extra_vars, or set vrt_in_file explicitly.'
+            echo 'Add hyai,hybi and/or hyam,hybm to the [ts] extra_vars, or set vrt_in_file explicitly.'
             echo 'ERROR (5)' > {{ prefix }}.status
             exit 5
           fi
