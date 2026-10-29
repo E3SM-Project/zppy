@@ -179,3 +179,22 @@ Dependencies
 **Downstream (what depends on global_time_series):**
 
 - None.
+
+Years not divisible by ``ts_num_years``
+---------------------------------------
+
+If the ``global_time_series`` year range is not a multiple of
+``ts_num_years``, list the trailing years as an explicit range in the glb
+``[ts]`` subtasks. ``global_time_series`` then depends on and plots that
+shorter chunk. For example, to plot 1995-2007 with ``ts_num_years = 5``:
+
+.. code-block:: ini
+
+   [ts]
+   years = "1995:2004:5", "2005-2007",
+
+   [global_time_series]
+   years = "1995-2007",
+   ts_num_years = 5
+
+Without the explicit range, the plots end at the last full chunk (2004).

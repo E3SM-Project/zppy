@@ -65,6 +65,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">global_time_series — Global Time Series Plots</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#parameters">Parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#years-not-divisible-by-ts-num-years">Years not divisible by <code class="docutils literal notranslate"><span class="pre">ts_num_years</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="ilamb.html">ilamb — Land Benchmarking</a></li>
@@ -322,6 +323,22 @@ have no effect: <code class="docutils literal notranslate"><span class="pre">nco
 <ul class="simple">
 <li><p>None.</p></li>
 </ul>
+</section>
+<section id="years-not-divisible-by-ts-num-years">
+<h2>Years not divisible by <code class="docutils literal notranslate"><span class="pre">ts_num_years</span></code><a class="headerlink" href="#years-not-divisible-by-ts-num-years" title="Link to this heading"></a></h2>
+<p>If the <code class="docutils literal notranslate"><span class="pre">global_time_series</span></code> year range is not a multiple of
+<code class="docutils literal notranslate"><span class="pre">ts_num_years</span></code>, list the trailing years as an explicit range in the glb
+<code class="docutils literal notranslate"><span class="pre">[ts]</span></code> subtasks. <code class="docutils literal notranslate"><span class="pre">global_time_series</span></code> then depends on and plots that
+shorter chunk. For example, to plot 1995-2007 with <code class="docutils literal notranslate"><span class="pre">ts_num_years</span> <span class="pre">=</span> <span class="pre">5</span></code>:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[ts]</span>
+<span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1995:2004:5"</span><span class="na">, "2005-2007",</span>
+
+<span class="k">[global_time_series]</span>
+<span class="na">years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"1995-2007"</span><span class="na">,</span>
+<span class="na">ts_num_years</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">5</span>
+</pre></div>
+</div>
+<p>Without the explicit range, the plots end at the last full chunk (2004).</p>
 </section>
 </section>
 
