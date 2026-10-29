@@ -182,7 +182,10 @@ file only when the vertical variables carry it with the CF <code class="docutils
 convention, which older EAMxx output does not. <code class="docutils literal notranslate"><span class="pre">zppy</span></code> therefore derives an
 explicit source vertical grid file at run time from the run’s own output, so
 any EAMxx vertical grid works; set <code class="docutils literal notranslate"><span class="pre">vrt_in_file</span></code> to use a file of your own
-instead.</p></li>
+instead. Newer EAMxx output streams may carry only the interface
+(<code class="docutils literal notranslate"><span class="pre">hyai</span></code>, <code class="docutils literal notranslate"><span class="pre">hybi</span></code>) or only the midpoint (<code class="docutils literal notranslate"><span class="pre">hyam</span></code>, <code class="docutils literal notranslate"><span class="pre">hybm</span></code>) coefficients;
+<code class="docutils literal notranslate"><span class="pre">zppy</span></code> keeps whichever are present, and remapping such output needs
+NCO 5.4.2 or later.</p></li>
 <li><p>Vertical remapping (<code class="docutils literal notranslate"><span class="pre">vrt_remap_vars</span></code>) is often needed to produce
 pressure-level data for diagnostics.</p></li>
 </ul>
