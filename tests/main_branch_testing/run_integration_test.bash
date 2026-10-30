@@ -37,6 +37,34 @@ set -u  # Exit on undefined variable
 SCRIPT_RUN_DIR="$PWD"
 
 # ============================================================================
+# Stack size limit
+# ============================================================================
+#
+# MPAS-Analysis segfaults unless the stack size limit is unlimited (e.g.
+# inside `screen`, which can start with a lower default than a login shell).
+# `ulimit -s` is inherited by child processes, and SLURM propagates the
+# submitting shell's limits to jobs, so raising it here covers the zppy job
+# submissions too. A process can only raise its soft limit up to the hard
+# limit, so fail early with a clear message if that isn't enough.
+ensure_unlimited_stack() {
+    local soft hard
+    soft="$(ulimit -S -s)"
+    hard="$(ulimit -H -s)"
+    if [[ "$soft" == "unlimited" ]]; then
+        return 0
+    fi
+    if ulimit -S -s unlimited 2>/dev/null; then
+        echo "Raised stack size soft limit from ${soft} to unlimited."
+        return 0
+    fi
+    echo "Error: stack size soft limit is ${soft} (hard limit: ${hard}), but MPAS-Analysis needs 'unlimited'." >&2
+    echo "Run 'ulimit -s unlimited' before invoking this script, or ask your system admin to raise the hard limit." >&2
+    return 1
+}
+
+ensure_unlimited_stack || exit 1
+
+# ============================================================================
 # Parse arguments
 # ============================================================================
 
