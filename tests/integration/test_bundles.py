@@ -68,6 +68,7 @@ def test_bundles_bash_file_list():
             "ts_atm_monthly_180x360_aave_1987-1988-0002.bash",
             "ts_atm_monthly_glb_1985-1989-0005.bash",
             "ts_atm_monthly_glb_1990-1994-0005.bash",
+            "ts_atm_monthly_glb_1995-1995-0001.bash",
             "ts_land_monthly_1985-1986-0002.bash",
             "ts_land_monthly_1987-1988-0002.bash",
             "ts_rof_monthly_1985-1986-0002.bash",
