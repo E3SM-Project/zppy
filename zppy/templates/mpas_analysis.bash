@@ -304,6 +304,14 @@ extra_config="--polar_regions"
 extra_config=""
 {% endif %}
 
+# MPAS-Analysis appends to taskProgress.log rather than overwriting it, so
+# ERROR lines from a previous (failed) run would make a successful rerun fail
+# the check below. Set the old log aside so the check only sees this run.
+task_progress_log=${output_dir_name}/logs/taskProgress.log
+if [ -f ${task_progress_log} ]; then
+  mv ${task_progress_log} ${task_progress_log}.$(date +%Y%m%d_%H%M%S)
+fi
+
 mpas_analysis ${purge} --verbose ${extra_config} cfg/mpas_analysis_${identifier}.cfg
 if [ $? != 0 ]; then
   echo 'ERROR (1)' > {{ scriptDir }}/{{ prefix }}.status
@@ -311,8 +319,8 @@ if [ $? != 0 ]; then
 fi
 
 # Check master log for obvious errors
-size=`wc -c ${output_dir_name}/logs/taskProgress.log | awk '{print $1}'`
-error=`grep ERROR ${output_dir_name}/logs/taskProgress.log | wc -l`
+size=`wc -c ${task_progress_log} | awk '{print $1}'`
+error=`grep ERROR ${task_progress_log} | wc -l`
 if [ "${size}" = "" ] || [ "${size}" = "0" ] || [ "${error}" != "0" ];then
   echo 'ERROR (2)' > {{ scriptDir }}/{{ prefix }}.status
   exit 2
