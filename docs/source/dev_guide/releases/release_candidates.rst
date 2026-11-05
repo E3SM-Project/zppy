@@ -29,18 +29,24 @@ Step 4: tbump
 
 In this example, ``v1.2.3rc4`` is used -- so, the major version is 1, the minor version is 2, and the patch version is 3. The release candidate number is 4.
 
+   .. warning::
+        Do NOT use the tag name as the branch name as 
+        doing so can cause issues with the version tagging.
+        For example, rather than ``v1.2.3rc4``, use ``bump_to_v1.2.3rc4``.
+
+
    .. code-block:: bash
 
         cd zppy
         git status # Make sure you don't have any uncommitted changes
         git fetch upstream main # This assumes you've named your remote for the main repo as "upstream"
-        git checkout -b v1.2.3rc4 upstream/main
+        git checkout -b bump_to_v1.2.3rc4 upstream/main
         conda activate env-name # Activate any zppy dev environment you have; we just need `tbump`
         tbump 1.2.3rc4 --no-tag
         # This creates a commit, but won't push it (because the branch isn't named `main`)
         git diff HEAD^ HEAD | cat
-        # Review the change `tbump`` added
-        git push upstream v1.2.3rc4
+        # Review the change `tbump` added
+        git push upstream bump_to_v1.2.3rc4
         # Create, and "Update version" label" to, and merge the PR; delete the branch on GitHub
 
 Step 5: Tag the RC on the zppy repo
@@ -52,8 +58,6 @@ Step 5: Tag the RC on the zppy repo
         git fetch upstream
         git reset --hard upstream/main
         git tag -a v1.2.3rc4 -m "v1.2.3rc4" # Add the tag for this RC
-        # Delete the branch from the tbump step. Otherwise, the push command won't work.
-        git branch -D v1.2.3rc4
         git push upstream v1.2.3rc4 # Push the new RC tag to GitHub
 
 ``v1.2.3rc4`` should now appear on `Tags <https://github.com/E3SM-Project/zppy/tags>`__, but _not_ on `Releases <https://github.com/E3SM-Project/zppy/releases>`_.
