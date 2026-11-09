@@ -66,7 +66,7 @@ body:
       attributes:
           label: What command did you run?
           description: |
-              Copy the command causing the issue (e.g., `zppy -c tests/integration/generated/test_complete_run_chrysalis.cfg`). This will be automatically formatted into code, so no need for markdown backticks.
+              Copy the command causing the issue (e.g., `zppy -c tests/integration/generated/test_cfg_suite_chrysalis.cfg`). This will be automatically formatted into code, so no need for markdown backticks.
           render: bash
       validations:
           required: true

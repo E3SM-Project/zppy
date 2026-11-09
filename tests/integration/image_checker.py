@@ -11,6 +11,7 @@ from mache import MachineInfo
 from matplotlib import pyplot as plt
 from PIL import Image, ImageChops, ImageDraw
 
+from tests.cfg_suite.layout import RUN_SEGMENT as BASELINE_RUN_SEGMENT
 from tests.integration import image_severity
 from tests.integration.image_severity import Comparison
 
@@ -118,21 +119,48 @@ def set_up_and_run_image_checker(
     base_diff_dir = (
         f"{actual_images_dir}image_check_failures_{cfg_specifier}{diff_dir_suffix}"
     )
-    d: Dict[str, str] = {
-        "actual_images_dir": actual_images_dir,
-        "expected_images_dir": f"{expansions['expected_dir']}expected_{cfg_specifier}",
-        "diff_dir": _get_unused_diff_dir(base_diff_dir),
-        "expected_images_list": f"{expansions['expected_dir']}image_list_expected_{cfg_specifier}.txt",
-    }
-    if d["diff_dir"] != base_diff_dir:
+    # The baseline is the www output of the promoted run, not a copy of it.
+    cfg_name = f"weekly_{cfg_specifier}"
+    baseline_by_cfg_task = expansions.get("baseline_by_cfg_task", {})
+    diff_dir = _get_unused_diff_dir(base_diff_dir)
+    if diff_dir != base_diff_dir:
         print(
-            f"diff_dir={base_diff_dir} already exists; using {d['diff_dir']} instead to avoid overwriting previous results"
+            f"diff_dir={base_diff_dir} already exists; using {diff_dir} instead to avoid overwriting previous results"
         )
-    print("Image checking dict:")
-    for key in d:
-        print(f"{key}: {d[key]}")
-    parameters: Parameters = Parameters(d)
     for task in task_list:
+        baseline = baseline_by_cfg_task.get(f"{cfg_name}:{task}", {})
+        if baseline.get("state") == "not-compared":
+            reason = baseline.get("reason", "no baseline")
+            print(f"Not comparing {cfg_name}/{task}: {reason}")
+            continue
+        baseline_www = baseline.get("www") or expansions.get("baseline_www")
+        baseline_image_lists = baseline.get("image_lists") or expansions.get(
+            "baseline_image_lists"
+        )
+        if baseline_www:
+            expected_images_dir = (
+                f"{baseline_www}zppy_{cfg_name}_www/"
+                f"{BASELINE_RUN_SEGMENT}/{case_name}"
+            )
+            expected_images_list = f"{baseline_image_lists}image_list_{cfg_name}.txt"
+        else:
+            # A machine with no promoted baseline yet.
+            expected_images_dir = (
+                f"{expansions['expected_dir']}expected_{cfg_specifier}"
+            )
+            expected_images_list = (
+                f"{expansions['expected_dir']}image_list_expected_{cfg_specifier}.txt"
+            )
+        d: Dict[str, str] = {
+            "actual_images_dir": actual_images_dir,
+            "expected_images_dir": expected_images_dir,
+            "diff_dir": diff_dir,
+            "expected_images_list": expected_images_list,
+        }
+        print(f"Image checking dict for {task}:")
+        for key in d:
+            print(f"{key}: {d[key]}")
+        parameters = Parameters(d)
         test_results = check_images(parameters, task)
         test_results_dict[f"{cfg_specifier}_{task}"] = test_results
 
@@ -152,13 +180,13 @@ def check_images(parameters: Parameters, prefix: str):
     if os.path.exists(missing_images_file):
         os.remove(missing_images_file)
     for missing_image in test_results.file_list_missing:
-        with open(missing_images_file, "a") as f:
+        with open(missing_images_file, "a", encoding="utf-8") as f:
             f.write(f"{missing_image}\n")
     mismatched_images_file = f"{diff_subdir}/mismatched_images.txt"
     if os.path.exists(mismatched_images_file):
         os.remove(mismatched_images_file)
     for mismatched_image in test_results.file_list_mismatched:
-        with open(mismatched_images_file, "a") as f:
+        with open(mismatched_images_file, "a", encoding="utf-8") as f:
             f.write(f"{mismatched_image}\n")
     # Rank and group the failures so a reviewer knows where to start
     _write_severity_report(diff_subdir, test_results)
@@ -228,7 +256,7 @@ def _write_severity_report(diff_subdir: str, test_results: Results) -> None:
     comparisons = sorted(test_results.comparisons, key=Comparison.sort_key)
     needing_review = [c for c in comparisons if c.needs_review]
 
-    with open(f"{diff_subdir}/severity_report.txt", "w") as f:
+    with open(f"{diff_subdir}/severity_report.txt", "w", encoding="utf-8") as f:
         f.write(f"Image check for {test_results.prefix}\n")
         f.write(f"{test_results.image_count_total} images compared\n")
         f.write(f"{test_results.image_count_identical} identical\n")
@@ -270,7 +298,7 @@ def _write_severity_report(diff_subdir: str, test_results: Results) -> None:
                     f"  {c.image_name}\n"
                 )
 
-    with open(f"{diff_subdir}/image_scores.json", "w") as f:
+    with open(f"{diff_subdir}/image_scores.json", "w", encoding="utf-8") as f:
         json.dump(
             [
                 {
@@ -300,16 +328,22 @@ def construct_markdown_summary_table(
     web_portal_base_url = config.get(
         "web_portal", "base_url"
     )  # Does NOT include trailing "/"
-    with open(output_file_path, "w") as f:
+    with open(output_file_path, "w", encoding="utf-8") as f:
         f.write("# Summary of test results\n\n")
         f.write(
             "| Test name | Total images | Correct images | Identical |"
-            " Cosmetic only | Missing images | Needs review | Severity | \n"
+            f" Cosmetic only | {image_severity.IMAGE_REVIEW_COLUMNS[0]} | "
+            f"{image_severity.IMAGE_REVIEW_COLUMNS[1]} | "
+            f"{image_severity.IMAGE_REVIEW_COLUMNS[2]} | Severity | \n"
         )
-        f.write("| --- | --- | --- | --- | --- | --- | --- | --- | \n")
+        f.write("| --- | --- | --- | --- | --- | --- | --- | --- | --- | \n")
         for test_name, test_results in test_results_dict.items():
-            missing_str = f"{test_results.image_count_missing}"
-            mismatched_str = f"{test_results.image_count_mismatched}"
+            counts = test_results.severity_counts
+            missing = image_severity.missing_image_count(counts)
+            needs_review = image_severity.needs_review_count(counts)
+            total_attention = image_severity.total_needing_attention_count(counts)
+            missing_str = f"{missing}"
+            mismatched_str = f"{needs_review}"
 
             # test_results.diff_dir starts with the file path that is displayed on the web server.
             # That is, it starts with the web_portal_base_path
@@ -320,15 +354,15 @@ def construct_markdown_summary_table(
                 web_subdir = test_results.diff_dir.removeprefix(web_portal_base_path)
                 web_link = f"{web_portal_base_url}/{web_subdir}/{test_results.prefix}"
             if web_link:
-                has_missing: bool = test_results.image_count_missing > 0
+                has_missing: bool = missing > 0
                 if has_missing:
                     if os.path.exists(f"{diff_subdir}/missing_images.txt"):
-                        missing_str = f"{test_results.image_count_missing} ([list]({web_link}/missing_images.txt))"
-                    else:
                         missing_str = (
-                            f"{test_results.image_count_missing} (no list created)"
+                            f"{missing} ([list]({web_link}/missing_images.txt))"
                         )
-                has_mismatched: bool = test_results.image_count_mismatched > 0
+                    else:
+                        missing_str = f"{missing} (no list created)"
+                has_mismatched: bool = needs_review > 0
                 if has_mismatched:
                     mismatched_list_exists = os.path.exists(
                         f"{diff_subdir}/mismatched_images.txt"
@@ -337,13 +371,13 @@ def construct_markdown_summary_table(
                         f"{diff_subdir}/image_diff_grid.pdf"
                     )
                     if mismatched_list_exists and image_diff_grid_exists:
-                        mismatched_str = f"{test_results.image_count_mismatched} ([list]({web_link}/mismatched_images.txt), [grid]({web_link}/image_diff_grid.pdf))"
+                        mismatched_str = f"{needs_review} ([list]({web_link}/mismatched_images.txt), [grid]({web_link}/image_diff_grid.pdf))"
                     elif mismatched_list_exists:
-                        mismatched_str = f"{test_results.image_count_mismatched} ([list]({web_link}/mismatched_images.txt), no grid created)"
+                        mismatched_str = f"{needs_review} ([list]({web_link}/mismatched_images.txt), no grid created)"
                     elif image_diff_grid_exists:
-                        mismatched_str = f"{test_results.image_count_mismatched} (no list created, [grid]({web_link}/image_diff_grid.pdf))"
+                        mismatched_str = f"{needs_review} (no list created, [grid]({web_link}/image_diff_grid.pdf))"
                     else:
-                        mismatched_str = f"{test_results.image_count_mismatched} (no list/grid created)"
+                        mismatched_str = f"{needs_review} (no list/grid created)"
                     if os.path.exists(f"{diff_subdir}/severity_report.txt"):
                         mismatched_str += f", [ranked]({web_link}/severity_report.txt)"
 
@@ -367,8 +401,14 @@ def construct_markdown_summary_table(
                 f" | {test_results.image_count_identical}"
                 f" | {cosmetic_str}"
                 f" | {missing_str} | {mismatched_str}"
+                f" | {total_attention}"
                 f" | {test_results.severity_summary()} | \n"
             )
+        f.write(
+            "\nLegend: Missing means an expected image was not produced. "
+            "Needs review excludes missing images. Total needing attention "
+            "includes missing images and other reviewable differences.\n"
+        )
     print(f"Copy the output of {output_file_path} to a Pull Request comment")
 
 
@@ -390,7 +430,7 @@ def _check_mismatched_images(
 
     counter = 0
     print(f"Opening expected images file {parameters.expected_images_list}")
-    with open(parameters.expected_images_list) as f:
+    with open(parameters.expected_images_list, encoding="utf-8") as f:
         print(f"Reading expected images file {parameters.expected_images_list}")
         for line in f:
             image_name = line.strip("./").strip("\n")
