@@ -12,6 +12,7 @@ ${pkg_manager} list mpas-analysis || true # If we can't print this, just continu
 # Additional settings for MPAS-Analysis
 export OMP_NUM_THREADS=1
 export HDF5_USE_FILE_LOCKING=FALSE
+ulimit -s unlimited 2>/dev/null || true
 
 {% if machine == 'dane' %}
 # MPAS-Analysis workaround on dane: avoid "Too many open files" failures by
