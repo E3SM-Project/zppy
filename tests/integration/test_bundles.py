@@ -12,6 +12,23 @@ V3_CASE_NAME = "v3.LR.historical_0051"
 # pytest tests/integration/test_images.py
 # The bundles tests in this file use the same output as the bundles image tests!
 
+# Lines matching these basic regexes are ignored by `diff -I`.
+# - Output paths differ per run.
+# - The E3SM Unified environment script differs between the expected files
+#   (e.g., an rc/test version) and the current latest version.
+DIFF_IGNORE_PATTERNS = [
+    "zppy_weekly_bundles_output/",
+    'echo "source .*e3sm_unified',
+]
+
+
+def diff_bundle_file(actual_directory, expected_directory, filename):
+    ignore_args = " ".join(f"-I '{pattern}'" for pattern in DIFF_IGNORE_PATTERNS)
+    return os.system(
+        f"diff -bu {ignore_args} "
+        f"{actual_directory}/{filename} {expected_directory}/{filename}"
+    )
+
 
 # @pytest.mark.skip(reason="Not testing")
 def test_bundles_bash_file_list():
@@ -51,6 +68,7 @@ def test_bundles_bash_file_list():
             "ts_atm_monthly_180x360_aave_1987-1988-0002.bash",
             "ts_atm_monthly_glb_1985-1989-0005.bash",
             "ts_atm_monthly_glb_1990-1994-0005.bash",
+            "ts_atm_monthly_glb_1995-1995-0001.bash",
             "ts_land_monthly_1985-1986-0002.bash",
             "ts_land_monthly_1987-1988-0002.bash",
             "ts_rof_monthly_1985-1986-0002.bash",
@@ -69,21 +87,5 @@ def test_bundles_bash_file_content():
     actual_directory = f"{user_output}zppy_weekly_bundles_output/{unique_id}/{V3_CASE_NAME}/post/scripts"
     expected_directory = f"{expected_dir}expected_bundles/bundle_files"
     # Check that bundle files are correct
-    assert (
-        os.system(
-            f"diff -bu -I 'zppy_weekly_bundles_output/' {actual_directory}/bundle1.bash {expected_directory}/bundle1.bash"
-        )
-        == 0
-    )
-    assert (
-        os.system(
-            f"diff -bu -I 'zppy_weekly_bundles_output/' {actual_directory}/bundle2.bash {expected_directory}/bundle2.bash"
-        )
-        == 0
-    )
-    assert (
-        os.system(
-            f"diff -bu -I 'zppy_weekly_bundles_output/' {actual_directory}/bundle3.bash {expected_directory}/bundle3.bash"
-        )
-        == 0
-    )
+    for filename in ["bundle1.bash", "bundle2.bash", "bundle3.bash"]:
+        assert diff_bundle_file(actual_directory, expected_directory, filename) == 0
