@@ -39,17 +39,26 @@ class Results(object):
         file_list_missing: List[str],
         file_list_mismatched: List[str],
         comparisons: Optional[List[Comparison]] = None,
+        baseline_missing: bool = False,
     ):
-        if image_count_total == 0:
+        # If there is no baseline, nothing was compared. In that case,
+        # image_count_total is just the number of actual images found
+        # (which may legitimately be 0), so don't treat 0 as an error.
+        if image_count_total == 0 and not baseline_missing:
             raise ValueError(f"No images found for task {prefix} in {diff_dir}")
         self.diff_dir = diff_dir
         self.prefix = prefix
+        self.baseline_missing = baseline_missing
         self.image_count_total = image_count_total
         self.image_count_missing = len(file_list_missing)
         self.image_count_mismatched = len(file_list_mismatched)
-        self.image_count_correct = (
-            image_count_total - len(file_list_missing) - len(file_list_mismatched)
-        )
+        if baseline_missing:
+            # Nothing was compared, so nothing can be called "correct".
+            self.image_count_correct = 0
+        else:
+            self.image_count_correct = (
+                image_count_total - len(file_list_missing) - len(file_list_mismatched)
+            )
         self.file_list_missing = sorted(file_list_missing)
         # Worst first, so a reviewer can work down the list and stop once the
         # remaining differences are clearly cosmetic.
@@ -144,6 +153,9 @@ def set_up_and_run_image_checker(
 
 def check_images(parameters: Parameters, prefix: str):
     test_results = _check_mismatched_images(parameters, prefix)
+    if test_results.baseline_missing:
+        # Nothing was compared, so there are no reports, samples or grids to make.
+        return test_results
     diff_subdir = f"{parameters.diff_dir}/{prefix}"
     if not os.path.exists(diff_subdir):
         os.makedirs(diff_subdir, exist_ok=True)
@@ -308,6 +320,15 @@ def construct_markdown_summary_table(
         )
         f.write("| --- | --- | --- | --- | --- | --- | --- | --- | \n")
         for test_name, test_results in test_results_dict.items():
+            if test_results.baseline_missing:
+                # Nothing was compared. "Total images" is the number of actual
+                # images found, i.e. how many would become the baseline.
+                f.write(
+                    f"| {test_name} | {test_results.image_count_total}"
+                    " | n/a | n/a | n/a | n/a | n/a | **NO BASELINE** | \n"
+                )
+                continue
+
             missing_str = f"{test_results.image_count_missing}"
             mismatched_str = f"{test_results.image_count_mismatched}"
 
@@ -375,10 +396,45 @@ def construct_markdown_summary_table(
 # Helper functions ############################################################
 
 
+def _count_actual_images(parameters: Parameters, prefix: str) -> int:
+    """Count the PNGs the test run produced for this task."""
+    root = os.path.join(parameters.actual_images_dir, prefix)
+    return sum(
+        1
+        for _, _, files in os.walk(root)
+        for file_name in files
+        if file_name.endswith(".png")
+    )
+
+
+def _no_baseline_results(parameters: Parameters, prefix: str, reason: str) -> Results:
+    """Build a Results object for a task that has nothing to compare against."""
+    print(f"WARNING: no baseline for {prefix}: {reason}")
+    print(
+        "Nothing was compared. Generate expected files "
+        "(tests/integration/template_update_weekly_expected_files.sh) to create a baseline."
+    )
+    return Results(
+        parameters.diff_dir,
+        prefix,
+        _count_actual_images(parameters, prefix),
+        [],
+        [],
+        baseline_missing=True,
+    )
+
+
 def _check_mismatched_images(
     parameters: Parameters,
     prefix: str,
 ) -> Results:
+    # A new cfg won't have a baseline until expected files are generated for it.
+    # That is not a crash-worthy condition; report it and move on.
+    if not os.path.exists(parameters.expected_images_list):
+        return _no_baseline_results(
+            parameters, prefix, f"{parameters.expected_images_list} not found"
+        )
+
     missing_images: List[str] = []
     mismatched_images: List[str] = []
     comparisons: List[Comparison] = []
@@ -414,6 +470,15 @@ def _check_mismatched_images(
                     parameters.diff_dir,
                     comparisons,
                 )
+
+    if counter == 0:
+        # The list exists but has no entries for this task (e.g. a task that
+        # was added after the baseline was generated).
+        return _no_baseline_results(
+            parameters,
+            prefix,
+            f"{parameters.expected_images_list} has no entries for {prefix}/",
+        )
 
     verbose: bool = False
     if verbose:
