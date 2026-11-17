@@ -222,7 +222,7 @@ case "$MACHINE" in
         CONDA_ACTIVATION_CMD="nersc_conda"
         UNIFIED_ENV_CMD="source /global/common/software/e3sm/anaconda_envs/load_latest_e3sm_unified_pm-cpu.sh"
         SALLOC_CMD="salloc --nodes=1 --qos=debug --time=01:00:00 --constraint=cpu --account=e3sm"
-        SBATCH_DIRECTIVES=$'#SBATCH --qos=debug\n#SBATCH --time=01:00:00\n#SBATCH --constraint=cpu\n#SBATCH --account=e3sm'
+        SBATCH_DIRECTIVES=$'#SBATCH --qos=regular\n#SBATCH --time=06:00:00\n#SBATCH --constraint=cpu\n#SBATCH --account=e3sm'
         ;;
 esac
 
