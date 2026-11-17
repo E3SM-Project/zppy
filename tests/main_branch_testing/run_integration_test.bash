@@ -27,7 +27,10 @@
 #     from that branch are used. See ZPPY_ENV_TYPE in zppy_test.cfg.
 #   - To resume from Phase 2 or 3 on a later day, set EXPLICIT_TAG in your config
 #     to the TAG printed at the start of Phase 1 (or stored in ~/.zppy_test_tag),
-#     and set START_PHASE accordingly.
+#     and set START_PHASE accordingly. Run from the SAME directory you started
+#     Phase 1 in: results that later phases need for the report (unit-test
+#     results, cancelled-job flags) are persisted to phase_state_<TAG>.env
+#     there and reloaded on resume.
 #   - To run this script unattended on a schedule (e.g. a weekly cron job),
 #     see docs/source/dev_guide/tests/automated_test.rst.
 
@@ -449,6 +452,12 @@ LEGACY_300_V3_OUTPUT="${OUTPUT_WORKSPACE}/zppy_weekly_legacy_3.0.0_comprehensive
 # and distribute_env_descriptions below.
 ENV_DESC_DIR="${SCRIPT_RUN_DIR}/env_descriptions_${TAG}"
 
+# Where state that is produced in one phase but needed by the report in a
+# later phase is persisted, so restarting at START_PHASE=2 or 3 (a fresh
+# shell) doesn't lose it. Keyed by TAG, like ENV_DESC_DIR, so restart from
+# the same directory you started from.
+STATE_FILE="${SCRIPT_RUN_DIR}/phase_state_${TAG}.env"
+
 # Where the auto-generated Markdown report and image-checker artifacts land.
 REPORT_FILE="${SCRIPT_RUN_DIR}/test_report_${TAG}.md"
 IMAGE_CHECKER_SBATCH="${SCRIPT_RUN_DIR}/image_checker_${TAG}.sbatch"
@@ -528,6 +537,35 @@ checkpoint() {
 # Append a line (or block) of text to the Markdown report.
 report_append() {
     printf '%s\n' "$*" >> "$REPORT_FILE"
+}
+
+# Persist cross-phase state (see STATE_FILE above). printf %q makes every
+# value safe to re-source, including the "\n" sequences in
+# SLURM_JOBS_INCOMPLETE_DETAIL. Written atomically via a temp file.
+save_state() {
+    {
+        printf 'ZI_UNIT_TEST_STATUS=%q\n'            "$ZI_UNIT_TEST_STATUS"
+        printf 'ZPPY_UNIT_TEST_STATUS=%q\n'          "$ZPPY_UNIT_TEST_STATUS"
+        printf 'IMAGE_HELPER_UNIT_TEST_STATUS=%q\n'  "$IMAGE_HELPER_UNIT_TEST_STATUS"
+        printf 'SLURM_JOBS_INCOMPLETE=%q\n'          "$SLURM_JOBS_INCOMPLETE"
+        printf 'SLURM_JOBS_INCOMPLETE_DETAIL=%q\n'   "$SLURM_JOBS_INCOMPLETE_DETAIL"
+    } > "${STATE_FILE}.tmp"
+    mv "${STATE_FILE}.tmp" "$STATE_FILE"
+}
+
+# Restore state saved by an earlier phase/invocation with the same TAG.
+load_state() {
+    if [[ -f "$STATE_FILE" ]]; then
+        # shellcheck disable=SC1090
+        source "$STATE_FILE"
+        log "Restored state from earlier phase(s): ${STATE_FILE}"
+        log "  zppy-interfaces unit tests:  ${ZI_UNIT_TEST_STATUS}"
+        log "  zppy unit tests:             ${ZPPY_UNIT_TEST_STATUS}"
+        log "  image-checker unit tests:    ${IMAGE_HELPER_UNIT_TEST_STATUS}"
+    else
+        log_warning "No saved state found at ${STATE_FILE}. Unit-test results from Phase 1 will show as 'not run in this invocation' in the report."
+        log_warning "(Was Phase 1 run from this same directory, with this same TAG=${TAG}?)"
+    fi
 }
 
 init_conda_base() {
@@ -1179,6 +1217,11 @@ phase_1_setup() {
     # Save TAG immediately so later phases can find it even if the date changes.
     echo "$TAG" > "$TAG_CACHE_FILE"
 
+    # Fresh Phase 1 run: discard any stale state from an earlier attempt
+    # with the same TAG.
+    rm -f "$STATE_FILE"
+    save_state
+
     log "========================================="
     log "Phase 1: Setup"
     log "Config file: $CONFIG_FILE"
@@ -1339,6 +1382,7 @@ phase_1_setup() {
         pytest tests/unit/pcmdi_diags/test_*.py
     )
     ZI_UNIT_TEST_STATUS="passed"
+    save_state
     log_success "zppy-interfaces unit tests passed"
     # global_time_series and pcmdi_diags are both powered by zppy-interfaces.
     capture_env_description "global_time_series" "$ZPPY_INTERFACES_DIR" "$ZI_ENV_TYPE" "$ZI_ENV"
@@ -1390,6 +1434,7 @@ phase_1_setup() {
         pytest tests/test_*.py
     )
     ZPPY_UNIT_TEST_STATUS="passed"
+    save_state
     log_success "zppy unit tests passed"
 
     (
@@ -1403,6 +1448,7 @@ phase_1_setup() {
         pytest tests/images/test_image_summary_report.py
     )
     IMAGE_HELPER_UNIT_TEST_STATUS="passed"
+    save_state
     log_success "Image-checker/report unit tests passed"
 
     # Record which zppy was tested. When zppy comes from E3SM-Unified this
@@ -1528,6 +1574,7 @@ PYEOF
         # on a partially-completed run. See phase_3_validation.
         SLURM_JOBS_INCOMPLETE=true
         SLURM_JOBS_INCOMPLETE_DETAIL+="- Phase 1: one or more jobs hit DependencyNeverSatisfied and were cancelled.\n"
+        save_state
         log_warning "Phase 1 had cancelled jobs -- continuing on to phase 2/3 to check what actually finished."
     fi
 
@@ -1596,6 +1643,7 @@ phase_2_bundles_part2() {
         # checks report on whatever actually finished.
         SLURM_JOBS_INCOMPLETE=true
         SLURM_JOBS_INCOMPLETE_DETAIL+="- Phase 2: one or more jobs hit DependencyNeverSatisfied and were cancelled.\n"
+        save_state
         log_warning "Phase 2 had cancelled jobs -- continuing on to phase 3 to check what actually finished."
     fi
 
@@ -2068,6 +2116,13 @@ main() {
     log "Start phase:  $START_PHASE"
     log "zppy env:     $ZPPY_ENV_DESC"
     log "Unified cmd:   $UNIFIED_ENV_CMD"
+
+    # Resuming from phase 2 or 3: pull back in anything the earlier phases
+    # computed (unit-test results, cancelled-job flags) so the final report
+    # is complete. Phase 1 starts clean and writes its own state file.
+    if [[ "$START_PHASE" -gt 1 ]]; then
+        load_state
+    fi
 
     case "$START_PHASE" in
         1)
