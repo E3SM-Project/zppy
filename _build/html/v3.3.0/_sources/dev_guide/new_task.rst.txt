@@ -1,0 +1,212 @@
+*****************
+Adding a new task
+*****************
+
+A task should be a wrapper around an external package.
+
+* The ``climo`` and ``ts`` tasks use NCO. ``tc_analysis`` and ``pcmdi_diags`` also make use of NCO tools.
+* The ``global_time_series`` and ``pcmdi_diags`` tasks use ``zppy-interfaces``.
+* The ``tc_analysis`` uses ``TempestRemap`` and ``TempestExtremes``. 
+* The ``e3sm_to_cmip``, ``e3sm_diags``, ``mpas_analysis``, ``ilamb``, and ``livvkit`` use their eponymous packages.
+
+In general, functionality should be added via calls to external packages. There are 2 reasons for this:
+
+* It creates a clearer separation of concerns: ``zppy`` is the workflow manager whereas the called packages do the actual post-processing.
+* The called packages often have different environment needs than ``zppy``. A package can have its own dependency list and developer environment setup instructions. Putting all the functionality in a ``zppy`` bash template makes it more difficult to customize the environment for that specific task.
+
+The ``zppy-interfaces`` package is meant to be a collection of tools that are too complex to just write inline in a ``zppy`` bash file but not complex enough to be worth the effort of building and maintaining a new package just for it. Currently, ``zppy-interfaces`` is home to these two tools:
+
+* ``global_time_series``: this functionality was initially implemented in the ``zppy`` bash template itself, but grew complex enough to require separation.
+* ``pcmdi_diags``: this is "glue code" to allow for seamless integration of the PCMDI Metrics Package with ``zppy``.
+
+``zppy-interfaces`` official documentation can be found `here <https://docs.e3sm.org/zppy-interfaces/_build/html/main/index.html>`_.
+
+The task's bash file
+=====================
+
+Create ``zppy/templates/<task-name>.bash``.
+This is where the bulk of the work required for a task will be.
+Most of the file is task-specific, so it is difficult to describe precise steps.
+Some key parts, however, are displayed below:
+
+    .. code::
+
+        #!/bin/bash
+        {% include 'inclusions/slurm_header.bash' %}
+        {% include 'inclusions/boilerplate.bash' %}
+
+        set -e
+        {{ environment_commands }}
+        set +e
+
+        set_pkg_manager
+        echo "${pkg_manager} list package-this-task-calls:"
+        ${pkg_manager} list package-this-task-calls || true # If we can't print this, just continue on.
+
+    .. code::
+
+        # Update status file and exit
+        {% raw %}
+        ENDTIME=$(date +%s)
+        ELAPSEDTIME=$(($ENDTIME - $STARTTIME))
+        {% endraw %}
+        echo ==============================================
+        echo "Elapsed time: $ELAPSEDTIME seconds"
+        echo ==============================================
+        echo 'OK' > {{ prefix }}.status
+        exit 0
+
+
+Variables of the form ``{{ <variable-name> }}`` can come from a number of sources:
+
+1. ``zppy/templates/default.ini`` (in the form of ``<variable-name> = <variable-type>(default=<default-value>)``)
+2. ``zppy/templates/<campaign>.cfg`` (in the form of ``<variable-name> = <value>``); overrides values from #1
+3. The user's configuration file (in the form of ``<variable-name> = <value>``); overrides values from #1, #2
+
+Another possible source is ``zppy/<task-name>.py``
+(in the form of ``c["<variable-name>"]`` where ``c`` is defined in ``for c in tasks``).
+
+
+
+
+
+
+The task's Python file
+======================
+
+Create ``zppy/<task-name>.py``. The basic outline of the file should be similar to the
+below example, adapted from ``zppy/e3sm_diags.py``.
+
+    .. code::
+
+        import os
+        import pprint
+
+        import jinja2
+
+        from zppy.utils import checkStatus, getTasks, getYears, submitScript
+
+
+        # -----------------------------------------------------------------------------
+        def <task-name>(config, scriptDir):
+
+            # Initialize jinja2 template engine
+            templateLoader = jinja2.FileSystemLoader(
+                searchpath=config["default"]["templateDir"]
+            )
+            templateEnv = jinja2.Environment(loader=templateLoader)
+            template = templateEnv.get_template("<task-name>.bash")
+
+            # --- List of <task-name> tasks ---
+            tasks = getTasks(config, "<task-name>")
+            if len(tasks) == 0:
+                return
+
+            # --- Generate and submit <task-name> scripts ---
+            for c in tasks:
+
+                # Loop over year sets
+                year_sets = getYears(c["years"])
+                for s in year_sets:
+                    c["year1"] = s[0]
+                    c["year2"] = s[1]
+                    c["scriptDir"] = scriptDir
+                    if c["subsection"]:
+                        sub = c["subsection"]
+                    else:
+                        sub = c["grid"]
+                    prefix = "<task-name>_%s_%s_%04d-%04d" % (
+                        sub,
+                        c["tag"],
+                        c["year1"],
+                        c["year2"],
+                    )
+                    print(prefix)
+                    c["prefix"] = prefix
+                    scriptFile = os.path.join(scriptDir, "%s.bash" % (prefix))
+                    statusFile = os.path.join(scriptDir, "%s.status" % (prefix))
+                    settingsFile = os.path.join(scriptDir, "%s.settings" % (prefix))
+                    skip = checkStatus(statusFile)
+                    if skip:
+                        continue
+
+                    # Create script
+                    with open(scriptFile, "w") as f:
+                        f.write(template.render(**c))
+
+                    # List of dependencies
+                    dependencies = []
+
+                   # Add dependencies
+                   # Example:
+                   dependencies.append(os.path.join(scriptDir, "%s_%04d-%04d.status" % (<name-of-dependency>, c["year1"], c["year2"]),))
+		    
+                    with open(settingsFile, "w") as sf:
+                        p = pprint.PrettyPrinter(indent=2, stream=sf)
+                        p.pprint(c)
+                        p.pprint(s)
+
+                    if not c["dry_run"]:
+                        # Submit job
+                        jobid = submitScript(
+                            scriptFile, dependFiles=dependencies, export="NONE"
+                        )
+
+                        if jobid != -1:
+                            # Update status file
+                            with open(statusFile, "w") as f:
+                                f.write("WAITING %d\n" % (jobid))
+
+
+The main file
+=============
+
+Add the task to ``zppy/__main__.py``:
+
+    .. code-block:: python
+
+        from task_name import task_name
+
+    .. code-block:: python
+
+        # task_name tasks
+        existing_bundles = task_name(config, script_dir, existing_bundles, job_ids_file)
+
+Update defaults
+===============
+Add default values for parameters in ``zppy/templates/default.ini``.
+
+    .. code::
+
+        [<task-name>]
+        ...
+
+            [[__many__]] # Only if the task supports sub-tasks
+            ... # List the same parameters but with `default=None`
+
+Update the tutorial
+===================
+Add example values for parameters in ``docs/source/post.mysimulation.cfg``.
+
+    .. code::
+
+        [ <task-name> ]
+        ... # Specify parameters that would likely apply to all sub-tasks
+
+            [[ <subtask-name> ]] # Only if the task supports sub-tasks
+            ... # Specify parameters that make more sense defined in the sub-tasks
+
+Explain new parameters
+======================
+In ``docs/source/parameters.rst``
+
+Copy defaults from ``zppy/templates/default.ini`` and add a comment line
+above each explaining the parameter.
+
+
+Update the tests
+================
+In ``tests/integration/test_*.cfg``
+
+Copy example values from ``docs/source/post.mysimulation.cfg``.
+The expected files will have to be updated as well.
