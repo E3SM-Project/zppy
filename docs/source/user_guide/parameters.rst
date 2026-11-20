@@ -11,7 +11,7 @@ be overridden by parameters set in a ``[[subsection]]``.
 .. warning::
    Note that some parameters will be overridden by defaults if you define them too high up in the inheritance hierarchy.
 
-See `this release's parameter defaults <https://github.com/E3SM-Project/zppy/blob/885d53cb989119d77a21b4f25fe6109fc74a043e/zppy/defaults/default.ini>`_
+See `this release's parameter defaults <https://github.com/E3SM-Project/zppy/blob/98c331aa16a5fdd1b8a55a1042167ed53e9e903c/zppy/defaults/default.ini>`_
 on GitHub for a complete list of parameters and their default values.
 You can also view the most up-to-date,
 `unreleased parameter defaults <https://github.com/E3SM-Project/zppy/blob/main/zppy/defaults/default.ini>`_.
