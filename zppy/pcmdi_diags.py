@@ -56,7 +56,6 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
 
     # --- Generate and submit pcmdi_diags scripts ---
     for c in tasks:
-        dependencies: List[str] = []
         define_current_set(c)
         resolve_obs_sets(c)
         if c["current_set"] == "enso":
@@ -83,6 +82,7 @@ def pcmdi_diags(config, script_dir, existing_bundles, job_ids_file):
             ref_year_sets = year_sets
 
         for i, (s, rs) in enumerate(zip(year_sets, ref_year_sets)):
+            dependencies: List[str] = []
             c["year1"] = s[0]
             c["year2"] = s[1]
             if ("last_year" in c.keys()) and (c["year2"] > c["last_year"]):

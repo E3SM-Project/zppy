@@ -1,0 +1,164 @@
+{
+  "climo_atm_monthly_180x360_aave_1985-1986": [],
+  "climo_atm_monthly_180x360_aave_1987-1988": [],
+  "climo_atm_monthly_diurnal_8xdaily_180x360_aave_1985-1986": [],
+  "climo_atm_monthly_diurnal_8xdaily_180x360_aave_1987-1988": [],
+  "climo_atm_monthly_eamxx_180x360_aave_1985-1986": [],
+  "climo_atm_monthly_eamxx_180x360_aave_1987-1988": [],
+  "climo_land_monthly_climo_1985-1986": [],
+  "climo_land_monthly_climo_1987-1988": [],
+  "climo_land_monthly_climo_era5_1985-1986": [],
+  "climo_land_monthly_climo_era5_1987-1988": [],
+  "climo_land_monthly_climo_native_1985-1986": [],
+  "climo_land_monthly_climo_native_1987-1988": [],
+  "e3sm_diags_atm_monthly_180x360_aave_model_vs_obs_1985-1986": [
+    "climo_atm_monthly_180x360_aave_1985-1986.status",
+    "climo_atm_monthly_diurnal_8xdaily_180x360_aave_1985-1986.status",
+    "tc_analysis_1985-1986.status",
+    "ts_atm_monthly_180x360_aave_1985-1986-0002.status",
+    "ts_rof_monthly_1985-1986-0002.status",
+    "ts_atm_daily_180x360_aave_1985-1986-0002.status"
+  ],
+  "e3sm_diags_atm_monthly_180x360_aave_model_vs_obs_1987-1988": [
+    "climo_atm_monthly_180x360_aave_1987-1988.status",
+    "climo_atm_monthly_diurnal_8xdaily_180x360_aave_1987-1988.status",
+    "tc_analysis_1987-1988.status",
+    "ts_atm_monthly_180x360_aave_1987-1988-0002.status",
+    "ts_rof_monthly_1987-1988-0002.status",
+    "ts_atm_daily_180x360_aave_1987-1988-0002.status"
+  ],
+  "e3sm_diags_atm_monthly_180x360_aave_mvm_model_vs_model_1985-1986_vs_1985-1986": [
+    "climo_atm_monthly_180x360_aave_1985-1986.status",
+    "climo_atm_monthly_diurnal_8xdaily_180x360_aave_1985-1986.status",
+    "tc_analysis_1985-1986.status",
+    "ts_atm_monthly_180x360_aave_1985-1986-0002.status",
+    "ts_rof_monthly_1985-1986-0002.status",
+    "ts_atm_daily_180x360_aave_1985-1986-0002.status"
+  ],
+  "e3sm_diags_atm_monthly_180x360_aave_mvm_model_vs_model_1987-1988_vs_1985-1986": [
+    "climo_atm_monthly_180x360_aave_1987-1988.status",
+    "climo_atm_monthly_diurnal_8xdaily_180x360_aave_1987-1988.status",
+    "tc_analysis_1987-1988.status",
+    "ts_atm_monthly_180x360_aave_1987-1988-0002.status",
+    "ts_rof_monthly_1987-1988-0002.status",
+    "ts_atm_daily_180x360_aave_1987-1988-0002.status"
+  ],
+  "e3sm_diags_lnd_monthly_mvm_lnd_model_vs_model_1985-1986_vs_1985-1986": [
+    "climo_land_monthly_climo_1985-1986.status"
+  ],
+  "e3sm_diags_lnd_monthly_mvm_lnd_model_vs_model_1987-1988_vs_1985-1986": [
+    "climo_land_monthly_climo_1987-1988.status"
+  ],
+  "e3sm_to_cmip_atm_monthly_180x360_aave_1985-1986-0002": [
+    "ts_atm_monthly_180x360_aave_1985-1986-0002.status"
+  ],
+  "e3sm_to_cmip_atm_monthly_180x360_aave_1987-1988-0002": [
+    "ts_atm_monthly_180x360_aave_1987-1988-0002.status"
+  ],
+  "e3sm_to_cmip_atm_monthly_eamxx_180x360_aave_1985-1986-0002": [
+    "ts_atm_monthly_eamxx_180x360_aave_1985-1986-0002.status"
+  ],
+  "e3sm_to_cmip_atm_monthly_eamxx_180x360_aave_1987-1988-0002": [
+    "ts_atm_monthly_eamxx_180x360_aave_1987-1988-0002.status"
+  ],
+  "e3sm_to_cmip_land_monthly_1985-1986-0002": [
+    "ts_land_monthly_1985-1986-0002.status"
+  ],
+  "e3sm_to_cmip_land_monthly_1987-1988-0002": [
+    "ts_land_monthly_1987-1988-0002.status"
+  ],
+  "global_time_series_classic_original_8_no_ocn_1985-1988": [
+    "ts_atm_monthly_glb_1985-1986-0002.status",
+    "ts_atm_monthly_glb_1987-1988-0002.status"
+  ],
+  "global_time_series_classic_pdf_original_1985-1988": [
+    "ts_atm_monthly_glb_1985-1986-0002.status",
+    "ts_atm_monthly_glb_1987-1988-0002.status",
+    "mpas_analysis_reference_ts_1985-1986_climo_1985-1986.status",
+    "mpas_analysis_test_ts_1985-1988_climo_1987-1988.status"
+  ],
+  "global_time_series_viewer_both_1985-1988": [
+    "ts_atm_monthly_glb_1985-1986-0002.status",
+    "ts_atm_monthly_glb_1987-1988-0002.status",
+    "ts_lnd_monthly_glb_1985-1986-0002.status",
+    "ts_lnd_monthly_glb_1987-1988-0002.status",
+    "mpas_analysis_reference_ts_1985-1986_climo_1985-1986.status",
+    "mpas_analysis_test_ts_1985-1988_climo_1987-1988.status"
+  ],
+  "ilamb_1985-1986": [
+    "ts_land_monthly_1985-1986-0002.status",
+    "e3sm_to_cmip_land_monthly_1985-1986-0002.status",
+    "ts_atm_monthly_180x360_aave_1985-1986-0002.status",
+    "e3sm_to_cmip_atm_monthly_180x360_aave_1985-1986-0002.status"
+  ],
+  "ilamb_1987-1988": [
+    "ts_land_monthly_1987-1988-0002.status",
+    "e3sm_to_cmip_land_monthly_1987-1988-0002.status",
+    "ts_atm_monthly_180x360_aave_1987-1988-0002.status",
+    "e3sm_to_cmip_atm_monthly_180x360_aave_1987-1988-0002.status"
+  ],
+  "livvkit_1985-1986": [
+    "ts_land_monthly_energy_1985-1986-0002.status",
+    "climo_land_monthly_climo_native_1985-1986.status",
+    "climo_land_monthly_climo_era5_1985-1986.status"
+  ],
+  "livvkit_1987-1988": [
+    "ts_land_monthly_energy_1987-1988-0002.status",
+    "climo_land_monthly_climo_native_1987-1988.status",
+    "climo_land_monthly_climo_era5_1987-1988.status"
+  ],
+  "mpas_analysis_mvm_ts_1985-1988_climo_1987-1988_vs_ref_ts_1985-1986_climo_1985-1986": [],
+  "mpas_analysis_reference_ts_1985-1986_climo_1985-1986": [],
+  "mpas_analysis_test_ts_1985-1988_climo_1987-1988": [],
+  "pcmdi_diags_enso_model_vs_obs_1985-1986": [
+    "ts_atm_monthly_180x360_aave_1985-1986-0002.status",
+    "e3sm_to_cmip_atm_monthly_180x360_aave_1985-1986-0002.status"
+  ],
+  "pcmdi_diags_enso_model_vs_obs_1987-1988": [
+    "ts_atm_monthly_180x360_aave_1987-1988-0002.status",
+    "e3sm_to_cmip_atm_monthly_180x360_aave_1987-1988-0002.status"
+  ],
+  "pcmdi_diags_mean_climate_model_vs_obs_1985-1986": [
+    "ts_atm_monthly_180x360_aave_1985-1986-0002.status",
+    "e3sm_to_cmip_atm_monthly_180x360_aave_1985-1986-0002.status"
+  ],
+  "pcmdi_diags_mean_climate_model_vs_obs_1987-1988": [
+    "ts_atm_monthly_180x360_aave_1987-1988-0002.status",
+    "e3sm_to_cmip_atm_monthly_180x360_aave_1987-1988-0002.status"
+  ],
+  "pcmdi_diags_synthetic_plots_model_vs_obs": [],
+  "pcmdi_diags_variability_modes_atm_model_vs_obs_1985-1986": [
+    "ts_atm_monthly_180x360_aave_1985-1986-0002.status",
+    "e3sm_to_cmip_atm_monthly_180x360_aave_1985-1986-0002.status"
+  ],
+  "pcmdi_diags_variability_modes_atm_model_vs_obs_1987-1988": [
+    "ts_atm_monthly_180x360_aave_1987-1988-0002.status",
+    "e3sm_to_cmip_atm_monthly_180x360_aave_1987-1988-0002.status"
+  ],
+  "pcmdi_diags_variability_modes_cpl_model_vs_obs_1985-1986": [
+    "ts_atm_monthly_180x360_aave_1985-1986-0002.status",
+    "e3sm_to_cmip_atm_monthly_180x360_aave_1985-1986-0002.status"
+  ],
+  "pcmdi_diags_variability_modes_cpl_model_vs_obs_1987-1988": [
+    "ts_atm_monthly_180x360_aave_1987-1988-0002.status",
+    "e3sm_to_cmip_atm_monthly_180x360_aave_1987-1988-0002.status"
+  ],
+  "tc_analysis_1985-1986": [],
+  "tc_analysis_1987-1988": [],
+  "ts_atm_daily_180x360_aave_1985-1986-0002": [],
+  "ts_atm_daily_180x360_aave_1987-1988-0002": [],
+  "ts_atm_monthly_180x360_aave_1985-1986-0002": [],
+  "ts_atm_monthly_180x360_aave_1987-1988-0002": [],
+  "ts_atm_monthly_eamxx_180x360_aave_1985-1986-0002": [],
+  "ts_atm_monthly_eamxx_180x360_aave_1987-1988-0002": [],
+  "ts_atm_monthly_glb_1985-1986-0002": [],
+  "ts_atm_monthly_glb_1987-1988-0002": [],
+  "ts_land_monthly_1985-1986-0002": [],
+  "ts_land_monthly_1987-1988-0002": [],
+  "ts_land_monthly_energy_1985-1986-0002": [],
+  "ts_land_monthly_energy_1987-1988-0002": [],
+  "ts_lnd_monthly_glb_1985-1986-0002": [],
+  "ts_lnd_monthly_glb_1987-1988-0002": [],
+  "ts_rof_monthly_1985-1986-0002": [],
+  "ts_rof_monthly_1987-1988-0002": []
+}

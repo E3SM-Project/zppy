@@ -119,6 +119,7 @@ There are two output directories: the paths specified by `output` and `www`.
 
 `output/post/scripts/` contains:
 - The rendered `.bash` scripts, which are created by applying values from the configuration to the bash templates in `zppy/templates/`.
+- The E3SM Diags run scripts (`.py`) and MPAS-Analysis config files (`.cfg`), rendered from `zppy/templates/e3sm_diags/` and `zppy/templates/mpas_analysis/`, which those jobs copy into their work directories.
 - The `.settings` files, which show the actual values each parameter was assigned. This is useful for debugging if values are getting passed in from the configuration as intended.
 - The `.o` files, which are the output files.
 - The `.status` files, which indicate the status of the corresponding job.

@@ -100,6 +100,9 @@ Debugging failures
 
   # If an error is obvious, make a fix in the bash file and rerun:
   sbatch failing_task.bash
+  # e3sm_diags and mpas_analysis jobs also copy a file from here: the E3SM Diags
+  # run script (failing_task.py) or the MPAS-Analysis config file
+  # (failing_task.cfg). A fix made there is used when you rerun, too.
 
   # If the error is not obvious, do the following:
   emacs failing_task.bash
