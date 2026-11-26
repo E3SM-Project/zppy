@@ -273,9 +273,9 @@ land_param.ref_name = '${ref_name}'
 land_param.short_ref_name = '{{ short_ref_name }}'
 # Optionally, swap test and reference model
 if {{ swap_test_ref }}:
-   land_param.test_data_path, param.reference_data_path = param.reference_data_path, param.test_data_path
-   land_param.test_name, param.ref_name = param.ref_name, param.test_name
-   land_param.short_test_name, param.short_ref_name = param.short_ref_name, param.short_test_name
+   land_param.test_data_path, land_param.reference_data_path = land_param.reference_data_path, land_param.test_data_path
+   land_param.test_name, land_param.ref_name = land_param.ref_name, land_param.test_name
+   land_param.short_test_name, land_param.short_ref_name = land_param.short_ref_name, land_param.short_test_name
 {%- endif %}
 params.append(land_param)
 {%- endif %}
