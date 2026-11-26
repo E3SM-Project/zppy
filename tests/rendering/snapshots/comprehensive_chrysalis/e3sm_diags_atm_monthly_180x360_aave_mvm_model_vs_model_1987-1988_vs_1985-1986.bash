@@ -95,7 +95,6 @@ export UVCDAT_ANONYMOUS_LOG=False
 
 # Basic definitions
 case="v3.LR.historical_0051"
-short="v3.LR.historical_0051"
 www="/zppy_snapshot/www"
 y1=1987
 y2=1988
@@ -107,7 +106,7 @@ ref_Y2="1986"
 run_type="model_vs_model"
 tag="model_vs_model"
 
-results_dir=${tag}_${Y1}-${Y2}
+results_dir=model_vs_model_1987-1988
 
 # Create temporary workdir
 hash=`mktemp --dry-run -d XXXX`
@@ -153,7 +152,6 @@ create_links_climo_diurnal()
   fi
   cd ..
 }
-
 climo_dir_primary=climo_test
 # Create local links to input climo files
 climo_dir_source=/zppy_snapshot/output/post/atm/180x360_aave/clim/2yr
@@ -163,7 +161,6 @@ create_links_climo ${climo_dir_source} ${climo_dir_primary} ${case} ${Y1} ${Y2} 
 climo_dir_source=/zppy_snapshot/output/post/atm/180x360_aave/clim/2yr
 climo_dir_ref=climo_ref
 create_links_climo ${climo_dir_source} ${climo_dir_ref} v3.LR.historical_0051 ${ref_Y1} ${ref_Y2} 4
-
 climo_diurnal_dir_primary=climo_diurnal_8xdaily_test
 # Create local links to input diurnal cycle climo files
 climo_diurnal_dir_source=/zppy_snapshot/output/post/atm/180x360_aave/clim_diurnal_8xdaily/2yr
@@ -173,197 +170,14 @@ create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_prima
 climo_diurnal_dir_source=/zppy_snapshot/output/post/atm/180x360_aave/clim_diurnal_8xdaily/2yr
 climo_diurnal_dir_ref=climo_diurnal_ref
 create_links_climo_diurnal ${climo_diurnal_dir_source} ${climo_diurnal_dir_ref} v3.LR.historical_0051 ${ref_Y1} ${ref_Y2} 6
-# Create xml files for time series variables
-ts_dir_primary=/zppy_snapshot/output/post/atm/180x360_aave/ts/monthly/2yr
-
-ts_dir_ref=/zppy_snapshot/output/post/atm/180x360_aave/ts/monthly/2yr
-ts_daily_dir=/zppy_snapshot/output/post/atm/180x360_aave/ts/daily/2yr
-
-ts_daily_dir_ref=/zppy_snapshot/output/post/atm/180x360_aave/ts/daily/2yr
-ts_rof_dir_primary="/zppy_snapshot/output/post/rof/native/ts/monthly/2yr"
-
-ts_rof_dir_ref=/zppy_snapshot/output/post/rof/native/ts/monthly/2yr
-
-
-ref_name=v3.LR.historical_0051
-
 
 # Run E3SM Diags
 echo
 echo ===== RUN E3SM DIAGS =====
 echo
 
-# Prepare configuration file
-cat > e3sm.py << EOF
-import os
-import numpy
-from e3sm_diags.parameter.core_parameter import CoreParameter
-from e3sm_diags.parameter.diurnal_cycle_parameter import DiurnalCycleParameter
-from e3sm_diags.parameter.enso_diags_parameter import EnsoDiagsParameter
-from e3sm_diags.parameter.qbo_parameter import QboParameter
-from e3sm_diags.parameter.streamflow_parameter import StreamflowParameter
-from e3sm_diags.parameter.tc_analysis_parameter import TCAnalysisParameter
-from e3sm_diags.parameter.tropical_subseasonal_parameter import TropicalSubseasonalParameter
-
-
-from e3sm_diags.run import runner
-
-short_name = '${short}'
-test_ts = '${ts_dir_primary}'
-start_yr = int('${Y1}')
-end_yr = int('${Y2}')
-num_years = end_yr - start_yr + 1
-ref_start_yr = 1985
-
-param = CoreParameter()
-
-# Model
-param.test_data_path = '${climo_dir_primary}'
-param.test_name = '${case}'
-param.short_test_name = short_name
-
-# Ref
-
-# Reference
-param.reference_data_path = '${climo_dir_ref}'
-param.ref_name = '${ref_name}'
-param.short_ref_name = 'same simulation'
-# Optionally, swap test and reference model
-if False:
-   param.test_data_path, param.reference_data_path = param.reference_data_path, param.test_data_path
-   param.test_name, param.ref_name = param.ref_name, param.test_name
-   param.short_test_name, param.short_ref_name = param.short_ref_name, param.short_test_name
-
-# Output dir
-param.results_dir = '${results_dir}'
-
-# Additional settings
-param.run_type = 'model_vs_model'
-param.diff_title = 'Difference'
-param.output_format = ['png']
-param.output_format_subplot = []
-param.multiprocessing = True
-param.num_workers = 8
-#param.fail_on_incomplete = True
-params = [param]
-
-# Model land
-enso_param = EnsoDiagsParameter()
-enso_param.test_data_path = test_ts
-enso_param.test_name = short_name
-enso_param.test_start_yr = start_yr
-enso_param.test_end_yr = end_yr
-
-# Reference
-enso_param.reference_data_path = '${ts_dir_ref}'
-enso_param.ref_name = '${ref_name}'
-enso_param.short_ref_name = 'same simulation'
-enso_param.ref_start_yr = '1985'
-enso_param.ref_end_yr = '1986'
-# Optionally, swap test and reference model
-if False:
-   enso_param.test_data_path, enso_param.reference_data_path = enso_param.reference_data_path, enso_param.test_data_path
-   enso_param.test_name, enso_param.ref_name = enso_param.ref_name, enso_param.test_name
-   enso_param.short_test_name, enso_param.short_ref_name = enso_param.short_ref_name, enso_param.short_test_name
-params.append(enso_param)
-trop_param = TropicalSubseasonalParameter()
-trop_param.test_data_path = '${ts_daily_dir}'
-trop_param.test_name = short_name
-trop_param.test_start_yr = start_yr
-trop_param.test_end_yr = end_yr
-
-trop_param.reference_data_path = '${ts_daily_dir_ref}'
-trop_param.ref_name = '${ref_name}'
-trop_param.short_ref_name = 'same simulation'
-trop_param.ref_start_yr = '1985'
-trop_param.ref_end_yr = '1986'
-# Optionally, swap test and reference model
-if False:
-   trop_param.test_data_path, trop_param.reference_data_path = trop_param.reference_data_path, trop_param.test_data_path
-   trop_param.test_name, trop_param.ref_name = trop_param.ref_name, trop_param.test_name
-   trop_param.short_test_name, trop_param.short_ref_name = trop_param.short_ref_name, trop_param.short_test_name
-params.append(trop_param)
-qbo_param = QboParameter()
-qbo_param.test_data_path = test_ts
-qbo_param.test_name = short_name
-qbo_param.test_start_yr = start_yr
-qbo_param.test_end_yr = end_yr
-qbo_param.ref_start_yr = ref_start_yr
-ref_end_yr = ref_start_yr + num_years - 1
-if (ref_end_yr <= 1986):
-  qbo_param.ref_end_yr = ref_end_yr
-else:
-  qbo_param.ref_end_yr = 1986
-
-# Reference
-qbo_param.reference_data_path = '${ts_dir_ref}'
-qbo_param.ref_name = '${ref_name}'
-qbo_param.short_ref_name = 'same simulation'
-# Optionally, swap test and reference model
-if False:
-   qbo_param.test_data_path, qbo_param.reference_data_path = qbo_param.reference_data_path, qbo_param.test_data_path
-   qbo_param.test_name, qbo_param.ref_name = qbo_param.ref_name, qbo_param.test_name
-   qbo_param.short_test_name, qbo_param.short_ref_name = qbo_param.short_ref_name, qbo_param.short_test_name
-params.append(qbo_param)
-dc_param = DiurnalCycleParameter()
-dc_param.test_data_path = '${climo_diurnal_dir_primary}'
-dc_param.short_test_name = short_name
-# Plotting diurnal cycle amplitude on different scales. Default is True
-dc_param.normalize_test_amp = False
-
-# Reference
-dc_param.reference_data_path = '${climo_diurnal_dir_ref}'
-dc_param.ref_name = '${ref_name}'
-dc_param.short_ref_name = 'same simulation'
-# Optionally, swap test and reference model
-if False:
-   dc_param.test_data_path, dc_param.reference_data_path = dc_param.reference_data_path, dc_param.test_data_path
-   dc_param.test_name, dc_param.ref_name = dc_param.ref_name, dc_param.test_name
-   dc_param.short_test_name, dc_param.short_ref_name = dc_param.short_ref_name, dc_param.short_test_name
-params.append(dc_param)
-streamflow_param = StreamflowParameter()
-streamflow_param.test_data_path = '${ts_rof_dir_primary}'
-streamflow_param.test_name = short_name
-streamflow_param.test_start_yr = start_yr
-streamflow_param.test_end_yr = end_yr
-
-# Reference
-streamflow_param.reference_data_path = '${ts_rof_dir_ref}'
-streamflow_param.ref_name = '${ref_name}'
-streamflow_param.short_ref_name = 'same simulation'
-streamflow_param.ref_start_yr = '1985'
-streamflow_param.ref_end_yr = '1986'
-streamflow_param.gauges_path = '/lcrc/group/e3sm/diagnostics/observations/Atm/time-series/GSIM/GSIM_catchment_characteristics_all_1km2.csv'
-# Optionally, swap test and reference model
-if False:
-   streamflow_param.test_data_path, streamflow_param.reference_data_path = streamflow_param.reference_data_path, streamflow_param.test_data_path
-   streamflow_param.test_name, streamflow_param.ref_name = streamflow_param.ref_name, streamflow_param.test_name
-   streamflow_param.short_test_name, streamflow_param.short_ref_name = streamflow_param.short_ref_name, streamflow_param.short_test_name
-params.append(streamflow_param)
-tc_param = TCAnalysisParameter()
-tc_param.test_data_path = "/zppy_snapshot/output/post/atm/tc-analysis_${Y1}_${Y2}"
-tc_param.short_test_name = short_name
-tc_param.test_start_yr = "${Y1}"
-tc_param.test_end_yr = "${Y2}"
-
-# Reference
-tc_param.reference_data_path = '/zppy_snapshot/output/post/atm/tc-analysis_1985_1986'
-tc_param.ref_name = '${ref_name}'
-tc_param.short_ref_name = 'same simulation'
-tc_param.ref_start_yr = '1985'
-tc_param.ref_end_yr = '1986'
-# Optionally, swap test and reference model
-if False:
-   tc_param.test_data_path, tc_param.reference_data_path = tc_param.reference_data_path, tc_param.test_data_path
-   tc_param.test_name, tc_param.ref_name = tc_param.ref_name, tc_param.test_name
-   tc_param.short_test_name, tc_param.short_ref_name = tc_param.short_ref_name, tc_param.short_test_name
-params.append(tc_param)
-
-# Run
-runner.sets_to_run = ['lat_lon', 'zonal_mean_xy', 'enso_diags', 'qbo', 'diurnal_cycle', 'streamflow', 'tropical_subseasonal', 'tc_analysis']
-runner.run_diags(params)
-
-EOF
+# Copy the run script that zppy rendered next to this job script
+cp /zppy_snapshot/output/post/scripts/e3sm_diags_atm_monthly_180x360_aave_mvm_model_vs_model_1987-1988_vs_1985-1986.py e3sm.py
 
 # Handle cases when cfg file is explicitly provided
 

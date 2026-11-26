@@ -1,14 +1,9 @@
-"""Check the `swap_test_ref` blocks in the `e3sm.py` that E3SM Diags jobs write."""
+"""Check the `swap_test_ref` blocks in the run scripts zppy writes for E3SM Diags."""
 
 import ast
-import re
 from typing import List, Set
 
 from tests.rendering.scenarios import SCENARIOS_BY_NAME, bash_scripts, render_scenario
-
-E3SM_PY_HEREDOC = re.compile(
-    r"^cat > e3sm\.py << EOF\n(?P<body>.*?)^EOF$", re.MULTILINE | re.DOTALL
-)
 
 
 def _swap_blocks(source: str) -> List[ast.If]:
@@ -38,17 +33,17 @@ def test_each_swap_block_swaps_a_single_parameter() -> None:
     files = render_scenario(SCENARIOS_BY_NAME["comprehensive_chrysalis"])
     failures: List[str] = []
     checked: Set[str] = set()
-    for name, text in bash_scripts(files).items():
+    for name in bash_scripts(files):
         if not name.startswith("e3sm_diags_"):
             continue
-        match = E3SM_PY_HEREDOC.search(text)
-        assert match, f"{name} does not write e3sm.py"
-        for block in _swap_blocks(match.group("body")):
+        run_script = name.removesuffix(".bash") + ".py"
+        assert run_script in files, f"no run script for {name}"
+        for block in _swap_blocks(files[run_script]):
             objects = _objects_in(block)
             checked.update(objects)
             if len(objects) != 1:
                 failures.append(
-                    f"{name}, line {block.lineno} of e3sm.py: the swap block "
+                    f"{run_script}, line {block.lineno}: the swap block "
                     f"swaps attributes of {sorted(objects)}"
                 )
     assert not failures, "\n".join(failures)

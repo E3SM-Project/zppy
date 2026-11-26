@@ -96,7 +96,6 @@ export UVCDAT_ANONYMOUS_LOG=False
 
 # Basic definitions
 case="v3.LR.historical_0051"
-short="v3.LR.historical_0051"
 www="/zppy_snapshot/www"
 y1=1985
 y2=1986
@@ -106,7 +105,7 @@ Y2="1986"
 run_type="model_vs_obs"
 tag="model_vs_obs"
 
-results_dir=${tag}_${Y1}-${Y2}
+results_dir=model_vs_obs_1985-1986
 
 # Create temporary workdir
 hash=`mktemp --dry-run -d XXXX`
@@ -152,15 +151,10 @@ create_links_climo_diurnal()
   fi
   cd ..
 }
-
 climo_dir_primary=climo
-
 # Create local links to input climo files
 climo_dir_source=/zppy_snapshot/output/post/atm/180x360_aave/clim/2yr
 create_links_climo ${climo_dir_source} ${climo_dir_primary} ${case} ${Y1} ${Y2} 3
-
-
-
 
 
 # Run E3SM Diags
@@ -168,54 +162,8 @@ echo
 echo ===== RUN E3SM DIAGS =====
 echo
 
-# Prepare configuration file
-cat > e3sm.py << EOF
-import os
-import numpy
-from e3sm_diags.parameter.core_parameter import CoreParameter
-
-
-from e3sm_diags.run import runner
-
-short_name = '${short}'
-test_ts = '${ts_dir_primary}'
-start_yr = int('${Y1}')
-end_yr = int('${Y2}')
-num_years = end_yr - start_yr + 1
-
-param = CoreParameter()
-
-# Model
-param.test_data_path = '${climo_dir_primary}'
-param.test_name = '${case}'
-param.short_test_name = short_name
-
-# Ref
-
-# Obs
-param.reference_data_path = '/global/cfs/cdirs/e3sm/diagnostics/observations/Atm/climatology/'
-
-
-# Output dir
-param.results_dir = '${results_dir}'
-
-# Additional settings
-param.run_type = 'model_vs_obs'
-param.diff_title = 'Model - Observations'
-param.output_format = ['png']
-param.output_format_subplot = []
-param.multiprocessing = True
-param.num_workers = 24
-#param.fail_on_incomplete = True
-params = [param]
-
-# Model land
-
-# Run
-runner.sets_to_run = ['lat_lon']
-runner.run_diags(params)
-
-EOF
+# Copy the run script that zppy rendered next to this job script
+cp /zppy_snapshot/output/post/scripts/e3sm_diags_atm_monthly_180x360_aave_model_vs_obs_1985-1986.py e3sm.py
 
 # Handle cases when cfg file is explicitly provided
 

@@ -15,6 +15,7 @@ from zppy.utils import (
     make_executable,
     print_url,
     submit_script,
+    write_rendered_file,
     write_settings_file,
 )
 
@@ -22,7 +23,8 @@ from zppy.utils import (
 # -----------------------------------------------------------------------------
 def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
 
-    template, _ = initialize_template(config, "mpas_analysis.bash")
+    template, template_env = initialize_template(config, "mpas_analysis.bash")
+    cfg_template = template_env.get_template("mpas_analysis/mpas_analysis.cfg.jinja")
 
     # --- List of mpas_analysis tasks ---
     tasks: List[Dict[str, Any]] = get_tasks(config, "mpas_analysis")
@@ -130,6 +132,9 @@ def mpas_analysis(config: ConfigObj, script_dir: str, existing_bundles, job_ids_
             with open(bash_file, "w") as f:
                 f.write(template.render(**c))
             make_executable(bash_file)
+            # The MPAS-Analysis config file, which the job copies to its cfg dir
+            cfg_file = os.path.join(script_dir, f"{prefix}.cfg")
+            write_rendered_file(cfg_file, cfg_template, c)
             c["dependencies"] = dependencies
             write_settings_file(settings_file, c, ts)
             export = "ALL"
@@ -274,7 +279,6 @@ def get_mpas_analysis_prefixes(config: ConfigObj) -> Dict[str, List[str]]:
 def get_mpas_analysis_identifier(
     *, ts_year1: int, ts_year2: int, climo_year1: int, climo_year2: int
 ) -> str:
-    # Must match identifier in zppy/templates/mpas_analysis.bash
     ts_y1 = f"{ts_year1:04d}"
     ts_y2 = f"{ts_year2:04d}"
     clim_y1 = f"{climo_year1:04d}"
@@ -550,6 +554,8 @@ def _set_output_paths(
     c["analysis_subdir"] = "mpas_analysis"
     c["comparison_type"] = "mvm" if is_mvm else "mvo"
     c["analysis_task_name"] = f"{c['analysis_subdir']}/{c['comparison_type']}"
+    # The job's work directory, relative to the scripts directory
+    c["analysis_dir"] = f"../analysis/{c['analysis_task_name']}"
 
     if not is_mvm:
         c["output_dir_name"] = identifier

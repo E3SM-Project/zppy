@@ -34,6 +34,8 @@ DEFAULT_INI = REPO_ROOT / "zppy" / "defaults" / "default.ini"
 # the rendered files, so that they do not depend on where the tests run.
 PLACEHOLDER_ROOT = "/zppy_snapshot"
 DEPENDENCIES_FILE = "dependencies.json"
+# Files zppy renders into the scripts directory
+RENDERED_PATTERNS = ["*.bash", "*.py", "*.cfg"]
 
 
 @dataclass(frozen=True)
@@ -117,7 +119,10 @@ SCENARIOS_BY_NAME: Dict[str, Scenario] = {s.name: s for s in SCENARIOS}
 
 
 def render_scenario(scenario: Scenario) -> Dict[str, str]:
-    """Return the rendered `.bash` files and dependency manifest by file name.
+    """Return the rendered files and dependency manifest by file name.
+
+    The rendered files are the job scripts (`.bash`) and the files zppy writes
+    next to them for the jobs to use (`.py` and `.cfg`).
 
     Each scenario is rendered only once per test session.
     """
@@ -163,8 +168,9 @@ def _render_in(scenario: Scenario, work_dir: Path) -> Dict[str, str]:
     _launch_scripts(config, str(script_dir), str(script_dir / "jobids.txt"), [])
 
     files: Dict[str, str] = {}
-    for script in sorted(script_dir.glob("*.bash")):
-        files[script.name] = _normalize(script.read_text(), root)
+    for pattern in RENDERED_PATTERNS:
+        for rendered in sorted(script_dir.glob(pattern)):
+            files[rendered.name] = _normalize(rendered.read_text(), root)
     files[DEPENDENCIES_FILE] = _dependency_manifest(script_dir, root)
     return files
 

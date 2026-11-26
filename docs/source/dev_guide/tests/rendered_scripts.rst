@@ -28,13 +28,15 @@ Each scenario renders one configuration file from ``tests/rendering/`` as if
 * ``last_year_chrysalis``: ``last_year.cfg`` with ``last_year = 1986``.
 
 For each scenario, ``tests/rendering/snapshots/<scenario>/`` holds every
-rendered ``.bash`` file and ``dependencies.json``, which lists the status files
+rendered job script (``.bash``), every file ``zppy`` writes next to them for the
+jobs to use (such as an E3SM Diags run script, ``.py``, or an MPAS-Analysis
+config file, ``.cfg``), and ``dependencies.json``, which lists the status files
 each job depends on. The temporary directory each scenario runs in is written
 as ``/zppy_snapshot``, so the snapshots do not depend on where the tests run.
 
 The tests also check that every rendered script passes ``bash -n``, that the
-Python files the scripts write (such as E3SM Diags' ``e3sm.py``) compile, and
-that the MPAS-Analysis config files they write can be parsed.
+rendered Python files compile, and that the MPAS-Analysis config files can be
+parsed.
 
 Updating the snapshots
 ======================

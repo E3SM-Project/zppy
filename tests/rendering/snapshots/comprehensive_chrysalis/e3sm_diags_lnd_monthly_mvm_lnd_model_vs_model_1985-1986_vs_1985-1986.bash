@@ -95,7 +95,6 @@ export UVCDAT_ANONYMOUS_LOG=False
 
 # Basic definitions
 case="v3.LR.historical_0051"
-short="v3.LR.historical_0051"
 www="/zppy_snapshot/www"
 y1=1985
 y2=1986
@@ -107,7 +106,7 @@ ref_Y2="1986"
 run_type="model_vs_model"
 tag="model_vs_model"
 
-results_dir=${tag}_${Y1}-${Y2}
+results_dir=model_vs_model_1985-1986
 
 # Create temporary workdir
 hash=`mktemp --dry-run -d XXXX`
@@ -153,7 +152,6 @@ create_links_climo_diurnal()
   fi
   cd ..
 }
-
 climo_dir_primary_land=climo_test_land
 # Create local links to input climo files
 climo_dir_source=/zppy_snapshot/output/post/lnd/180x360_aave/clim/2yr
@@ -164,72 +162,13 @@ climo_dir_source=/zppy_snapshot/output/post/lnd/180x360_aave/clim/2yr
 climo_dir_ref_land=climo_ref_land
 create_links_climo ${climo_dir_source} ${climo_dir_ref_land} v3.LR.historical_0051 ${ref_Y1} ${ref_Y2} 2
 
-
-ref_name=v3.LR.historical_0051
-
-
 # Run E3SM Diags
 echo
 echo ===== RUN E3SM DIAGS =====
 echo
 
-# Prepare configuration file
-cat > e3sm.py << EOF
-import os
-import numpy
-from e3sm_diags.parameter.core_parameter import CoreParameter
-from e3sm_diags.parameter.lat_lon_land_parameter import LatLonLandParameter
-
-
-from e3sm_diags.run import runner
-
-short_name = '${short}'
-test_ts = '${ts_dir_primary}'
-start_yr = int('${Y1}')
-end_yr = int('${Y2}')
-num_years = end_yr - start_yr + 1
-
-param = CoreParameter()
-
-# Model
-param.test_name = '${case}'
-param.short_test_name = short_name
-
-# Ref
-
-# Output dir
-param.results_dir = '${results_dir}'
-
-# Additional settings
-param.run_type = 'model_vs_model'
-param.diff_title = 'Difference'
-param.output_format = ['png']
-param.output_format_subplot = []
-param.multiprocessing = True
-param.num_workers = 8
-#param.fail_on_incomplete = True
-params = [param]
-
-# Model land
-land_param = LatLonLandParameter()
-land_param.test_data_path = '${climo_dir_primary_land}'
-
-# Reference
-land_param.reference_data_path = '${climo_dir_ref_land}'
-land_param.ref_name = '${ref_name}'
-land_param.short_ref_name = 'same simulation'
-# Optionally, swap test and reference model
-if True:
-   land_param.test_data_path, land_param.reference_data_path = land_param.reference_data_path, land_param.test_data_path
-   land_param.test_name, land_param.ref_name = land_param.ref_name, land_param.test_name
-   land_param.short_test_name, land_param.short_ref_name = land_param.short_ref_name, land_param.short_test_name
-params.append(land_param)
-
-# Run
-runner.sets_to_run = ['lat_lon_land']
-runner.run_diags(params)
-
-EOF
+# Copy the run script that zppy rendered next to this job script
+cp /zppy_snapshot/output/post/scripts/e3sm_diags_lnd_monthly_mvm_lnd_model_vs_model_1985-1986_vs_1985-1986.py e3sm.py
 
 # Handle cases when cfg file is explicitly provided
 

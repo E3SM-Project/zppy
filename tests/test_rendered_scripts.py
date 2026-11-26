@@ -40,14 +40,9 @@ UPDATE_HINT = (
     "and review them with `git diff tests/rendering/snapshots`."
 )
 
-# Python files written by a heredoc in a rendered script, e.g. `e3sm.py`.
+# Python files written by a heredoc in a rendered script, e.g. `parameterfile.py`.
 PYTHON_HEREDOC = re.compile(
     r"^cat > (?P<name>\S+\.py) << EOF\n(?P<body>.*?)^EOF$", re.MULTILINE | re.DOTALL
-)
-# MPAS-Analysis config files written by a heredoc in a rendered script.
-MPAS_ANALYSIS_CFG_HEREDOC = re.compile(
-    r"^cat > (?P<name>\S*mpas_analysis_\S+\.cfg) << EOF\n(?P<body>.*?)^EOF$",
-    re.MULTILINE | re.DOTALL,
 )
 
 
@@ -132,12 +127,20 @@ def test_rendered_scripts_are_valid_bash(scenario: Scenario) -> None:
 
 
 @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda s: s.name)
-def test_embedded_python_compiles(scenario: Scenario) -> None:
+def test_python_files_compile(scenario: Scenario) -> None:
+    files = render_scenario(scenario)
+    failures: List[str] = []
+    for name, text in files.items():
+        if not name.endswith(".py"):
+            continue
+        try:
+            compile(text, name, "exec")
+        except SyntaxError as error:
+            failures.append(f"{name}: {error}")
     # Bash expands `${...}` in these heredocs when the job runs, but zppy only
     # places such expansions inside Python string literals, so the rendered
     # text must already be valid Python.
-    failures: List[str] = []
-    for name, text in bash_scripts(render_scenario(scenario)).items():
+    for name, text in bash_scripts(files).items():
         for match in PYTHON_HEREDOC.finditer(text):
             try:
                 compile(match.group("body"), f"{name}:{match.group('name')}", "exec")
@@ -149,11 +152,12 @@ def test_embedded_python_compiles(scenario: Scenario) -> None:
 @pytest.mark.parametrize("scenario", SCENARIOS, ids=lambda s: s.name)
 def test_mpas_analysis_config_parses(scenario: Scenario) -> None:
     failures: List[str] = []
-    for name, text in bash_scripts(render_scenario(scenario)).items():
-        for match in MPAS_ANALYSIS_CFG_HEREDOC.finditer(text):
-            parser = configparser.ConfigParser(interpolation=None, strict=True)
-            try:
-                parser.read_string(match.group("body"))
-            except configparser.Error as error:
-                failures.append(f"{name}: {match.group('name')}: {error}")
+    for name, text in render_scenario(scenario).items():
+        if not (name.startswith("mpas_analysis_") and name.endswith(".cfg")):
+            continue
+        parser = configparser.ConfigParser(interpolation=None, strict=True)
+        try:
+            parser.read_string(text)
+        except configparser.Error as error:
+            failures.append(f"{name}: {error}")
     assert not failures, "\n".join(failures)

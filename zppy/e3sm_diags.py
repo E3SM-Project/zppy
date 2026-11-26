@@ -19,6 +19,7 @@ from zppy.utils import (
     print_url,
     set_value_of_parameter_if_undefined,
     submit_script,
+    write_rendered_file,
     write_settings_file,
 )
 
@@ -26,7 +27,8 @@ from zppy.utils import (
 # -----------------------------------------------------------------------------
 def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
 
-    template, _ = initialize_template(config, "e3sm_diags.bash")
+    template, template_env = initialize_template(config, "e3sm_diags.bash")
+    run_template = template_env.get_template("e3sm_diags/e3sm.py.jinja")
 
     # --- List of e3sm_diags tasks ---
     tasks: List[Dict[str, Any]] = get_tasks(config, "e3sm_diags")
@@ -60,6 +62,7 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
             c["ref_year1"] = rs[0]
             c["ref_year2"] = rs[1]
             check_and_define_parameters(c)
+            set_run_paths(c)
             bash_file, settings_file, status_file = get_file_names(
                 script_dir, c["prefix"]
             )
@@ -70,6 +73,9 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
             with open(bash_file, "w") as f:
                 f.write(template.render(**c))
             make_executable(bash_file)
+            # The run script for E3SM Diags, which the job copies to its work dir
+            run_file = os.path.join(script_dir, f"{c['prefix']}.py")
+            write_rendered_file(run_file, run_template, c)
             # List of dependencies
             add_climo_dependencies(c, dependencies, script_dir)
             if "ts_num_years" in c.keys():
@@ -245,6 +251,54 @@ def check_and_define_parameters(c: Dict[str, Any]) -> None:
         raise ValueError(f"Invalid run_type={c['run_type']}")
     print(prefix)
     c["prefix"] = prefix
+
+
+def set_run_paths(c: Dict[str, Any]) -> None:
+    """Set the names and paths that both e3sm_diags.bash and e3sm.py use."""
+    mvm: bool = c["run_type"] == "model_vs_model"
+    sets: Set[str] = set(c["sets"])
+    test_suffix: str = "_test" if mvm else ""
+    c["results_dir"] = f"{c['tag']}_{c['year1']:04d}-{c['year2']:04d}"
+    # Directories in the job's work directory that climatologies are linked into
+    c["climo_dir_primary"] = f"climo{test_suffix}"
+    c["climo_dir_ref"] = "climo_ref"
+    c["climo_dir_primary_land"] = f"climo{test_suffix}_land"
+    c["climo_dir_ref_land"] = "climo_ref_land"
+    c["climo_diurnal_dir_primary"] = (
+        f"climo_{c['climo_diurnal_frequency']}{test_suffix}"
+    )
+    c["climo_diurnal_dir_ref"] = "climo_diurnal_ref"
+    # Time series directories, empty when no requested set uses them
+    ts_years: str = f"{c['ts_num_years']}yr"
+    ref_ts_years: str = f"{c['ts_num_years_ref']}yr"
+    for name in [
+        "ts_dir_primary",
+        "ts_dir_ref",
+        "ts_daily_dir",
+        "ts_daily_dir_ref",
+        "ts_rof_dir_primary",
+        "ts_rof_dir_ref",
+    ]:
+        c[name] = ""
+    atm_ts: str = f"{c['output']}/post/atm/{c['grid']}/ts"
+    if sets & {"enso_diags", "qbo", "area_mean_time_series", "mp_partition"}:
+        c["ts_dir_primary"] = f"{atm_ts}/monthly/{ts_years}"
+        if mvm:
+            c["ts_dir_ref"] = f"{c['reference_data_path_ts']}/{ref_ts_years}"
+    if sets & {"tropical_subseasonal", "precip_pdf"}:
+        c["ts_daily_dir"] = f"{atm_ts}/daily/{ts_years}"
+        if mvm:
+            c["ts_daily_dir_ref"] = (
+                f"{c['reference_data_path_ts_daily']}/{ref_ts_years}"
+            )
+    if "streamflow" in sets:
+        c["ts_rof_dir_primary"] = f"{c['output']}/post/rof/native/ts/monthly/{ts_years}"
+        if mvm:
+            c["ts_rof_dir_ref"] = f"{c['reference_data_path_ts_rof']}/{ref_ts_years}"
+    # The reference name to show in figures
+    c["fig_ref_name"] = (
+        c["ref_name"] if (mvm and c["keep_mvm_case_name_in_fig"]) else ""
+    )
 
 
 def add_climo_dependencies(

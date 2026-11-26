@@ -1,3 +1,4 @@
+import functools
 import os
 import os.path
 import pprint
@@ -78,15 +79,32 @@ def get_url_message(c: Dict[str, Any], task: str) -> str:
 # Beginning steps #############################################################
 
 
-# TODO: determine return type
-def initialize_template(config: ConfigObj, template_name: str) -> Tuple[Any, Any]:
-    # --- Initialize jinja2 template engine ---
-    template_loader = jinja2.FileSystemLoader(
-        searchpath=config["default"]["templateDir"]
-    )
-    template_env = jinja2.Environment(loader=template_loader)
+@functools.lru_cache(maxsize=None)
+def get_template_env(template_dir: str) -> jinja2.Environment:
+    """Return the Jinja2 environment shared by every template in a directory."""
+    return jinja2.Environment(loader=jinja2.FileSystemLoader(searchpath=template_dir))
+
+
+def initialize_template(
+    config: ConfigObj, template_name: str
+) -> Tuple[jinja2.Template, jinja2.Environment]:
+    template_env = get_template_env(config["default"]["templateDir"])
     template = template_env.get_template(template_name)
     return template, template_env
+
+
+def write_rendered_file(
+    path: str, template: jinja2.Template, task: Dict[str, Any]
+) -> None:
+    """Render a file that a job script uses, such as a tool's config file.
+
+    Unlike a job script, the file ends with a newline, as a text file should.
+    """
+    text = template.render(**task)
+    if not text.endswith("\n"):
+        text += "\n"
+    with open(path, "w") as f:
+        f.write(text)
 
 
 # TODO: type aliases require python 3.12 or higher
