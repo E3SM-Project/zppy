@@ -22,11 +22,13 @@ Your goal is to leave review comments on the following topics:
 - Dependencies that need to be added
 - Possible performance slowdowns
 
+Write the review as described in `.agents/skills/review-comments/SKILL.md`.
+
 ### (2) Specific instructions for agents performing analysis
 
 These instructions apply if your task is analysis-only. This happens when a request mentions that it is "analysis-only" or otherwise does not require a commit to be made.
 
-- Your goal is to produce a Markdown comment answering the request.
+- Your goal is to produce a Markdown comment answering the request, written as described in [Writing for human readers](#writing-for-human-readers).
 - If you are not able to produce a Markdown comment, it's ok to add a commit to the package including your analysis in a new file called `ANALYSIS.md`.
 
 ### (3) Specific instructions for agents adding commits
@@ -56,6 +58,56 @@ When to add dependencies:
 - Do so only if absolutely necessary or specifically requested.
 - Record the dependency updates in the appropriate repository dependency files
   (for example, in `conda/dev.yml`), not only as imports.
+
+Write commit messages and pull request descriptions as described in [Commit messages](#commit-messages) and [GitHub pull requests and issues](#github-pull-requests-and-issues) below.
+
+## Writing for human readers
+
+These rules apply to anything a colleague reads: GitHub comments, pull request descriptions, issues, release notes, plans and design notes. They do not apply to code comments or commit messages, where a reader who wants the mechanism is already in the right place. Rules and worked examples for each kind of writing are in `.agents/skills/<kind>/SKILL.md`, as plain markdown. Agents that do not load skills by themselves should read the matching one before writing. (`.claude/skills` is a link to the same directory.)
+
+Assume the reader is a `zppy` developer who knows the overall structure and purpose of the code base at a high level.
+
+Do not repeat explanations of existing, unchanged features that the [zppy documentation](https://docs.e3sm.org/zppy/_build/html/main/index.html) already covers; link to the relevant section instead. Explain what changes, particularly a change of concept, and any nuance that informs the current discussion.
+
+Write less; do not pack the same content into denser sentences. Keep headings, tables and links. Structure is not the problem; length is.
+
+- **Lead with the answer.** The first two sentences say what you found, changed, or propose. Setup and reproduction go last.
+- **One point per paragraph, and few paragraphs.** Colleagues write one to three per comment. Say each thing once.
+- **Do not narrate the mechanism.** The chain of calls, and why the fix is right, go in the commit message. Here, say what broke and where to look.
+- **Cut clauses that qualify rather than inform**, and any sentence whose only job is to justify the one before it. One clause per sentence where one will do.
+- **Use backticks about half as often as feels natural.** They are for what a reader would type or grep. Code blocks hold artifacts you did not write, never authored prose.
+- **One document, one decision.** Anything still relevant after this merges is an issue, not a comment.
+
+Sign anything posted to GitHub on someone's behalf: pull request descriptions, issues and comments. Put the signature at the end of a pull request description, below a line holding only `---`, and on its own line at the top of anything else:
+
+```
+*Posted by <agent> on @<user>'s behalf*
+```
+
+That signature is only accurate when the user gave no significant input on the content. When the text grew out of the user's own draft or substantial direction, sign it instead with:
+
+```
+*Drafted by @<user> and <agent> together*
+```
+
+Name the agent, not the vendor: `Claude Code`, `Codex`, `Copilot`, and so on.
+
+## Commit messages
+
+- Write for a developer reading `git log` or `git blame` years from now, who has not seen the pull request, its discussion or any plan behind it.
+- Say what the change does in the code's own terms: "Let [climo] subsections inherit a section-level climo_jobs", not "Follow-up fix for review".
+- Do not use pull request or issue numbers, work-package numbers, stage letters or design-decision numbers as names for things. A reference may appear beside a description, for example a `Fixes #123` line, but the message must make sense without following it.
+
+## GitHub pull requests and issues
+
+- Do not hard-wrap. Write each paragraph and each bullet as a single line, however long. GitHub wraps them for display, and hard breaks make later edits show up as reflowed paragraphs in the diff.
+- Start with a paragraph summarizing what the pull request or issue is about, then use sections for the detail.
+- Follow `.github/pull_request_template.md`: the description goes in its Summary section, and use closing keywords, such as `Closes #123`, for any issue the pull request fixes.
+- Never tick checklist boxes on the developer's behalf. Remove a checklist line only after the developer agrees that it does not apply.
+- Name the repository in every reference to an issue or pull request outside `zppy`, such as `E3SM-Project/zppy-interfaces#12`. A bare number links to `zppy`'s own issue or pull request with that number.
+- Do not list individual commits in a pull request description. The commits are already on the pull request; describe what the change accomplishes as a whole instead.
+- Do not describe testing in a pull request description. Testing goes in its own `Testing` comment on the pull request, and only when it adds something CI does not already show.
+- An issue should say what happens, what was expected instead, and enough about the cfg and commands used to reproduce it.
 
 ## Context for all agents
 
