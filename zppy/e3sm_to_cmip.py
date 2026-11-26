@@ -34,7 +34,6 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
 
     # --- Generate and submit e3sm_to_cmip scripts ---
     for c in tasks:
-        dependencies: List[str] = []
         set_component_and_prc_typ(c)
         check_parameters_for_bash(c)
         c["cmor_tables_prefix"] = c["diagnostics_base_path"]
@@ -49,6 +48,7 @@ def e3sm_to_cmip(config: ConfigObj, script_dir: str, existing_bundles, job_ids_f
         year_sets: List[Tuple[int, int]] = get_years(c["years"])
         # Loop over year sets
         for s in year_sets:
+            dependencies: List[str] = []
             c["yr_start"] = s[0]
             c["yr_end"] = s[1]
             if ("last_year" in c.keys()) and (c["yr_end"] > c["last_year"]):
