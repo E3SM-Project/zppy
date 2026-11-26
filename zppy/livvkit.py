@@ -41,6 +41,8 @@ def livvkit(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
             dependencies: List[str] = []
             c["year1"] = s[0]
             c["year2"] = s[1]
+            if ("last_year" in c.keys()) and (c["year2"] > c["last_year"]):
+                continue  # Skip this year set
             c["ts_num_years"] = s[1] - s[0] + 1
             c["scriptDir"] = script_dir
 
