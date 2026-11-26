@@ -1,0 +1,15 @@
+{
+  "climo_land_monthly_climo_native_1985-1986": [],
+  "e3sm_to_cmip_land_monthly_1985-1986-0002": [
+    "ts_land_monthly_1985-1986-0002.status"
+  ],
+  "ilamb_1985-1986": [
+    "ts_land_monthly_1985-1986-0002.status",
+    "e3sm_to_cmip_land_monthly_1985-1986-0002.status"
+  ],
+  "livvkit_1985-1986": [
+    "ts_land_monthly_1985-1986-0002.status",
+    "climo_land_monthly_climo_native_1985-1986.status"
+  ],
+  "ts_land_monthly_1985-1986-0002": []
+}

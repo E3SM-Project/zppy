@@ -42,6 +42,8 @@ def ilamb(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
         for s in year_sets:
             c["year1"] = s[0]
             c["year2"] = s[1]
+            if ("last_year" in c.keys()) and (c["year2"] > c["last_year"]):
+                continue  # Skip this year set
             c["scriptDir"] = script_dir
             set_value_of_parameter_if_undefined(
                 c,
