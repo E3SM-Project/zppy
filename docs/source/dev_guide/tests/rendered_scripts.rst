@@ -56,6 +56,15 @@ Adding a scenario
 =================
 
 Add a configuration file to ``tests/rendering/`` (or reuse one) and add a
-``Scenario`` to ``SCENARIOS`` in ``tests/test_rendered_scripts.py``. To render
+``Scenario`` to ``SCENARIOS`` in ``tests/rendering/scenarios.py``. To render
 for a machine that is not yet in ``MACHINES``, add its paths from ``mache``'s
 machine config file. Then regenerate the snapshots as described above.
+
+Other tests can check specific behavior of the rendered scripts with
+``render_scenario``, which renders each scenario only once per test session:
+
+.. code-block:: python
+
+    from tests.rendering.scenarios import SCENARIOS_BY_NAME, render_scenario
+
+    files = render_scenario(SCENARIOS_BY_NAME["comprehensive_chrysalis"])
