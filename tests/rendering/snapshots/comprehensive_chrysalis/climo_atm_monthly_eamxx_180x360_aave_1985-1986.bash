@@ -94,7 +94,7 @@ cd ${workdir}
 run_nco ncclimo \
 --case=1ma_ne30pg2.AVERAGE.nmonths_x1.0001-01-01-00000.nc \
 --fml_nm=v3.LR.historical_0051.1ma_ne30pg2 \
---jobs=${SLURM_NNODES} \
+--jobs=4 \
 --thr=1 \
 --parallel=mpi \
 --yr_srt=1985 \

@@ -513,7 +513,7 @@ def test_subsections():
             "input_component": None,
             "mapping_file": "MAPPING_FILE_CLIMO_GRID1",
             "nodes": None,
-            "climo_jobs": 0,
+            "climo_jobs": None,
             "exclude": None,
             "vars": None,
         },
@@ -522,7 +522,7 @@ def test_subsections():
             "mapping_file": "MAPPING_FILE_CLIMO_GRID2",
             "years": ["0001:0100:50"],
             "partition": "LONG",
-            "climo_jobs": 0,
+            "climo_jobs": None,
             "nodes": None,
             "exclude": None,
             "vars": None,
@@ -645,3 +645,45 @@ def test_subsections():
         "years": ["0001:0100:50"],
     }
     compare(actual_task, expected_task)
+
+
+def test_subsection_defaults_do_not_override_section_values():
+    # `get_tasks` lets a subsection inherit a section's value only when the
+    # subsection's value is None, so every parameter of a `[[__many__]]` block
+    # in the configspec must default to None.
+    configspec = ConfigObj(
+        [], configspec=os.path.join("zppy", "defaults", "default.ini")
+    )
+    non_none_defaults = []
+    for section_name in configspec.configspec.sections:
+        section = configspec.configspec[section_name]
+        if "__many__" not in section.sections:
+            continue
+        for parameter, spec in section["__many__"].items():
+            if "default=None" not in spec:
+                non_none_defaults.append(f"[{section_name}] {parameter} = {spec}")
+    assert non_none_defaults == []
+
+
+def test_subsections_inherit_section_climo_jobs():
+    config = ConfigObj(
+        [
+            "[default]",
+            "case = CASE",
+            "input = INPUT",
+            "output = OUTPUT",
+            "www = WWW",
+            "[climo]",
+            "active = True",
+            "climo_jobs = 4",
+            "  [[ inherits ]]",
+            "  [[ overrides ]]",
+            "  climo_jobs = 12",
+        ],
+        configspec=os.path.join("zppy", "defaults", "default.ini"),
+    )
+    assert config.validate(Validator())
+    climo_jobs = {
+        task["subsection"]: task["climo_jobs"] for task in get_tasks(config, "climo")
+    }
+    assert climo_jobs == {"inherits": 4, "overrides": 12}
