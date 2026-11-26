@@ -35,7 +35,6 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
 
     # --- Generate and submit e3sm_diags scripts ---
     for c in tasks:
-        dependencies: List[str] = []
         check_parameters_for_bash(c)
         c["scriptDir"] = script_dir
         c["default_case"] = config["default"]["case"]
@@ -53,6 +52,7 @@ def e3sm_diags(config: ConfigObj, script_dir: str, existing_bundles, job_ids_fil
             ref_year_sets = year_sets
 
         for s, rs in zip(year_sets, ref_year_sets):
+            dependencies: List[str] = []
             c["year1"] = s[0]
             c["year2"] = s[1]
             if ("last_year" in c.keys()) and (c["year2"] > c["last_year"]):
