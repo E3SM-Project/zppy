@@ -1,4 +1,6 @@
-exclude: "docs|node_modules|migrations|.git|.tox"
+# tests/rendering/snapshots holds scripts exactly as zppy renders them, which
+# must not be changed by the whitespace and end-of-file hooks.
+exclude: "docs|node_modules|migrations|.git|.tox|^tests/rendering/snapshots/"
 fail_fast: true
 
 # (run `python scripts/sync_pre_commit_versions.py` to sync them)
