@@ -1,0 +1,1143 @@
+#!/bin/bash
+
+# Running on compy
+
+#SBATCH  --job-name=livvkit_1985-1986
+#SBATCH  --account=e3sm
+#SBATCH  --nodes=1
+#SBATCH  --output=/zppy_snapshot/output/post/scripts/livvkit_1985-1986.o%j
+#SBATCH  --exclusive
+#SBATCH  --time=1:30:00
+
+
+#SBATCH  --qos=regular
+#SBATCH  --partition=slurm
+
+
+# Turn on debug output if needed
+debug=False
+if [[ "${debug,,}" == "true" ]]; then
+  set -x
+fi
+
+# Script dir
+cd /zppy_snapshot/output/post/scripts
+
+# Get jobid
+id=${SLURM_JOBID}
+
+# Update status file
+STARTTIME=$(date +%s)
+echo "RUNNING ${id}" > livvkit_1985-1986.status
+
+set_pkg_manager() {
+  # Detect whether to use pixi or conda based on environment_commands
+  # Example environment commands:
+
+  # These would indicate pixi is the package manager:
+  # source /share/apps/E3SM/conda_envs/test_e3sm_unified_1.13.0rc7_compy.sh
+  # source /share/apps/E3SM/conda_envs/load_latest_e3sm_unified_compy.sh
+
+  # This would indicate conda is the package manager:
+  # source /qfs/people/fors729/miniforge3/etc/profile.d/conda.sh; conda activate e3sm_to_cmip_20260415
+
+  # Important: we need the quotes since environment_commands might
+  # include multiple commands, separated by semi-colon.
+  if echo "source /share/apps/E3SM/conda_envs/load_latest_e3sm_unified_compy.sh" | grep -Eq 'test_e3sm_unified|load_latest_e3sm_unified'; then
+    pkg_manager="pixi"
+  else
+    pkg_manager="conda"
+  fi
+
+  # We always want to know what the python version is.
+  echo "${pkg_manager} list python:"
+  ${pkg_manager} list python || true # If we can't print this, just continue on.
+}
+
+run_nco() {
+  # Example:
+  # environment_path=/global/cfs/cdirs/e3sm/zender/bin_perlmutter/ (set with jinja2 substitution from config file)
+  # nco_cmd=ncclimo (passed in directly)
+  # Runs `/global/cfs/cdirs/e3sm/zender/bin_perlmutter/ncclimo --npo` on the original arguments
+
+  # Full list of NCO commands: https://nco.sourceforge.net/nco.html#Reference-Manual
+
+  local environment_path=""
+  local nco_cmd=$1
+  shift # Remove nco_cmd from the argument list
+
+  if [[ -n "$environment_path" && ( "$nco_cmd" == "ncclimo" || "$nco_cmd" == "ncremap" ) ]]; then
+    # nco_path is non-empty AND nco_cmd is a script (either ncclimo or ncremap),
+    # so use the full development setup:
+    "${environment_path%/}/$nco_cmd" --npo "$@"
+  else
+    # nco_path is empty OR nco_cmd is a binary executable (not a script),
+    # so use just the nco_cmd itself:
+    "$nco_cmd" "$@"
+  fi
+}
+echo
+echo ===== ACTIVATE ENVIRONMENT =====
+echo
+set -e
+source /share/apps/E3SM/conda_envs/load_latest_e3sm_unified_compy.sh
+set +e
+
+set_pkg_manager
+echo "${pkg_manager} list livvkit:"
+${pkg_manager} list livvkit || true # If we can't print this, just continue on.
+
+# Basic definitions
+case="v3.LR.historical_0051"
+short=""
+www="/zppy_snapshot/www"
+y1=1985
+y2=1986
+Y1="1985"
+Y2="1986"
+scriptDir="/zppy_snapshot/output/post/scripts"
+
+# Create temporary workdir
+hash=`mktemp --dry-run -d XXXX`
+workdir=tmp.livvkit_1985-1986.${id}.${hash}
+workdir=${scriptDir}/${workdir}
+mkdir -p ${workdir}/${case}
+cd ${workdir}/${case}
+
+echo
+echo ===== RUN LIVVKIT =====
+echo
+
+# include cfg file
+cat > livvkit_template.yml << EOF
+---
+
+common: &common
+    meta: &meta
+      Case ID: [{{ case_id }}]
+      Climatology years: [1980-2020]
+      Model: [E3SM-ELM]
+
+      Model years: [1985 - 1986]
+
+    climo: {{ dir_native }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
+    latlon: &climo_ann_file
+      {{ dir_native }}/{{ case_id }}_ANN_{sea_s}_{sea_e}_climo.nc
+    # These are the same for purposes of typical model run, but can be different
+    elevation: *climo_ann_file
+    lnd_climo: *climo_ann_file
+    topo: *climo_ann_file
+    glc_surf: *climo_ann_file
+    latv: lat
+    lonv: lon
+    topov: topo
+    landfracv: landfrac
+    img_height: 300
+
+    # These come from zppy
+    year_s: 1985
+    year_e: 1986
+
+
+common_smb: &common_smb
+    smbv: QICE
+    maskv: gis_mask2
+    smbscale: 31536000
+    cmap: BrBG
+    cmap_diff: BrBG
+    clim_even: 1
+    units: mm w. e. yr^-1
+    References:
+      - {{ livvproj_dir }}/smb/smb_icecores.bib
+      - {{ livvproj_dir }}/livvkit.bib
+
+common_snow: &common_snow
+    cmap: YlGnBu
+    cmap_diff: BrBG
+    units: mm
+    References:
+      - {{ livvproj_dir }}/livvkit.bib
+
+common_river: &common_river
+    cmap: YlGnBu
+    cmap_diff: BrBG
+    units: m^3 s^-1
+    References:
+      - {{ livvproj_dir }}/livvkit.bib
+
+common_energy: &common_energy
+  desc: Surface energy balance component {component}{comment} from {data_var_names}
+  references:
+    - {{ livvproj_dir }}/racmo/Noel2015.bib
+    - {{ livvproj_dir }}/cism/glissade/cism-glissade.bib
+    - {{ livvproj_dir }}/e3sm/Evans2019.bib
+    - {{ livvproj_dir }}/livvkit.bib
+  cmap: plasma
+  cmap_diff: RdBu_r
+
+common_elm: &common_elm
+  dataset_names: { model: ELM }
+  timeseries_dirs:
+    model: "{{ dir_ts_native }}"
+  ts_file_patterns:
+    model: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+  masks:
+    model: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
+
+common_mosart: &common_mosart
+  climo_river: {{ dir_river }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
+  dataset_names: { model: MOSART }
+  timeseries_dirs:
+    model: "{{ dir_ts_river }}"
+  ts_file_patterns:
+    model: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+  masks:
+    model: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
+
+common_racmo: &common_racmo
+  clim_years:
+    dset_a: { year_s: 1980, year_e: 2020 }
+  dataset_names: { model: ELM, dset_a: RACMO 2.4 }
+  in_dirs: { dset_a: "{{ racmo_root_dir }}/clm/{_var}" }
+  file_patterns:
+    dset_a: "{_var}_{icesheet}_{season}_{sea_s}_{sea_e}_climo.nc"
+  timeseries_dirs:
+    model: "{{ dir_ts_native }}"
+    dset_a: "{{ racmo_root_dir }}/ts"
+  ts_file_patterns:
+    model: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+    dset_a: "{_var}_{icesheet}_{year_s:04d}01_{year_e:04d}12.nc"
+  masks:
+    dset_a: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_rcm.nc
+    model: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_rcm.nc
+    model_native: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
+
+common_era5: &common_era5
+  climo_remap: {{ dir_era5 }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
+  dataset_names: {model_remap: 'ELM [ERA5 Grid]', model_native: ELM, dset_a: ERA5}
+  aavg_sort: [ELM, 'ELM [ERA5 Grid]', ERA5]
+  scales: {model: 1, dset_a: 1}
+  clim_years:
+    dset_a: { year_s: 1979, year_e: 2019}
+  in_dirs: {dset_a: {{ e3sm_diags_data_dir }}/observations/Atm/climatology/ERA5}
+  file_patterns: {dset_a: 'ERA5_{season}_{sea_s}_{sea_e}_climo.nc'}
+  timeseries_dirs:
+    model: "{{ dir_ts_native }}"
+    dset_a: "{{ e3sm_diags_data_dir }}/observations/Atm/time-series/ERA5"
+  ts_file_patterns:
+    model: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+    dset_a: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+  masks:
+    dset_a: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_remap_era5.traave.nc
+    model_remap: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_remap_era5.traave.nc
+    model_native: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
+
+common_merra: &common_merra
+  climo_remap: {{ dir_merra2 }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
+  in_dirs: {dset_a: {{ e3sm_diags_data_dir }}/observations/Atm/climatology/MERRA2}
+  file_patterns: {dset_a: 'MERRA2_{season}_{sea_s}_{sea_e}_climo.nc'}
+  timeseries_dirs:
+    model: "{{ dir_ts_native }}"
+    dset_a: "{{ e3sm_diags_data_dir }}/observations/Atm/time-series/MERRA2"
+  ts_file_patterns:
+    model: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+    dset_a: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+  masks:
+    dset_a: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_remap_merra2.traave.nc
+    model_remap: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_remap_merra2.traave.nc
+    model_native: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
+  dataset_names: {model_remap: 'ELM [MERRA2 Grid]', model_native: ELM, dset_a: MERRA2}
+  aavg_sort: [ELM, 'ELM [MERRA2 Grid]', MERRA2]
+  scales: {model: 1, dset_a: 1}
+  clim_years:
+    dset_a: { year_s: 1980, year_e: 2016}
+
+common_ceres: &common_ceres
+  climo_remap: {{ dir_ceres }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
+  dataset_names:
+    { model_native: ELM, model_remap: "ELM [CERES Grid]", dset_a: CERES }
+  aavg_sort: [ELM, "ELM [CERES Grid]", CERES]
+  scales: { model: 1, dset_a: 1 }
+  clim_years:
+    dset_a: { year_s: 2001, year_e: 2018 }
+  timeseries_dirs:
+    model: "{{ dir_ts_native }}"
+    dset_a: "{{ e3sm_diags_data_dir }}/observations/Atm/time-series/ceres_ebaf_surface_v4.1"
+  ts_file_patterns:
+    model: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+    dset_a: "{_var}_{year_s:04d}01_{year_e:04d}12.nc"
+  in_dirs:
+    dset_a: {{ e3sm_diags_data_dir }}/observations/Atm/climatology/ceres_ebaf_surface_v4.1
+  file_patterns:
+    dset_a: ceres_ebaf_surface_v4.1_{season}_{sea_s}_{sea_e}_climo.nc
+  masks:
+    dset_a: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_remap_cmip6.traave.nc
+    model_remap: {{ livvproj_dir }}/grids/msk_{icesheet}_r025_remap_cmip6.traave.nc
+    model_native: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
+
+common_modis: &common_modis
+  climo_remap: {{ dir_native }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
+  dataset_names: {model: 'ELM', dset_a: MODIS/Terra}
+  scales: {model: 100, dset_a: 1}
+  clim_years:
+    dset_a: { year_s: 2001, year_e: 2025}
+  in_dirs: {dset_a: /global/cfs/cdirs/e3sm/zender/mod10cm/rgr/}
+  file_patterns: {dset_a: 'mod10cm_{season}_{sea_s}_{sea_e}_climo.nc'}
+  masks:
+    dset_a: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
+    model: {{ livvproj_dir }}/grids/msk_{icesheet}_rcm_r05.nc
+
+common_racmo_gis: &common_racmo_gis
+  climo_remap: {{ dir_racmo_gis }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
+  icesheet: gis
+
+common_racmo_ais: &common_racmo_ais
+  climo_remap: {{ dir_racmo_ais }}/{{ case_id }}_{clim}_{sea_s}_{sea_e}_climo.nc
+  icesheet: ais
+
+common_racmo_smb_vars: &common_racmo_smb_vars
+  # Surface mass balance variables for dset_a: RACMO 2.4, model: ELM
+  # Each field must have:
+  #   - title: Human readable field name
+  #   - dset_a: definition for the field in dset_a dataset (i.e. RACMO)
+  #   - model: definition for the field in model dataset (i.e. ELM)
+  #   - units: Units of this field
+  #   - ac_contrib_sign: For each dataset, multiply the annual cycle by +/- 1 to achieve
+  #                      correct contribution to annual cycle of SMB
+  #   - aavg: parameters for ice sheet-area-averaging
+  #       - scale: Further scale the area-average, (this typically converts mm w.e./yr to GT/yr)
+  #       - units: Units of area average (only applicable if different than units for the field)
+  #       - sum: Perform area-weighted sum if true (area weighted mean if false)
+
+  # Additional parameters which may be defined are:
+  #   - mask_weight: mask variable acts as a weight (e.g. partial mask at edge of the ice sheet)
+  #   - primary_var: True for the primary field of interest for an annual cycle plot
+  #   - cmap: Override for colourmap for the fields
+  #   - cmap_diff: Override for colourmap for the difference plot
+  #   - cmin, cmax, cmin_d, cmax_d: Override for min / max values for fields and differences respectively
+  #   - comment: added to figure caption on output (usually used to indicate signedness of fluxes)
+
+  # Surface mass balance
+  - title: Surface Mass Balance
+    dset_a: smbgl
+    model: QICE
+    ac_contrib_sign: { model: 1, dset_a: 1 }
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    units: mm w. e. yr^-1
+    mask_weight: true
+    primary_var: true
+
+  # Total precipitation
+  - title: Total precip
+    dset_a: prgl
+    model: [+, SNOW, RAIN]
+    ac_contrib_sign: { model: 1, dset_a: 1 }
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    units: mm w. e. yr^-1
+    cmap: YlGnBu
+    cmin: 0
+    mask_weight: true
+
+  # Snowfall
+  - title: Snowfall
+    dset_a: sf
+    model: SNOW
+    ac_contrib_sign: { model: 1, dset_a: 1 }
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    units: mm w. e. yr^-1
+    cmap: YlGnBu
+    cmin: 0
+    mask_weight: true
+    scales:
+      { model: 365 * 24 * 3600, dset_a: 365 * 24 * 3600, }
+
+  # Rainfall
+  - title: Rain
+    dset_a: [+, crrate, lsrrate]
+    model: RAIN
+    ac_contrib_sign: { model: 1, dset_a: 1 }
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    units: mm w. e. yr^-1
+    cmap: YlGnBu
+    cmin: 0
+    mask_weight: true
+    scales:
+      { model: 365 * 24 * 3600, dset_a: 365 * 24 * 3600, }
+
+  # Re-freeze
+  - title: Re-freeze
+    dset_a: rfrzgl
+    model: QSNOFRZ
+    ac_contrib_sign: { model: 1, dset_a: 1 }
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    mask_weight: true
+    units: mm w. e. yr^-1
+    cmin: 0
+    cmap: YlGnBu
+
+  # Runoff
+  - title: Runoff
+    dset_a: totrunoff
+    model: QRUNOFF
+    ac_contrib_sign: { model: -1, dset_a: -1 }
+    scales:
+      { model: 365 * 24 * 3600, dset_a: 365 * 24 * 3600, }
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    mask_weight: true
+    units: mm w. e. yr^-1
+    # cmin: -20.0
+    cmin: 0
+    # cmax: 20.0
+    cmap: YlGnBu
+
+  # Snow & ice melt
+  - title: Snow + ice melt
+    dset_a: mltgl
+    model: ["+", QSNOMELT, QICE_MELT]
+    ac_contrib_sign: { model: -1, dset_a: -1 }
+    scales:
+      { model: 365 * 24 * 3600, dset_a: 365 * 24 * 3600, }
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    mask_weight: true
+    units: mm w. e. yr^-1
+    # cmin: -20.0
+    # cmax: 20.0
+    cmin: 0
+    # cmax: 20.0
+    cmap: YlGnBu
+
+  # Sublimation
+  - title: Sublimation
+    dset_a: sublgl
+    model: QSOIL
+    comment: " (Positive to atmosphere)"
+    ac_contrib_sign: { model: -1, dset_a: 1 }
+    scales: { model: 365 * 24 * 3600, dset_a: -365 * 24 * 3600, }
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    mask_weight: true
+    units: mm w. e. yr^-1
+
+common_racmo_cmb_vars: &common_racmo_cmb_vars
+  # Climatic mass balance variables for dset_a: RACMO 2.4, model: ELM
+
+  # Climatic mass balance
+  - title: Climatic Mass Balance
+    dset_a: ["-", "prgl", ["-", "totrunoff", "sublgl"]]
+    model: ["-", ["+", "SNOW", "RAIN"], ["+", "QRUNOFF", "QSOIL"]]
+    ac_contrib_sign: { model: 1, dset_a: 1, }
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    units: mm w. e. yr^-1
+    mask_weight: true
+    primary_var: true
+
+  # Snowfall
+  - title: Snowfall
+    dset_a: sf
+    model: SNOW
+    ac_contrib_sign: { model: 1, dset_a: 1, }
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    units: mm w. e. yr^-1
+    cmap: YlGnBu
+    cmin: 0
+    mask_weight: true
+    scales:
+      { model: 365 * 24 * 3600, dset_a: 365 * 24 * 3600, }
+
+  # Rainfall
+  - title: Rain
+    dset_a: [+, crrate, lsrrate]
+    model: RAIN
+    ac_contrib_sign: { model: 1, dset_a: 1, }
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    units: mm w. e. yr^-1
+    cmap: YlGnBu
+    cmin: 0
+    mask_weight: true
+    scales:
+      { model: 365 * 24 * 3600, dset_a: 365 * 24 * 3600, }
+
+  # Runoff
+  - title: Runoff
+    dset_a: totrunoff
+    model: QRUNOFF
+    ac_contrib_sign: { model: -1, dset_a: -1, }
+    scales:
+      { model: 365 * 24 * 3600, dset_a: 365 * 24 * 3600, }
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    mask_weight: true
+    units: mm w. e. yr^-1
+    cmin: 0
+    cmap: YlGnBu
+
+  # Sublimation
+  - title: Sublimation
+    dset_a: sublgl
+    model: QSOIL
+    comment: " (Positive to atmosphere)"
+    ac_contrib_sign: { model: -1, dset_a: 1, }
+    scales:
+      { model: 365 * 24 * 3600, dset_a: -365 * 24 * 3600,  }
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    mask_weight: true
+    units: mm w. e. yr^-1
+
+common_snow_storage_vars: &common_snow_storage_vars
+  - title: Snow Depth (liquid water)
+    model: H2OSNO
+    sign: 1
+    scales: {model: 1}
+    units: "mm"
+    ac_axis: 0
+    cmin: 0.0
+    cmap: YlGnBu
+    cmin_d: -8000
+    cmax_d: 8000
+  - title: Snow ice
+    model: SNOWICE
+    sign: 1
+    scales: {model: 1}
+    units: "mm"
+    ac_axis: 0
+    cmin: 0.0
+    cmap: YlGnBu
+    cmin_d: -8000
+    cmax_d: 8000
+  - title: Snow liquid water
+    model: SNOWLIQ
+    sign: 1
+    scales: {model: 1}
+    ac_axis: 1
+    units: "mm"
+    cmin: 0.0
+    # cmax: 80
+    cmap: YlGnBu
+    cmin_d: -10
+    cmax_d: 10
+  - title: Surface water runoff
+    model: QH2OSFC
+    sign: 1
+    scales: {model: 365 * 24 * 3600}
+    units: "mm w. e. yr^-1"
+    cmin: 0.0
+    cmap: YlGnBu
+    ac_axis: 0
+
+common_snow_cover_vars: &common_snow_cover_vars
+  - title: Snow cover
+    model: FSNO
+    dset_a: Snow_Cover_Monthly_CMG
+    sign: 1
+    ac_contrib_sign: { model: 1, dset_a: 1 }
+    scales: {model: 100, dset_a: 1}
+    units: "%"
+    cmin: 0
+    cmax: 100
+    cmap: YlGnBu
+
+common_river_vars: &common_river_vars
+  - title: "Total discharge to ocean: ice"
+    model: TOTAL_DISCHARGE_TO_OCEAN_ICE
+    sign: 1
+    scales: {model: 365 * 24 * 3600}
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    units: "mm w.e. yr^-1"
+    ac_axis: 0
+    cmin: 0.0
+    cmap: YlGnBu
+  - title: "Total discharge to ocean: liquid"
+    model: TOTAL_DISCHARGE_TO_OCEAN_LIQ
+    sign: 1
+    scales: {model: 365 * 24 * 3600}
+    aavg: { scale: 1e-06, units: GT yr^-1, sum: true }
+    units: "mm w.e. yr^-1"
+    ac_axis: 0
+    cmin: 0.0
+    cmap: YlGnBu
+
+common_racmo_energy_vars: &common_racmo_energy_vars
+  - title: Surface temperature
+    dset_a: tas
+    model: TSA
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: K
+
+  - title: Albedo
+    dset_a: [/, rsusgl, rsds]
+    model:
+    - /
+    - [+, FSRND, FSRVD]
+    - [+, FSDSVD, FSDSND]
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: unitless
+    cmin: 0.5
+    cmax: 0.9
+    cmin_d: -0.2
+    cmax_d: 0.2
+
+  - title: Shortwave net
+    dset_a: ['-', rsds, rsusgl]
+    model: FSA
+    comment: ' (Positive to surface)'
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - title: Shortwave down
+    dset_a: rsds
+    model: FSDS
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - title: Longwave net
+    dset_a: strgl
+    model: FIRA
+    comment: ' (Positive to atmosphere)'
+    sign: 1
+    scales: {dset_a: -1, model: 1}
+    units: W m^-2
+
+  - title: Longwave down
+    dset_a: rlds
+    model: FLDS
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - title: Sensible heat
+    dset_a: hfssgl
+    model: FSH
+    comment: ' (Positive to atmosphere)'
+    sign: 1
+    scales: {dset_a: -1, model: 1}
+    units: W m^-2
+
+  - title: Latent Heat Flux
+    dset_a: hflsgl
+    model: EFLX_LH_TOT
+    comment: ' (Positive to atmosphere)'
+    sign: 1
+    scales: {dset_a: -1, model: 1}
+    units: W m^-2
+
+  - title: Net energy balance
+    dset_a:
+    - +
+    - ['-', rsds, rsusgl]
+    - - +
+      - strgl
+      - [+, hfssgl, hflsgl]
+    model:
+    - '-'
+    - FSA
+    - - +
+      - FIRA
+      - [+, FSH, EFLX_LH_TOT]
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+    cmin: -10
+    cmax: 10
+    cmap: RdBu_r
+
+common_era_energy_vars: &common_era_energy_vars
+  - title: Surface temperature
+    dset_a: ts
+    model: TSA
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: K
+
+  - title: Albedo
+    dset_a: [/, rsus, rsds]
+    model:
+    - /
+    - [+, FSRND, FSRVD]
+    - [+, FSDSVD, FSDSND]
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: unitless
+    cmin: 0.5
+    cmax: 1.0
+    cmin_d: -0.2
+    cmax_d: 0.2
+
+  - title: Shortwave net
+    dset_a: ['-', rsds, rsus]
+    model: FSA
+    comment: ' (Positive to surface)'
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - title: Shortwave down
+    dset_a: rsds
+    model: FSDS
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - model: FIRA
+    title: Longwave net
+    dset_a: ['-', rlus, rlds]
+    comment: ' (Positive to atmosphere)'
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - title: Longwave down
+    dset_a: rlds
+    model: FLDS
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - model: FSH
+    dset_a: hfss
+    title: Sensible heat
+    comment: ' (Positive to atmosphere)'
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - title: Latent Heat Flux
+    dset_a: hfls
+    model: EFLX_LH_TOT
+    comment: ' (Positive to atmosphere)'
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - title: Net energy balance
+    dset_a:
+    - '-'
+    - ['-', rsds, rsus]
+    - - +
+      - ['-', rlus, rlds]
+      - [+, hfss, hfls]
+    model:
+    - '-'
+    - FSA
+    - - +
+      - FIRA
+      - [+, FSH, EFLX_LH_TOT]
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+    cmin: -10
+    cmax: 10
+    cmap: RdBu_r
+
+common_merra_energy_vars: &common_merra_energy_vars
+  - title: Surface temperature
+    dset_a: tas
+    model: TSA
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: K
+
+  - title: Albedo
+    dset_a: [/, rsus, rsds]
+    model:
+    - /
+    - [+, FSRND, FSRVD]
+    - [+, FSDSVD, FSDSND]
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: unitless
+    cmin: 0.5
+    cmax: 0.83
+    cmin_d: -0.2
+    cmax_d: 0.2
+
+  - title: Shortwave net
+    dset_a: ['-', rsds, rsus]
+    model: FSA
+    comment: ' (Positive to surface)'
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - title: Shortwave down
+    dset_a: rsds
+    model: FSDS
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - title: Longwave net
+    dset_a: ['-', rlus, rlds]
+    model: FIRA
+    comment: ' (Positive to atmosphere)'
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - title: Longwave down
+    dset_a: rlds
+    model: FLDS
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - title: Sensible heat
+    dset_a: hfss
+    model: FSH
+    comment: ' (Positive to atmosphere)'
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - title: Latent Heat Flux
+    dset_a: hfls
+    model: EFLX_LH_TOT
+    comment: ' (Positive to atmosphere)'
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+
+  - title: Net energy balance
+    dset_a:
+    - '-'
+    - ['-', rsds, rsus]
+    - - +
+      - ['-', rlus, rlds]
+      - [+, hfss, hfls]
+    model:
+    - '-'
+    - FSA
+    - - +
+      - FIRA
+      - [+, FSH, EFLX_LH_TOT]
+    sign: 1
+    scales: {dset_a: 1, model: 1}
+    units: W m^-2
+    cmin: -10
+    cmax: 10
+    cmap: RdBu_r
+
+common_ceres_energy_vars: &common_ceres_energy_vars
+    - title: Albedo
+      dset_a: [/, rsus, rsds]
+      model:
+        - /
+        - [+, FSRND, FSRVD]
+        - [+, FSDSVD, FSDSND]
+      sign: 1
+      scales: { dset_a: 1, model: 1 }
+      units: unitless
+      cmin: 0.5
+      cmax: 0.83
+      cmin_d: -0.2
+      cmax_d: 0.2
+
+    - title: Shortwave net
+      dset_a: sfc_net_sw_all_mon
+      model: FSA
+      comment: " (Positive to surface)"
+      sign: 1
+      scales: { dset_a: 1, model: 1 }
+      units: W m^-2
+
+    - title: Shortwave down
+      dset_a: rsds
+      model: FSDS
+      sign: 1
+      scales: { dset_a: 1, model: 1 }
+      units: W m^-2
+
+    - title: Longwave net
+      dset_a: sfc_net_lw_all_mon
+      model: FIRA
+      comment: " (Positive to atmosphere)"
+      sign: 1
+      scales: { dset_a: -1, model: 1 }
+      units: W m^-2
+
+    - title: Longwave down
+      dset_a: rlds
+      model: FLDS
+      sign: 1
+      scales: { dset_a: 1, model: 1 }
+      units: W m^-2
+
+{% if gis %}
+# Greenland
+{% if cmb %}
+Climatic_Mass_Balance_GIS:
+  module: {{ livvext_root }}/smb/smb_icecores.py
+  data_vars: *common_racmo_cmb_vars
+  <<: [*common, *common_smb, *common_racmo, *common_racmo_gis]
+  scales:
+    { model: 365 * 24 * 3600, dset_a: 365 * 24 * 3600 }
+  primary_var: Climatic Mass Balance
+  desc: "{component} component of CMB from {data_var_names}"
+{% endif %}
+
+{% if smb %}
+Surface_Mass_Balance_GIS:
+  module: {{ livvext_root }}/smb/smb_icecores.py
+  data_vars: *common_racmo_smb_vars
+  core_year_s: 1980
+  core_year_e: 2021
+  ib_year_e: 1987-1976
+  ib_year_s: 2014-2004
+  preprocess: []
+  preproc_dir: {{ livvproj_dir }}/smb/processed
+  zwally_file: model_zwally_basins_elm_r05.csv
+  ib_file: IceBridge_modelXY_elm{}_r05.csv
+  smb_cf_file: SMB_CoreFirnEstimates_elm{}_r05.csv
+  smb_mo_file: SMB_Obs_Model_elm{}_r05.csv
+  <<: [*common, *common_smb, *common_racmo, *common_racmo_gis]
+  scales:
+    { model: 365 * 24 * 3600, dset_a: 365 * 24 * 3600 }
+  primary_var: smbgl
+  desc: "{component} component of SMB from {data_var_names}"
+{% endif %}
+
+{% if snow %}
+Snow_Storage_GIS:
+  module: {{ livvext_root }}/snow/snow.py
+  data_vars: *common_snow_storage_vars
+  icesheet: gis
+  <<: [*common, *common_snow, *common_elm]
+  scales:
+    { model: 1, }
+  primary_var: H2OSNO
+  desc: "{component} component of snow storage from {data_var_names}"
+
+Snow_Cover_GIS:
+  module: {{ livvext_root }}/snow/snow.py
+  data_vars: *common_snow_cover_vars
+  icesheet: gis
+  <<: [*common, *common_snow, *common_modis]
+  scales:
+    { model: 100, dset_a: 1}
+  primary_var: FSNO
+  desc: "{component} snow cover from {data_var_names}"
+  references:
+    - {{ livvproj_dir }}/livvkit.bib
+{% endif %}
+
+{% if river %}
+River_Discharge_GIS:
+  module: {{ livvext_root }}/river/river.py
+  data_vars: *common_river_vars
+  icesheet: gis
+  <<: [*common, *common_river, *common_mosart]
+  scales:
+    { model: 1,}
+  primary_var: TOTAL_DISCHARGE_TO_OCEAN_LIQ
+  desc: "{component} river discharge from {data_var_names}"
+  references:
+    - {{ livvproj_dir }}/livvkit.bib
+{% endif %}
+
+{% if energy_racmo %}
+Energy_Balance_RACMO_GIS:
+  module: {{ livvext_root }}/energy/energy.py
+  <<: [*common, *common_energy, *common_racmo, *common_racmo_gis]
+  scales: {model: 1, dset_a: 1}
+  data_vars: *common_racmo_energy_vars
+{% endif %}
+
+{% if energy_era5 %}
+Energy_Balance_ERA5_GIS:
+  module: {{ livvext_root }}/energy/energy.py
+  icesheet: gis
+  mask_ocean: {model_native: false, model_remap: true, dset_a: true}
+  <<: [*common, *common_energy, *common_era5]
+  data_vars: *common_era_energy_vars
+{% endif %}
+
+{% if energy_merra2 %}
+Energy_Balance_MERRA2_GIS:
+  module: {{ livvext_root }}/energy/energy.py
+  icesheet: gis
+  <<: [*common, *common_energy, *common_merra]
+  mask_ocean: {model_native: false, model_remap: true, dset_a: true}
+  data_vars: *common_merra_energy_vars
+{% endif %}
+
+{% if energy_ceres %}
+Energy_Balance_CERES_GIS:
+  module: {{ livvext_root }}/energy/energy.py
+  icesheet: gis
+  <<: [*common, *common_energy, *common_ceres]
+  mask_ocean: { model_native: false, model_remap: true, dset_a: true }
+  data_vars: *common_ceres_energy_vars
+{% endif %}
+{% endif %}
+
+{% if ais %}
+# Antarctica
+{% if cmb %}
+Climatic_Mass_Balance_AIS:
+  module: {{ livvext_root }}/smb/smb_icecores.py
+  data_vars: *common_racmo_cmb_vars
+  <<: [*common, *common_smb, *common_racmo, *common_racmo_ais]
+  scales:
+    { model: 365 * 24 * 3600, dset_a: 365 * 24 * 3600 }
+  primary_var: Climatic Mass Balance
+  desc: "{component} component of CMB from {data_var_names}"
+{% endif %}
+
+{% if smb %}
+Surface_Mass_Balance_AIS:
+  module: {{ livvext_root }}/smb/smb_icecores.py
+  data_vars: *common_racmo_smb_vars
+  <<: [*common, *common_smb, *common_racmo, *common_racmo_ais]
+  scales:
+    { model: 365 * 24 * 3600, dset_a: 365 * 24 * 3600 }
+  primary_var: smbgl
+  desc: "{component} component of SMB from {data_var_names}"
+{% endif %}
+
+{% if snow %}
+Snow_Storage_AIS:
+  module: {{ livvext_root }}/snow/snow.py
+  data_vars: *common_snow_storage_vars
+  icesheet: ais
+  <<: [*common, *common_snow, *common_elm]
+  scales:
+    { model: 1, }
+  primary_var: H2OSNO
+  desc: "{component} component of snow storage from {data_var_names}"
+
+Snow_Cover_AIS:
+  module: {{ livvext_root }}/snow/snow.py
+  data_vars: *common_snow_cover_vars
+  icesheet: gis
+  <<: [*common, *common_snow, *common_modis]
+  scales:
+    { model: 100, dset_a: 1}
+  primary_var: FSNO
+  desc: "{component} snow storage from {data_var_names}"
+  icesheet: ais
+  references:
+    - {{ livvproj_dir }}/livvkit.bib
+{% endif %}
+
+{% if river %}
+River_Discharge_AIS:
+  module: {{ livvext_root }}/river/river.py
+  data_vars: *common_river_vars
+  icesheet: ais
+  <<: [*common, *common_mosart, *common_river,]
+  scales:
+    { model: 1,}
+  primary_var: TOTAL_DISCHARGE_TO_OCEAN_LIQ
+  desc: "{component} river discharge from {data_var_names}"
+  references:
+    - {{ livvproj_dir }}/livvkit.bib
+{% endif %}
+
+{% if energy_racmo %}
+Energy_Balance_RACMO_AIS:
+  module: {{ livvext_root }}/energy/energy.py
+  <<: [*common, *common_energy, *common_racmo, *common_racmo_ais]
+  scales: {model: 1, dset_a: 1}
+  data_vars: *common_racmo_energy_vars
+{% endif %}
+
+{% if energy_era5 %}
+Energy_Balance_ERA5_AIS:
+  module: {{ livvext_root }}/energy/energy.py
+  icesheet: ais
+  mask_ocean: {model_native: false, model_remap: true, dset_a: true}
+  <<: [*common, *common_energy, *common_era5]
+  data_vars: *common_era_energy_vars
+{% endif %}
+
+{% if energy_merra2 %}
+Energy_Balance_MERRA2_AIS:
+  module: {{ livvext_root }}/energy/energy.py
+  icesheet: ais
+  <<: [*common, *common_energy, *common_merra]
+  mask_ocean: {model_native: false, model_remap: true, dset_a: true}
+  data_vars: *common_merra_energy_vars
+{% endif %}
+
+{% if energy_ceres %}
+Energy_Balance_CERES_AIS:
+  module: {{ livvext_root }}/energy/energy.py
+  icesheet: ais
+  <<: [*common, *common_energy, *common_ceres]
+  mask_ocean: { model_native: false, model_remap: true, dset_a: true }
+  data_vars: *common_ceres_energy_vars
+{% endif %}
+{% endif %}
+
+EOF
+
+climo_dir_source=/zppy_snapshot/output/post/lnd/DATA_GRID/clim/2yr
+
+# Generate config file
+lex-cfg \
+  --template livvkit_template.yml \
+  --casedir ${climo_dir_source} \
+  --case ${case} \
+  --icesheets gis,ais \
+  --sets energy_era5 \
+  -z
+
+echo ${workdir}
+echo /zppy_snapshot/output/post/scripts
+livv --validate livvkit.yml --out-dir ./${case}.web
+
+if [ $? != 0 ]; then
+  cd /zppy_snapshot/output/post/scripts
+  echo 'ERROR (1)' > livvkit_1985-1986.status
+  exit 1
+fi
+mv livv_log_${case}.web.log ./${case}.web/logs
+
+# Copy output to web server
+echo
+echo ===== COPY FILES TO WEB SERVER =====
+echo
+
+# Create top-level directory
+web_dir=${www}/${case}/livvkit/${Y1}-${Y2}
+mkdir -p ${web_dir}
+if [ $? != 0 ]; then
+  cd /zppy_snapshot/output/post/scripts
+  echo 'ERROR (2)' > livvkit_1985-1986.status
+  exit 2
+fi
+
+
+
+# Copy files
+results_dir=./${case}.web/
+rsync -a --delete ${results_dir} ${web_dir}/
+if [ $? != 0 ]; then
+  cd /zppy_snapshot/output/post/scripts
+  echo 'ERROR (3)' > livvkit_1985-1986.status
+  exit 3
+fi
+
+
+
+
+
+# Delete temporary workdir
+cd ..
+if [[ "${debug,,}" != "true" ]]; then
+  rm -rf ${workdir}
+fi
+
+# Update status file and exit
+
+ENDTIME=$(date +%s)
+ELAPSEDTIME=$(($ENDTIME - $STARTTIME))
+
+echo ==============================================
+echo "Elapsed time: $ELAPSEDTIME seconds"
+echo ==============================================
+cd /zppy_snapshot/output/post/scripts
+rm -f livvkit_1985-1986.status
+echo 'OK' > livvkit_1985-1986.status
+exit 0

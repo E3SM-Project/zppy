@@ -1,0 +1,1012 @@
+#!/bin/bash
+
+# Running on chrysalis
+
+#SBATCH  --job-name=ilamb_1985-1986
+#SBATCH  --account=e3sm
+#SBATCH  --nodes=1
+#SBATCH  --output=/zppy_snapshot/output/post/scripts/ilamb_1985-1986.o%j
+#SBATCH  --exclusive
+#SBATCH  --time=2:00:00
+
+
+#SBATCH  --partition=compute
+
+
+# Turn on debug output if needed
+debug=False
+if [[ "${debug,,}" == "true" ]]; then
+  set -x
+fi
+
+# Script dir
+cd /zppy_snapshot/output/post/scripts
+
+# Get jobid
+id=${SLURM_JOBID}
+
+# Update status file
+STARTTIME=$(date +%s)
+echo "RUNNING ${id}" > ilamb_1985-1986.status
+
+set_pkg_manager() {
+  # Detect whether to use pixi or conda based on environment_commands
+  # Example environment commands:
+
+  # These would indicate pixi is the package manager:
+  # source /share/apps/E3SM/conda_envs/test_e3sm_unified_1.13.0rc7_compy.sh
+  # source /share/apps/E3SM/conda_envs/load_latest_e3sm_unified_compy.sh
+
+  # This would indicate conda is the package manager:
+  # source /qfs/people/fors729/miniforge3/etc/profile.d/conda.sh; conda activate e3sm_to_cmip_20260415
+
+  # Important: we need the quotes since environment_commands might
+  # include multiple commands, separated by semi-colon.
+  if echo "source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh" | grep -Eq 'test_e3sm_unified|load_latest_e3sm_unified'; then
+    pkg_manager="pixi"
+  else
+    pkg_manager="conda"
+  fi
+
+  # We always want to know what the python version is.
+  echo "${pkg_manager} list python:"
+  ${pkg_manager} list python || true # If we can't print this, just continue on.
+}
+
+run_nco() {
+  # Example:
+  # environment_path=/global/cfs/cdirs/e3sm/zender/bin_perlmutter/ (set with jinja2 substitution from config file)
+  # nco_cmd=ncclimo (passed in directly)
+  # Runs `/global/cfs/cdirs/e3sm/zender/bin_perlmutter/ncclimo --npo` on the original arguments
+
+  # Full list of NCO commands: https://nco.sourceforge.net/nco.html#Reference-Manual
+
+  local environment_path=""
+  local nco_cmd=$1
+  shift # Remove nco_cmd from the argument list
+
+  if [[ -n "$environment_path" && ( "$nco_cmd" == "ncclimo" || "$nco_cmd" == "ncremap" ) ]]; then
+    # nco_path is non-empty AND nco_cmd is a script (either ncclimo or ncremap),
+    # so use the full development setup:
+    "${environment_path%/}/$nco_cmd" --npo "$@"
+  else
+    # nco_path is empty OR nco_cmd is a binary executable (not a script),
+    # so use just the nco_cmd itself:
+    "$nco_cmd" "$@"
+  fi
+}
+set -e
+source /lcrc/soft/climate/e3sm-unified/load_latest_e3sm_unified_chrysalis.sh
+set +e
+
+set_pkg_manager
+echo "${pkg_manager} list ilamb:"
+${pkg_manager} list ilamb || true # If we can't print this, just continue on.
+
+# Point to observation data
+export ILAMB_ROOT=/lcrc/group/e3sm/diagnostics/ilamb_data
+
+# Basic definitions
+case="v3.LR.historical_0051"
+short="v3.LR.historical_0051"
+www="/zppy_snapshot/www"
+y1=1985
+y2=1986
+Y1="1985"
+Y2="1986"
+scriptDir="/zppy_snapshot/output/post/scripts"
+
+# Create temporary workdir
+hash=`mktemp --dry-run -d XXXX`
+workdir=tmp.ilamb_1985-1986.${id}.${hash}
+workdir=${scriptDir}/${workdir}
+mkdir ${workdir}
+model_root=${workdir}/model_data
+
+if [ $short != "" ]; then
+    case=${short}
+fi
+
+mkdir -p ${model_root}/${case}
+cd ${model_root}/${case}
+
+echo
+echo ===== Copy nc files =====
+echo
+
+# Create output directory
+# Create local links to input cmip time-series files
+lnd_ts_for_ilamb=/zppy_snapshot/output/post/lnd/180x360_aave/cmip_ts/monthly/
+
+# Go through the time series files for between year1 and year2,
+# using a step size equal to the number of years per time series file
+start_year=$(echo $Y1 | sed 's/^0*//')
+end_year=$(echo $Y2 | sed 's/^0*//')
+for year in `seq $start_year 2 $end_year`;
+do
+  end_year_int=$((${year} + 2 - 1))
+  start_year=`printf "%04d" ${year}`
+  end_year=`printf "%04d" ${end_year_int}`
+  echo "Copying files for ${start_year} to ${end_year}"
+  cp -s ${lnd_ts_for_ilamb}/*_*_*_*_*_*_${start_year}??-${end_year}??.nc .
+  if [ $? != 0 ]; then
+    cd /zppy_snapshot/output/post/scripts
+    echo 'ERROR (1)' > ilamb_1985-1986.status
+    exit 1
+  fi
+
+done
+cd ../..
+
+echo
+echo ===== RUN ILAMB =====
+echo
+
+# Run diagnostics
+# Not required TODO?
+# TODO: find the mpi run format for different platforms
+
+# include cfg file
+cat > ilamb.cfg << EOF
+# This configure file uses observational data which can be obtained by
+# running the following command after exporting ILAMB_ROOT to the
+# appropriate location.
+#
+#   ilamb-fetch --remote_root https://www.ilamb.org/ILAMB-Data
+#
+# Extra ilamb-run options are defined here with the '#!' symbols:
+#
+#! define_regions = DATA/regions/GlobalLand.nc
+#
+[h1: Ecosystem and Carbon Cycle]
+bgcolor = "#ECFFE6"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Biomass]
+variable       = "biomass"
+alternate_vars = "cVeg"
+weight         = 5
+skip_rmse      = True
+mass_weighting = True
+
+[ESACCI]
+source = "DATA/biomass/ESACCI/biomass.nc"
+scale_factor = 0.714 # x 0.5 (total mass to carbon) / 0.7 (above only to total)
+weight     = 20
+table_unit = "Pg"
+plot_unit  = "kg m-2"
+space_mean = False
+
+#[GEOCARBON]
+#source       = "DATA/biomass/GEOCARBON/biomass.nc"
+#scale_factor = 0.714 # x 0.5 (total mass to carbon) / 0.7 (above only to total)
+#weight       = 16
+#table_unit   = "Pg"
+#plot_unit    = "kg m-2"
+#space_mean   = False
+
+[NBCD2000]
+source     = "DATA/biomass/NBCD2000/biomass_0.5x0.5.nc"
+weight     = 8
+table_unit = "Pg"
+plot_unit  = "kg m-2"
+space_mean = False
+
+[Saatchi2011]
+source     = "DATA/biomass/Saatchi2011/biomass_0.5x0.5.nc"
+weight     = 16
+table_unit = "Pg"
+plot_unit  = "kg m-2"
+space_mean = False
+
+[Thurner]
+source = "DATA/biomass/Thurner/biomass_0.5x0.5.nc"
+weight     = 16
+table_unit = "Pg"
+plot_unit  = "kg m-2"
+space_mean = False
+
+[USForest]
+source     = "DATA/biomass/USForest/biomass_0.5x0.5.nc"
+scale_factor = 0.714 # x 0.5 (total mass to carbon) / 0.7 (above only to total)
+weight     = 8
+table_unit = "Pg"
+plot_unit  = "kg m-2"
+space_mean = False
+
+[XuSaatchi2021]
+source     = "DATA/biomass/XuSaatchi2021/XuSaatchi.nc"
+weight     = 20
+table_unit = "Pg"
+plot_unit  = "kg m-2"
+space_mean = False
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Burned Area]
+variable       = "burntArea"
+alternate_vars = "burntFractionAll"
+weight         = 4
+cmap           = "OrRd"
+mass_weighting = True
+
+[GFED4.1S]
+source        = "DATA/burntArea/GFED4.1S/burntArea.nc"
+weight        = 20
+relationships = "Precipitation/GPCPv2.3","SurfaceAirTemperature/CRU4.02"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Carbon Dioxide]
+variable      = "co2"
+weight        = 5
+
+[NOAA.Emulated]
+ctype         = "ConfCO2"
+source        = "DATA/co2/NOAA.GMD/co2.nc"
+emulated_flux = "nbp"
+sites         = "alt,asc,azr,bhd,bmw,brw,cba,cgo,chr,crz,gmi,hba,ice,key,kum,mhd,mid,pocs35,pocs30,pocs25,pocs20,pocs15,pocs10,pocs05,poc000,pocn05,pocn10,pocn15,pocn20,pocn25,psa,rpb,sey,shm,smo,spo,syo,zep"
+lat_bands     = "-90,-60,-23,0,+23,+60,+90"
+force_emulation = True
+
+[HIPPOAToM]
+ctype      = "ConfGSNF"
+variable   = "gsnf"
+source     = "DATA/co2/HIPPOATom/HIPPO_AToM.nc"
+model_flux = "ra+rh-gpp"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Gross Primary Productivity]
+variable       = "gpp"
+cmap           = "Greens"
+weight         = 5
+mass_weighting = True
+
+[FLUXNET2015]
+source     = "DATA/gpp/FLUXNET2015/gpp.nc"
+weight     = 9
+table_unit = "g m-2 d-1"
+plot_unit  = "g m-2 d-1"
+
+[FLUXCOM]
+source        = "DATA/gpp/FLUXCOM/gpp.nc"
+weight        = 15
+table_unit    = "Pg yr-1"
+plot_unit     = "g m-2 d-1"
+space_mean    = False
+skip_iav      = True
+relationships = "Evapotranspiration/GLEAMv3.3a","Precipitation/GPCPv2.3","SurfaceDownwardSWRadiation/CERESed4.2","SurfaceNetSWRadiation/CERESed4.2","SurfaceAirTemperature/CRU4.02"
+
+[WECANN]
+source        = "DATA/gpp/WECANN/gpp.nc"
+weight        = 15
+table_unit    = "Pg yr-1"
+plot_unit     = "g m-2 d-1"
+space_mean    = False
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Leaf Area Index]
+variable       = "lai"
+cmap           = "Greens"
+weight         = 3
+mass_weighting = True
+
+[AVHRR]
+source        = "DATA/lai/AVHRR/lai_0.5x0.5.nc"
+weight        = 15
+relationships = "Precipitation/GPCPv2.3"
+
+[AVH15C1]
+source        = "DATA/lai/AVH15C1/lai.nc"
+weight        = 15
+relationships = "Precipitation/GPCPv2.3"
+
+[MODIS]
+source        = "DATA/lai/MODIS/lai_0.5x0.5.nc"
+weight        = 15
+relationships = "Precipitation/GPCPv2.3"
+skip_iav      = True
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Global Net Ecosystem Carbon Balance]
+variable = "nbp"
+weight   = 5
+ctype    = "ConfNBP"
+
+[GCP]
+source   = "DATA/nbp/GCP/nbp_1959-2016.nc"
+weight   = 20
+
+[Hoffman]
+source      = "DATA/nbp/HOFFMAN/nbp_1850-2010.nc"
+weight      = 20
+skip_taylor = True
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Net Ecosystem Exchange]
+variable       = "nee"
+derived        = "ra+rh-gpp"
+weight         = 5
+mass_weighting = True
+
+[FLUXNET2015]
+source     = "DATA/nee/FLUXNET2015/nee.nc"
+weight     = 9
+table_unit = "g m-2 d-1"
+plot_unit  = "g m-2 d-1"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Ecosystem Respiration]
+variable       = "reco"
+derived        = "ra+rh"
+weight         = 4
+mass_weighting = True
+
+[FLUXNET2015]
+source     = "DATA/reco/FLUXNET2015/reco.nc"
+weight     = 6
+table_unit = "g m-2 d-1"
+plot_unit  = "g m-2 d-1"
+
+[FLUXCOM]
+source     = "DATA/reco/FLUXCOM/reco.nc"
+weight     = 4
+table_unit = "Pg yr-1"
+plot_unit  = "g m-2 d-1"
+space_mean = False
+skip_iav   = True
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Soil Carbon]
+variable       = "cSoilAbove1m"
+alternate_vars = "cSoil"
+weight         = 5
+mass_weighting = True
+
+[HWSD]
+source     = "DATA/cSoil/HWSD/soilc_0.5x0.5.nc"
+weight     = 15
+table_unit = "Pg"
+plot_unit  = "kg m-2"
+space_mean = False
+skip_rmse  = True
+
+[NCSCDV22]
+source     = "DATA/cSoil/NCSCDV22/soilc_0.5x0.5.nc"
+weight     = 12
+table_unit = "Pg"
+plot_unit  = "kg m-2"
+space_mean = False
+skip_rmse  = True
+
+[Koven]
+ctype        = "ConfSoilCarbon"
+source       = "DATA/cSoil/NCSCDV22/soilc_0.5x0.5.nc"
+weight       = 15
+soilc_source = "DATA/cSoil/NCSCDV22/soilc_0.5x0.5.nc, DATA/cSoil/HWSD/soilc_0.5x0.5.nc"
+tas_source   = "DATA/tas/CRU4.02/tas.nc"
+pr_source    = "DATA/pr/GPCCv2018/pr.nc"
+npp_source   = "DATA/cSoil/Koven/npp_0.5x0.5.nc"
+pet_source   = "DATA/cSoil/Koven/pet_0.5x0.5.nc"
+fracpeat_source = "DATA/cSoil/Koven/fracpeat_0.5x0.5.nc"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Nitrogen Fixation]
+variable = "fBNF"
+cmap = "Greens"
+weight = 3
+
+[Davies-Barnard]
+source     = "DATA/fBNF/DaviesBarnard/fBNF_0.5x0.5.nc"
+table_unit = "Tg yr-1"
+plot_unit  = "kg ha-1 yr-1"
+space_mean = False
+weight     = 16
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Methane]
+variable       = "FCH4"
+alternate_vars = "ch4"
+cmap           = "Greens"
+mass_weighting = True
+
+[FluxnetANN]
+source     = "DATA/ch4/FluxnetANN/FCH4_F_ANN_monthly_wetland_tier1.nc"
+table_unit = "g m-2 d-1"
+plot_unit  = "g m-2 d-1"
+
+###########################################################################
+
+[h1: Hydrology Cycle]
+bgcolor = "#E6F9FF"
+
+[h2: Evapotranspiration]
+variable       = "et"
+alternate_vars = "evspsbl"
+cmap           = "Blues"
+weight         = 5
+mass_weighting = True
+
+[GLEAMv3.3a]
+source        = "DATA/evspsbl/GLEAMv3.3a/et.nc"
+weight        = 15
+table_unit    = "mm d-1"
+plot_unit     = "mm d-1"
+relationships = "Precipitation/GPCPv2.3","SurfaceAirTemperature/CRU4.02"
+
+[MODIS]
+source        = "DATA/evspsbl/MODIS/et_0.5x0.5.nc"
+weight        = 15
+table_unit    = "mm d-1"
+plot_unit     = "mm d-1"
+relationships = "Precipitation/GPCPv2.3","SurfaceAirTemperature/CRU4.02"
+
+[MOD16A2]
+source        = "DATA/evspsbl/MOD16A2/et.nc"
+weight        = 15
+table_unit    = "mm d-1"
+plot_unit     = "mm d-1"
+relationships = "Precipitation/GPCPv2.3","SurfaceAirTemperature/CRU4.02"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Evaporative Fraction]
+variable       = "EvapFrac"
+weight         = 5
+mass_weighting = True
+ctype          = "ConfEvapFraction"
+cmap           = "BuGn"
+
+[FLUXCOM]
+hfss_source = "DATA/hfss/FLUXCOM/sh.nc"
+hfls_source = "DATA/hfls/FLUXCOM/le.nc"
+weight      = 9
+skip_rmse   = True
+
+[CLASS]
+hfss_source = "DATA/hfss/CLASS/hfss.nc"
+hfls_source = "DATA/hfls/CLASS/hfls.nc"
+skip_rmse   = True
+weight      = 25
+
+[WECANN]
+hfss_source = "DATA/hfss/WECANN/hfss.nc"
+hfls_source = "DATA/hfls/WECANN/hfls.nc"
+weight      = 9
+skip_rmse   = True
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Latent Heat]
+variable       = "hfls"
+alternate_vars = "le"
+cmap           = "Oranges"
+weight         = 5
+mass_weighting = True
+
+[FLUXNET2015]
+source   = "DATA/hfls/FLUXNET2015/hfls.nc"
+weight   = 3
+
+[FLUXCOM]
+source   = "DATA/hfls/FLUXCOM/le.nc"
+land     = True
+weight   = 9
+skip_iav = True
+
+[DOLCE]
+source   = "DATA/evspsbl/DOLCE/DOLCE.nc"
+weight   = 15
+land     = True
+
+[CLASS]
+source     = "DATA/hfls/CLASS/hfls.nc"
+plot_unit  = "W m-2"
+table_unit = "W m-2"
+weight     = 25
+
+[WECANN]
+source     = "DATA/hfls/WECANN/hfls.nc"
+plot_unit  = "W m-2"
+table_unit = "W m-2"
+weight     = 9
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Runoff]
+variable       = "runoff"
+alternate_vars = "mrro"
+weight         = 5
+mass_weighting = True
+
+[Dai]
+ctype          = "ConfRunoff"
+source         = "DATA/mrro/Dai/runoff.nc"
+weight         = 15
+
+[LORA]
+source         = "DATA/mrro/LORA/LORA.nc"
+table_unit     = "mm d-1"
+plot_unit      = "mm d-1"
+weight         = 15
+
+[CLASS]
+source         = "DATA/mrro/CLASS/mrro.nc"
+plot_unit      = "mm d-1"
+table_unit     = "mm d-1"
+weight         = 25
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Sensible Heat]
+variable       = "hfss"
+alternate_vars = "sh"
+weight         = 2
+mass_weighting = True
+
+[FLUXNET2015]
+source   = "DATA/hfss/FLUXNET2015/hfss.nc"
+weight   = 9
+
+[FLUXCOM]
+source   = "DATA/hfss/FLUXCOM/sh.nc"
+weight   = 15
+skip_iav = True
+
+[CLASS]
+source     = "DATA/hfss/CLASS/hfss.nc"
+plot_unit  = "W m-2"
+table_unit = "W m-2"
+weight     = 25
+
+[WECANN]
+source     = "DATA/hfss/WECANN/hfss.nc"
+plot_unit  = "W m-2"
+table_unit = "W m-2"
+weight     = 15
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Terrestrial Water Storage Anomaly]
+variable       = "twsa"
+alternate_vars = "tws"
+derived        = "pr-evspsbl-mrro"
+cmap           = "Blues"
+weight         = 5
+ctype          = "ConfTWSA"
+
+[GRACE]
+source     = "DATA/twsa/GRACE/twsa_0.5x0.5.nc"
+weight     = 25
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Snow Water Equivalent]
+variable       = "swe"
+alternate_vars = "snw"
+cmap           = "Blues"
+weight         = 5
+ctype          = "ConfSWE"
+
+[CanSISE]
+source     = "DATA/swe/CanSISE/swe.nc"
+weight     = 25
+plot_unit  = "cm"
+table_unit = "cm"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Permafrost]
+variable = "tsl"
+
+[Brown2002]
+ctype    = "ConfPermafrost"
+source   = "DATA/permafrost/Brown2002/Brown2002.nc"
+y0       = 1985.
+yf       = 2005.
+Teps     = 273.15
+dmax     = 3.5
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[Obu2018]
+ctype    = "ConfPermafrost"
+source   = "DATA/permafrost/Obu2018/Obu2018.nc"
+y0       = 2000.
+yf       = 2016.
+Teps     = 273.15
+dmax     = 3.5
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Surface Soil Moisture]
+variable = "mrsos"
+weight   = 3
+cmap     = "Blues"
+
+[WangMao]
+source   = "DATA/mrsos/WangMao/mrsos_olc.nc"
+weight   = 15
+
+###########################################################################
+
+[h1: Radiation and Energy Cycle]
+bgcolor = "#FFECE6"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Albedo]
+variable = "albedo"
+weight   = 1
+ctype    = "ConfAlbedo"
+
+[CERESed4.2]
+source   = "DATA/albedo/CERESed4.2/albedo.nc"
+weight   = 20
+
+[GEWEX.SRB]
+source   = "DATA/albedo/GEWEX.SRB/albedo_0.5x0.5.nc"
+weight   = 20
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Surface Upward SW Radiation]
+variable = "rsus"
+weight   = 1
+
+[CERESed4.2]
+source   = "DATA/rsus/CERESed4.2/rsus.nc"
+weight   = 15
+
+[FLUXNET2015]
+source   = "DATA/rsus/FLUXNET2015/rsus.nc"
+weight   = 12
+
+[GEWEX.SRB]
+source   = "DATA/rsus/GEWEX.SRB/rsus_0.5x0.5.nc"
+weight   = 15
+
+[WRMC.BSRN]
+source   = "DATA/rsus/WRMC.BSRN/rsus.nc"
+weight   = 12
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Surface Net SW Radiation]
+variable = "rsns"
+derived  = "rsds-rsus"
+weight   = 1
+
+[CERESed4.2]
+source   = "DATA/rsns/CERESed4.2/rsns.nc"
+weight   = 15
+
+[FLUXNET2015]
+source   = "DATA/rsns/FLUXNET2015/rsns.nc"
+weight   = 12
+
+[GEWEX.SRB]
+source   = "DATA/rsns/GEWEX.SRB/rsns_0.5x0.5.nc"
+weight   = 15
+
+[WRMC.BSRN]
+source   = "DATA/rsns/WRMC.BSRN/rsns.nc"
+weight   = 12
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Surface Upward LW Radiation]
+variable = "rlus"
+weight   = 1
+
+[CERESed4.2]
+source   = "DATA/rlus/CERESed4.2/rlus.nc"
+weight   = 15
+
+[FLUXNET2015]
+source   = "DATA/rlus/FLUXNET2015/rlus.nc"
+weight   = 12
+
+[GEWEX.SRB]
+source   = "DATA/rlus/GEWEX.SRB/rlus_0.5x0.5.nc"
+weight   = 15
+
+[WRMC.BSRN]
+source   = "DATA/rlus/WRMC.BSRN/rlus.nc"
+weight   = 12
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Surface Net LW Radiation]
+variable = "rlns"
+derived  = "rlds-rlus"
+weight   = 1
+
+[CERESed4.2]
+source   = "DATA/rlns/CERESed4.2/rlns.nc"
+weight   = 15
+
+[FLUXNET2015]
+source   = "DATA/rlns/FLUXNET2015/rlns.nc"
+weight   = 12
+
+[GEWEX.SRB]
+source   = "DATA/rlns/GEWEX.SRB/rlns_0.5x0.5.nc"
+weight   = 15
+
+[WRMC.BSRN]
+source   = "DATA/rlns/WRMC.BSRN/rlns.nc"
+weight   = 12
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Surface Net Radiation]
+variable = "rns"
+derived  = "rlds-rlus+rsds-rsus"
+weight   = 2
+cmap     = "RdPu"
+
+[CERESed4.2]
+source   = "DATA/rns/CERESed4.2/rns.nc"
+weight   = 15
+
+[FLUXNET2015]
+source   = "DATA/rns/FLUXNET2015/rns.nc"
+weight   = 12
+
+[GEWEX.SRB]
+source   = "DATA/rns/GEWEX.SRB/rns_0.5x0.5.nc"
+weight   = 15
+
+[WRMC.BSRN]
+source   = "DATA/rns/WRMC.BSRN/rns.nc"
+weight   = 12
+
+[CLASS]
+source     = "DATA/rns/CLASS/rns.nc"
+plot_unit  = "W m-2"
+table_unit = "W m-2"
+weight     = 25
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Ground Heat Flux]
+variable       = "hfdsl"
+alternate_vars = "FGR12"
+cmap           = "Oranges"
+
+[CLASS]
+source     = "DATA/hfdsl/CLASS/hfdsl.nc"
+plot_unit  = "W m-2"
+table_unit = "W m-2"
+
+###########################################################################
+
+[h1: Forcings]
+bgcolor = "#EDEDED"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Surface Air Temperature]
+variable = "tas"
+weight   = 2
+
+[CRU4.02]
+source   = "DATA/tas/CRU4.02/tas.nc"
+weight   = 25
+
+[FLUXNET2015]
+source   = "DATA/tas/FLUXNET2015/tas.nc"
+weight   = 9
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Diurnal Max Temperature]
+variable = "tasmax"
+weight   = 2
+
+[CRU4.02]
+source   = "DATA/tasmax/CRU4.02/tasmax.nc"
+weight   = 25
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Diurnal Min Temperature]
+variable = "tasmin"
+weight   = 2
+
+[CRU4.02]
+source   = "DATA/tasmin/CRU4.02/tasmin.nc"
+weight   = 25
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Diurnal Temperature Range]
+variable = "dtr"
+weight   = 2
+derived  = "tasmax-tasmin"
+
+[CRU4.02]
+source   = "DATA/dtr/CRU4.02/dtr.nc"
+weight   = 25
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Precipitation]
+variable       = "pr"
+cmap           = "Blues"
+weight         = 2
+mass_weighting = True
+
+[CMAPv1904]
+source     = "DATA/pr/CMAPv1904/pr.nc"
+land       = True
+weight     = 20
+table_unit = "mm d-1"
+plot_unit  = "mm d-1"
+space_mean = True
+
+[FLUXNET2015]
+source     = "DATA/pr/FLUXNET2015/pr.nc"
+land       = True
+weight     = 9
+table_unit = "mm d-1"
+plot_unit  = "mm d-1"
+
+[GPCCv2018]
+source     = "DATA/pr/GPCCv2018/pr.nc"
+land       = True
+weight     = 20
+table_unit = "mm d-1"
+plot_unit  = "mm d-1"
+space_mean = True
+
+[GPCPv2.3]
+source     = "DATA/pr/GPCPv2.3/pr.nc"
+land       = True
+weight     = 20
+table_unit = "mm d-1"
+plot_unit  = "mm d-1"
+space_mean = True
+
+[CLASS]
+source         = "DATA/pr/CLASS/pr.nc"
+land           = True
+weight         = 15
+table_unit     = "mm d-1"
+plot_unit      = "mm d-1"
+space_mean     = True
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Surface Relative Humidity]
+variable       = "rhums"
+alternate_vars = "hurs"
+cmap           = "Blues"
+weight         = 3
+mass_weighting = True
+
+[ERA5]
+source     = "DATA/rhums/ERA5/rhums.nc"
+weight     = 10
+
+[CRU4.02]
+source     = "DATA/rhums/CRU4.02/rhums.nc"
+weight     = 10
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Surface Downward SW Radiation]
+variable = "rsds"
+weight   = 2
+
+[CERESed4.2]
+source   = "DATA/rsds/CERESed4.2/rsds.nc"
+weight   = 15
+
+[FLUXNET2015]
+source   = "DATA/rsds/FLUXNET2015/rsds.nc"
+weight   = 12
+
+[GEWEX.SRB]
+source   = "DATA/rsds/GEWEX.SRB/rsds_0.5x0.5.nc"
+weight   = 15
+
+[WRMC.BSRN]
+source   = "DATA/rsds/WRMC.BSRN/rsds.nc"
+weight   = 12
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[h2: Surface Downward LW Radiation]
+variable = "rlds"
+weight   = 1
+
+[CERESed4.2]
+source   = "DATA/rlds/CERESed4.2/rlds.nc"
+weight   = 15
+
+[FLUXNET2015]
+source   = "DATA/rlds/FLUXNET2015/rlds.nc"
+weight   = 12
+
+[GEWEX.SRB]
+source   = "DATA/rlds/GEWEX.SRB/rlds_0.5x0.5.nc"
+weight   = 15
+
+[WRMC.BSRN]
+source   = "DATA/rlds/WRMC.BSRN/rlds.nc"
+weight   = 12
+EOF
+
+echo ${workdir}
+echo /zppy_snapshot/output/post/scripts
+
+srun -N 1 ilamb-run --config ilamb.cfg --model_root $model_root  --regions global --model_year ${Y1} 2000
+
+if [ $? != 0 ]; then
+  cd /zppy_snapshot/output/post/scripts
+  echo 'ERROR (3)' > ilamb_1985-1986.status
+  exit 3
+fi
+
+# Copy output to web server
+echo
+echo ===== COPY FILES TO WEB SERVER =====
+echo
+
+# Create top-level directory
+web_dir=${www}/${case}/ilamb/_${Y1}-${Y2}
+mkdir -p ${web_dir}
+if [ $? != 0 ]; then
+  cd /zppy_snapshot/output/post/scripts
+  echo 'ERROR (4)' > ilamb_1985-1986.status
+  exit 4
+fi
+
+
+
+# Copy files
+results_dir=_build/
+rsync -a --delete ${results_dir} ${web_dir}/
+if [ $? != 0 ]; then
+  cd /zppy_snapshot/output/post/scripts
+  echo 'ERROR (5)' > ilamb_1985-1986.status
+  exit 5
+fi
+
+
+
+
+# For LCRC, change permissions of new files
+pushd ${web_dir}/
+chmod -R go+rX,go-w .
+popd
+
+
+# Delete temporary workdir
+cd ..
+if [[ "${debug,,}" != "true" ]]; then
+  rm -rf ${workdir}
+fi
+
+# Update status file and exit
+
+ENDTIME=$(date +%s)
+ELAPSEDTIME=$(($ENDTIME - $STARTTIME))
+
+echo ==============================================
+echo "Elapsed time: $ELAPSEDTIME seconds"
+echo ==============================================
+rm -f ilamb_1985-1986.status
+echo 'OK' > ilamb_1985-1986.status
+exit 0
