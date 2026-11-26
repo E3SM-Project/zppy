@@ -32,14 +32,12 @@ def ilamb(config: ConfigObj, script_dir: str, existing_bundles, job_ids_file):
 
     # --- Generate and submit ilamb scripts ---
     for c in tasks:
-
-        dependencies: List[str] = []
-
         if "ts_num_years" in c.keys():
             c["ts_num_years"] = int(c["ts_num_years"])
         # Loop over year sets
         year_sets = get_years(c["years"])
         for s in year_sets:
+            dependencies: List[str] = []
             c["year1"] = s[0]
             c["year2"] = s[1]
             c["scriptDir"] = script_dir
