@@ -93,7 +93,7 @@ cd ${workdir}
 # --- Monthly climatologies ---
 run_nco ncclimo \
 --case=v3.LR.historical_0051 \
---jobs=${SLURM_NNODES} \
+--jobs=4 \
 --thr=1 \
 --parallel=mpi \
 --yr_srt=1985 \
